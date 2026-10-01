@@ -1,5 +1,65 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 
+
+/* ---- Calculator docks on the left and pushes the test over (never covers it) ---- */
+.calc-panel{left:0!important;right:auto!important;border-left:0!important;border-right:1px solid var(--line);box-shadow:4px 0 18px rgba(15,23,42,.08)!important}
+body.calc-open{padding-left:min(440px,100vw)}
+body.calc-open.calc-wide{padding-left:min(900px,100vw)}
+@media (max-width:760px){
+  .calc-panel,.calc-panel.wide{width:100vw!important;top:0;bottom:auto!important;height:46vh;border-right:0;border-bottom:2px solid var(--line)}
+  body.calc-open,body.calc-open.calc-wide{padding-left:0;padding-top:46vh}
+}
+/* ---- Account button + sign-in popup ---- */
+.acct-btn{background:#fff;color:var(--ink);border:1px solid var(--line);padding:6px 12px;font-size:.85rem;border-radius:999px;display:flex;align-items:center;gap:6px}
+.acct-btn:hover{background:#f3f4f6}
+.acct-btn .av{width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:.75rem;font-weight:800}
+.auth-modal{text-align:left;max-width:400px}
+.auth-tabs{display:flex;gap:4px;background:#f1f5f9;border-radius:10px;padding:4px;margin:12px 0}
+.auth-tabs button{flex:1;background:transparent;color:var(--muted);padding:7px;font-size:.9rem}
+.auth-tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.auth-modal label{display:block;font-size:.82rem;font-weight:700;margin:10px 0 4px}
+.auth-modal input,.auth-modal select{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font:inherit;font-size:16px}
+.g-btn{width:100%;background:#fff;color:#1f1f1f;border:1.5px solid #dadce0;display:flex;align-items:center;justify-content:center;gap:10px}
+.g-btn:hover{background:#f8f9fa}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.8rem;margin:14px 0 2px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.auth-msg{font-size:.85rem;margin-top:10px;min-height:1.2em}
+.auth-msg.err{color:var(--red)}.auth-msg.ok{color:var(--green)}
+.auth-sec{border-top:1px solid var(--line);margin-top:16px;padding-top:12px}
+.modal.auth-modal{text-align:left;max-height:calc(100dvh - 40px);overflow-y:auto}
+#authModal{align-items:center}
+@media (max-width:640px){#authModal{padding:10px}.modal.auth-modal{padding:20px 18px}}
+@media (max-width:640px){
+  .card .bb-foot{flex-wrap:nowrap;margin:14px -16px -16px;padding:10px 12px;gap:6px}
+  .card .bb-coin .meter{width:30px}
+  .card .bb-coin span:last-child{display:none}
+  .card .bb-navbtn{font-size:.78rem;white-space:nowrap;padding:8px 10px}
+  .card .bb-btns{gap:6px}.card .bb-btns button{padding:8px 10px;font-size:.88rem}
+  .card .module-head{flex-direction:column;align-items:stretch;gap:8px}
+  .card .module-actions{display:flex;flex-wrap:wrap;gap:4px;justify-content:space-between}
+}
+/* ---- Bookmarks + curve ---- */
+.bb-star{background:transparent;color:var(--ink);padding:4px 8px;font-size:.85rem;font-weight:600}
+.bb-star:hover{background:#e2e8f0}
+.bb-star.on{color:#b45309}
+.curve-note{font-size:.8rem;color:var(--muted);margin-top:6px}
+#curveSelect{padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;font:inherit;max-width:100%}
+/* ---- Phones and small tablets ---- */
+.wrap{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+@media (max-width:640px){
+  .card{padding:16px;border-radius:14px}
+  .bb-foot{margin:14px -16px -16px;padding:10px 12px;border-radius:0 0 14px 14px;gap:8px}
+  .bb-coin span:last-child{display:none}
+  .bb-btns button,.bb-navbtn{padding:9px 12px}
+  .module-head{flex-direction:column;align-items:stretch}
+  .module-actions{display:flex;flex-wrap:wrap;gap:4px}
+  .topbar{gap:8px}.badges{gap:5px}.badge{padding:3px 9px;font-size:.75rem}
+  .qtext{font-size:1rem}.choice{padding:11px 12px}
+  .bb-qhead{flex-wrap:wrap}
+  h1{font-size:1.4rem}.hero h1{font-size:1.6rem}
+  .crow input,.calc-ai input,#customLen{font-size:16px}
+}
+
 /* ---- Bluebook-style test screen ---- */
 body.wide-test .wrap{max-width:1240px}
 .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
@@ -357,6 +417,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
       <button class="arcade-btn" id="btnArcade" title="Play mini-games">🎮 Arcade</button>
       <button class="sound-btn" id="btnSound" title="Toggle sound">🔊</button>
       <span class="autosave" id="autosave">✓ Autosaved</span>
+      <button class="acct-btn" id="btnAccount" type="button" title="Sign in to save your progress"><span class="av">👤</span><span id="acctLabel">Sign in</span></button>
     </div>
   </div>
 
@@ -418,6 +479,10 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
         <button id="btnResume" class="secondary" style="margin-right:8px">Resume</button>
         <button id="btnDiscard" class="danger">Discard progress</button>
       </div>
+      <div class="pick-label">Score curve</div>
+      <select id="curveSelect"></select>
+      <div class="curve-note" id="curveNote"></div>
+      <div id="bookmarkStart" style="margin-top:16px;display:none"><button type="button" class="secondary" id="btnRetryBookmarks"></button></div>
       <div id="historyStart" style="margin-top:20px;display:none"></div>
       <div style="margin-top:20px"><button id="btnStart" style="font-size:1.1rem;padding:14px 34px">Start practice →</button></div>
     </section>
@@ -465,7 +530,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
     </section>
   </main>
 
-  <div class="foot">Practice estimates. SAT uses an official College Board raw-score curve (Practice Test 4, © 2023); ACT uses the sample 1–36 conversion chart. Questions are original practice items — not an official score.</div>
+  <div class="foot">Practice estimates. SAT uses the College Board raw-score curve from Practice Test 4 (2023), adjustable on the start screen; ACT uses the sample 1–36 conversion chart. Questions are original practice items — not an official score.</div>
 </div>
 
 <!-- Arcade overlay -->
@@ -509,6 +574,36 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 </div>
 
 <!-- Unlock modal -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal auth-modal" role="dialog" aria-labelledby="authTitle">
+    <button class="close-x" id="authClose" type="button">&times;</button>
+    <h2 id="authTitle">Save your progress</h2>
+    <div id="authOut">
+      <p class="small muted" style="margin:0">Sign in to keep your scores, bookmarks, credits and high scores on every device.</p>
+      <div class="auth-tabs"><button type="button" class="on" data-mode="in">Sign in</button><button type="button" data-mode="up">Create account</button></div>
+      <button type="button" class="g-btn" id="authGoogle"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continue with Google</button>
+      <div class="or">or use email</div>
+      <form id="authForm" novalidate>
+        <label for="authEmail">Email</label><input id="authEmail" type="email" autocomplete="email" required>
+        <label for="authPass">Password</label><input id="authPass" type="password" autocomplete="current-password" minlength="6" required>
+        <button type="submit" id="authSubmit" style="width:100%;margin-top:14px">Sign in</button>
+      </form>
+      <button type="button" class="ghost" id="authForgot" style="margin-top:6px;padding-left:0">Forgot password?</button>
+    </div>
+    <div id="authIn" style="display:none">
+      <p style="margin:6px 0 4px">Signed in as <strong id="authWho"></strong></p>
+      <p class="small muted" id="authSync">Your progress syncs automatically.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" id="authSyncNow">Sync now</button><button type="button" class="secondary" id="authOutBtn">Sign out</button></div>
+    </div>
+    <div class="auth-msg" id="authMsg"></div>
+    <div class="auth-sec">
+      <label for="aiProvider">AI tutor</label>
+      <select id="aiProvider"><option value="free">Free (Pollinations, no key needed)</option><option value="groq">Llama 3.3 70B on Groq (free key)</option></select>
+      <div id="groqKeyWrap" style="display:none"><label for="groqKey">Groq API key</label><input id="groqKey" type="password" autocomplete="off" placeholder="gsk_…"><div class="small muted" style="margin-top:4px">Get a free key at console.groq.com. It is stored only on this device.</div></div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="unlockModal">
   <div class="modal">
     <button class="close-x" id="unlockClose">&times;</button>
@@ -971,6 +1066,7 @@ let state = newState(DEFAULT_CFG);
 
 function save() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); flashAutosave(true); } catch (e) { flashAutosave(false); }
+  try { cloud.queue(); } catch (e) {}
 }
 function clearSaved() {
   try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
@@ -990,7 +1086,7 @@ const DEFAULT_PROFILE = {
   tokens: 0, arcadeSeconds: ARCDE_START_SEC, qSinceToken: 0,
   bestStreak: 0, totalCorrect: 0, totalAttempts: 0,
   highScores: { pacman: 0, snake: 0, pong: 0, watersort: 0, tetris: 0, doom: 0, pressurewash: 0 },
-  soundOn: true, history: [], seen: {}
+  soundOn: true, history: [], seen: {}, bookmarks: [], curve: "pt4", updatedAt: 0
 };
 let profile = JSON.parse(JSON.stringify(DEFAULT_PROFILE));
 
@@ -999,7 +1095,7 @@ function loadProfile() {
   if (!Array.isArray(profile.history)) profile.history = [];
   if (!profile.seen || typeof profile.seen !== "object") profile.seen = {};
 }
-function saveProfile() { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch (e) {} }
+function saveProfile() { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch (e) {} try { cloud.queue(); } catch (e) {} }
 
 // ---- HISTORY ----
 function loadHistory() {
@@ -1080,6 +1176,15 @@ function totalCorrect() { return correctCount(Object.keys(state.answers)); }
 function fmtTime(sec) { const m = Math.floor(sec / 60); return m + ":" + String(sec % 60).padStart(2, "0"); }
 function escapeHtml(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
 
+// Score curves. Only the College Board table is official; the other two are the same table shifted,
+// to show how a harder or easier test date's curve changes your score.
+const CURVES = {
+  pt4: { label: "Official — SAT Practice Test 4 (College Board, 2023)", short: "SAT Practice Test 4 curve (2023)", sat: 0, act: 0 },
+  strict: { label: "Strict — official 2023 curve minus 20 points (like an easier test form)", short: "strict curve (2023 table −20)", sat: -20, act: -1 },
+  generous: { label: "Generous — official 2023 curve plus 20 points (like a harder test form)", short: "generous curve (2023 table +20)", sat: 20, act: 1 }
+};
+function curCurve() { return CURVES[profile.curve] || CURVES.pt4; }
+const clampSat = (v) => Math.max(200, Math.min(800, v));
 function estimateSection(section, route) {
   const qids = sectionQids(section);
   const answered = answeredCount(qids);
@@ -1088,8 +1193,9 @@ function estimateSection(section, route) {
   const maxRaw = section === "rw" ? 66 : 54;
   const raw = Math.round((correct / answered) * maxRaw);
   const row = CURVE[section][Math.min(raw, CURVE[section].length - 1)];
-  const point = route === "harder" ? row[1] : route === "easier" ? row[0] : Math.round((row[0] + row[1]) / 2);
-  return { lo: row[0], hi: row[1], point, answered, correct };
+  const sh = curCurve().sat, lo = clampSat(row[0] + sh), hi = clampSat(row[1] + sh);
+  const point = route === "harder" ? hi : route === "easier" ? lo : Math.round((lo + hi) / 2);
+  return { lo, hi, point, answered, correct };
 }
 
 function actScale(section, raw) {
@@ -1103,7 +1209,7 @@ function estimateActSection(key) {
   const correct = correctCount(qids);
   if (!answered) return { scale: null, answered: 0, correct: 0 };
   const raw = Math.round((correct / answered) * ACT_MAX_RAW[key]);
-  return { scale: actScale(key, raw), answered, correct, raw };
+  return { scale: Math.max(1, Math.min(36, actScale(key, raw) + curCurve().act)), answered, correct, raw };
 }
 
 function domainStats(section, qids) {
@@ -1246,6 +1352,13 @@ function renderStart() {
   $("resumeBox").style.display = hasSaved ? "block" : "none";
   if (hasSaved) $("resumeInfo").textContent = "You have a session in progress with " + Object.keys(state.answers).length + " answered. Pick up where you left off.";
   renderHistorySummary();
+  const cs = $("curveSelect");
+  if (!cs.options.length) Object.keys(CURVES).forEach((k) => { const o = document.createElement("option"); o.value = k; o.textContent = CURVES[k].label; cs.appendChild(o); });
+  cs.value = profile.curve in CURVES ? profile.curve : "pt4";
+  $("curveNote").textContent = isAct ? "ACT uses the chart from ACT's free practice test (no year printed). Strict/Generous move each section 1 point." : "Uses the " + curCurve().short + ". The SAT doesn't publish a curve for each test date, so this is the most recent official table.";
+  const bm = (profile.bookmarks || []).filter((id) => byId(id));
+  $("bookmarkStart").style.display = bm.length ? "block" : "none";
+  $("btnRetryBookmarks").textContent = "⭐ Retry bookmarked questions (" + bm.length + ")";
 }
 
 function historyKeysFor(rec) {
@@ -1408,9 +1521,6 @@ function wireCoach(q, chosen) {
     coachBusy[q.id] = true; input.value = ""; send.disabled = true; coachPaint(q.id);
     const idx = hist.length - 1;
     try {
-      if (typeof claude === "undefined" || !claude.use) throw { code: "unavailable" };
-      const sample = await claude.use("sample");
-      if (!sample) throw { code: "unavailable" };
       const info = coachInfo(q);
       const ctx = "You are a friendly, concise SAT/ACT math tutor chatting with a high-school student right after they answered a practice question.\n" +
         "Question: " + q.q + "\nChoices: " + q.choices.map((c, i) => String.fromCharCode(65 + i) + ") " + c).join("  ") +
@@ -1419,14 +1529,11 @@ function wireCoach(q, chosen) {
         "\nOfficial explanation: " + q.exp + "\nDesmos verdict: " + info[0] + " — " + info[1] +
         "\nRules: reply in under 120 words, plain text (no markdown tables), be encouraging but honest, and when relevant give exact Desmos steps. If asked for a similar practice question, write one new question with 4 choices and do NOT reveal the answer until they reply." +
         "\n" + CALC_AI_RULES;
-      const turns = [{ role: "user", content: ctx + "\n\nStudent's first message: " + hist[0].content }];
-      hist.slice(1, -1).forEach((m) => turns.push({ role: m.role, content: m.content }));
-      const res = await sample(turns, { cache: false, onText: ({ text: t }) => { hist[idx].content = t; if (curMathId() === q.id) coachPaint(q.id); } });
-      hist[idx].content = (res && res.text) || hist[idx].content;
+      const turns = [{ role: "system", content: ctx }];
+      hist.slice(0, -1).forEach((m) => turns.push({ role: m.role, content: m.content }));
+      hist[idx].content = (await aiChat(turns)) || "Sorry, I didn't get an answer. Try again.";
     } catch (e) {
-      hist[idx].content = e && e.code === "unavailable" ? "The chat helper isn't available in this view. Open the page in claude.ai to use it." :
-        e && e.code === "not_granted" ? "Chat is turned off. Allow it when prompted to ask follow-ups." :
-        e && e.code === "rate_limited" ? "Too many questions at once. Wait a moment and try again." : "Sorry, I couldn't answer that. Try again.";
+      hist[idx].content = aiErrorText(e);
     }
     coachBusy[q.id] = false; if (curMathId() === q.id) { coachPaint(q.id); const sb = $("csend"); if (sb) sb.disabled = false; }
   }
@@ -1478,6 +1585,7 @@ function renderQuestion() {
   if (split) html += '<div class="split"><div class="split-l"><div class="passage">' + escapeHtml(q.passage) + '</div></div><div class="split-r">';
   html += '<div class="bb-qhead"><span class="bb-num">' + (qi + 1) + '</span>' +
     '<button type="button" class="bb-flag' + (flagged ? " on" : "") + '" id="btnFlag">' + (flagged ? "🔖 Marked for Review" : "🏷 Mark for Review") + '</button>' +
+    '<button type="button" class="bb-star' + ((profile.bookmarks || []).indexOf(q.id) >= 0 ? " on" : "") + '" id="btnStar" title="Save this question to retry later">' + ((profile.bookmarks || []).indexOf(q.id) >= 0 ? "⭐ Bookmarked" : "☆ Bookmark") + '</button>' +
     '<button type="button" class="bb-abc' + (elimMode ? " on" : "") + '" id="btnElim" title="Answer eliminator: cross out choices you have ruled out">ABC</button></div>';
   html += '<div class="qtext">' + escapeHtml(q.q) + "</div>";
   html += '<div class="choices">';
@@ -1525,6 +1633,11 @@ function renderQuestion() {
   });
   highlighter.restore(q.id);
   const fb = $("btnFlag"); if (fb) fb.addEventListener("click", () => { state.flags = state.flags || {}; state.flags[q.id] = !state.flags[q.id]; save(); render(); });
+  const sb = $("btnStar"); if (sb) sb.addEventListener("click", () => {
+    profile.bookmarks = profile.bookmarks || []; const at = profile.bookmarks.indexOf(q.id);
+    if (at >= 0) profile.bookmarks.splice(at, 1); else profile.bookmarks.push(q.id);
+    saveProfile(); showToast(at >= 0 ? "Bookmark removed" : "⭐ Bookmarked — retry it from the start screen"); render();
+  });
   const eb = $("btnElim"); if (eb) eb.addEventListener("click", () => { elimMode = !elimMode; render(); });
   $("questionCard").querySelectorAll(".elim-btn").forEach((b) => b.addEventListener("click", () => {
     state.elims = state.elims || {}; const list = state.elims[q.id] = state.elims[q.id] || [];
@@ -1674,15 +1787,15 @@ function renderResults() {
     const total = (rw.point || 0) + (math.point || 0);
     headline = total;
     html += box(total, "Total (400–1600)", true) + box(rw.point || "—", "Reading & Writing") + box(math.point || "—", "Math");
-    $("resultsIntro").textContent = "Estimated from your answered questions using an official College Board curve.";
+    $("resultsIntro").textContent = "Estimated from your answered questions using the " + curCurve().short + ".";
   } else if (state.counts.rw) {
     headline = rw.point;
     html += box(rw.point, "Reading & Writing (200–800)", true);
-    $("resultsIntro").textContent = "Reading & Writing section estimate from your answered questions.";
+    $("resultsIntro").textContent = "Reading & Writing section estimate from your answered questions, using the " + curCurve().short + ".";
   } else {
     headline = math.point;
     html += box(math.point, "Math (200–800)", true);
-    $("resultsIntro").textContent = "Math section estimate from your answered questions.";
+    $("resultsIntro").textContent = "Math section estimate from your answered questions, using the " + curCurve().short + ".";
   }
   $("scoreGrid").innerHTML = html;
 
@@ -1742,7 +1855,7 @@ function renderActResults() {
   let html = box(comp == null ? "—" : comp, "Composite (1–36)", true);
   keys.forEach((k) => { const e = ests[keys.indexOf(k)]; html += box(e.scale == null ? "—" : e.scale, defByKey("act", k).label + " (1–36)"); });
   $("scoreGrid").innerHTML = html;
-  $("resultsIntro").textContent = "Estimated from your answered questions using the sample ACT conversion chart.";
+  $("resultsIntro").textContent = "Estimated from your answered questions using the conversion chart from ACT's free practice test (ACT doesn't print a year on it)" + (curCurve().act ? ", shifted " + (curCurve().act > 0 ? "+1" : "−1") + " for the " + (curCurve().act > 0 ? "generous" : "strict") + " setting" : "") + ".";
   $("resultsNote").textContent = "The ACT is not adaptive, so these are fixed question sets scored 1–36 per section, with a composite average.";
 
   // Rewards summary
@@ -1947,6 +2060,25 @@ function startDrill(key, domain) {
   sessionStreak = 0; sessionBestStreak = 0; sessionTokensEarned = 0; sessionUnlocks = []; pendingUnlock = null;
   state.view = "test"; save(); render(); scrollTo(0, 0);
 }
+// Retry a saved list of questions (bookmarks). Mixed SAT/ACT questions are grouped into sections.
+function startCustomSet(ids, label) {
+  ids = ids.filter((id) => byId(id));
+  if (!ids.length) return;
+  const act = ids.some((id) => /^s/.test(id));
+  const keyOf = (id) => /^m/.test(id) ? "math" : /^s/.test(id) ? "science" : act ? (byId(id).kind === "reading" ? "reading" : "english") : "rw";
+  const tt = act ? "act" : "sat";
+  const order = act ? ["english", "math", "reading", "science"] : ["rw", "math"];
+  const groups = {}; shuffle(ids).forEach((id) => { (groups[keyOf(id)] = groups[keyOf(id)] || []).push(id); });
+  const keys = order.filter((k) => groups[k]);
+  if (Object.keys(state.answers).length && !state.done) finalizeAttempt(false);
+  const cfg = Object.assign({}, state.cfg, { testType: tt, total: ids.length, section: act ? state.cfg.section : (keys.length > 1 ? "both" : keys[0]), actSection: act ? (keys.length > 1 ? "all" : keys[0]) : state.cfg.actSection });
+  clearSaved();
+  state = newState(cfg);
+  state.keys = keys; state.counts = {}; state.plan = {}; state.routes = {};
+  keys.forEach((k) => { const d = defByKey(tt, k); state.counts[k] = groups[k].length; state.plan[k] = { adaptive: d.adaptive, bank: d.bank, moduleOnly: "drill", drillDomain: label, mods: [groups[k]] }; });
+  sessionStreak = 0; sessionBestStreak = 0; sessionTokensEarned = 0; sessionUnlocks = []; pendingUnlock = null;
+  state.view = "test"; save(); render(); scrollTo(0, 0);
+}
 function domainStatsKey(key) {
   const out = {};
   sectionQids(key).forEach((id) => {
@@ -1976,6 +2108,37 @@ function resultsExtras() {
 function wireResultsExtras() {
   const d = $("btnDrill"); if (d) d.addEventListener("click", () => startDrill(d.dataset.k, d.dataset.d));
   const s = $("btnSpend"); if (s) s.addEventListener("click", () => openArcade());
+}
+
+
+// ---- AI TUTOR: free providers (no Claude). Default: Pollinations' free OpenAI-compatible endpoint (no key).
+// Optional: Llama 3.3 70B on Groq with the user's own free API key (stored only in this browser).
+const AI_SETTINGS_KEY = "satPrepAI_v1";
+function aiSettings() { try { return JSON.parse(localStorage.getItem(AI_SETTINGS_KEY)) || { provider: "free", groqKey: "" }; } catch (e) { return { provider: "free", groqKey: "" }; } }
+function saveAiSettings(s) { try { localStorage.setItem(AI_SETTINGS_KEY, JSON.stringify(s)); } catch (e) {} }
+async function aiChat(messages) {
+  const s = aiSettings();
+  const ask = async (url, body, headers) => {
+    const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 45000);
+    try {
+      const r = await fetch(url, { method: "POST", headers: Object.assign({ "Content-Type": "application/json" }, headers || {}), body: JSON.stringify(body), signal: ctrl.signal });
+      if (r.status === 429) throw { code: "rate_limited" };
+      if (r.status === 401 || r.status === 403) throw { code: "bad_key" };
+      if (!r.ok) throw { code: "http", status: r.status };
+      const j = await r.json();
+      return (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content || "").trim();
+    } finally { clearTimeout(t); }
+  };
+  if (s.provider === "groq" && s.groqKey) {
+    return ask("https://api.groq.com/openai/v1/chat/completions", { model: "llama-3.3-70b-versatile", messages, temperature: 0.4, max_tokens: 500 }, { Authorization: "Bearer " + s.groqKey });
+  }
+  return ask("https://text.pollinations.ai/openai", { model: "openai", messages, temperature: 0.4, private: true });
+}
+function aiErrorText(e) {
+  return e && e.code === "rate_limited" ? "The free AI is busy right now. Wait a few seconds and try again." :
+    e && e.code === "bad_key" ? "Your Groq key was rejected. Check it in 👤 Account → AI tutor." :
+    e && e.name === "AbortError" ? "The AI took too long to answer. Try again." :
+    "Couldn't reach the AI. Check your internet connection and try again.";
 }
 
 // ---- TEST TOOLS: graphing calculator (Desmos), AI calculator walkthroughs, highlighter, line reader ----
@@ -2120,11 +2283,11 @@ const calcTool = {
     return this.loading;
   },
   async open() {
-    $("calcPanel").classList.add("show"); $("btnCalc").classList.add("on");
+    $("calcPanel").classList.add("show"); $("btnCalc").classList.add("on"); document.body.classList.add("calc-open");
     await this.ensure();
     if (this.engine === "desmos") this.calc.resize(); else if (this.calc) this.calc.draw();
   },
-  close() { $("calcPanel").classList.remove("show"); $("btnCalc").classList.remove("on"); },
+  close() { $("calcPanel").classList.remove("show"); $("btnCalc").classList.remove("on"); document.body.classList.remove("calc-open"); },
   toggle() { if (this.isOpen()) this.close(); else this.open(); },
   clear() { if (!this.calc) return; if (this.engine === "desmos") this.calc.setBlank(); else this.calc.clear(); },
   // Type the AI's steps into the calculator one at a time so the student can watch the order.
@@ -2144,26 +2307,21 @@ const calcTool = {
     let q = null; try { if (state.view === "test") q = byId(currentQids()[state.qi]); } catch (e) {}
     msg.textContent = "Thinking…";
     try {
-      if (typeof claude === "undefined" || !claude.use) throw { code: "unavailable" };
-      const sample = await claude.use("sample");
-      if (!sample) throw { code: "unavailable" };
       const ctx = "You are a friendly SAT/ACT tutor helping a high-school student use the graphing calculator. Reply in under 90 words, plain text.\n" + CALC_AI_RULES +
         (q ? "\nCurrent question: " + q.q + "\nChoices: " + q.choices.map((c, i) => String.fromCharCode(65 + i) + ") " + c).join("  ") +
           (state.answers[q.id] == null ? "\nThe student has NOT answered yet: show the calculator method but do not state which choice is correct." : "\nCorrect answer: " + String.fromCharCode(65 + q.ans)) : "");
-      const res = await sample([{ role: "user", content: ctx + "\n\nStudent: " + text }], { cache: false, onText: ({ text: t }) => { msg.textContent = parseCalcSteps(t).text; } });
-      const parsed = parseCalcSteps((res && res.text) || "");
+      const parsed = parseCalcSteps(await aiChat([{ role: "system", content: ctx }, { role: "user", content: text }]));
       msg.textContent = parsed.text;
       if (parsed.exprs.length) this.demo(parsed.exprs);
     } catch (e) {
-      msg.textContent = e && e.code === "unavailable" ? "The AI helper isn't available in this view. Open the page in claude.ai to use it." :
-        e && e.code === "not_granted" ? "AI help is turned off. Allow it when prompted." : "Sorry, I couldn't do that. Try again.";
+      msg.textContent = aiErrorText(e);
     }
   }
 };
 $("btnCalc").addEventListener("click", () => calcTool.toggle());
 $("calcClose").addEventListener("click", () => calcTool.close());
 $("calcClear").addEventListener("click", () => calcTool.clear());
-$("calcWide").addEventListener("click", () => { $("calcPanel").classList.toggle("wide"); setTimeout(() => { if (calcTool.engine === "desmos") calcTool.calc.resize(); else if (calcTool.calc) calcTool.calc.draw(); }, 50); });
+$("calcWide").addEventListener("click", () => { $("calcPanel").classList.toggle("wide"); document.body.classList.toggle("calc-wide", $("calcPanel").classList.contains("wide")); setTimeout(() => { if (calcTool.engine === "desmos") calcTool.calc.resize(); else if (calcTool.calc) calcTool.calc.draw(); }, 50); });
 $("calcAskBtn").addEventListener("click", () => { calcTool.askAI($("calcAsk").value); $("calcAsk").value = ""; });
 $("calcAsk").addEventListener("keydown", (e) => { e.stopPropagation(); if (e.key === "Enter") { e.preventDefault(); $("calcAskBtn").click(); } });
 
@@ -2227,6 +2385,132 @@ const lineReader = {
 $("btnLine").addEventListener("click", () => lineReader.toggle());
 addEventListener("pointermove", (e) => { if (lineReader.on && !e.target.closest("#calcPanel")) { lineReader.y = e.clientY; lineReader.paint(); } });
 addEventListener("resize", () => lineReader.paint());
+
+
+// ---- ACCOUNTS + CLOUD SAVE (Firebase Auth + Firestore, free tier) ----
+// Paste your Firebase web config here (Firebase console → Project settings → Your apps → Web app).
+// Until it's filled in, the sign-in popup explains that cloud save isn't set up and everything stays on this device.
+const FIREBASE_CONFIG = null; /* e.g. { apiKey: "…", authDomain: "your-app.firebaseapp.com", projectId: "your-app", appId: "…" } */
+const FB_VER = "10.12.2";
+const cloud = {
+  ready: null, auth: null, db: null, user: null, timer: null, applying: false,
+  async init() {
+    if (!FIREBASE_CONFIG) return null;
+    if (this.ready) return this.ready;
+    this.ready = (async () => {
+      for (const m of ["app", "auth", "firestore"]) await loadScript("https://www.gstatic.com/firebasejs/" + FB_VER + "/firebase-" + m + "-compat.js");
+      firebase.initializeApp(FIREBASE_CONFIG);
+      this.auth = firebase.auth(); this.db = firebase.firestore();
+      this.auth.onAuthStateChanged((u) => { this.user = u; paintAccount(); if (u) this.pull(); });
+      return true;
+    })().catch(() => { this.ready = null; return null; });
+    return this.ready;
+  },
+  doc() { return this.db.collection("users").doc(this.user.uid); },
+  // Newest copy wins: if the cloud copy is newer, load it; otherwise upload this device's copy.
+  async pull() {
+    try {
+      const snap = await this.doc().get();
+      const d = snap.exists ? snap.data() : null;
+      if (d && (d.updatedAt || 0) > (profile.updatedAt || 0)) {
+        this.applying = true;
+        Object.keys(DEFAULT_PROFILE).forEach((k) => { if (d.profile && d.profile[k] !== undefined) profile[k] = d.profile[k]; });
+        if (Array.isArray(d.history)) profile.history = d.history;
+        if (d.state && d.state.v === 4) state = d.state;
+        profile.updatedAt = d.updatedAt;
+        saveProfile(); saveHistory(); try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+        this.applying = false; render(); showToast("☁️ Progress loaded from your account");
+      } else this.push();
+    } catch (e) { setAuthMsg("Couldn't load your saved progress. Check your connection.", true); }
+  },
+  async push() {
+    if (!this.user) return;
+    try {
+      const prof = Object.assign({}, profile); delete prof.history;
+      await this.doc().set({ profile: prof, history: profile.history.slice(0, 200), state, updatedAt: profile.updatedAt || Date.now(), email: this.user.email || "" });
+      const el = $("authSync"); if (el) el.textContent = "Last synced " + new Date().toLocaleTimeString();
+    } catch (e) {}
+  },
+  queue() {
+    if (this.applying) return;
+    profile.updatedAt = Date.now();
+    if (!this.user) return;
+    clearTimeout(this.timer); this.timer = setTimeout(() => this.push(), 2500);
+  }
+};
+function setAuthMsg(t, err) { const m = $("authMsg"); m.textContent = t || ""; m.className = "auth-msg" + (t ? (err ? " err" : " ok") : ""); }
+function paintAccount() {
+  const u = cloud.user;
+  $("acctLabel").textContent = u ? (u.displayName || u.email || "Account").split(" ")[0].split("@")[0] : "Sign in";
+  $("btnAccount").querySelector(".av").textContent = u ? ((u.displayName || u.email || "?")[0] || "?").toUpperCase() : "👤";
+  $("authOut").style.display = u ? "none" : "block"; $("authIn").style.display = u ? "block" : "none";
+  if (u) $("authWho").textContent = u.email || u.displayName || "";
+}
+let authMode = "in";
+function authError(e) {
+  const c = (e && e.code) || "";
+  return c.includes("wrong-password") || c.includes("invalid-credential") ? "That email and password don't match." :
+    c.includes("user-not-found") ? "No account with that email. Choose Create account." :
+    c.includes("email-already-in-use") ? "That email already has an account. Choose Sign in." :
+    c.includes("weak-password") ? "Use a password with at least 6 characters." :
+    c.includes("invalid-email") ? "Enter a valid email address." :
+    c.includes("popup-closed") ? "Google sign-in was closed before it finished." :
+    c.includes("popup-blocked") ? "Your browser blocked the Google popup. Allow popups and try again." :
+    c.includes("too-many-requests") ? "Too many tries. Wait a minute and try again." : "Sign-in failed. Check your connection and try again.";
+}
+async function needCloud() {
+  if (!FIREBASE_CONFIG) { setAuthMsg("Accounts aren't set up yet: the app owner needs to add a Firebase config (see FIREBASE_CONFIG in the code). Your progress is still saved on this device.", true); return false; }
+  if (!(await cloud.init())) { setAuthMsg("Couldn't reach the sign-in service. Check your connection.", true); return false; }
+  return true;
+}
+$("btnAccount").addEventListener("click", () => {
+  setAuthMsg(""); paintAccount();
+  const s = aiSettings(); $("aiProvider").value = s.provider; $("groqKey").value = s.groqKey || ""; $("groqKeyWrap").style.display = s.provider === "groq" ? "block" : "none";
+  $("authModal").classList.add("show");
+});
+$("authClose").addEventListener("click", () => $("authModal").classList.remove("show"));
+$("authModal").addEventListener("click", (e) => { if (e.target === $("authModal")) $("authModal").classList.remove("show"); });
+document.querySelectorAll(".auth-tabs button").forEach((b) => b.addEventListener("click", () => {
+  authMode = b.dataset.mode;
+  document.querySelectorAll(".auth-tabs button").forEach((x) => x.classList.toggle("on", x === b));
+  $("authSubmit").textContent = authMode === "in" ? "Sign in" : "Create account";
+  $("authPass").autocomplete = authMode === "in" ? "current-password" : "new-password";
+  setAuthMsg("");
+}));
+$("authForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = $("authEmail").value.trim(), pass = $("authPass").value;
+  if (!email || pass.length < 6) { setAuthMsg("Enter your email and a password of at least 6 characters.", true); return; }
+  if (!(await needCloud())) return;
+  $("authSubmit").disabled = true; setAuthMsg(authMode === "in" ? "Signing in…" : "Creating your account…");
+  try {
+    if (authMode === "in") await cloud.auth.signInWithEmailAndPassword(email, pass);
+    else await cloud.auth.createUserWithEmailAndPassword(email, pass);
+    setAuthMsg("Signed in. Your progress will sync.");
+  } catch (err) { setAuthMsg(authError(err), true); }
+  $("authSubmit").disabled = false;
+});
+$("authGoogle").addEventListener("click", async () => {
+  if (!(await needCloud())) return;
+  try { await cloud.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); setAuthMsg("Signed in with Google."); }
+  catch (err) { setAuthMsg(authError(err), true); }
+});
+$("authForgot").addEventListener("click", async () => {
+  const email = $("authEmail").value.trim();
+  if (!email) { setAuthMsg("Type your email above first.", true); return; }
+  if (!(await needCloud())) return;
+  try { await cloud.auth.sendPasswordResetEmail(email); setAuthMsg("Password reset email sent to " + email + "."); } catch (err) { setAuthMsg(authError(err), true); }
+});
+$("authOutBtn").addEventListener("click", async () => { await cloud.auth.signOut(); setAuthMsg("Signed out. Progress stays on this device."); });
+$("authSyncNow").addEventListener("click", async () => { await cloud.push(); setAuthMsg("Synced."); });
+$("aiProvider").addEventListener("change", () => { const s = aiSettings(); s.provider = $("aiProvider").value; saveAiSettings(s); $("groqKeyWrap").style.display = s.provider === "groq" ? "block" : "none"; });
+$("groqKey").addEventListener("change", () => { const s = aiSettings(); s.groqKey = $("groqKey").value.trim(); saveAiSettings(s); });
+$("groqKey").addEventListener("keydown", (e) => e.stopPropagation());
+$("authEmail").addEventListener("keydown", (e) => e.stopPropagation());
+$("authPass").addEventListener("keydown", (e) => e.stopPropagation());
+$("curveSelect").addEventListener("change", () => { profile.curve = $("curveSelect").value; saveProfile(); renderStart(); });
+$("btnRetryBookmarks").addEventListener("click", () => startCustomSet((profile.bookmarks || []).slice(), "Bookmarked"));
+cloud.init();
 
 // ---- KEYBOARD ----
 // Shared key -> normalized direction map, used by quiz nav, arcade keyboard input, and touch/dpad/swipe,

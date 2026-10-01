@@ -598,6 +598,15 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
         <label for="authPass">Password</label><input id="authPass" type="password" autocomplete="current-password" minlength="8" required><div class="small muted" id="authPassHint" style="display:none;margin-top:4px">At least 8 characters.</div>
         <button type="submit" id="authSubmit" style="width:100%;margin-top:14px">Sign in</button>
       </form>
+      <button type="button" class="ghost" id="authForgot" style="margin-top:6px;padding-left:0">Forgot password?</button>
+    </div>
+    <div id="authReset" style="display:none">
+      <p class="small muted" style="margin:0">Choose a new password for your account. You'll be signed out on your other devices.</p>
+      <form id="resetForm" novalidate>
+        <label for="resetPass">New password</label><input id="resetPass" type="password" autocomplete="new-password" minlength="8" required>
+        <div class="small muted" style="margin-top:4px">At least 8 characters.</div>
+        <button type="submit" id="resetSubmit" style="width:100%;margin-top:14px">Save new password</button>
+      </form>
     </div>
     <div id="authIn" style="display:none">
       <p style="margin:6px 0 4px">Signed in as <strong id="authWho"></strong></p>
@@ -2558,10 +2567,37 @@ function paintAccount() {
   const u = cloud.user;
   $("acctLabel").textContent = u ? u.email.split("@")[0] : "Sign in";
   $("btnAccount").querySelector(".av").textContent = u ? (u.email[0] || "?").toUpperCase() : "👤";
-  $("authOut").style.display = u ? "none" : "block"; $("authIn").style.display = u ? "block" : "none";
+  const resetting = !!resetToken && !u;
+  $("authOut").style.display = u || resetting ? "none" : "block"; $("authIn").style.display = u ? "block" : "none"; $("authReset").style.display = resetting ? "block" : "none";
+  $("authTitle").textContent = resetting ? "Reset your password" : "Save your progress";
   if (u) $("authWho").textContent = u.email;
 }
 let authMode = "in";
+// A reset link from the email opens the app at /#reset=<token>.
+let resetToken = (location.hash.match(/^#reset=([0-9a-f]{64})$/) || [])[1] || null;
+if (resetToken) history.replaceState(null, "", location.pathname + location.search);
+$("authForgot").addEventListener("click", async () => {
+  const email = $("authEmail").value.trim();
+  if (!email) { setAuthMsg("Type your email above, then choose Forgot password.", true); return; }
+  setAuthMsg("Sending…");
+  try { await cloud.api("forgot", { method: "POST", body: JSON.stringify({ email }) }); setAuthMsg("If " + email + " has an account, a reset link is on its way. Check your inbox and spam folder."); }
+  catch (err) { setAuthMsg(err.msg, true); }
+});
+$("resetForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const pass = $("resetPass").value;
+  if (pass.length < 8) { setAuthMsg("Use a password with at least 8 characters.", true); return; }
+  $("resetSubmit").disabled = true;
+  try {
+    const j = await cloud.api("reset", { method: "POST", body: JSON.stringify({ token: resetToken, password: pass }) });
+    resetToken = null; cloud.token = j.token; cloud.user = { email: j.email };
+    try { localStorage.setItem(TOKEN_KEY, JSON.stringify({ token: j.token, email: j.email })); } catch (e2) {}
+    paintAccount(); setAuthMsg("Password changed. You're signed in."); cloud.pull();
+  } catch (err) { setAuthMsg(err.msg, true); }
+  $("resetSubmit").disabled = false;
+});
+$("resetPass").addEventListener("keydown", (e) => e.stopPropagation());
+if (resetToken) setTimeout(() => { paintAccount(); setAuthMsg(""); $("authModal").classList.add("show"); }, 300);
 $("btnAccount").addEventListener("click", () => {
   setAuthMsg(""); paintAccount();
   const s = aiSettings(); $("aiProvider").value = s.provider; $("groqKey").value = s.groqKey || ""; $("groqKeyWrap").style.display = s.provider === "groq" ? "block" : "none";

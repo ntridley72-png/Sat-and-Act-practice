@@ -5,6 +5,10 @@
 //   GET  /api/me                            -> { email }
 //   GET  /api/progress                      -> { data, updatedAt }
 //   PUT  /api/progress { data, updatedAt }  -> { ok, updatedAt }
+//   POST /api/forgot   { email }            -> { ok }  (emails a reset link through Resend)
+//   POST /api/reset    { token, password }  -> { token, email }
+// Password reset needs a Resend API key: npx wrangler secret put RESEND_API_KEY
+// and optionally MAIL_FROM (a sender on a domain you verified in Resend).
 // Passwords are hashed with PBKDF2-SHA256 and a per-user salt. Session tokens are random and only
 // their SHA-256 hash is stored, so a database leak doesn't expose usable logins.
 
@@ -12,6 +16,7 @@ const SESSION_DAYS = 60;
 const PBKDF2_ITERATIONS = 100000; // the most Workers' Web Crypto allows
 const MAX_FAILS = 8, LOCK_MINUTES = 15;
 const MAX_PROGRESS_BYTES = 900 * 1024;
+const RESET_MINUTES = 60, MAX_RESETS_PER_HOUR = 3;
 
 export default {
   async fetch(request, env) {
@@ -31,6 +36,8 @@ export default {
 async function route(req, env, path) {
   if (path === "signup" && req.method === "POST") return signup(req, env);
   if (path === "login" && req.method === "POST") return login(req, env);
+  if (path === "forgot" && req.method === "POST") return forgot(req, env);
+  if (path === "reset" && req.method === "POST") return reset(req, env);
   const user = await authed(req, env);
   if (!user) return json({ error: "Please sign in again." }, 401, req);
   if (path === "logout" && req.method === "POST") {
@@ -82,6 +89,50 @@ async function login(req, env) {
   await env.DB.prepare("UPDATE users SET failed_logins = 0, locked_until = 0 WHERE id = ?").bind(u.id).run();
   await env.DB.prepare("DELETE FROM sessions WHERE user_id = ? AND expires_at < ?").bind(u.id, Date.now()).run();
   return json({ token: await newSession(env, u.id), email: u.email }, 200, req);
+}
+
+// Always answers the same way, so it can't be used to find out which emails have accounts.
+async function forgot(req, env) {
+  if (!env.RESEND_API_KEY) return json({ error: "Password reset by email isn't set up yet. Ask the app owner." }, 503, req);
+  const { email } = await creds(req);
+  const done = json({ ok: true }, 200, req);
+  const u = await env.DB.prepare("SELECT id, email FROM users WHERE email = ?").bind(email).first();
+  if (!u) return done;
+  const recent = await env.DB.prepare("SELECT COUNT(*) AS n FROM password_resets WHERE user_id = ? AND created_at > ?").bind(u.id, Date.now() - 3600000).first();
+  if (recent.n >= MAX_RESETS_PER_HOUR) return done;
+  const token = hex(crypto.getRandomValues(new Uint8Array(32)));
+  await env.DB.prepare("INSERT INTO password_resets (token_hash, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)")
+    .bind(await sha256(token), u.id, Date.now(), Date.now() + RESET_MINUTES * 60000).run();
+  const link = new URL(req.url).origin + "/#reset=" + token;
+  const r = await fetch(env.RESEND_URL || "https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: "Bearer " + env.RESEND_API_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: env.MAIL_FROM || "SAT & ACT Practice <onboarding@resend.dev>", to: [u.email],
+      subject: "Reset your SAT & ACT Practice password",
+      text: "Someone asked to reset the password for this account.\n\nReset it here (the link works for " + RESET_MINUTES + " minutes, once):\n" + link + "\n\nIf this wasn't you, ignore this email. Your password stays the same.",
+      html: '<p>Someone asked to reset the password for this account.</p><p><a href="' + link + '">Choose a new password</a></p><p>The link works for ' + RESET_MINUTES + " minutes, once. If this wasn't you, ignore this email.</p>"
+    })
+  });
+  if (!r.ok) return json({ error: "Couldn't send the email. Try again in a few minutes." }, 502, req);
+  return done;
+}
+
+async function reset(req, env) {
+  let b = {}; try { b = await req.json(); } catch {}
+  const token = String(b.token || ""), password = String(b.password || "").slice(0, 200);
+  if (!/^[0-9a-f]{64}$/.test(token)) return json({ error: "This reset link isn't valid. Request a new one." }, 400, req);
+  if (password.length < 8) return json({ error: "Use a password with at least 8 characters." }, 400, req);
+  const row = await env.DB.prepare("SELECT r.user_id, u.email FROM password_resets r JOIN users u ON u.id = r.user_id WHERE r.token_hash = ? AND r.used = 0 AND r.expires_at > ?")
+    .bind(await sha256(token), Date.now()).first();
+  if (!row) return json({ error: "This reset link has expired or was already used. Request a new one." }, 400, req);
+  const salt = hex(crypto.getRandomValues(new Uint8Array(16)));
+  await env.DB.batch([
+    env.DB.prepare("UPDATE users SET pass_hash = ?, salt = ?, failed_logins = 0, locked_until = 0 WHERE id = ?").bind(await hashPassword(password, salt), salt, row.user_id),
+    env.DB.prepare("UPDATE password_resets SET used = 1 WHERE user_id = ?").bind(row.user_id),
+    env.DB.prepare("DELETE FROM sessions WHERE user_id = ?").bind(row.user_id) // signs out every other device
+  ]);
+  return json({ token: await newSession(env, row.user_id), email: row.email }, 200, req);
 }
 
 async function authed(req, env) {

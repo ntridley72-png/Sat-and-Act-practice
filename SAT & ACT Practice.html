@@ -56,6 +56,9 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 .qtext{font-size:1.06rem;font-weight:600;margin:14px 0 10px;white-space:pre-line}
 .choices{display:flex;flex-direction:column;gap:9px}
 .choice{display:flex;gap:11px;align-items:flex-start;text-align:left;width:100%;background:#fff;border:1.3px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--ink);transition:border-color .12s,background .12s,transform .12s}
+.idk-btn{margin-top:10px;width:100%;background:#fff;color:var(--muted);border:1.3px dashed #cbd5e1;font-weight:600}
+.idk-btn:hover{background:#f8fafc;color:var(--ink);border-color:var(--muted)}
+.feedback.idk{background:#eff6ff;border:1px solid #bfdbfe}
 .choice:hover:not(:disabled){border-color:var(--blue);background:#f6f9ff}
 .choice .key{font-weight:800;color:var(--muted);min-width:22px}
 .choice.correct{border-color:var(--green);background:var(--green-bg);animation:correctPop .35s ease}
@@ -186,7 +189,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 .arcade-stage canvas{display:block;background:#0b1120;margin:8px auto 0;border-radius:8px;image-rendering:pixelated;max-width:calc(100% - 16px);width:420px;height:auto}
 .arcade-status{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.85);border-radius:999px;padding:4px 16px;font-size:.88rem;font-weight:700;pointer-events:none;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis}
 .arcade-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;pointer-events:none}
-.arcade-msg .msg-box{background:rgba(15,23,42,.92);border-radius:16px;padding:20px 32px;text-align:center;animation:modalPop .25s ease}
+.arcade-msg .msg-box{pointer-events:auto;background:rgba(15,23,42,.92);border-radius:16px;padding:20px 32px;text-align:center;animation:modalPop .25s ease}
 .arcade-msg h3{margin-bottom:6px}
 .arcade-controls-hint{color:#64748b;font-size:.8rem;text-align:center;margin-top:8px}
 .dpad{position:absolute;bottom:16px;left:16px;display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px);gap:4px;z-index:20}
@@ -231,7 +234,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
       <span class="hud-streak" id="hudStreak" title="Streak → bonus arcade time at 3 in a row">
         <span>🔥</span><span id="streakPips"></span>
       </span>
-      <span class="token-badge" id="tokenBadge" title="Earn 1 token every 5 questions you answer. Spend a token for +60s (1 min) of arcade time.">🪙 <span id="tokenCount">0</span></span>
+      <span class="token-badge" id="tokenBadge" title="Earn 1 token every 3 questions you answer. Each token = 30s of arcade time.">🪙 <span id="tokenCount">0</span></span>
       <button class="arcade-btn" id="btnArcade" title="Play mini-games">🎮 Arcade</button>
       <button class="sound-btn" id="btnSound" title="Toggle sound">🔊</button>
       <span class="autosave" id="autosave">✓ Autosaved</span>
@@ -244,8 +247,8 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
       <h1>What would you like to practice?</h1>
       <p class="muted">Your progress saves automatically, and you can finish and see a score anytime.</p>
       <div style="margin:14px 0;font-size:.88rem;color:var(--muted)">
-        🔥 <strong>Streak</strong> bonus: hit 3 right in a row → unlock 20s of arcade time.<br>
-        🪙 <strong>Token</strong> every 5 questions answered → spend on +60s (1 min) of arcade time.
+        🔥 <strong>Streak</strong> bonus: hit 3 right in a row → earn a bonus 🪙 (+30s).<br>
+        🪙 <strong>Token</strong> every 3 questions answered → 30 seconds of arcade time.
       </div>
       <div class="pick-label">Test</div>
       <div class="pick-row" id="typePicker">
@@ -346,13 +349,13 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
     <div class="chip" id="chipTime">⏱ <span id="chipTimeVal">20</span>s</div>
     <div class="chip" id="chipTok">🪙 <span id="chipTokVal">0</span></div>
     <div style="display:flex;gap:6px">
-      <button class="secondary" id="btnArcadeAddTime" style="padding:6px 12px;font-size:.82rem">+60s (1🪙)</button>
+      <button class="secondary" id="btnArcadeAddTime" style="padding:6px 12px;font-size:.82rem">+30s (1🪙)</button>
       <button class="secondary" id="btnArcadeMenu" style="padding:6px 12px;font-size:.82rem">Menu</button>
     </div>
   </div>
   <div class="arcade-menu" id="arcadeMenu">
     <h2>Mini-Games</h2>
-    <div class="subtitle">Earn a token every 5 questions you answer. Spend tokens to buy +60s (1 min) of play time.</div>
+    <div class="subtitle">Every 3 questions you answer = 1 token = 30 seconds of play time.</div>
     <div class="game-cards" id="gameCards"></div>
     <div class="arcade-controls-hint">Use arrow keys / WASD. On mobile, swipe or use the d-pad.</div>
   </div>
@@ -558,6 +561,140 @@ const ACT_SCIENCE = [
   {id:"s11",diff:"hard",domain:"Data Representation",q:"A table shows the freezing point of salt water at different salt concentrations.\nSalt (%): 0 · 5 · 10 · 20\nFreezing point (°C): 0 · −3 · −6 · −12\nBased on the trend, the freezing point at 25% salt is most likely…",choices:["−9°C","−12°C","−15°C","−18°C"],ans:2,exp:"From 10% to 20% the freezing point drops 6°C (−6 to −12). Continuing the trend, 25% should be around −15°C."},
   {id:"s12",diff:"easy",domain:"Research Summaries",q:"A pendulum of different lengths was timed.\nLength (cm): 50 · 100 · 200\nSwings in 10 s: 10 · 7 · 5\nWhat can be concluded?",choices:["Longer pendulums swing more times in 10 s","Longer pendulums swing fewer times in 10 s","Length does not affect swing rate","Shorter pendulums swing fewer times"],ans:1,exp:"As length increases, swings drop from 10 to 5, so longer pendulums swing fewer times (more slowly)."}
 ];
+// ---- EXPANDED BANK: original questions written in the style and format of the digital SAT and ACT ----
+BANK.math.push(
+  {id:"m101",diff:"easy",domain:"Algebra",q:"The equation 4x − 9 = 3x + 2 is true for what value of x?",choices:["−11","−7","7","11"],ans:3,exp:"Subtract 3x from both sides: x − 9 = 2. Add 9: x = 11."},
+  {id:"m102",diff:"easy",domain:"Algebra",q:"A gym charges a $30 sign-up fee and $15 per month. Which expression gives the total cost, in dollars, for m months?",choices:["15m + 30","30m + 15","45m","15(m + 30)"],ans:0,exp:"The $30 is paid once and $15 is paid each month, so the cost is 15m + 30."},
+  {id:"m103",diff:"easy",domain:"Problem-Solving & Data Analysis",q:"A store sold 48 shirts on Saturday, which was 3 times the number sold on Monday. How many shirts were sold on Monday?",choices:["12","16","45","144"],ans:1,exp:"If 3 × Monday = 48, then Monday = 48 ÷ 3 = 16."},
+  {id:"m104",diff:"easy",domain:"Algebra",q:"Line ℓ is defined by y = −2x + 7. What is the y-intercept of line ℓ?",choices:["(0, −2)","(0, 7)","(7, 0)","(−2, 0)"],ans:1,exp:"In y = mx + b, b is the y-intercept. Here b = 7, so the line crosses the y-axis at (0, 7)."},
+  {id:"m105",diff:"easy",domain:"Problem-Solving & Data Analysis",q:"There are 12 inches in 1 foot. How many inches are in 4.5 feet?",choices:["16.5","48","54","60"],ans:2,exp:"Multiply 4.5 × 12 = 54 inches."},
+  {id:"m106",diff:"easy",domain:"Advanced Math",q:"Which expression is equivalent to 5(x + 2) − 3x?",choices:["2x + 2","2x + 10","8x + 10","2x + 7"],ans:1,exp:"Distribute: 5x + 10 − 3x = 2x + 10."},
+  {id:"m107",diff:"easy",domain:"Geometry & Trigonometry",q:"A square has a perimeter of 36 centimeters. What is the area of the square, in square centimeters?",choices:["9","36","81","144"],ans:2,exp:"Each side is 36 ÷ 4 = 9 cm, so the area is 9² = 81 square centimeters."},
+  {id:"m108",diff:"easy",domain:"Problem-Solving & Data Analysis",q:"A data set consists of the values 6, 6, 8, 10, and 15. What is the mode of the data set?",choices:["6","8","9","15"],ans:0,exp:"The mode is the value that appears most often. 6 appears twice."},
+  {id:"m109",diff:"easy",domain:"Algebra",q:"If 2(n + 3) = 18, what is the value of n + 3?",choices:["6","9","12","15"],ans:1,exp:"Divide both sides by 2: n + 3 = 9. The SAT often asks for an expression — you don't need n itself."},
+  {id:"m110",diff:"easy",domain:"Advanced Math",q:"If h(x) = x² + 1, what is h(−3)?",choices:["−8","7","10","−5"],ans:2,exp:"(−3)² = 9, and 9 + 1 = 10. Squaring a negative gives a positive."},
+  {id:"m111",diff:"easy",domain:"Problem-Solving & Data Analysis",q:"A survey of 200 students found that 35% prefer online classes. How many students prefer online classes?",choices:["35","65","70","130"],ans:2,exp:"35% of 200 = 0.35 × 200 = 70."},
+  {id:"m112",diff:"easy",domain:"Geometry & Trigonometry",q:"Two lines intersect, forming a pair of vertical angles. One angle measures 47°. What is the measure of the angle vertical to it?",choices:["43°","47°","133°","313°"],ans:1,exp:"Vertical angles are congruent, so it also measures 47°."},
+  {id:"m113",diff:"easy",domain:"Algebra",q:"Which ordered pair (x, y) is a solution to the inequality y > 2x − 1?",choices:["(1, 0)","(2, 3)","(0, 1)","(3, 4)"],ans:2,exp:"Test (0, 1): 1 > 2(0) − 1 = −1. True. The others give 0 > 1, 3 > 3, and 4 > 5, which are false."},
+  {id:"m114",diff:"easy",domain:"Problem-Solving & Data Analysis",q:"A printer prints 18 pages per minute. At this rate, how many minutes will it take to print 270 pages?",choices:["12","15","18","25"],ans:1,exp:"270 ÷ 18 = 15 minutes."},
+  {id:"m115",diff:"medium",domain:"Algebra",q:"The function f is defined by f(x) = 7x − 5. What is the value of f(x + 1)?",choices:["7x − 4","7x + 2","7x + 1","7x − 5"],ans:1,exp:"Replace x with (x + 1): 7(x + 1) − 5 = 7x + 7 − 5 = 7x + 2."},
+  {id:"m116",diff:"medium",domain:"Algebra",q:"3x + 2y = 16\nx − 2y = 0\nWhat is the solution (x, y) to the system of equations?",choices:["(2, 5)","(4, 2)","(8, 4)","(6, −1)"],ans:1,exp:"Add the equations: 4x = 16, so x = 4. Then 4 − 2y = 0 gives y = 2."},
+  {id:"m117",diff:"medium",domain:"Algebra",q:"A line in the xy-plane passes through (−1, 4) and (3, −4). What is the slope of the line?",choices:["−2","−1/2","1/2","2"],ans:0,exp:"Slope = (−4 − 4)/(3 − (−1)) = −8/4 = −2."},
+  {id:"m118",diff:"medium",domain:"Advanced Math",q:"Which of the following is a factor of x² + 2x − 15?",choices:["x − 5","x + 3","x − 3","x + 15"],ans:2,exp:"Find numbers that multiply to −15 and add to 2: 5 and −3. So x² + 2x − 15 = (x + 5)(x − 3)."},
+  {id:"m119",diff:"medium",domain:"Problem-Solving & Data Analysis",q:"A jacket's price was reduced by 30% to $56. What was the original price?",choices:["$72.80","$78.00","$80.00","$86.00"],ans:2,exp:"After a 30% cut, the price is 70% of the original: 0.70p = 56, so p = 80."},
+  {id:"m120",diff:"medium",domain:"Algebra",q:"The equation y = 12x + 150 models the total amount y, in dollars, in a savings account after x weeks. What is the best interpretation of 12 in this context?",choices:["The starting balance","The amount added each week","The total after 12 weeks","The number of weeks"],ans:1,exp:"12 is the slope — the change in dollars per week. 150 is the starting balance."},
+  {id:"m121",diff:"medium",domain:"Advanced Math",q:"What is the sum of the solutions to (x − 4)(x + 9) = 0?",choices:["−13","−5","5","13"],ans:1,exp:"The solutions are x = 4 and x = −9. Their sum is 4 + (−9) = −5."},
+  {id:"m122",diff:"medium",domain:"Geometry & Trigonometry",q:"Triangle ABC is similar to triangle DEF, with AB corresponding to DE. If AB = 6, DE = 15, and BC = 8, what is EF?",choices:["17","18","20","24"],ans:2,exp:"The scale factor is 15/6 = 2.5. EF = 8 × 2.5 = 20."},
+  {id:"m123",diff:"medium",domain:"Problem-Solving & Data Analysis",q:"In a class, the ratio of juniors to seniors is 5 to 3. If there are 40 students in the class, how many are seniors?",choices:["12","15","24","25"],ans:1,exp:"The ratio has 5 + 3 = 8 parts, so each part is 40 ÷ 8 = 5 students. Seniors = 3 × 5 = 15."},
+  {id:"m124",diff:"medium",domain:"Advanced Math",q:"Which expression is equivalent to (x²y³)(x⁴y)?",choices:["x⁶y³","x⁸y³","x⁶y⁴","x⁸y⁴"],ans:2,exp:"Add exponents of like bases: x²⁺⁴ = x⁶ and y³⁺¹ = y⁴."},
+  {id:"m125",diff:"medium",domain:"Algebra",q:"For what value of k does the system have no solution?\ny = kx + 3\ny = 4x − 1",choices:["−4","1/4","3","4"],ans:3,exp:"Two lines with the same slope and different intercepts are parallel and never meet. So k = 4."},
+  {id:"m126",diff:"medium",domain:"Geometry & Trigonometry",q:"A right circular cone has radius 3 and height 8. What is its volume? (V = ⅓πr²h)",choices:["8π","24π","72π","96π"],ans:1,exp:"V = ⅓π(3²)(8) = ⅓π(72) = 24π."},
+  {id:"m127",diff:"medium",domain:"Problem-Solving & Data Analysis",q:"A random sample of 400 voters in a city found that 52% support a new park, with a margin of error of 4%. Which conclusion is most appropriate?",choices:["Exactly 52% of the city's voters support the park.","The true percentage is plausibly between 48% and 56%.","Most of the city's voters definitely support the park.","The survey is invalid because 400 is too small."],ans:1,exp:"A margin of error gives a plausible range: 52% ± 4% = 48% to 56%. Since that range includes values below 50%, we can't say a majority definitely supports it."},
+  {id:"m128",diff:"medium",domain:"Advanced Math",q:"If 3^(x+1) = 81, what is the value of x?",choices:["2","3","4","26"],ans:1,exp:"81 = 3⁴, so x + 1 = 4 and x = 3."},
+  {id:"m129",diff:"medium",domain:"Algebra",q:"Maria has $500 and spends $35 per week. After how many weeks will she have $255 left?",choices:["5","6","7","8"],ans:2,exp:"500 − 35w = 255 gives 35w = 245, so w = 7."},
+  {id:"m130",diff:"medium",domain:"Geometry & Trigonometry",q:"In a right triangle, cos A = 5/13. What is sin A?",choices:["5/12","12/13","13/12","12/5"],ans:1,exp:"With adjacent 5 and hypotenuse 13, the opposite side is √(169 − 25) = 12. So sin A = 12/13."},
+  {id:"m131",diff:"medium",domain:"Problem-Solving & Data Analysis",q:"A car's fuel efficiency is 32 miles per gallon. Gas costs $3.50 per gallon. What is the cost of gas, in dollars, to drive 224 miles?",choices:["$21.00","$24.50","$28.00","$31.50"],ans:1,exp:"224 ÷ 32 = 7 gallons; 7 × $3.50 = $24.50."},
+  {id:"m132",diff:"medium",domain:"Advanced Math",q:"The function g is defined by g(x) = (x − 2)² − 9. What is the minimum value of g?",choices:["−9","−5","2","9"],ans:0,exp:"In vertex form a(x − h)² + k with a > 0, the minimum value is k = −9 (at x = 2)."},
+  {id:"m133",diff:"medium",domain:"Algebra",q:"Which equation represents a line perpendicular to y = (2/3)x + 1?",choices:["y = (2/3)x − 4","y = −(2/3)x + 1","y = −(3/2)x + 5","y = (3/2)x"],ans:2,exp:"Perpendicular slopes are negative reciprocals. The negative reciprocal of 2/3 is −3/2."},
+  {id:"m134",diff:"medium",domain:"Problem-Solving & Data Analysis",q:"The table shows the number of pets owned by 20 students.\nPets: 0 · 1 · 2 · 3\nStudents: 4 · 9 · 5 · 2\nWhat is the median number of pets?",choices:["0","1","1.5","2"],ans:1,exp:"With 20 values, the median is the average of the 10th and 11th. Values 1–4 are 0 and values 5–13 are 1, so both are 1."},
+  {id:"m135",diff:"hard",domain:"Advanced Math",q:"For the quadratic y = x² − 8x + c, the graph touches the x-axis at exactly one point. What is the value of c?",choices:["4","8","16","64"],ans:2,exp:"One x-intercept means the discriminant is 0: (−8)² − 4(1)(c) = 0 → 64 = 4c → c = 16."},
+  {id:"m136",diff:"hard",domain:"Advanced Math",q:"A population of bacteria doubles every 3 hours. If there are 500 bacteria now, which function gives the number after t hours?",choices:["P(t) = 500(2)^(3t)","P(t) = 500(2)^(t/3)","P(t) = 500(3)^(t/2)","P(t) = 1000t/3"],ans:1,exp:"The population doubles once per 3 hours, so the number of doublings after t hours is t/3: P = 500·2^(t/3)."},
+  {id:"m137",diff:"hard",domain:"Algebra",q:"If 2x + 3y = 12 and 4x + 6y = k has infinitely many solutions, what is k?",choices:["6","12","18","24"],ans:3,exp:"Infinitely many solutions means the equations are the same line. The second is the first times 2, so k = 24."},
+  {id:"m138",diff:"hard",domain:"Advanced Math",q:"Which expression is equivalent to (x² − 16)/(x + 4), for x ≠ −4?",choices:["x − 4","x + 4","x − 16","x² − 4"],ans:0,exp:"Factor: (x − 4)(x + 4)/(x + 4) = x − 4."},
+  {id:"m139",diff:"hard",domain:"Geometry & Trigonometry",q:"A circle in the xy-plane has equation x² + y² − 6x + 4y = 12. What is the radius of the circle?",choices:["2√3","5","12","25"],ans:1,exp:"Complete the square: (x − 3)² + (y + 2)² = 12 + 9 + 4 = 25. The radius is √25 = 5."},
+  {id:"m140",diff:"hard",domain:"Problem-Solving & Data Analysis",q:"The mean score of 10 students was 80. When one more student's score was added, the mean became 82. What was the new student's score?",choices:["82","92","100","102"],ans:3,exp:"Original total = 800. New total = 11 × 82 = 902. The new score = 902 − 800 = 102."},
+  {id:"m141",diff:"hard",domain:"Advanced Math",q:"If x > 0 and x² − 5x − 14 = 0, what is the value of x?",choices:["2","5","7","14"],ans:2,exp:"Factor: (x − 7)(x + 2) = 0. Since x > 0, x = 7."},
+  {id:"m142",diff:"hard",domain:"Geometry & Trigonometry",q:"In a circle with radius 10, a central angle measures 72°. What is the length of the arc it intercepts?",choices:["2π","4π","10π","20π"],ans:1,exp:"72° is 72/360 = 1/5 of the circle. Circumference = 20π, so the arc = 20π/5 = 4π."},
+  {id:"m143",diff:"hard",domain:"Algebra",q:"A phone plan costs $40 per month plus $0.10 per text over 500 texts. If a bill was $52.50, how many texts were sent?",choices:["125","525","625","1,025"],ans:2,exp:"Overage = 52.50 − 40 = 12.50, which is 125 texts at $0.10. Total texts = 500 + 125 = 625."},
+  {id:"m144",diff:"hard",domain:"Advanced Math",q:"The function f(x) = 2(x + 1)(x − 5) is graphed in the xy-plane. What is the x-coordinate of the vertex?",choices:["−1","2","3","5"],ans:1,exp:"The vertex lies midway between the zeros −1 and 5: (−1 + 5)/2 = 2."},
+  {id:"m145",diff:"hard",domain:"Problem-Solving & Data Analysis",q:"A value increased by 20% and then decreased by 20%. The final value is what percent of the original?",choices:["96%","100%","104%","80%"],ans:0,exp:"Multiply the factors: 1.20 × 0.80 = 0.96, so the final value is 96% of the original."},
+  {id:"m146",diff:"hard",domain:"Geometry & Trigonometry",q:"In right triangle XYZ, angle Y is 90°. If sin X = 0.6, what is cos Z?",choices:["0.4","0.6","0.8","1.25"],ans:1,exp:"X and Z are complementary, and the sine of an angle equals the cosine of its complement. So cos Z = sin X = 0.6."},
+  {id:"m147",diff:"hard",domain:"Advanced Math",q:"If (ax + 3)(2x − 1) = 6x² + bx − 3 for all x, what is the value of b?",choices:["−3","3","5","9"],ans:1,exp:"The x² term: 2a = 6, so a = 3. The x term: −a + 6 = −3 + 6 = 3. So b = 3."},
+  {id:"m148",diff:"hard",domain:"Algebra",q:"The graph of y = |x − 2| − 3 has its vertex at which point?",choices:["(−2, −3)","(2, 3)","(2, −3)","(−2, 3)"],ans:2,exp:"y = |x − h| + k has vertex (h, k). Here h = 2 and k = −3."},
+  {id:"m149",diff:"hard",domain:"Problem-Solving & Data Analysis",q:"Data set A: 10, 20, 30, 40, 50. Data set B: 28, 29, 30, 31, 32. Which statement is true?",choices:["A and B have the same mean, and A has a greater standard deviation.","A and B have the same mean, and B has a greater standard deviation.","A has a greater mean.","They have the same standard deviation."],ans:0,exp:"Both have mean 30. A's values are much more spread out, so A has the larger standard deviation."},
+  {id:"m150",diff:"hard",domain:"Advanced Math",q:"For what positive value of x is √(x + 6) = x?",choices:["2","3","6","9"],ans:1,exp:"Square: x + 6 = x² → x² − x − 6 = 0 → (x − 3)(x + 2) = 0. Only x = 3 works since √ is nonnegative."},
+  {id:"m151",diff:"medium",domain:"Geometry & Trigonometry",q:"A rectangular box has length 5, width 4, and height 3. What is its volume?",choices:["12","47","60","94"],ans:2,exp:"V = l × w × h = 5 × 4 × 3 = 60."},
+  {id:"m152",diff:"easy",domain:"Algebra",q:"If 6y = 42, what is the value of 3y?",choices:["7","14","21","126"],ans:2,exp:"3y is half of 6y, so 3y = 42 ÷ 2 = 21."},
+  {id:"m153",diff:"medium",domain:"Problem-Solving & Data Analysis",q:"A bakery makes 3 kinds of muffins and 4 kinds of drinks. How many different muffin-and-drink combos are possible?",choices:["7","12","24","64"],ans:1,exp:"Multiply the choices: 3 × 4 = 12."},
+  {id:"m154",diff:"easy",domain:"Problem-Solving & Data Analysis",q:"A map uses a scale where 1 inch represents 25 miles. Two towns are 3.2 inches apart on the map. How far apart are they in miles?",choices:["28.2","75","80","85"],ans:2,exp:"3.2 × 25 = 80 miles."},
+  {id:"m155",diff:"hard",domain:"Algebra",q:"A boat travels 36 miles downstream in 2 hours and returns upstream in 3 hours. What is the speed of the current, in miles per hour?",choices:["3","6","12","15"],ans:0,exp:"Downstream speed 18 = b + c; upstream 12 = b − c. Subtracting: 2c = 6, so c = 3."},
+  {id:"m156",diff:"medium",domain:"Advanced Math",q:"Which of the following is equivalent to x^(3/2)?",choices:["√(x³)","∛(x²)","3x/2","x³/2"],ans:0,exp:"x^(m/n) = ⁿ√(x^m). So x^(3/2) = √(x³)."},
+  {id:"m157",diff:"easy",domain:"Geometry & Trigonometry",q:"A triangle has angles of 90° and 35°. What is the third angle?",choices:["35°","45°","55°","65°"],ans:2,exp:"180 − 90 − 35 = 55°."},
+  {id:"m158",diff:"hard",domain:"Problem-Solving & Data Analysis",q:"In a group of 60 people, 25 own a cat, 30 own a dog, and 10 own both. How many own neither?",choices:["5","10","15","25"],ans:2,exp:"Owners of at least one = 25 + 30 − 10 = 45. Neither = 60 − 45 = 15."}
+);
+
+BANK.rw.push(
+  {id:"w101",diff:"easy",domain:"Standard English Conventions",kind:"writing",q:"Choose the option that conforms to the conventions of Standard English.\nThe flock of geese ___ south every October, stopping at the same lake along the way.",choices:["fly","flies","are flying","have flown"],ans:1,exp:"The subject is “flock” (singular), not “geese,” so the verb must be singular: “flies.”"},
+  {id:"w102",diff:"easy",domain:"Standard English Conventions",kind:"writing",q:"Choose the option that conforms to the conventions of Standard English.\nMarine biologist Sylvia Earle has spent more than 7,000 hours ___ studying ocean ecosystems firsthand.",choices:["underwater,","underwater;","underwater","underwater:"],ans:2,exp:"No punctuation is needed between “underwater” and the phrase that follows; any mark would interrupt the sentence."},
+  {id:"w103",diff:"easy",domain:"Standard English Conventions",kind:"writing",q:"Choose the option that conforms to the conventions of Standard English.\nThe museum's newest exhibit features ___ from three different centuries.",choices:["artifact's","artifacts","artifacts'","artifact"],ans:1,exp:"A simple plural is needed, with no possession: “artifacts.”"},
+  {id:"w104",diff:"easy",domain:"Standard English Conventions",kind:"writing",q:"Choose the option that conforms to the conventions of Standard English.\nThe novel was well received by ___ and became a bestseller within a month.",choices:["critics,","critics","critics;","critics:"],ans:1,exp:"“and became” shares the subject “The novel,” so no comma is needed before “and.”"},
+  {id:"w105",diff:"medium",domain:"Standard English Conventions",kind:"writing",q:"Choose the option that conforms to the conventions of Standard English.\nThe Atacama Desert is one of the driest places on ___ some weather stations there have never recorded rain.",choices:["Earth,","Earth;","Earth","Earth, and,"],ans:1,exp:"Both sides are complete sentences. A semicolon correctly joins two independent clauses; a comma alone would create a comma splice."},
+  {id:"w106",diff:"medium",domain:"Standard English Conventions",kind:"writing",q:"Choose the option that conforms to the conventions of Standard English.\nAfter analyzing the soil samples, ___",choices:["the results surprised the researchers.","the researchers were surprised by the results.","surprise was felt by the researchers.","the samples showed surprising results."],ans:1,exp:"The opening phrase must describe whoever did the analyzing — the researchers. Otherwise it's a dangling modifier."},
+  {id:"w107",diff:"medium",domain:"Standard English Conventions",kind:"writing",q:"Choose the option that conforms to the conventions of Standard English.\nThe architect Zaha Hadid, known for her sweeping curved ___ was the first woman to win the Pritzker Prize.",choices:["designs","designs,","designs;","designs—"],ans:1,exp:"The phrase “known for her sweeping curved designs” is set off by commas. The opening comma needs a matching closing comma."},
+  {id:"w108",diff:"medium",domain:"Standard English Conventions",kind:"writing",q:"Choose the option that conforms to the conventions of Standard English.\nEach of the paintings in the gallery ___ been restored at least once.",choices:["have","has","are","were"],ans:1,exp:"“Each” is the singular subject, so it takes “has.” The phrase “of the paintings” doesn't change that."},
+  {id:"w109",diff:"medium",domain:"Standard English Conventions",kind:"writing",q:"Choose the option that conforms to the conventions of Standard English.\nThe expedition needed three ___ a satellite phone, a water purifier, and a solar charger.",choices:["things,","things:","things;","things"],ans:1,exp:"A colon introduces a list after a complete sentence."},
+  {id:"w110",diff:"medium",domain:"Standard English Conventions",kind:"writing",q:"Choose the option that conforms to the conventions of Standard English.\nThe team's findings, which were published last year, ___ that coral can recover faster than expected.",choices:["suggests","suggest","suggesting","has suggested"],ans:1,exp:"The subject is “findings” (plural), so the verb is “suggest.”"},
+  {id:"w111",diff:"hard",domain:"Standard English Conventions",kind:"writing",q:"Choose the option that conforms to the conventions of Standard English.\nIn 1969, the Apollo 11 lunar module ___ on the Moon's surface, and millions of viewers watched the broadcast.",choices:["lands","landed","has landed","had been landing"],ans:1,exp:"The event happened at a specific past time (1969), and the sentence pairs it with “watched,” so the simple past “landed” fits."},
+  {id:"w112",diff:"hard",domain:"Standard English Conventions",kind:"writing",q:"Choose the option that conforms to the conventions of Standard English.\nThe poet's later work is more ___ her early poems were often rhymed, her later ones abandon formal structure almost entirely.",choices:["experimental, while","experimental: while","experimental; while","experimental, while,"],ans:1,exp:"A colon introduces an explanation of the first clause. The second part explains how the work is more experimental."},
+  {id:"w113",diff:"hard",domain:"Standard English Conventions",kind:"writing",q:"Choose the option that conforms to the conventions of Standard English.\nThe researchers compared the two ___ the first grown in shade, the second in full sun.",choices:["plants:","plants;","plants","plants, and"],ans:0,exp:"After a complete clause, a colon introduces the elaboration. A semicolon would need a complete clause after it, which “the first grown in shade…” is not."},
+  {id:"w114",diff:"easy",domain:"Expression of Ideas",kind:"writing",q:"Which choice completes the text with the most logical transition?\nThe city expected the new bridge to reduce traffic. ___ congestion actually increased in the first year, as more drivers chose the new route.",choices:["Similarly,","However,","Therefore,","For example,"],ans:1,exp:"The result (more congestion) contrasts with the expectation, so “However” is the logical transition."},
+  {id:"w115",diff:"easy",domain:"Expression of Ideas",kind:"writing",q:"Which choice completes the text with the most logical transition?\nOctopuses can change both the color and the texture of their skin. ___ some species can make their skin look like rough rock or flowing seaweed.",choices:["In contrast,","For instance,","Nevertheless,","Meanwhile,"],ans:1,exp:"The second sentence gives a specific example of the first claim, so “For instance” fits."},
+  {id:"w116",diff:"medium",domain:"Expression of Ideas",kind:"writing",q:"Which choice completes the text with the most logical transition?\nEarly telescopes produced blurry images because of flaws in their lenses. ___ astronomers began using curved mirrors, which avoided many of these distortions.",choices:["As a result,","For example,","Likewise,","Even so,"],ans:0,exp:"Using mirrors was a response to the lens problem, so a cause-and-effect transition — “As a result” — fits."},
+  {id:"w117",diff:"medium",domain:"Expression of Ideas",kind:"writing",q:"Which choice completes the text with the most logical transition?\nMost songbirds learn their songs by imitating adults. The brown-headed cowbird, ___ is raised by other species and still sings its own species' song.",choices:["consequently,","similarly,","by contrast,","in other words,"],ans:2,exp:"The cowbird is an exception to the rule just stated, so “by contrast” fits."},
+  {id:"w118",diff:"medium",domain:"Expression of Ideas",kind:"writing",q:"While researching a topic, a student has taken the following notes:\n• The Great Wall of China was built over many centuries.\n• Most of the existing wall dates from the Ming dynasty (1368–1644).\n• The Ming wall stretches about 5,500 miles.\nThe student wants to emphasize the length of the Ming-era wall. Which choice most effectively uses relevant information from the notes?",choices:["The Great Wall of China was built over many centuries.","Built during the Ming dynasty, the existing wall stretches about 5,500 miles.","The Ming dynasty lasted from 1368 to 1644.","The Great Wall was built by several dynasties."],ans:1,exp:"Only this choice states the length (5,500 miles), which is what the student wants to emphasize."},
+  {id:"w119",diff:"medium",domain:"Expression of Ideas",kind:"writing",q:"While researching a topic, a student has taken the following notes:\n• Mae Jemison was the first Black woman to travel to space.\n• She flew aboard the space shuttle Endeavour in 1992.\n• Before NASA, she worked as a doctor in the Peace Corps.\nThe student wants to introduce Jemison to an audience unfamiliar with her. Which choice most effectively accomplishes this goal?",choices:["In 1992, the space shuttle Endeavour launched.","Mae Jemison, a former Peace Corps doctor, became the first Black woman in space when she flew aboard Endeavour in 1992.","Jemison worked in the Peace Corps.","Many astronauts have flown aboard Endeavour."],ans:1,exp:"An introduction should say who she is and why she matters. This choice does both."},
+  {id:"w120",diff:"hard",domain:"Expression of Ideas",kind:"writing",q:"While researching a topic, a student has taken the following notes:\n• Tardigrades are microscopic animals.\n• They can survive temperatures from −272°C to 150°C.\n• Bdelloid rotifers, another microscopic animal, can survive being frozen for thousands of years.\nThe student wants to highlight a similarity between the two animals. Which choice most effectively uses relevant information from the notes?",choices:["Tardigrades can survive temperatures as high as 150°C.","Both tardigrades and bdelloid rotifers are microscopic animals that can survive extreme cold.","Bdelloid rotifers have been frozen for thousands of years.","Tardigrades are more resilient than bdelloid rotifers."],ans:1,exp:"Only this choice compares the two animals and names something they share."},
+  {id:"w121",diff:"hard",domain:"Expression of Ideas",kind:"writing",q:"Which choice completes the text with the most logical transition?\nThe theory predicted that the particle would decay within a microsecond. The experiment, ___ detected particles lasting nearly ten times longer, forcing physicists to reconsider the model.",choices:["accordingly,","however,","for example,","in addition,"],ans:1,exp:"The experimental result contradicts the prediction, so “however” is the logical transition."},
+  {id:"w122",diff:"easy",domain:"Standard English Conventions",kind:"writing",q:"Choose the option that conforms to the conventions of Standard English.\nThe students handed in ___ projects before the deadline.",choices:["there","their","they're","there's"],ans:1,exp:"“Their” is the possessive form — the projects belong to the students."},
+  {id:"w123",diff:"easy",domain:"Standard English Conventions",kind:"writing",q:"Choose the option that conforms to the conventions of Standard English.\nNeither the manager nor the employees ___ aware of the change.",choices:["was","were","is","has been"],ans:1,exp:"With “neither…nor,” the verb agrees with the closer subject, “employees,” which is plural."},
+  {id:"w124",diff:"medium",domain:"Standard English Conventions",kind:"writing",q:"Choose the option that conforms to the conventions of Standard English.\nThe company released ___ annual report on Monday.",choices:["it's","its","its'","their"],ans:1,exp:"“Its” is the possessive of a singular noun (company). “It's” means “it is.”"},
+  {id:"w125",diff:"hard",domain:"Standard English Conventions",kind:"writing",q:"Choose the option that conforms to the conventions of Standard English.\nThe migration of monarch butterflies, which can span ___ is one of the longest insect migrations in the world.",choices:["3,000 miles","3,000 miles,","3,000 miles;","3,000 miles—"],ans:1,exp:"The nonessential clause “which can span 3,000 miles” must be closed with a comma to match the one that opened it."},
+  {id:"w126",diff:"easy",domain:"Expression of Ideas",kind:"writing",q:"Which choice completes the text with the most logical transition?\nSolar panels have become much cheaper over the past decade. ___ more households are installing them than ever before.",choices:["Nonetheless,","Consequently,","In contrast,","Previously,"],ans:1,exp:"Cheaper panels lead to more installations — a cause-and-effect relationship, so “Consequently.”"}
+);
+
+BANK.rw.push(
+  {id:"r101",diff:"medium",domain:"Craft & Structure",kind:"reading",passage:"The following text is adapted from Jane Austen's 1813 novel Pride and Prejudice.\nMr. Bennet was so odd a mixture of quick parts, sarcastic humour, reserve, and caprice, that the experience of three-and-twenty years had been insufficient to make his wife understand his character.",q:"As used in the text, what does the word “parts” most nearly mean?",choices:["Pieces","Abilities","Roles","Regions"],ans:1,exp:"“Quick parts” describes Mr. Bennet's mind — a quick intelligence or set of abilities."},
+  {id:"r102",diff:"medium",domain:"Craft & Structure",kind:"reading",passage:"Many people assume that the ancient Maya abandoned their cities suddenly. Archaeologist Arlen Chase argues that the decline was ___ : population fell gradually over more than a century as droughts made farming less reliable.",q:"Which choice completes the text with the most logical and precise word or phrase?",choices:["abrupt","protracted","celebrated","imaginary"],ans:1,exp:"The text says the decline happened “gradually over more than a century,” so “protracted” (drawn out) fits."},
+  {id:"r103",diff:"hard",domain:"Craft & Structure",kind:"reading",passage:"Historian Kerri Greenidge's biography of the Grimké family is neither a celebration nor a condemnation. Instead, Greenidge takes a ___ approach, carefully documenting both the family's activism and the contradictions in their lives.",q:"Which choice completes the text with the most logical and precise word or phrase?",choices:["partisan","nuanced","dismissive","whimsical"],ans:1,exp:"A treatment that shows both strengths and contradictions, without simply praising or condemning, is “nuanced.”"},
+  {id:"r104",diff:"medium",domain:"Craft & Structure",kind:"reading",passage:"Researchers had long believed that plants could not respond to sound. A 2019 study challenged this view: when evening primrose flowers were exposed to the sound of a flying bee, they produced sweeter nectar within three minutes.",q:"Which choice best describes the function of the second sentence in the overall structure of the text?",choices:["It presents evidence that calls a long-held belief into question.","It explains why researchers held the earlier belief.","It offers an alternative explanation for how plants make nectar.","It summarizes the history of plant research."],ans:0,exp:"The second sentence describes a study whose result “challenged this view.”"},
+  {id:"r105",diff:"hard",domain:"Craft & Structure",kind:"reading",passage:"Text 1\nSome economists argue that raising the minimum wage reduces employment, since businesses facing higher costs will hire fewer workers.\nText 2\nA study by David Card and Alan Krueger compared fast-food restaurants in New Jersey, which raised its minimum wage, with those in neighboring Pennsylvania, which did not. They found no decrease in employment in New Jersey.",q:"Based on the texts, how would Card and Krueger (Text 2) most likely respond to the economists in Text 1?",choices:["By agreeing that higher wages always reduce employment","By pointing out that their evidence did not show the predicted decrease in employment","By arguing that Pennsylvania should lower its minimum wage","By claiming that businesses never respond to higher costs"],ans:1,exp:"Card and Krueger's data found no decrease in employment, which directly challenges the prediction in Text 1."},
+  {id:"r106",diff:"medium",domain:"Information & Ideas",kind:"reading",passage:"Honeyguides are African birds that lead people to bees' nests. Researchers found that when honey hunters in Mozambique made a specific trilling call, the birds were more than twice as likely to guide them to a nest as when other sounds were used.",q:"Which choice best states the main idea of the text?",choices:["Honeyguides eat only honey.","Honeyguides respond to a particular human call by guiding people to bees' nests.","Honey hunters in Mozambique no longer use calls.","Researchers trained honeyguides to make a trilling sound."],ans:1,exp:"The key finding is that the specific call made the birds much more likely to guide hunters."},
+  {id:"r107",diff:"hard",domain:"Information & Ideas",kind:"reading",passage:"Ecologist Hiro Tanaka hypothesized that a particular wildflower depends on bumblebees for pollination. To test this, he covered some flowers with fine mesh that kept out bumblebees but allowed smaller insects through.",q:"Which finding, if true, would most directly support Tanaka's hypothesis?",choices:["Covered and uncovered flowers produced similar numbers of seeds.","Covered flowers produced far fewer seeds than uncovered flowers.","Smaller insects visited the covered flowers often.","Bumblebees visited many other types of flowers nearby."],ans:1,exp:"If excluding bumblebees sharply reduces seed production, that supports the idea that the flower depends on them."},
+  {id:"r108",diff:"hard",domain:"Information & Ideas",kind:"reading",passage:"A researcher studying a city's bike-share program recorded the average daily number of rides in each season.\nWinter: 1,200 · Spring: 3,400 · Summer: 4,100 · Fall: 2,800\nThe researcher claims that ridership is closely tied to warm weather.",q:"Which choice most effectively uses data from the table to support the researcher's claim?",choices:["Ridership was 2,800 rides per day in fall.","Ridership was highest in summer (4,100) and lowest in winter (1,200).","Spring had more rides than fall.","Ridership varied across seasons."],ans:1,exp:"Contrasting the warmest season (highest) with the coldest (lowest) directly supports a link to warm weather."},
+  {id:"r109",diff:"medium",domain:"Information & Ideas",kind:"reading",passage:"In 1977, NASA launched the Voyager 1 probe to study Jupiter and Saturn. After completing that mission, the probe kept traveling outward, and in 2012 it became the first human-made object to enter interstellar space.",q:"According to the text, what happened after Voyager 1 completed its study of Jupiter and Saturn?",choices:["It returned to Earth.","It continued traveling and eventually entered interstellar space.","It was redirected to study Mars.","It stopped sending data."],ans:1,exp:"The text says the probe “kept traveling outward” and entered interstellar space in 2012."},
+  {id:"r110",diff:"hard",domain:"Information & Ideas",kind:"reading",passage:"Some scholars have assumed that medieval European farmers rarely traveled far from home. However, isotope analysis of skeletons from a 12th-century English village showed that nearly a third of the people buried there had grown up more than 100 miles away. This suggests that ___",q:"Which choice most logically completes the text?",choices:["medieval farmers never left their villages.","migration in medieval England may have been more common than scholars have assumed.","isotope analysis is unreliable.","the village was founded in the 12th century."],ans:1,exp:"Many people from far away challenges the assumption that farmers rarely traveled, so migration was likely more common than assumed."},
+  {id:"r111",diff:"medium",domain:"Craft & Structure",kind:"reading",passage:"The following text is from Zora Neale Hurston's 1937 novel Their Eyes Were Watching God.\nShips at a distance have every man's wish on board. For some they come in with the tide. For others they sail forever on the horizon, never out of sight, never landing.",q:"Which choice best describes the function of the ships in the text?",choices:["They describe a historical voyage.","They are a metaphor for hopes and dreams, some fulfilled and some not.","They set up a conflict between two sailors.","They explain how tides work."],ans:1,exp:"The ships carry “every man's wish”; some arrive and others never land — a metaphor for dreams fulfilled or unfulfilled."},
+  {id:"r112",diff:"medium",domain:"Craft & Structure",kind:"reading",passage:"The new restaurant's menu is surprisingly ___ : despite the small kitchen, it offers dishes from more than a dozen regional cuisines.",q:"Which choice completes the text with the most logical and precise word or phrase?",choices:["limited","eclectic","expensive","predictable"],ans:1,exp:"Dishes from more than a dozen cuisines means a wide-ranging, varied menu — “eclectic.”"},
+  {id:"r113",diff:"hard",domain:"Craft & Structure",kind:"reading",passage:"The scientist's initial results were promising, but she was careful not to ___ them; she noted that the sample size was small and that further trials were needed before drawing firm conclusions.",q:"Which choice completes the text with the most logical and precise word or phrase?",choices:["overstate","replicate","dismiss","publish"],ans:0,exp:"Noting the small sample and need for more trials shows caution about claiming too much — not wanting to “overstate” the results."},
+  {id:"r114",diff:"medium",domain:"Information & Ideas",kind:"reading",passage:"Urban heat islands form when buildings and pavement absorb sunlight and release it as heat, making cities warmer than surrounding rural areas. A study of 30 cities found that neighborhoods with more tree cover were, on average, 4°C cooler on summer afternoons than nearby neighborhoods with little tree cover.",q:"Which choice best states the main idea of the text?",choices:["Rural areas are always cooler than cities.","Tree cover is associated with cooler temperatures in urban neighborhoods.","Pavement reflects all sunlight.","Thirty cities have eliminated urban heat islands."],ans:1,exp:"The study's central finding links more tree cover to cooler neighborhoods."},
+  {id:"r115",diff:"hard",domain:"Information & Ideas",kind:"reading",passage:"Linguists have noted that languages spoken in mountainous regions are more likely to include ejective consonants — sounds made with a burst of air from the throat. One researcher proposed that thinner air at high altitude makes these sounds easier to produce. Critics respond that the pattern could instead reflect the fact that related languages, which tend to share features, often cluster in the same geographic area.",q:"Which choice best describes the critics' point?",choices:["Ejective consonants do not exist.","The link between altitude and ejectives might be explained by shared ancestry among nearby languages rather than by air pressure.","Air at high altitude is not thinner.","Mountain languages have fewer sounds overall."],ans:1,exp:"The critics suggest an alternative explanation: related languages cluster together and share features, so altitude may not be the cause."},
+  {id:"r116",diff:"medium",domain:"Craft & Structure",kind:"reading",passage:"The following text is from Charlotte Brontë's 1847 novel Jane Eyre.\nI am no bird; and no net ensnares me: I am a free human being with an independent will.",q:"The main purpose of the text is to",choices:["describe a bird Jane has seen","assert the speaker's independence","explain how nets are used","express fear of being trapped by an animal"],ans:1,exp:"Jane declares she is “free” with an “independent will” — a forceful assertion of independence."},
+  {id:"r117",diff:"easy",domain:"Information & Ideas",kind:"reading",passage:"Axolotls are salamanders native to lakes near Mexico City. Unlike most salamanders, they keep their larval features, such as feathery external gills, throughout their adult lives. They are also known for their ability to regrow lost limbs.",q:"According to the text, what is one way axolotls differ from most salamanders?",choices:["They live in lakes.","They keep larval features, such as external gills, as adults.","They cannot regrow limbs.","They are found only in deserts."],ans:1,exp:"The text says “unlike most salamanders, they keep their larval features.”"},
+  {id:"r118",diff:"easy",domain:"Craft & Structure",kind:"reading",passage:"The committee's decision was ___ : every member voted in favor of the proposal.",q:"Which choice completes the text with the most logical and precise word or phrase?",choices:["divided","unanimous","delayed","secret"],ans:1,exp:"Every member voting the same way means the decision was “unanimous.”"},
+  {id:"r119",diff:"easy",domain:"Information & Ideas",kind:"reading",passage:"The Harlem Renaissance was a flourishing of African American art, music, and literature in the 1920s and 1930s. Writers such as Langston Hughes and Zora Neale Hurston, along with musicians like Duke Ellington, helped make Harlem, in New York City, a center of cultural life.",q:"Which choice best states the main idea of the text?",choices:["Duke Ellington was a writer.","The Harlem Renaissance was a period of African American cultural achievement centered in Harlem.","Harlem is located in Chicago.","The Harlem Renaissance began in the 1960s."],ans:1,exp:"The text describes the movement as a flourishing of African American culture, centered in Harlem."},
+  {id:"r120",diff:"easy",domain:"Craft & Structure",kind:"reading",passage:"Although the hiking trail was described as easy, the steep climbs and loose rocks made it surprisingly ___ for most of the group.",q:"Which choice completes the text with the most logical and precise word or phrase?",choices:["relaxing","strenuous","brief","scenic"],ans:1,exp:"“Although…easy” sets up a contrast; steep climbs and loose rocks make it “strenuous.”"},
+  {id:"r121",diff:"easy",domain:"Information & Ideas",kind:"reading",passage:"Recycling aluminum cans uses about 95% less energy than making new aluminum from raw ore. Because aluminum can be recycled repeatedly without losing quality, a recycled can may be back on store shelves in as little as 60 days.",q:"According to the text, why is recycling aluminum beneficial?",choices:["It uses much less energy than making new aluminum.","It makes aluminum stronger.","It takes several years.","It requires more raw ore."],ans:0,exp:"The text states recycling uses about 95% less energy than making new aluminum."},
+  {id:"r122",diff:"easy",domain:"Craft & Structure",kind:"reading",passage:"The young pianist's performance was so ___ that the audience rose to its feet before the final note had faded.",q:"Which choice completes the text with the most logical and precise word or phrase?",choices:["mediocre","captivating","hesitant","forgettable"],ans:1,exp:"An audience leaping to its feet suggests the performance was “captivating.”"},
+  {id:"r123",diff:"medium",domain:"Information & Ideas",kind:"reading",passage:"Some sea turtles return to nest on the same beach where they hatched, even after traveling thousands of miles. Researchers think the turtles may use Earth's magnetic field as a kind of map, since each stretch of coastline has a slightly different magnetic signature.",q:"Based on the text, what do researchers think helps sea turtles find their home beaches?",choices:["The smell of the ocean","Earth's magnetic field","The position of the Moon","Following other turtles"],ans:1,exp:"The text says turtles may use Earth's magnetic field as a map."},
+  {id:"r124",diff:"hard",domain:"Information & Ideas",kind:"reading",passage:"A nutrition researcher claims that eating breakfast improves students' test performance. She surveyed 500 students and found that those who reported eating breakfast scored higher on average than those who did not.",q:"Which finding, if true, would most weaken the researcher's claim?",choices:["Students who ate breakfast also tended to sleep more, which is itself linked to higher scores.","The survey included students from many schools.","Most students reported eating breakfast.","Test scores were collected from official records."],ans:0,exp:"If breakfast-eaters also sleep more, sleep (not breakfast) could explain the higher scores — a confounding variable that weakens the causal claim."}
+);
+
+ACT_SCIENCE.push(
+  {id:"s101",diff:"easy",domain:"Data Representation",q:"A table shows the solubility of a salt in water at different temperatures.\nTemp (°C): 20 · 40 · 60 · 80\nSolubility (g/100 mL): 34 · 40 · 46 · 52\nAs temperature increases, solubility:",choices:["decreases","increases","stays the same","increases then decreases"],ans:1,exp:"Solubility rises from 34 to 52 as temperature rises."},
+  {id:"s102",diff:"medium",domain:"Data Representation",q:"A table shows the solubility of a salt in water at different temperatures.\nTemp (°C): 20 · 40 · 60 · 80\nSolubility (g/100 mL): 34 · 40 · 46 · 52\nBased on the pattern, the solubility at 100°C would most likely be about:",choices:["52 g","55 g","58 g","64 g"],ans:2,exp:"Solubility rises 6 g for every 20°C. From 80°C to 100°C: 52 + 6 = 58 g."},
+  {id:"s103",diff:"medium",domain:"Research Summaries",q:"Study 1: Students placed seeds in dishes at 10°C, 20°C, and 30°C, all with equal water and light. After 7 days, they counted sprouted seeds: 4, 15, 18.\nWhat was the independent variable in Study 1?",choices:["Amount of water","Temperature","Number of sprouted seeds","Amount of light"],ans:1,exp:"The researchers deliberately changed temperature; everything else was held constant."},
+  {id:"s104",diff:"medium",domain:"Research Summaries",q:"Study 1: Students placed seeds in dishes at 10°C, 20°C, and 30°C, all with equal water and light. After 7 days, they counted sprouted seeds: 4, 15, 18.\nWhich change would best test whether light affects sprouting?",choices:["Use 40°C instead of 30°C","Keep temperature at 20°C and vary the amount of light","Use more seeds at 10°C","Count seeds after 14 days"],ans:1,exp:"To test light, change only light and hold other variables (like temperature) constant."},
+  {id:"s105",diff:"hard",domain:"Research Summaries",q:"A scientist measured the rate of an enzyme reaction at different pH values.\npH: 4 · 5 · 6 · 7 · 8 · 9\nRate (units/min): 2 · 6 · 11 · 14 · 9 · 3\nAt which pH is the enzyme most active?",choices:["5","6","7","9"],ans:2,exp:"The highest rate (14) occurs at pH 7."},
+  {id:"s106",diff:"hard",domain:"Data Representation",q:"A scientist measured the rate of an enzyme reaction at different pH values.\npH: 4 · 5 · 6 · 7 · 8 · 9\nRate (units/min): 2 · 6 · 11 · 14 · 9 · 3\nWhich statement best describes the relationship between pH and rate?",choices:["Rate increases as pH increases.","Rate decreases as pH increases.","Rate increases up to pH 7, then decreases.","Rate does not depend on pH."],ans:2,exp:"Rate rises to a peak at pH 7, then falls — a rise-then-fall pattern."},
+  {id:"s107",diff:"hard",domain:"Conflicting Viewpoints",q:"Student 1: The Moon formed when a Mars-sized body collided with early Earth, and debris from the impact clumped together.\nStudent 2: The Moon formed elsewhere in the solar system and was later captured by Earth's gravity.\nWhich finding would most support Student 1?",choices:["Moon rocks have a very different composition from Earth rocks.","Moon rocks have oxygen isotope ratios nearly identical to Earth rocks.","The Moon has no atmosphere.","The Moon is slowly moving away from Earth."],ans:1,exp:"If the Moon formed from Earth debris, its rocks should closely match Earth's, as identical isotope ratios suggest."},
+  {id:"s108",diff:"hard",domain:"Conflicting Viewpoints",q:"Student 1: The Moon formed when a Mars-sized body collided with early Earth, and debris from the impact clumped together.\nStudent 2: The Moon formed elsewhere in the solar system and was later captured by Earth's gravity.\nBoth students would most likely agree that:",choices:["the Moon formed from Earth material","the Moon currently orbits Earth","the Moon formed far from Earth","no collision ever happened"],ans:1,exp:"Both explanations end with the Moon orbiting Earth; they disagree about its origin."},
+  {id:"s109",diff:"easy",domain:"Data Representation",q:"A graph shows that as the mass on a spring increases from 100 g to 400 g, the spring's stretch increases from 2 cm to 8 cm in a straight line. What is the stretch with 300 g?",choices:["4 cm","5 cm","6 cm","7 cm"],ans:2,exp:"The stretch is 2 cm per 100 g, so 300 g gives 6 cm."},
+  {id:"s110",diff:"medium",domain:"Research Summaries",q:"Experiment: Four identical cups of water were left in sunlight with different lids: none, plastic, foil, and glass. After 3 hours, the water lost (mL): 12, 3, 1, 4.\nWhich lid reduced evaporation the most?",choices:["None","Plastic","Foil","Glass"],ans:2,exp:"The foil-covered cup lost the least water (1 mL)."},
+  {id:"s111",diff:"medium",domain:"Research Summaries",q:"Experiment: Four identical cups of water were left in sunlight with different lids: none, plastic, foil, and glass. After 3 hours, the water lost (mL): 12, 3, 1, 4.\nWhat was the purpose of the cup with no lid?",choices:["It was the control, for comparison.","It measured the temperature.","It tested a new material.","It was a mistake in the design."],ans:0,exp:"The uncovered cup is the control — a baseline to compare the lids against."},
+  {id:"s112",diff:"easy",domain:"Data Representation",q:"A table lists the density of four liquids (g/mL): Water 1.00 · Oil 0.92 · Honey 1.42 · Alcohol 0.79. If all four are poured into a cylinder and do not mix, which liquid will be on the bottom?",choices:["Water","Oil","Honey","Alcohol"],ans:2,exp:"The densest liquid sinks to the bottom. Honey (1.42 g/mL) is the densest."},
+  {id:"s113",diff:"medium",domain:"Data Representation",q:"A table lists the density of four liquids (g/mL): Water 1.00 · Oil 0.92 · Honey 1.42 · Alcohol 0.79. An object with a density of 0.95 g/mL is dropped in. It will float on top of which liquid?",choices:["Oil","Alcohol","Water","None of them"],ans:2,exp:"An object floats on any liquid denser than itself. In the layered column it sinks through alcohol (0.79) and oil (0.92), then floats on water (1.00)."},
+  {id:"s114",diff:"hard",domain:"Research Summaries",q:"A researcher grew bacteria with different antibiotic doses.\nDose (mg): 0 · 5 · 10 · 20\nColonies: 220 · 140 · 60 · 58\nWhich conclusion is best supported?",choices:["Any dose above 0 kills all bacteria.","Increasing the dose beyond 10 mg had little additional effect.","The antibiotic has no effect.","Colonies increase with dose."],ans:1,exp:"Going from 10 to 20 mg reduced colonies only from 60 to 58 — very little extra effect."}
+);
 /*__DATA_END__*/// Derived ACT banks (reuse SAT writing/reading content + new science)
 BANK.english = BANK.rw.filter((q) => q.kind === "writing");
 BANK.reading = BANK.rw.filter((q) => q.kind === "reading");
@@ -568,12 +705,14 @@ const HISTORY_KEY = "satPrepHistory_v1";
 const PROFILE_KEY = "satPrepProfile_v1";
 const ROUTING_FRACTION = 0.6;
 const STREAK_TARGET = 3;
-const ARCDE_START_SEC = 20;
-const ARCDE_ADD_SEC = 60;
+const ARCDE_START_SEC = 30;
+const ARCDE_ADD_SEC = 30;
 const ARCDE_TOKEN_COST = 1;
-const QUESTIONS_PER_TOKEN = 5;
+const QUESTIONS_PER_TOKEN = 3;
 const $ = (id) => document.getElementById(id);
-const byId = (id) => BANK.math.concat(BANK.rw).concat(ACT_SCIENCE).find((q) => q.id === id);
+const _QINDEX = {};
+BANK.math.concat(BANK.rw).concat(ACT_SCIENCE).forEach((q) => { _QINDEX[q.id] = q; });
+const byId = (id) => _QINDEX[id];
 
 function bankByDiff(bankKey) {
   const out = { easy: [], medium: [], hard: [] };
@@ -581,7 +720,11 @@ function bankByDiff(bankKey) {
   return out;
 }
 function shuffle(a) { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
-function sample(a, n) { return shuffle(a).slice(0, n); }
+function sample(a, n) {
+  let seen = {};
+  try { seen = profile.seen || {}; } catch (e) {} // profile is not initialized yet on first load
+  return shuffle(a).sort((x, y) => (seen[x.id] || 0) - (seen[y.id] || 0)).slice(0, n);
+}
 
 function weightedSampleUnique(pool, n, weightFn) {
   const remaining = pool.slice();
@@ -704,13 +847,14 @@ const DEFAULT_PROFILE = {
   tokens: 0, arcadeSeconds: ARCDE_START_SEC, qSinceToken: 0,
   bestStreak: 0, totalCorrect: 0, totalAttempts: 0,
   highScores: { pacman: 0, snake: 0, pong: 0, watersort: 0, tetris: 0, doom: 0, pressurewash: 0 },
-  soundOn: true, history: []
+  soundOn: true, history: [], seen: {}
 };
 let profile = JSON.parse(JSON.stringify(DEFAULT_PROFILE));
 
 function loadProfile() {
   try { const p = JSON.parse(localStorage.getItem(PROFILE_KEY)); if (p && typeof p === "object") { Object.keys(DEFAULT_PROFILE).forEach((k) => { if (p[k] !== undefined) profile[k] = p[k]; }); } } catch (e) {}
   if (!Array.isArray(profile.history)) profile.history = [];
+  if (!profile.seen || typeof profile.seen !== "object") profile.seen = {};
 }
 function saveProfile() { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch (e) {} }
 
@@ -1077,7 +1221,7 @@ function coachHtml(q, chosen) {
        (info[0] !== "no" ? '<div class="small muted" style="margin-top:3px"><a href="https://www.desmos.com/calculator" target="_blank" rel="noopener">Open Desmos</a> — the SAT has it built in (and it is allowed on every math question).</div>' : '') + '</div>';
   h += '<div class="sec"><div class="sec-t">Step by step</div><ol>' + steps.map((t) => "<li>" + escapeHtml(t) + "</li>").join("") + "</ol></div>";
   h += '<div class="sec"><div class="sec-t">' + (good ? "Watch out next time" : "Where it probably went wrong") + '</div><div>' +
-       (good ? "" : "You picked <strong>" + String.fromCharCode(65 + chosen) + ". " + escapeHtml(q.choices[chosen]) + "</strong>. ") + escapeHtml(info[2]) + "</div></div>";
+       (good || chosen === -1 ? "" : "You picked <strong>" + String.fromCharCode(65 + chosen) + ". " + escapeHtml(q.choices[chosen]) + "</strong>. ") + escapeHtml(info[2]) + "</div></div>";
   h += '<div class="sec"><div class="sec-t">Skill &amp; difficulty</div><div>' + escapeHtml(q.domain) + " · " + escapeHtml(q.diff) + (good ? "" : " · Worth redoing a similar one") + "</div></div>";
   h += '<div class="cchat"><div class="sec-t">Still have questions? Ask here</div>' +
        '<div class="cchips"><button type="button" data-chip="Can you show me another way to solve this?">Another way</button><button type="button" data-chip="Walk me through the Desmos steps one at a time.">Desmos steps</button><button type="button" data-chip="Give me a similar practice question.">Similar question</button></div>' +
@@ -1178,17 +1322,19 @@ function renderQuestion() {
     html += '<button class="' + cls + '" data-choice="' + i + '"' + (chosen != null ? " disabled" : "") + '><span class="key">' + String.fromCharCode(65 + i) + "</span><span>" + escapeHtml(c) + "</span></button>";
   });
   html += "</div>";
+  if (chosen == null) html += '<button class="idk-btn" id="btnIdk" type="button">🤷 I don\'t know — show me</button>';
 
   if (chosen != null) {
     const good = chosen === q.ans;
-    let head = good ? "Nice — that's correct ✓" : "Almost — here's the explanation ✗";
+    const skipped = chosen === -1;
+    let head = good ? "Nice — that's correct ✓" : skipped ? "No worries — here's how to solve it 💡" : "Almost — here's the explanation ✗";
     if (good) {
       const streakMsg = sessionStreak >= STREAK_TARGET ? "Streak 🔥 " + sessionStreak + "!" : sessionStreak >= STREAK_TARGET - 1 ? "1 more right for arcade time! 🔥" : "";
       head += (streakMsg ? " " + streakMsg : "");
     }
-    html += '<div class="feedback ' + (good ? "good" : "bad") + '">' +
+    html += '<div class="feedback ' + (good ? "good" : skipped ? "idk" : "bad") + '">' +
       '<div class="head">' + head + "</div>" +
-      "<div>Your answer: <strong>" + String.fromCharCode(65 + chosen) + "</strong>. Correct answer: <strong>" + String.fromCharCode(65 + q.ans) + "</strong>.</div>" +
+      "<div>" + (skipped ? "You chose “I don't know.”" : "Your answer: <strong>" + String.fromCharCode(65 + chosen) + "</strong>.") + " Correct answer: <strong>" + String.fromCharCode(65 + q.ans) + "</strong>.</div>" +
       '<div class="explain"><strong>Why:</strong> ' + escapeHtml(q.exp) + "</div></div>";
     if (isMathQ(q)) html += coachHtml(q, chosen);
   }
@@ -1205,6 +1351,7 @@ function renderQuestion() {
   $("questionCard").querySelectorAll(".choice").forEach((b) => {
     b.addEventListener("click", () => { handleAnswer(parseInt(b.dataset.choice, 10), b); });
   });
+  const idk = $("btnIdk"); if (idk) idk.addEventListener("click", () => handleAnswer(-1, idk));
   if (chosen != null && isMathQ(q)) wireCoach(q, chosen);
   const p = $("btnPrev"); if (p) p.addEventListener("click", () => { state.qi--; save(); render(); });
   const n = $("btnNext"); if (n) n.addEventListener("click", () => { state.qi++; if (state.qi >= qids.length) advanceAfterModule(); else render(); });
@@ -1216,6 +1363,7 @@ function handleAnswer(choice, btnEl) {
   const qi = state.qi;
   const q = byId(qids[qi]);
   state.answers[q.id] = choice;
+  profile.seen[q.id] = (profile.seen[q.id] || 0) + 1;
   save();
 
   // Earn 1 token (worth ARCDE_ADD_SEC = a minute of arcade time) every QUESTIONS_PER_TOKEN
@@ -1240,10 +1388,14 @@ function handleAnswer(choice, btnEl) {
     if (sessionStreak % STREAK_TARGET === 0) {
       sessionUnlocks.push(sessionStreak);
       pendingUnlock = sessionStreak;
-      profile.arcadeSeconds += ARCDE_START_SEC;
+      profile.tokens++;
+      $("tokenCount").textContent = profile.tokens;
       saveProfile();
       setTimeout(() => showUnlockModal(sessionStreak), 450);
     }
+  } else if (choice === -1) {
+    if (sessionStreak > 0) showToast("Streak reset — but asking is how you learn!");
+    sessionStreak = 0;
   } else {
     if (sessionStreak > 0) showToast("Streak reset. Keep going!");
     sndWrong();
@@ -1255,7 +1407,7 @@ function handleAnswer(choice, btnEl) {
 }
 
 function showUnlockModal(streak) {
-  $("unlockBody").textContent = streak + " in a row! You earned " + ARCDE_START_SEC + "s of arcade time. 🎮";
+  $("unlockBody").textContent = streak + " in a row! Bonus 🪙 — that's another " + ARCDE_ADD_SEC + "s of arcade time. 🎮";
   $("unlockModal").classList.add("show");
   sndUnlock(); burstConfetti(60);
 }
@@ -1472,7 +1624,7 @@ function renderReviewHtml(testType, keys, plan, answers) {
         const correct = chosen === q.ans;
         html += '<div class="review"><div class="review-head"><span><strong>' + (i + 1) + ".</strong> " + escapeHtml(q.q.replace(/\n/g, " ")) + ' <span class="tag dom">' + q.domain + "</span></span>" +
           '<span class="tag ' + (correct ? "right" : "wrong") + '">' + (correct ? "Correct" : "Incorrect") + "</span></div>" +
-          '<div class="review-body"><div>Your answer: <span class="' + (correct ? "correct-ans" : "your-ans") + '">' + (chosen == null ? "No answer" : String.fromCharCode(65 + chosen) + ". " + escapeHtml(q.choices[chosen])) + "</span></div>" +
+          '<div class="review-body"><div>Your answer: <span class="' + (correct ? "correct-ans" : "your-ans") + '">' + (chosen == null ? "No answer" : chosen === -1 ? "I don't know" : String.fromCharCode(65 + chosen) + ". " + escapeHtml(q.choices[chosen])) + "</span></div>" +
           "<div>Correct: <span class=\"correct-ans\">" + String.fromCharCode(65 + q.ans) + ". " + escapeHtml(q.choices[q.ans]) + "</span></div>" +
           '<div class="muted small" style="margin-top:5px"><strong>Why:</strong> ' + escapeHtml(q.exp) + "</div>" + coachReviewHtml(q);
         if (q.kind === "reading") html += "<details><summary>Show passage</summary><div class=\"passage\" style=\"max-height:160px\">" + escapeHtml(q.passage) + "</div></details>";
@@ -1702,11 +1854,13 @@ const arcade = {
     else if (game === 'watersort') this.game = new WaterSort(canvas, this);
     else if (game === 'doom') this.game = new Doom(canvas, this);
     else if (game === 'pressurewash') this.game = new PressureWasher(canvas, this);
+    if (game === 'pacman') { canvas.width = this.game.W; canvas.height = this.game.H; }
     this.game.reset();
     // Any minutes already earned (5 questions = 1 token = ARCDE_ADD_SEC) are applied automatically
     // right when a game opens, so "a minute of playtime per 5 questions" shows up immediately
     // instead of requiring an extra manual "+60s" click.
-    let startSec = this.game.initialSec || ARCDE_START_SEC;
+    let startSec = this.remainingCarry > 0 ? this.remainingCarry : ARCDE_START_SEC;
+    this.remainingCarry = 0;
     while (profile.tokens >= ARCDE_TOKEN_COST) {
       profile.tokens -= ARCDE_TOKEN_COST;
       startSec += ARCDE_ADD_SEC;
@@ -1767,7 +1921,12 @@ const arcade = {
     // token should visibly add a minute to the clock whether you're mid-game or at time's up.
     this.remaining += ARCDE_ADD_SEC;
     this.updateChips();
-    if (this.mode === 'timeup') { this.mode = 'ready'; this.lastTick = Date.now(); this.play(); }
+    if (this.mode === 'timeup') {
+      if (this.game) { this.game.reset(); this.game.over = false; }
+      this.showMsg(false); this.mode = 'ready';
+      this.statusEl.textContent = (this.game ? this.game.name : '') + ' — Press SPACE or tap to start';
+      this.restartLoop();
+    }
   },
 
   timeUp() {
@@ -1780,8 +1939,8 @@ const arcade = {
     this.showOverlay(
       '<h3>⏱ Time\'s up!</h3>' +
       '<p>Score: ' + (this.game ? this.game.score : 0) + '</p>' +
-      '<p style="margin:8px 0;font-size:.9rem">' + (hasTok ? 'Spend 1 🪙 for +60s?' : 'Answer questions to earn 🪙 for more time!') + '</p>' +
-      (hasTok ? '<button id="timeUpAdd" style="margin:6px">+60s (1🪙)</button><br>' : '') +
+      '<p style="margin:8px 0;font-size:.9rem">' + (hasTok ? 'Spend 1 🪙 for +30s?' : 'Answer questions to earn 🪙 for more time!') + '</p>' +
+      (hasTok ? '<button id="timeUpAdd" style="margin:6px">+30s (1🪙)</button><br>' : '') +
       '<button id="timeUpMenu" class="secondary">Back to menu</button>',
       false, true
     );
@@ -1809,11 +1968,34 @@ const arcade = {
       '<button id="overMenu" class="secondary">Menu</button>',
       false, true
     );
-    $('againBtn').addEventListener('click', () => { if (this.game) this.game.reset(); this.mode = 'ready'; this.remaining = this.game.initialSec || 20; this.lastTick = Date.now(); this.play(); });
+    $('againBtn').addEventListener('click', () => { this.playAgain(); });
     $('overMenu').addEventListener('click', () => { this.backToMenu(); });
   },
 
+  // Restart the same game with whatever arcade time is left (buying more with tokens if the clock is empty).
+  playAgain() {
+    if (!this.game) { this.backToMenu(); return; }
+    if (this.remaining <= 0) {
+      if (profile.tokens < ARCDE_TOKEN_COST) { this.timeUp(); return; }
+      profile.tokens -= ARCDE_TOKEN_COST; this.remaining += ARCDE_ADD_SEC; saveProfile(); updateHUD();
+    }
+    this.game.reset();
+    this.game.over = false;
+    this.showMsg(false);
+    this.mode = 'ready';
+    this.statusEl.textContent = this.game.name + ' — Press SPACE or tap to start';
+    this.updateChips();
+    this.restartLoop();
+  },
+
+  restartLoop() {
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    this._lastFrame = performance.now();
+    this.loop();
+  },
+
   backToMenu() {
+    if (this.remaining > 0) this.remainingCarry = Math.ceil(this.remaining);
     if (this.game && this.game.started && this.mode === 'playing') {
       // save partial progress by keeping remaining time
     }
@@ -1872,7 +2054,10 @@ class Pong {
     this.paddle = { x: 12, y: this.H / 2 - this.PH / 2, w: this.PW, h: this.PH };
     this.ai = { x: this.W - 10 - this.PW, y: this.H / 2 - this.PH / 2, w: this.PW, h: this.PH, speed: 2.2 };
     this.ball = { x: this.W / 2, y: this.H / 2, vx: 3, vy: 2, speed: 3.5, r: 6 };
-    this.score = 0; this.over = false; this.started = false; this.pending = 0;
+    this.score = 0; this.cpu = 0; this.over = false; this.started = false; this.pending = 0;
+  }
+  serve(dir) {
+    this.ball = { x: this.W / 2, y: this.H / 2, vx: 3 * dir, vy: (Math.random() * 4 - 2), speed: 3.5, r: 6 };
   }
   input(dir) { /* pointer/touch handled separately */ }
   update(dt) {
@@ -1902,24 +2087,26 @@ class Pong {
       playTone(600 + this.score * 30, .06, 'sine', .06);
     }
     // Score
-    if (b.x < -b.r) { this.score++; playTone(200, .15, 'triangle', .08); b.reset ? this.reset() : this.reset(); }
-    if (b.x > this.W + b.r) { this.reset(); }
-    if (this.score >= 7) { this.over = true; }
+    if (b.x > this.W + b.r) { this.score++; playTone(880, .12, 'square', .06); this.serve(-1); }
+    if (b.x < -b.r) { this.cpu++; playTone(200, .15, 'square', .08); this.serve(1); }
+    if (this.score >= 7 || this.cpu >= 7) { this.over = true; }
   }
   draw(ctx) {
-    ctx.fillStyle = '#0b1120'; ctx.fillRect(0, 0, this.W, this.H);
-    // center line
-    ctx.setLineDash([4, 8]); ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(this.W / 2, 0); ctx.lineTo(this.W / 2, this.H); ctx.stroke();
-    ctx.setLineDash([]);
-    // paddles
-    ctx.fillStyle = '#06d6a0'; ctx.fillRect(this.paddle.x, this.paddle.y, this.paddle.w, this.paddle.h);
-    ctx.fillStyle = '#f87171'; ctx.fillRect(this.W - 10 - this.ai.w, this.ai.y, this.ai.w, this.ai.h);
-    // ball
-    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(this.ball.x, this.ball.y, this.ball.r, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#0b1120'; ctx.fillRect(0, 0, this.W, 24);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px monospace'; ctx.textAlign = 'center';
-    ctx.fillText('0    ' + this.score, this.W / 2, 18);
+    const W = this.W, H = this.H;
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#fff';
+    // dashed net made of blocks, like the 1972 cabinet
+    for (let y = 4; y < H; y += 16) ctx.fillRect(W / 2 - 2, y, 4, 9);
+    // blocky seven-segment-style scores
+    ctx.font = 'bold 40px "Courier New", monospace'; ctx.textAlign = 'center';
+    ctx.fillText(String(this.score), W / 2 - 50, 46);
+    ctx.fillText(String(this.cpu || 0), W / 2 + 50, 46);
+    ctx.fillRect(this.paddle.x, this.paddle.y, this.paddle.w, this.paddle.h);
+    ctx.fillRect(W - 10 - this.ai.w, this.ai.y, this.ai.w, this.ai.h);
+    // square ball
+    const b = this.ball; ctx.fillRect(b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
+    ctx.font = '10px "Courier New", monospace'; ctx.fillStyle = '#888';
+    ctx.fillText('YOU', W / 2 - 50, H - 8); ctx.fillText('CPU', W / 2 + 50, H - 8);
     ctx.textAlign = 'start';
   }
 }
@@ -1989,24 +2176,34 @@ class Snake {
     this.food = available[Math.floor(Math.random() * available.length)];
   }
   draw(ctx) {
-    ctx.fillStyle = '#0b1120'; ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    // grid
-    ctx.strokeStyle = '#131b2e'; ctx.lineWidth = 0.5;
-    for (let x = 0; x <= this.COLS; x++) { ctx.beginPath(); ctx.moveTo(x * this.G, 0); ctx.lineTo(x * this.G, this.canvas.height); ctx.stroke(); }
-    for (let y = 0; y <= this.ROWS; y++) { ctx.beginPath(); ctx.moveTo(0, y * this.G); ctx.lineTo(this.canvas.width, y * this.G); ctx.stroke(); }
-    // food
-    ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(this.food.x * this.G + this.G / 2, this.food.y * this.G + this.G / 2, this.G / 2 - 1, 0, Math.PI * 2); ctx.fill();
-    // snake
+    const W = this.canvas.width, H = this.canvas.height, G = this.G;
+    const LCD = '#9bbc0f', PIX = '#0f380f', FAINT = '#8bac0f';
+    ctx.fillStyle = LCD; ctx.fillRect(0, 0, W, H);
+    // faint pixel grid like an LCD
+    ctx.fillStyle = FAINT;
+    for (let x = 0; x < this.COLS; x++) for (let y = 0; y < this.ROWS; y++) ctx.fillRect(x * G + G / 2 - 1, y * G + G / 2 - 1, 2, 2);
+    // border
+    ctx.strokeStyle = PIX; ctx.lineWidth = 3; ctx.strokeRect(1.5, 25.5, W - 3, H - 27);
+    // food: classic diamond-pixel pellet
+    const fx = this.food.x * G, fy = this.food.y * G;
+    ctx.fillStyle = PIX;
+    ctx.fillRect(fx + G / 2 - 2, fy + 4, 4, 4); ctx.fillRect(fx + 4, fy + G / 2 - 2, 4, 4);
+    ctx.fillRect(fx + G - 8, fy + G / 2 - 2, 4, 4); ctx.fillRect(fx + G / 2 - 2, fy + G - 8, 4, 4);
+    // snake: solid dark blocks with 2px gaps, head has an eye
     this.body.forEach((seg, i) => {
-      const s = this.G - 2; const x = seg.x * this.G + (this.G - s) / 2; const y = seg.y * this.G + (this.G - s) / 2;
-      if (i === 0) { ctx.fillStyle = '#06d6a0'; ctx.fillRect(x - 1, y - 1, s + 2, s + 2); }
-      else { const a = Math.max(0.3, 1 - i / this.body.length * 0.6); ctx.fillStyle = `rgba(6,214,160,${a})`; ctx.fillRect(x, y, s, s); }
+      const x = seg.x * G, y = seg.y * G;
+      ctx.fillStyle = PIX; ctx.fillRect(x + 2, y + 2, G - 4, G - 4);
+      if (i === 0) {
+        ctx.fillStyle = LCD;
+        const ex = x + G / 2 + this.dir.x * 4 - 2 + (this.dir.y ? 3 : 0), ey = y + G / 2 + this.dir.y * 4 - 2 - (this.dir.x ? 3 : 0);
+        ctx.fillRect(ex, ey, 3, 3);
+      }
     });
-    // HUD
-    ctx.fillStyle = '#1e293b'; ctx.fillRect(0, 0, this.canvas.width, 24);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 14px monospace'; ctx.textAlign = 'center';
-    ctx.fillText('Score: ' + this.score, this.canvas.width / 2, 17);
-    ctx.fillStyle = '#94a3b8'; ctx.font = '10px monospace'; ctx.fillText('Length: ' + this.body.length, 12, 17);
+    // LCD header
+    ctx.fillStyle = LCD; ctx.fillRect(0, 0, W, 24);
+    ctx.fillStyle = PIX; ctx.font = 'bold 16px "Courier New", monospace';
+    ctx.textAlign = 'left'; ctx.fillText(String(this.score).padStart(4, '0'), 8, 18);
+    ctx.textAlign = 'right'; ctx.font = 'bold 12px "Courier New", monospace'; ctx.fillText('SNAKE II', W - 8, 17);
     ctx.textAlign = 'start';
   }
 }
@@ -2258,97 +2455,89 @@ class PacMan {
     this.frightTimer = 0;
   }
   draw(ctx) {
-    ctx.fillStyle = '#0b1120'; ctx.fillRect(0, 0, this.W, this.H);
-    // draw maze
-    for (let y = 0; y < MAZE_H; y++) {
-      for (let x = 0; x < MAZE_W; x++) {
-        const c = this.maze[y][x]; const px = x * this.T; const py = y * this.T;
-        if (c === '#') {
-          ctx.fillStyle = '#1e3a8a'; ctx.fillRect(px + 1, py + 1, this.T - 2, this.T - 2);
-          ctx.fillStyle = '#3b82f6'; ctx.fillRect(px + 2, py + 2, this.T - 4, this.T - 4);
-        } else if (c === '.') {
-          ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(px + this.T / 2, py + this.T / 2, 2.5, 0, Math.PI * 2); ctx.fill();
-        } else if (c === '*') {
-          ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(px + this.T / 2, py + this.T / 2, 5, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#b45309'; ctx.beginPath(); ctx.arc(px + this.T / 2, py + this.T / 2, 3, 0, Math.PI * 2); ctx.fill();
-        }
-      }
+    const T = this.T;
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, this.W, this.H);
+    const wall = (x, y) => y >= 0 && y < MAZE_H && x >= 0 && x < MAZE_W && this.maze[y][x] === '#';
+    // walls: thin double blue outline, like the 1980 cabinet
+    ctx.strokeStyle = '#2121ff'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+    for (let y = 0; y < MAZE_H; y++) for (let x = 0; x < MAZE_W; x++) {
+      if (!wall(x, y)) continue;
+      const px = x * T, py = y * T, i = 3;
+      ctx.beginPath();
+      if (!wall(x, y - 1)) { ctx.moveTo(px + (wall(x - 1, y) ? 0 : i), py + i); ctx.lineTo(px + T - (wall(x + 1, y) ? 0 : i), py + i); }
+      if (!wall(x, y + 1)) { ctx.moveTo(px + (wall(x - 1, y) ? 0 : i), py + T - i); ctx.lineTo(px + T - (wall(x + 1, y) ? 0 : i), py + T - i); }
+      if (!wall(x - 1, y)) { ctx.moveTo(px + i, py + (wall(x, y - 1) ? 0 : i)); ctx.lineTo(px + i, py + T - (wall(x, y + 1) ? 0 : i)); }
+      if (!wall(x + 1, y)) { ctx.moveTo(px + T - i, py + (wall(x, y - 1) ? 0 : i)); ctx.lineTo(px + T - i, py + T - (wall(x, y + 1) ? 0 : i)); }
+      ctx.stroke();
     }
-    // draw ghosts
-    this.ghosts.forEach(g => {
-      const gx = (g.x + g.t) * this.T; const gy = (g.y + g.t) * this.T;
-      if (g.mode === 'house') {
-        // blink in/out
-        if (Math.floor(g.releaseTimer * 4) % 2 === 0) return;
-        ctx.fillStyle = '#64748b'; ctx.beginPath(); ctx.arc(gx + this.T / 2, gy + this.T / 2, this.T / 2 - 1, Math.PI, 0); ctx.fill();
-        return;
+    const blink = Math.floor(performance.now() / 250) % 2 === 0;
+    for (let y = 0; y < MAZE_H; y++) for (let x = 0; x < MAZE_W; x++) {
+      const c = this.maze[y][x], cx = x * T + T / 2, cy = y * T + T / 2;
+      if (c === '.') { ctx.fillStyle = '#ffb897'; ctx.fillRect(cx - 1.5, cy - 1.5, 3, 3); }
+      else if ((c === '*' || c === 'O') && blink) { ctx.fillStyle = '#ffb897'; ctx.beginPath(); ctx.arc(cx, cy, T / 2.6, 0, Math.PI * 2); ctx.fill(); }
+    }
+    const classic = ['#ff0000', '#ffb8ff', '#00ffff', '#ffb852'];
+    this.ghosts.forEach((g, gi) => {
+      const gx = (g.x + g.t) * T, gy = (g.y + g.t) * T;
+      if (g.mode === 'house' && Math.floor(g.releaseTimer * 4) % 2 === 0) return;
+      const r = T / 2 - 1, cx = gx + T / 2, cy = gy + T / 2;
+      const fright = g.mode === 'fright', eyesOnly = g.mode === 'eyes';
+      if (!eyesOnly) {
+        const flash = fright && this.frightTimer > 0 && this.frightTimer < 2 && Math.floor(performance.now() / 200) % 2;
+        ctx.fillStyle = fright ? (flash ? '#fff' : '#2121ff') : (classic[gi % 4] || g.color);
+        ctx.beginPath(); ctx.arc(cx, cy - 1, r, Math.PI, 0);
+        const bot = gy + T - 1, step = (2 * r) / 4, phase = Math.floor(performance.now() / 150) % 2;
+        ctx.lineTo(cx + r, bot);
+        for (let k = 0; k < 4; k++) ctx.lineTo(cx + r - step * (k + 0.5), bot - (k % 2 === phase ? 3 : 0)), ctx.lineTo(cx + r - step * (k + 1), bot);
+        ctx.closePath(); ctx.fill();
       }
-      const r = this.T / 2 - 1;
-      if (g.mode === 'fright') {
-        const flash = Math.floor(g.frightFlash || 0) % 2;
-        ctx.fillStyle = flash ? '#06d6a0' : '#94a3b8';
-      } else if (g.mode === 'eyes') {
-        ctx.fillStyle = '#fff';
+      if (fright && !eyesOnly) {
+        ctx.fillStyle = '#ffb897'; ctx.fillRect(cx - 4, cy - 3, 2, 2); ctx.fillRect(cx + 2, cy - 3, 2, 2);
       } else {
-        ctx.fillStyle = g.color;
-      }
-      // body
-      ctx.beginPath(); ctx.arc(gx + this.T / 2, gy + this.T / 2 - 1, r, Math.PI, 0); ctx.fill();
-      // wavy bottom
-      const wave = Math.sin(g.t * 10) * 2;
-      ctx.lineTo(gx + this.T - 2, gy + r + 2 + wave);
-      ctx.lineTo(gx + 2, gy + r + 2 + wave);
-      ctx.closePath(); ctx.fill();
-      // eyes
-      if (g.mode === 'fright' || g.mode === 'eyes') {
-        const ex = gx + this.T / 2 - 3; const ey = gy + this.T / 2 - 2;
-        ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(ex, ey, 2, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(ex + 5, ey, 2, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex + (g.dir.x > 0 ? 1 : -1), ey, 0.8, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(ex + 5 + (g.dir.x > 0 ? 1 : -1), ey, 0.8, 0, Math.PI * 2); ctx.fill();
+        const dx = (g.dir && g.dir.x) || 0, dy = (g.dir && g.dir.y) || 0;
+        [-3, 3].forEach((o) => {
+          ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(cx + o, cy - 2, 2.6, 3.2, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#2121ff'; ctx.beginPath(); ctx.arc(cx + o + dx * 1.3, cy - 2 + dy * 1.5, 1.4, 0, Math.PI * 2); ctx.fill();
+        });
       }
     });
-    // draw pacman
-    const pacX = (this.px + this.t) * this.T + this.T / 2;
-    const pacY = (this.py + this.t) * this.T + this.T / 2;
-    const r = this.T / 2 - 1;
-    const mouth = 0.4 + Math.sin(this.t * this.speed * Math.PI * 2) * 0.35;
-    ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.moveTo(pacX, pacY);
-    ctx.arc(pacX, pacY, r, -mouth * Math.PI, mouth * Math.PI);
-    ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#0b1120'; ctx.beginPath(); ctx.arc(pacX, pacY, r * 0.35, 0, Math.PI * 2); ctx.fill();
-    // popup texts
+    // Pac-Man: solid yellow wedge facing his direction
+    const pacX = (this.px + this.t) * T + T / 2, pacY = (this.py + this.t) * T + T / 2, r = T / 2 - 0.5;
+    const d = this.dir || { x: 1, y: 0 };
+    const ang = Math.atan2(d.y || 0, d.x === undefined ? 1 : d.x);
+    const mouth = Math.abs(Math.sin(performance.now() / 60)) * 0.28 * Math.PI + 0.02;
+    ctx.fillStyle = '#ffff00'; ctx.beginPath(); ctx.moveTo(pacX, pacY);
+    ctx.arc(pacX, pacY, r, ang + mouth, ang + Math.PI * 2 - mouth); ctx.closePath(); ctx.fill();
     this.popupTexts = this.popupTexts.filter(p => { p.life -= 0.02; return p.life > 0; });
     this.popupTexts.forEach(p => {
-      ctx.globalAlpha = p.life; ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 12px monospace'; ctx.textAlign = 'center';
-      ctx.fillText(p.text, (p.x || 9) * this.T + this.T / 2, (p.y || 0) * this.T);
+      ctx.globalAlpha = p.life; ctx.fillStyle = '#00ffff'; ctx.font = 'bold 11px "Courier New", monospace'; ctx.textAlign = 'center';
+      ctx.fillText(p.text, (p.x || 9) * T + T / 2, (p.y || 0) * T);
       ctx.globalAlpha = 1; ctx.textAlign = 'start';
     });
-    // HUD
-    ctx.fillStyle = '#1e293b'; ctx.fillRect(0, 0, this.W, 22);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 13px monospace'; ctx.textAlign = 'center';
-    ctx.fillText('Score: ' + this.score, this.W / 2, 15);
-    ctx.fillText('Level: ' + this.level, 35, 15);
-    let lifeStr = ''; for (let i = 0; i < this.lives; i++) lifeStr += '😀 ';
-    ctx.textAlign = 'start'; ctx.fillText(lifeStr, this.W - 80, 15);
+    // arcade HUD
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, this.W, 22);
+    ctx.font = 'bold 12px "Courier New", monospace'; ctx.fillStyle = '#fff'; ctx.textAlign = 'left';
+    ctx.fillText('1UP ' + String(this.score).padStart(5, '0'), 6, 15);
+    ctx.textAlign = 'center'; ctx.fillText('LEVEL ' + this.level, this.W / 2, 15);
+    ctx.fillStyle = '#ffff00';
+    for (let i = 0; i < this.lives; i++) { const lx = this.W - 14 - i * 16; ctx.beginPath(); ctx.moveTo(lx, 11); ctx.arc(lx, 11, 6, Math.PI * 1.2, Math.PI * 2.8); ctx.closePath(); ctx.fill(); }
     if (this.readyTimer > 0) {
-      ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, this.W, this.H);
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 28px monospace'; ctx.textAlign = 'center';
-      ctx.fillText('READY!', this.W / 2, this.H / 2);
-      ctx.textAlign = 'start';
+      ctx.fillStyle = '#ffff00'; ctx.font = 'bold 18px "Courier New", monospace'; ctx.textAlign = 'center';
+      ctx.fillText('READY!', this.W / 2, this.H / 2 + 6);
     }
+    ctx.textAlign = 'start';
   }
 }
 
 // ---- TETRIS ----
 const TETROMINOES = {
-  I: { color: '#22d3ee', cells: [[0,1],[1,1],[2,1],[3,1]] },
-  O: { color: '#facc15', cells: [[1,0],[2,0],[1,1],[2,1]] },
-  T: { color: '#a855f7', cells: [[1,0],[0,1],[1,1],[2,1]] },
-  S: { color: '#22c55e', cells: [[1,0],[2,0],[0,1],[1,1]] },
-  Z: { color: '#ef4444', cells: [[0,0],[1,0],[1,1],[2,1]] },
-  J: { color: '#3b82f6', cells: [[0,0],[0,1],[1,1],[2,1]] },
-  L: { color: '#f97316', cells: [[2,0],[0,1],[1,1],[2,1]] }
+  I: { color: '#00f0f0', cells: [[0,1],[1,1],[2,1],[3,1]] },
+  O: { color: '#f0f000', cells: [[1,0],[2,0],[1,1],[2,1]] },
+  T: { color: '#a000f0', cells: [[1,0],[0,1],[1,1],[2,1]] },
+  S: { color: '#00f000', cells: [[1,0],[2,0],[0,1],[1,1]] },
+  Z: { color: '#f00000', cells: [[0,0],[1,0],[1,1],[2,1]] },
+  J: { color: '#0000f0', cells: [[0,0],[0,1],[1,1],[2,1]] },
+  L: { color: '#f0a000', cells: [[2,0],[0,1],[1,1],[2,1]] }
 };
 const TETRIS_TYPES = Object.keys(TETROMINOES);
 class Tetris {
@@ -2431,37 +2620,50 @@ class Tetris {
       if (!this.tryMove(0, 1)) this.lock();
     }
   }
+  drawBlock(ctx, x, y, s, color) {
+    ctx.fillStyle = color; ctx.fillRect(x, y, s, s);
+    ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.fillRect(x, y, s, 3); ctx.fillRect(x, y, 3, s);
+    ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(x, y + s - 3, s, 3); ctx.fillRect(x + s - 3, y, 3, s);
+  }
   draw(ctx) {
-    ctx.fillStyle = '#0b1120'; ctx.fillRect(0, 0, this.W, this.H);
+    ctx.fillStyle = '#10101e'; ctx.fillRect(0, 0, this.W, this.H);
     const bx = this.boardX, by = this.boardY, c = this.cell;
-    ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1;
-    for (let x = 0; x <= this.cols; x++) { ctx.beginPath(); ctx.moveTo(bx + x * c, by); ctx.lineTo(bx + x * c, by + this.rows * c); ctx.stroke(); }
-    for (let y = 0; y <= this.rows; y++) { ctx.beginPath(); ctx.moveTo(bx, by + y * c); ctx.lineTo(bx + this.cols * c, by + y * c); ctx.stroke(); }
+    // well
+    ctx.fillStyle = '#000'; ctx.fillRect(bx, by, this.cols * c, this.rows * c);
+    ctx.strokeStyle = '#7a7a9a'; ctx.lineWidth = 3; ctx.strokeRect(bx - 2, by - 2, this.cols * c + 4, this.rows * c + 4);
+    ctx.strokeStyle = 'rgba(255,255,255,.05)'; ctx.lineWidth = 1;
+    for (let x = 1; x < this.cols; x++) { ctx.beginPath(); ctx.moveTo(bx + x * c, by); ctx.lineTo(bx + x * c, by + this.rows * c); ctx.stroke(); }
+    for (let y = 1; y < this.rows; y++) { ctx.beginPath(); ctx.moveTo(bx, by + y * c); ctx.lineTo(bx + this.cols * c, by + y * c); ctx.stroke(); }
     for (let y = 0; y < this.rows; y++) for (let x = 0; x < this.cols; x++) {
-      if (this.board[y][x]) { ctx.fillStyle = this.board[y][x]; ctx.fillRect(bx + x * c + 1, by + y * c + 1, c - 2, c - 2); }
+      if (this.board[y][x]) this.drawBlock(ctx, bx + x * c, by + y * c, c, this.board[y][x]);
     }
-    if (this.piece) {
-      ctx.fillStyle = this.piece.color;
+    if (this.piece && !this.over) {
+      // ghost piece shows where it will land
+      let gy = this.piece.py; while (!this.collides(this.piece.shape, this.piece.px, gy + 1)) gy++;
+      ctx.strokeStyle = this.piece.color; ctx.globalAlpha = .45; ctx.lineWidth = 1.5;
+      this.piece.shape.forEach(([x, y]) => { if (gy + y >= 0) ctx.strokeRect(bx + (this.piece.px + x) * c + 1.5, by + (gy + y) * c + 1.5, c - 3, c - 3); });
+      ctx.globalAlpha = 1;
       this.piece.shape.forEach(([x, y]) => {
         const cy = this.piece.py + y;
-        if (cy >= 0) ctx.fillRect(bx + (this.piece.px + x) * c + 1, by + cy * c + 1, c - 2, c - 2);
+        if (cy >= 0) this.drawBlock(ctx, bx + (this.piece.px + x) * c, by + cy * c, c, this.piece.color);
       });
     }
-    // side panel: next piece + stats
-    const sx = bx + this.cols * c + 20;
-    ctx.fillStyle = '#94a3b8'; ctx.font = '11px monospace'; ctx.textAlign = 'left';
-    ctx.fillText('NEXT', sx, by + 10);
-    const nShape = TETROMINOES[this.next].cells;
-    ctx.fillStyle = TETROMINOES[this.next].color;
-    nShape.forEach(([x, y]) => ctx.fillRect(sx + x * 12, by + 18 + y * 12, 10, 10));
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText('LEVEL ' + this.level, sx, by + 90);
-    ctx.fillText('LINES ' + this.lines, sx, by + 108);
-    ctx.textAlign = 'start';
-    // HUD
-    ctx.fillStyle = '#1e293b'; ctx.fillRect(0, 0, this.W, 24);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 14px monospace'; ctx.textAlign = 'center';
-    ctx.fillText('Score: ' + this.score, this.W / 2, 17);
+    // side panels
+    const sx = bx + this.cols * c + 22;
+    const panel = (y, h, label) => {
+      ctx.fillStyle = '#000'; ctx.fillRect(sx, y, 110, h);
+      ctx.strokeStyle = '#7a7a9a'; ctx.lineWidth = 2; ctx.strokeRect(sx, y, 110, h);
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 11px "Courier New", monospace'; ctx.textAlign = 'left'; ctx.fillText(label, sx + 8, y + 15);
+    };
+    panel(by, 70, 'NEXT');
+    const n = TETROMINOES[this.next];
+    n.cells.forEach(([x, y]) => this.drawBlock(ctx, sx + 22 + x * 16, by + 26 + y * 16, 16, n.color));
+    panel(by + 82, 52, 'SCORE');
+    ctx.font = 'bold 16px "Courier New", monospace'; ctx.fillText(String(this.score).padStart(6, '0'), sx + 8, by + 124);
+    panel(by + 146, 52, 'LEVEL  LINES');
+    ctx.fillText(String(this.level).padStart(2, '0') + '     ' + String(this.lines).padStart(3, '0'), sx + 8, by + 188);
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 14px "Courier New", monospace'; ctx.textAlign = 'center';
+    ctx.fillText('TETRIS', bx + this.cols * c / 2, 18);
     ctx.textAlign = 'start';
   }
 }

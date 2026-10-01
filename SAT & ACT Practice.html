@@ -1,4 +1,43 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
+/* ---- Test tools: graphing calculator, highlighter, line reader ---- */
+.tools-bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.tool-btn{background:#fff;color:var(--ink);border:1.3px solid var(--line);padding:6px 12px;font-size:.85rem;border-radius:10px}
+.tool-btn:hover{background:#f3f4f6}
+.tool-btn.on{background:#eff6ff;border-color:var(--blue);color:var(--blue)}
+.calc-panel{position:fixed;top:0;right:0;bottom:0;width:min(440px,100vw);background:#fff;border-left:1px solid var(--line);box-shadow:-8px 0 30px rgba(15,23,42,.15);z-index:800;display:none;flex-direction:column}
+.calc-panel.show{display:flex}
+.calc-panel.wide{width:min(900px,100vw)}
+.calc-head{display:flex;align-items:center;gap:6px;padding:8px 10px;padding-top:calc(8px + env(safe-area-inset-top,0px));border-bottom:1px solid var(--line);background:#f8fafc}
+.calc-head strong{flex:1}
+.calc-head button{padding:5px 10px;font-size:.8rem}
+.calc-ai{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.calc-ai input{flex:1;min-width:0;padding:7px 10px;border:1.3px solid var(--line);border-radius:9px;font:inherit;font-size:.88rem}
+.calc-ai button{padding:6px 12px;font-size:.85rem}
+.calc-ai-msg{padding:0 10px;font-size:.84rem;color:var(--muted);white-space:pre-line;max-height:120px;overflow:auto}
+.calc-ai-msg:not(:empty){padding:8px 10px;border-bottom:1px solid var(--line)}
+#calcHost{flex:1;min-height:0;position:relative}
+.fb-calc{display:grid;grid-template-columns:200px 1fr;height:100%}
+@media (max-width:600px){.fb-calc{grid-template-columns:1fr;grid-template-rows:170px 1fr}}
+.fb-list{border-right:1px solid var(--line);overflow:auto;background:#fff}
+.fb-row{display:flex;align-items:center;border-bottom:1px solid #eef0f4;min-height:44px}
+.fb-row .dot{width:26px;align-self:stretch;display:grid;place-items:center;background:#f5f6f8;color:#94a3b8;font-size:.7rem}
+.fb-row .dot i{width:12px;height:12px;border-radius:50%;display:block}
+.fb-row input{flex:1;min-width:0;border:0;padding:10px 8px;font:15px "Times New Roman",serif;outline:none}
+.fb-row.active{box-shadow:inset 3px 0 0 var(--blue)}
+.fb-row .val{font-size:.8rem;color:var(--muted);padding-right:6px}
+.fb-row .err{color:var(--red)}
+.fb-graph{position:relative;min-height:0}
+.fb-graph canvas{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.fb-zoom{position:absolute;right:8px;top:8px;display:grid;gap:4px}
+.fb-zoom button{padding:4px 9px;background:#fff;color:var(--ink);border:1px solid var(--line);font-size:.9rem}
+.cmsg .calc-show{display:block;margin-top:6px;padding:5px 10px;font-size:.8rem}
+mark.hl{background:#fde68a;color:inherit;border-radius:2px;cursor:pointer;padding:0 1px}
+body.hl-mode .passage,body.hl-mode .qtext{cursor:text;outline:2px dashed #fcd34d;outline-offset:3px}
+.line-reader{position:fixed;left:0;right:0;pointer-events:none;z-index:700;display:none}
+.line-reader.show{display:block}
+.line-reader .shade{position:fixed;left:0;right:0;background:rgba(15,23,42,.55)}
+.line-reader .win{position:fixed;left:0;right:0;border-top:2px solid var(--blue);border-bottom:2px solid var(--blue)}
+</style></head><body>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="SAT/ACT Prep">
@@ -309,6 +348,11 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
           <div>
             <div class="module-tag" id="moduleTitle">Reading &amp; Writing · Module 1</div>
             <div class="muted small" id="moduleSub">Question 1</div>
+            <div class="tools-bar" id="toolsBar">
+              <button class="tool-btn" id="btnCalc" type="button" title="Graphing calculator (Ctrl+K)">📈 Calculator</button>
+              <button class="tool-btn" id="btnHl" type="button" title="Select text in the passage or question to highlight it. Click a highlight to remove it.">🖍 Highlighter</button>
+              <button class="tool-btn" id="btnLine" type="button" title="Shade everything except the lines you're reading. Move the mouse, or use Shift+↑/↓.">📏 Line reader</button>
+            </div>
           </div>
           <div class="module-actions">
             <button class="ghost" id="btnNewTestMid" title="Abandon this test and set up a new one">🔄 New test</button>
@@ -344,6 +388,17 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 </div>
 
 <!-- Arcade overlay -->
+<aside class="calc-panel" id="calcPanel" aria-label="Graphing calculator">
+  <div class="calc-head"><strong>📈 Graphing calculator</strong><span class="small muted" id="calcEngine"></span>
+    <button class="secondary" id="calcWide" type="button" title="Expand or collapse">⇔</button>
+    <button class="secondary" id="calcClear" type="button">Clear</button>
+    <button class="secondary" id="calcClose" type="button" title="Close (Esc)">✕</button></div>
+  <div class="calc-ai"><input id="calcAsk" type="text" maxlength="300" placeholder="Ask AI: “show me how to solve this in the calculator”" autocomplete="off"><button id="calcAskBtn" type="button">Show me</button></div>
+  <div class="calc-ai-msg" id="calcAiMsg"></div>
+  <div id="calcHost"></div>
+</aside>
+<div class="line-reader" id="lineReader"><div class="shade" id="lrTop"></div><div class="win" id="lrWin"></div><div class="shade" id="lrBot"></div></div>
+
 <div class="arcade-overlay" id="arcadeOverlay">
   <div class="arcade-hud">
     <div class="chip" id="chipTime">⏱ <span id="chipTimeVal">20</span>s</div>
@@ -1057,7 +1112,9 @@ function render() {
   if (state.view === "routing") renderRouting();
   else renderQuestion();
 }
-function showScreen(id) { ["screen-start", "screen-test", "screen-results"].forEach((s) => { $(s).style.display = s === id ? "block" : "none"; }); }
+function showScreen(id) { ["screen-start", "screen-test", "screen-results"].forEach((s) => { $(s).style.display = s === id ? "block" : "none"; }); 
+  if (id !== "screen-test") { try { calcTool.close(); if (lineReader.on) lineReader.toggle(); if (highlighter.on) highlighter.toggle(); } catch (e) {} }
+}
 
 function updateHUD() {
   $("tokenCount").textContent = profile.tokens;
@@ -1208,12 +1265,13 @@ const MATH_COACH = {
   m47:["no","Not a Desmos problem. It tests whether you recognize correlation values. Graphing wouldn't help unless you were given the data points.","A strong positive pattern means r close to +1. Negative r points downward."]
 };
 const DESMOS_LABEL = { yes:"✅ Yes — you can do this in Desmos", calc:"🟡 Only as a calculator — graphing doesn't help much", no:"❌ No — Desmos isn't the right tool for this one" };
-function isMathQ(q) { return !!q && /^m\d+$/.test(q.id) && !!MATH_COACH[q.id]; }
+function isMathQ(q) { return !!q && /^m\d+$/.test(q.id); }
+function coachInfo(q) { return MATH_COACH[q.id] || ["calc", "Type the equations into the graphing calculator to check your work, or graph both sides and look for where they meet.", "Re-read what the question is asking for, then check each step."]; }
 const coachChats = {};
 const coachBusy = {};
 
 function coachHtml(q, chosen) {
-  const info = MATH_COACH[q.id];
+  const info = coachInfo(q);
   const good = chosen === q.ans;
   const steps = String(q.exp).replace(/([.!?])\s+(?=[A-Z“(\d])/g, "$1\u0001").split("\u0001").filter(Boolean);
   let h = '<div class="coach"><h3>🧮 Math coach</h3>';
@@ -1224,7 +1282,7 @@ function coachHtml(q, chosen) {
        (good || chosen === -1 ? "" : "You picked <strong>" + String.fromCharCode(65 + chosen) + ". " + escapeHtml(q.choices[chosen]) + "</strong>. ") + escapeHtml(info[2]) + "</div></div>";
   h += '<div class="sec"><div class="sec-t">Skill &amp; difficulty</div><div>' + escapeHtml(q.domain) + " · " + escapeHtml(q.diff) + (good ? "" : " · Worth redoing a similar one") + "</div></div>";
   h += '<div class="cchat"><div class="sec-t">Still have questions? Ask here</div>' +
-       '<div class="cchips"><button type="button" data-chip="Can you show me another way to solve this?">Another way</button><button type="button" data-chip="Walk me through the Desmos steps one at a time.">Desmos steps</button><button type="button" data-chip="Give me a similar practice question.">Similar question</button></div>' +
+       '<div class="cchips"><button type="button" data-chip="Can you show me another way to solve this?">Another way</button><button type="button" data-chip="Show me how to solve this in the graphing calculator.">📈 Show me in the calculator</button><button type="button" data-chip="Give me a similar practice question.">Similar question</button></div>' +
        '<div class="cmsgs" id="cmsgs"></div>' +
        '<div class="crow"><input id="cinput" type="text" maxlength="400" placeholder="Ask about this question…" autocomplete="off"><button id="csend" type="button">Ask</button></div>' +
        '<div class="small muted" id="cnote" style="margin-top:5px"></div></div></div>';
@@ -1235,7 +1293,16 @@ function coachPaint(qid) {
   const box = $("cmsgs"); if (!box) return;
   box.innerHTML = "";
   (coachChats[qid] || []).forEach((m) => {
-    const d = document.createElement("div"); d.className = "cmsg " + (m.role === "user" ? "u" : "a"); d.textContent = m.content; box.appendChild(d);
+    const d = document.createElement("div"); d.className = "cmsg " + (m.role === "user" ? "u" : "a");
+    const parsed = m.role === "user" ? { text: m.content, exprs: [] } : parseCalcSteps(m.content);
+    d.textContent = parsed.text;
+    if (parsed.exprs.length) {
+      const b = document.createElement("button"); b.type = "button"; b.className = "calc-show";
+      b.textContent = "📈 Show me in the calculator (" + parsed.exprs.length + " step" + (parsed.exprs.length > 1 ? "s" : "") + ")";
+      b.addEventListener("click", () => calcTool.demo(parsed.exprs));
+      d.appendChild(b);
+    }
+    box.appendChild(d);
   });
   box.scrollTop = box.scrollHeight;
 }
@@ -1256,13 +1323,14 @@ function wireCoach(q, chosen) {
       if (typeof claude === "undefined" || !claude.use) throw { code: "unavailable" };
       const sample = await claude.use("sample");
       if (!sample) throw { code: "unavailable" };
-      const info = MATH_COACH[q.id];
+      const info = coachInfo(q);
       const ctx = "You are a friendly, concise SAT/ACT math tutor chatting with a high-school student right after they answered a practice question.\n" +
         "Question: " + q.q + "\nChoices: " + q.choices.map((c, i) => String.fromCharCode(65 + i) + ") " + c).join("  ") +
         "\nCorrect answer: " + String.fromCharCode(65 + q.ans) + ") " + q.choices[q.ans] +
-        "\nStudent chose: " + String.fromCharCode(65 + chosen) + ") " + q.choices[chosen] +
+        "\nStudent chose: " + (chosen === -1 ? "I don't know" : String.fromCharCode(65 + chosen) + ") " + q.choices[chosen]) +
         "\nOfficial explanation: " + q.exp + "\nDesmos verdict: " + info[0] + " — " + info[1] +
-        "\nRules: reply in under 120 words, plain text (no markdown tables), be encouraging but honest, and when relevant give exact Desmos steps. If asked for a similar practice question, write one new question with 4 choices and do NOT reveal the answer until they reply.";
+        "\nRules: reply in under 120 words, plain text (no markdown tables), be encouraging but honest, and when relevant give exact Desmos steps. If asked for a similar practice question, write one new question with 4 choices and do NOT reveal the answer until they reply." +
+        "\n" + CALC_AI_RULES;
       const turns = [{ role: "user", content: ctx + "\n\nStudent's first message: " + hist[0].content }];
       hist.slice(1, -1).forEach((m) => turns.push({ role: m.role, content: m.content }));
       const res = await sample(turns, { cache: false, onText: ({ text: t }) => { hist[idx].content = t; if (curMathId() === q.id) coachPaint(q.id); } });
@@ -1283,7 +1351,7 @@ function curMathId() { try { const qs = currentQids(); return state.view === "te
 
 function coachReviewHtml(q) {
   if (!isMathQ(q)) return "";
-  const info = MATH_COACH[q.id];
+  const info = coachInfo(q);
   return '<div class="small" style="margin-top:6px"><span class="dverdict ' + info[0] + '">Desmos: ' + (info[0] === "yes" ? "yes" : info[0] === "calc" ? "calculator only" : "no") + '</span> ' + escapeHtml(info[1]) + '</div>' +
          '<div class="small muted" style="margin-top:3px"><strong>Common trap:</strong> ' + escapeHtml(info[2]) + '</div>';
 }
@@ -1351,6 +1419,7 @@ function renderQuestion() {
   $("questionCard").querySelectorAll(".choice").forEach((b) => {
     b.addEventListener("click", () => { handleAnswer(parseInt(b.dataset.choice, 10), b); });
   });
+  highlighter.restore(q.id);
   const idk = $("btnIdk"); if (idk) idk.addEventListener("click", () => handleAnswer(-1, idk));
   if (chosen != null && isMathQ(q)) wireCoach(q, chosen);
   const p = $("btnPrev"); if (p) p.addEventListener("click", () => { state.qi--; save(); render(); });
@@ -1716,12 +1785,266 @@ $("btnArcadeMenu").addEventListener("click", () => arcade.backToMenu());
 window.addEventListener("beforeunload", save);
 setInterval(() => { if (!state.done && !arcdeOpen) { state.elapsed++; $("badgeTimer").textContent = "Time " + fmtTime(state.elapsed); if (state.elapsed % 5 === 0) save(); } }, 1000);
 
+
+// ---- TEST TOOLS: graphing calculator (Desmos), AI calculator walkthroughs, highlighter, line reader ----
+// Desmos's own API gives the exact Desmos calculator (same features, keypad and keyboard shortcuts).
+// The key below is Desmos's public demo key; request your own free key at desmos.com/api for production.
+const DESMOS_SRC = "https://www.desmos.com/api/v1.9/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6";
+const MATHJS_SRC = "https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.2/math.min.js";
+const CALC_AI_RULES = "You can type into the student's graphing calculator (it is Desmos). To show them how, put each calculator entry on its own line as [[calc: <expression>]] using Desmos syntax, e.g. [[calc: y=x^2-5x+6]] or [[calc: y=2x+3]] or [[calc: f(4)/f(2)]]. Use 1-5 entries in the order the student should type them, and say in one short sentence each what to look for (an intersection, an x-intercept, a vertex, a value). Only use [[calc: ...]] when the calculator genuinely helps.";
+
+function parseCalcSteps(text) {
+  const exprs = [];
+  const clean = String(text || "").replace(/\[\[\s*calc\s*:\s*([^\]]+?)\s*\]\]/gi, (_, ex) => { exprs.push(ex.trim()); return "“" + ex.trim() + "”"; });
+  return { text: clean, exprs };
+}
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement("script"); s.src = src; s.async = true;
+    s.onload = () => res(); s.onerror = () => rej(new Error("blocked"));
+    document.head.appendChild(s);
+    setTimeout(() => rej(new Error("timeout")), 8000);
+  });
+}
+
+// Built-in grapher used only when Desmos can't load (offline, or a page that blocks desmos.com).
+class FallbackCalc {
+  constructor(host) {
+    this.host = host; this.colors = ["#c74440", "#2d70b3", "#388c46", "#6042a6", "#fa7e19", "#000000"];
+    this.view = { cx: 0, cy: 0, scale: 40 }; this.rows = [];
+    host.innerHTML = '<div class="fb-calc"><div class="fb-list" id="fbList"></div><div class="fb-graph"><canvas id="fbCanvas"></canvas><div class="fb-zoom"><button type="button" data-z="in" title="Zoom in">+</button><button type="button" data-z="out" title="Zoom out">−</button><button type="button" data-z="home" title="Default viewport">⌂</button></div></div></div>';
+    this.list = host.querySelector("#fbList"); this.canvas = host.querySelector("#fbCanvas");
+    host.querySelectorAll("[data-z]").forEach((b) => b.addEventListener("click", () => {
+      if (b.dataset.z === "in") this.view.scale *= 1.5; else if (b.dataset.z === "out") this.view.scale /= 1.5; else this.view = { cx: 0, cy: 0, scale: 40 };
+      this.draw();
+    }));
+    let drag = null;
+    this.canvas.addEventListener("pointerdown", (e) => { drag = { x: e.clientX, y: e.clientY, cx: this.view.cx, cy: this.view.cy }; this.canvas.setPointerCapture(e.pointerId); });
+    this.canvas.addEventListener("pointermove", (e) => { if (!drag) return; this.view.cx = drag.cx - (e.clientX - drag.x) / this.view.scale; this.view.cy = drag.cy + (e.clientY - drag.y) / this.view.scale; this.draw(); });
+    this.canvas.addEventListener("pointerup", () => { drag = null; });
+    this.canvas.addEventListener("wheel", (e) => { e.preventDefault(); this.view.scale *= e.deltaY < 0 ? 1.1 : 1 / 1.1; this.draw(); }, { passive: false });
+    new ResizeObserver(() => this.draw()).observe(this.canvas);
+    this.addRow("");
+  }
+  // Desmos-style input → math.js: y=..., f(x)=..., x=..., (a,b), plain expressions
+  parse(raw) {
+    let s = raw.replace(/\\left|\\right/g, "").replace(/\\cdot|·|×/g, "*").replace(/÷/g, "/").replace(/−/g, "-").replace(/π|\\pi/g, "pi").replace(/√\s*\(?/g, "sqrt(").replace(/\\sqrt\{([^}]*)\}/g, "sqrt($1)").replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g, "($1)/($2)").replace(/[{}]/g, "").trim();
+    if (!s) return null;
+    let m;
+    if ((m = s.match(/^\(\s*([^,]+),([^)]+)\)$/))) return { kind: "point", x: math.evaluate(m[1], this.scope), y: math.evaluate(m[2], this.scope) };
+    if ((m = s.match(/^([a-wz])\s*\(\s*x\s*\)\s*=(.+)$/i))) { const c = math.compile(m[2]); const name = m[1]; this.scope[name] = (x) => c.evaluate(Object.assign({}, this.scope, { x })); return { kind: "fn", f: (x) => c.evaluate(Object.assign({}, this.scope, { x })), label: name + "(x)" }; }
+    if ((m = s.match(/^y\s*=(.+)$/))) { const c = math.compile(m[1]); return { kind: "fn", f: (x) => c.evaluate(Object.assign({}, this.scope, { x })) }; }
+    if ((m = s.match(/^x\s*=(.+)$/)) && !/x/.test(m[1])) return { kind: "vline", x: math.evaluate(m[1], this.scope) };
+    if ((m = s.match(/^([a-wz])\s*=(.+)$/i)) && !/\bx\b/.test(m[2])) { const v = math.evaluate(m[2], this.scope); this.scope[m[1]] = v; return { kind: "value", v }; }
+    if (/(^|[^a-z])x([^a-z]|$)/i.test(s)) { const c = math.compile(s); return { kind: "fn", f: (x) => c.evaluate(Object.assign({}, this.scope, { x })) }; }
+    return { kind: "value", v: math.evaluate(s, this.scope) };
+  }
+  addRow(text, after) {
+    const row = document.createElement("div"); row.className = "fb-row";
+    const color = this.colors[this.list.children.length % this.colors.length];
+    row.innerHTML = '<span class="dot"><i style="background:' + color + '"></i></span><input type="text" spellcheck="false" autocomplete="off"><span class="val"></span>';
+    row.dataset.color = color;
+    const input = row.querySelector("input"); input.value = text || "";
+    input.addEventListener("input", () => this.draw());
+    input.addEventListener("focus", () => { this.list.querySelectorAll(".fb-row").forEach((r) => r.classList.toggle("active", r === row)); });
+    input.addEventListener("keydown", (e) => {
+      const rows = [...this.list.children], i = rows.indexOf(row);
+      if (e.key === "Enter") { e.preventDefault(); this.addRow("", row).querySelector("input").focus(); }
+      else if (e.key === "Backspace" && !input.value && rows.length > 1) { e.preventDefault(); row.remove(); (rows[i - 1] || rows[i + 1]).querySelector("input").focus(); this.draw(); }
+      else if (e.key === "ArrowUp" && rows[i - 1]) { e.preventDefault(); rows[i - 1].querySelector("input").focus(); }
+      else if (e.key === "ArrowDown" && rows[i + 1]) { e.preventDefault(); rows[i + 1].querySelector("input").focus(); }
+    });
+    if (after) after.after(row); else this.list.appendChild(row);
+    this.draw();
+    return row;
+  }
+  setExpressions(list) {
+    this.list.innerHTML = "";
+    list.forEach((t) => this.addRow(t));
+    this.addRow("");
+  }
+  clear() { this.list.innerHTML = ""; this.addRow(""); this.view = { cx: 0, cy: 0, scale: 40 }; this.draw(); }
+  draw() {
+    const c = this.canvas, dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+    if (!W || !H) return;
+    c.width = W * dpr; c.height = H * dpr;
+    const g = c.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const { cx, cy, scale } = this.view;
+    const X = (x) => W / 2 + (x - cx) * scale, Y = (y) => H / 2 - (y - cy) * scale;
+    g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+    const raw = 80 / scale, pow = Math.pow(10, Math.floor(Math.log10(raw))), step = [1, 2, 5, 10].map((k) => k * pow).find((v) => v >= raw);
+    const x0 = cx - W / 2 / scale, x1 = cx + W / 2 / scale, y0 = cy - H / 2 / scale, y1 = cy + H / 2 / scale;
+    g.lineWidth = 1; g.font = "11px sans-serif"; g.fillStyle = "#555";
+    for (let x = Math.ceil(x0 / step) * step; x <= x1; x += step) { g.strokeStyle = "#e6e6e6"; g.beginPath(); g.moveTo(X(x), 0); g.lineTo(X(x), H); g.stroke(); if (Math.abs(x) > step / 2) g.fillText(+x.toPrecision(6), X(x) + 2, Math.min(H - 4, Math.max(12, Y(0) + 12))); }
+    for (let y = Math.ceil(y0 / step) * step; y <= y1; y += step) { g.strokeStyle = "#e6e6e6"; g.beginPath(); g.moveTo(0, Y(y)); g.lineTo(W, Y(y)); g.stroke(); if (Math.abs(y) > step / 2) g.fillText(+y.toPrecision(6), Math.min(W - 30, Math.max(2, X(0) + 3)), Y(y) - 2); }
+    g.strokeStyle = "#222"; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(X(0), 0); g.lineTo(X(0), H); g.moveTo(0, Y(0)); g.lineTo(W, Y(0)); g.stroke();
+    this.scope = {};
+    [...this.list.children].forEach((row) => {
+      const val = row.querySelector(".val"), text = row.querySelector("input").value;
+      val.textContent = ""; val.classList.remove("err");
+      let p; try { p = this.parse(text); } catch (e) { if (text.trim()) { val.textContent = "⚠"; val.classList.add("err"); val.title = e.message; } return; }
+      if (!p) return;
+      g.strokeStyle = g.fillStyle = row.dataset.color; g.lineWidth = 2.5;
+      try {
+        if (p.kind === "value") { val.textContent = "= " + (typeof p.v === "number" ? +p.v.toPrecision(10) : String(p.v)); }
+        else if (p.kind === "point") { g.beginPath(); g.arc(X(p.x), Y(p.y), 5, 0, Math.PI * 2); g.fill(); }
+        else if (p.kind === "vline") { g.beginPath(); g.moveTo(X(p.x), 0); g.lineTo(X(p.x), H); g.stroke(); }
+        else {
+          g.beginPath(); let pen = false, prev = null;
+          for (let px = 0; px <= W; px += 1) {
+            const x = cx + (px - W / 2) / scale; let y = p.f(x);
+            if (typeof y !== "number" || !isFinite(y) || (prev !== null && Math.abs(y - prev) * scale > H * 2)) { pen = false; prev = null; continue; }
+            if (pen) g.lineTo(px, Y(y)); else { g.moveTo(px, Y(y)); pen = true; }
+            prev = y;
+          }
+          g.stroke();
+        }
+      } catch (e) { val.textContent = "⚠"; val.classList.add("err"); }
+    });
+  }
+}
+
+const calcTool = {
+  calc: null, engine: null, loading: null,
+  isOpen() { return $("calcPanel").classList.contains("show"); },
+  async ensure() {
+    if (this.calc) return this.calc;
+    if (this.loading) return this.loading;
+    this.loading = (async () => {
+      const host = $("calcHost");
+      try {
+        if (!window.Desmos) await loadScript(DESMOS_SRC);
+        this.calc = Desmos.GraphingCalculator(host, { keypad: true, expressions: true, settingsMenu: true, zoomButtons: true, expressionsCollapsed: false, border: false });
+        this.engine = "desmos"; $("calcEngine").textContent = "Desmos";
+      } catch (e) {
+        try { if (!window.math) await loadScript(MATHJS_SRC); } catch (e2) {}
+        if (!window.math) { host.innerHTML = '<p class="small muted" style="padding:14px">The calculator couldn\'t load. Check your internet connection, or open <a href="https://www.desmos.com/testing/cb-digital-sat/graphing" target="_blank" rel="noopener">the SAT Desmos calculator</a> in a new tab.</p>'; return null; }
+        this.calc = new FallbackCalc(host); this.engine = "basic";
+        $("calcEngine").innerHTML = 'basic mode · <a href="https://www.desmos.com/testing/cb-digital-sat/graphing" target="_blank" rel="noopener">open Desmos</a>';
+      }
+      return this.calc;
+    })();
+    return this.loading;
+  },
+  async open() {
+    $("calcPanel").classList.add("show"); $("btnCalc").classList.add("on");
+    await this.ensure();
+    if (this.engine === "desmos") this.calc.resize(); else if (this.calc) this.calc.draw();
+  },
+  close() { $("calcPanel").classList.remove("show"); $("btnCalc").classList.remove("on"); },
+  toggle() { if (this.isOpen()) this.close(); else this.open(); },
+  clear() { if (!this.calc) return; if (this.engine === "desmos") this.calc.setBlank(); else this.calc.clear(); },
+  // Type the AI's steps into the calculator one at a time so the student can watch the order.
+  async demo(exprs) {
+    await this.open();
+    if (!this.calc) return;
+    this.clear();
+    for (let i = 0; i < exprs.length; i++) {
+      await new Promise((r) => setTimeout(r, i ? 700 : 150));
+      if (this.engine === "desmos") this.calc.setExpression({ id: "ai" + i, latex: exprs[i] });
+      else this.calc.setExpressions(exprs.slice(0, i + 1));
+    }
+    if (this.engine === "desmos") { try { this.calc.setMathBounds({ left: -10, right: 10, bottom: -10, top: 10 }); } catch (e) {} }
+  },
+  async askAI(text) {
+    const msg = $("calcAiMsg"); text = String(text || "").trim() || "Show me how to solve this question in the graphing calculator.";
+    let q = null; try { if (state.view === "test") q = byId(currentQids()[state.qi]); } catch (e) {}
+    msg.textContent = "Thinking…";
+    try {
+      if (typeof claude === "undefined" || !claude.use) throw { code: "unavailable" };
+      const sample = await claude.use("sample");
+      if (!sample) throw { code: "unavailable" };
+      const ctx = "You are a friendly SAT/ACT tutor helping a high-school student use the graphing calculator. Reply in under 90 words, plain text.\n" + CALC_AI_RULES +
+        (q ? "\nCurrent question: " + q.q + "\nChoices: " + q.choices.map((c, i) => String.fromCharCode(65 + i) + ") " + c).join("  ") +
+          (state.answers[q.id] == null ? "\nThe student has NOT answered yet: show the calculator method but do not state which choice is correct." : "\nCorrect answer: " + String.fromCharCode(65 + q.ans)) : "");
+      const res = await sample([{ role: "user", content: ctx + "\n\nStudent: " + text }], { cache: false, onText: ({ text: t }) => { msg.textContent = parseCalcSteps(t).text; } });
+      const parsed = parseCalcSteps((res && res.text) || "");
+      msg.textContent = parsed.text;
+      if (parsed.exprs.length) this.demo(parsed.exprs);
+    } catch (e) {
+      msg.textContent = e && e.code === "unavailable" ? "The AI helper isn't available in this view. Open the page in claude.ai to use it." :
+        e && e.code === "not_granted" ? "AI help is turned off. Allow it when prompted." : "Sorry, I couldn't do that. Try again.";
+    }
+  }
+};
+$("btnCalc").addEventListener("click", () => calcTool.toggle());
+$("calcClose").addEventListener("click", () => calcTool.close());
+$("calcClear").addEventListener("click", () => calcTool.clear());
+$("calcWide").addEventListener("click", () => { $("calcPanel").classList.toggle("wide"); setTimeout(() => { if (calcTool.engine === "desmos") calcTool.calc.resize(); else if (calcTool.calc) calcTool.calc.draw(); }, 50); });
+$("calcAskBtn").addEventListener("click", () => { calcTool.askAI($("calcAsk").value); $("calcAsk").value = ""; });
+$("calcAsk").addEventListener("keydown", (e) => { e.stopPropagation(); if (e.key === "Enter") { e.preventDefault(); $("calcAskBtn").click(); } });
+
+// Highlighter: select text in the passage or question to mark it; click a mark to remove it.
+const highlighter = {
+  on: false,
+  toggle() { this.on = !this.on; document.body.classList.toggle("hl-mode", this.on); $("btnHl").classList.toggle("on", this.on); if (this.on) showToast("Select text to highlight it. Click a highlight to remove it."); },
+  targets() { return [...$("questionCard").querySelectorAll(".passage, .qtext")]; },
+  apply() {
+    if (!this.on) return;
+    const sel = window.getSelection(); if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    const box = this.targets().find((t) => t.contains(range.commonAncestorContainer));
+    if (!box) return;
+    // Wrap each selected text node separately so selections across existing marks still work.
+    const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
+    const nodes = []; while (walker.nextNode()) { const n = walker.currentNode; if (range.intersectsNode(n) && !(n.parentNode.closest && n.parentNode.closest("mark.hl"))) nodes.push(n); }
+    nodes.forEach((n) => {
+      let start = n === range.startContainer ? range.startOffset : 0, end = n === range.endContainer ? range.endOffset : n.length;
+      if (end <= start) return;
+      const mid = n.splitText(start); mid.splitText(end - start);
+      const m = document.createElement("mark"); m.className = "hl"; mid.parentNode.replaceChild(m, mid); m.appendChild(mid);
+    });
+    sel.removeAllRanges(); this.save();
+  },
+  save() {
+    let q; try { q = byId(currentQids()[state.qi]); } catch (e) { return; }
+    if (!q) return;
+    state.highlights = state.highlights || {};
+    state.highlights[q.id] = this.targets().map((t) => t.innerHTML);
+    save();
+  },
+  restore(qid) {
+    const saved = state.highlights && state.highlights[qid]; if (!saved) return;
+    this.targets().forEach((t, i) => { if (saved[i] != null && t.textContent === saved[i].replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'")) t.innerHTML = saved[i]; });
+  }
+};
+$("btnHl").addEventListener("click", () => highlighter.toggle());
+document.addEventListener("mouseup", () => setTimeout(() => highlighter.apply(), 0));
+document.addEventListener("touchend", () => setTimeout(() => highlighter.apply(), 0));
+$("questionCard").addEventListener("click", (e) => {
+  const m = e.target.closest && e.target.closest("mark.hl");
+  if (!m || !window.getSelection().isCollapsed) return;
+  m.replaceWith(...m.childNodes); highlighter.save();
+});
+
+// Line reader: shade the page except a two-line window that follows the pointer (or Shift+↑/↓).
+const lineReader = {
+  on: false, y: 300, h: 56,
+  toggle() { this.on = !this.on; $("lineReader").classList.toggle("show", this.on); $("btnLine").classList.toggle("on", this.on); this.paint(); },
+  nudge(dir) { this.y += dir * 26; this.paint(); },
+  paint() {
+    if (!this.on) return;
+    this.y = Math.max(this.h / 2, Math.min(innerHeight - this.h / 2, this.y));
+    const top = this.y - this.h / 2;
+    $("lrTop").style.cssText = "top:0;height:" + top + "px";
+    $("lrWin").style.cssText = "top:" + top + "px;height:" + this.h + "px";
+    $("lrBot").style.cssText = "top:" + (top + this.h) + "px;bottom:0";
+  }
+};
+$("btnLine").addEventListener("click", () => lineReader.toggle());
+addEventListener("pointermove", (e) => { if (lineReader.on && !e.target.closest("#calcPanel")) { lineReader.y = e.clientY; lineReader.paint(); } });
+addEventListener("resize", () => lineReader.paint());
+
 // ---- KEYBOARD ----
 // Shared key -> normalized direction map, used by quiz nav, arcade keyboard input, and touch/dpad/swipe,
 // so every input pathway (keyboard, d-pad, swipe) agrees on 'up'/'down'/'left'/'right'.
 const KEY_DIR = { ArrowUp:"up", ArrowDown:"down", ArrowLeft:"left", ArrowRight:"right", w:"up", s:"down", a:"left", d:"right", W:"up", S:"down", A:"left", D:"right" };
 addEventListener("keydown", (e) => {
-  if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
+  if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K") && state.view === "test") { e.preventDefault(); calcTool.toggle(); return; }
+  if (e.key === "Escape" && calcTool.isOpen()) { calcTool.close(); return; }
+  if (lineReader.on && e.shiftKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) { e.preventDefault(); lineReader.nudge(e.key === "ArrowUp" ? -1 : 1); return; }
+  if (e.target && (/^(INPUT|TEXTAREA)$/.test(e.target.tagName) || e.target.isContentEditable || (e.target.closest && e.target.closest("#calcPanel")))) return;
   if (arcdeOpen) {
     // All arcade keyboard handling (Escape/pause, space/enter, direction keys) is owned by
     // the dedicated arcade keydown listener below, so quiz navigation keys never leak into

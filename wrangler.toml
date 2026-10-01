@@ -4,6 +4,14 @@ name = "sat-act-practice"
 main = "worker/index.js"
 compatibility_date = "2026-09-01"
 
+# Serve the app at funsat.bid. The domain must be added to this same Cloudflare account
+# (Websites → Add a domain) before deploying; Cloudflare then creates the DNS record itself.
+routes = [{ pattern = "funsat.bid", custom_domain = true }]
+
+# After verifying funsat.bid in Resend, uncomment this so reset emails can reach anyone:
+# [vars]
+# MAIL_FROM = "FunSAT <no-reply@funsat.bid>"
+
 [build]
 command = "mkdir -p public && cp \"SAT & ACT Practice.html\" public/index.html"
 

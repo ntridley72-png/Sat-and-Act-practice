@@ -38,6 +38,16 @@ body.calc-open.calc-wide{padding-left:min(900px,100vw)}
   .card .module-head{flex-direction:column;align-items:stretch;gap:8px}
   .card .module-actions{display:flex;flex-wrap:wrap;gap:4px;justify-content:space-between}
 }
+.pred-card{margin-top:20px;border:1px solid #c7d2fe;background:linear-gradient(180deg,#f5f7ff,#fff);border-radius:16px;padding:16px;text-align:left}
+.pred-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.pred-head h3{margin:0}
+.pred-conf{font-size:.75rem;font-weight:700;border-radius:999px;padding:3px 10px;text-transform:capitalize}
+.pred-conf.low{background:var(--amber-bg);color:var(--amber)}.pred-conf.medium{background:#dbeafe;color:var(--blue)}.pred-conf.high{background:var(--green-bg);color:var(--green)}
+.pred-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px}
+.pred-tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+.pred-num{font-size:1.7rem;font-weight:800;color:var(--blue);font-variant-numeric:tabular-nums;line-height:1.1}
+.pred-range{font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.pred-lbl{font-size:.8rem;font-weight:600;margin-top:4px}
 /* ---- Bookmarks + curve ---- */
 .bb-star{background:transparent;color:var(--ink);padding:4px 8px;font-size:.85rem;font-weight:600}
 .bb-star:hover{background:#e2e8f0}
@@ -483,6 +493,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
       <select id="curveSelect"></select>
       <div class="curve-note" id="curveNote"></div>
       <div id="bookmarkStart" style="margin-top:16px;display:none"><button type="button" class="secondary" id="btnRetryBookmarks"></button></div>
+      <div id="predStart"></div>
       <div id="historyStart" style="margin-top:20px;display:none"></div>
       <div style="margin-top:20px"><button id="btnStart" style="font-size:1.1rem;padding:14px 34px">Start practice →</button></div>
     </section>
@@ -519,6 +530,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
       <div class="score-grid" id="scoreGrid"></div>
       <div id="rewardsSummary" class="rewards-summary" style="display:none"></div>
       <div id="resultsDelta"></div>
+      <div id="resultsPred"></div>
       <div class="notice info" id="resultsNote"></div>
       <div id="resultsRouting"></div>
       <div id="resultsDomains"></div>
@@ -1128,7 +1140,9 @@ function makeAttemptRecord() {
     accuracy: totalA ? Math.round((totalC / totalA) * 100) : 0,
     bestStreak: profileBestStreak(), tokensEarned: sessionTokensEarned,
     unlocks: sessionUnlocks.slice(), routes: { ...state.routes },
-    secScores, domainStats: {}
+    secScores, domainStats: {},
+    // per-question log so the score predictor can weigh question difficulty
+    qlog: Object.keys(state.answers).filter((id) => byId(id)).map((id) => [id, state.answers[id] === byId(id).ans ? 1 : 0])
   };
 }
 
@@ -1358,6 +1372,7 @@ function renderStart() {
   $("curveNote").textContent = isAct ? "ACT uses the chart from ACT's free practice test (no year printed). Strict/Generous move each section 1 point." : "Uses the " + curCurve().short + ". The SAT doesn't publish a curve for each test date, so this is the most recent official table.";
   const bm = (profile.bookmarks || []).filter((id) => byId(id));
   $("bookmarkStart").style.display = bm.length ? "block" : "none";
+  $("predStart").innerHTML = predictorHtml();
   $("btnRetryBookmarks").textContent = "⭐ Retry bookmarked questions (" + bm.length + ")";
 }
 
@@ -1686,7 +1701,7 @@ function handleAnswer(choice, btnEl) {
       profile.tokens++;
       $("tokenCount").textContent = profile.tokens;
       saveProfile();
-      setTimeout(() => showUnlockModal(sessionStreak), 450);
+      const hit = sessionStreak; setTimeout(() => showUnlockModal(hit), 450);
     }
   } else if (choice === -1) {
     if (sessionStreak > 0) showToast("Streak reset — but asking is how you learn!");
@@ -1777,6 +1792,7 @@ function finishTest() {
 }
 
 function renderResults() {
+  $("resultsPred").innerHTML = predictorHtml();
   if (state.cfg.testType === "act") return renderActResults();
   const rw = state.plan.rw ? estimateSection("rw", state.routes.rw) : null;
   const math = state.plan.math ? estimateSection("math", state.routes.math) : null;
@@ -2110,6 +2126,99 @@ function wireResultsExtras() {
   const s = $("btnSpend"); if (s) s.addEventListener("click", () => openArcade());
 }
 
+
+
+// ---- SCORE PREDICTOR ----
+// Combines every attempt, however long, into one estimate:
+//  1. Each answered question is scored against its difficulty (easy/medium/hard) with a simple
+//     item-response model, P(correct) = 1 / (1 + e^-(ability − difficulty)), so 8/10 on hard
+//     questions counts for more than 8/10 on easy ones.
+//  2. Recent attempts count more (each older attempt weighs 12% less), so improvement shows up.
+//  3. A mild prior pulls tiny samples toward the middle, so 3 lucky answers can't predict a 1600.
+//  4. The fitted ability is turned into the share of a real test's mix you'd get right, then run
+//     through the selected score curve. The range comes from the model's uncertainty.
+const DIFF_B = { easy: -1, medium: 0, hard: 1 };
+const sig = (x) => 1 / (1 + Math.exp(-x));
+function predictorSectionOf(id, testType) {
+  const q = byId(id); if (!q) return null;
+  if (/^m/.test(id)) return "math";
+  if (/^s/.test(id)) return testType === "act" ? "science" : null;
+  if (testType === "act") return q.kind === "reading" ? "reading" : "english";
+  return "rw";
+}
+function fitAbility(items) {
+  let th = 0, h = -1;
+  for (let it = 0; it < 30; it++) {
+    let g = -th; h = -1; // N(0,1) prior
+    items.forEach((x) => { const p = sig(th - x.b); g += x.w * (x.c - x.n * p); h -= x.w * x.n * p * (1 - p); });
+    const step = g / h; th -= Math.max(-1, Math.min(1, step));
+    if (Math.abs(step) < 1e-4) break;
+  }
+  return { th, se: Math.sqrt(-1 / h) };
+}
+function predictScores() {
+  const hist = (profile.history || []).filter((r) => r.totalAnswered > 0).slice().sort((a, b) => (b.finishedAt || 0) - (a.finishedAt || 0));
+  const out = { sat: {}, act: {}, attempts: 0, questions: 0 };
+  const buckets = {};
+  hist.forEach((r, idx) => {
+    const w = Math.pow(0.88, idx), tt = r.testType === "act" ? "act" : "sat";
+    let used = false;
+    if (Array.isArray(r.qlog) && r.qlog.length) {
+      r.qlog.forEach(([id, c]) => {
+        const sec = predictorSectionOf(id, tt); if (!sec) return;
+        (buckets[tt + "." + sec] = buckets[tt + "." + sec] || []).push({ b: DIFF_B[byId(id).diff] || 0, c, n: 1, w });
+        out.questions++; used = true;
+      });
+    } else {
+      // older attempts saved only right/answered per section: treat them as medium questions
+      Object.keys(r.secScores || {}).forEach((sec) => {
+        const s = r.secScores[sec]; if (!s || !s.answered) return;
+        (buckets[tt + "." + sec] = buckets[tt + "." + sec] || []).push({ b: 0, c: s.correct, n: s.answered, w });
+        out.questions += s.answered; used = true;
+      });
+    }
+    if (used) out.attempts++;
+  });
+  const shareOfTest = (th) => (sig(th + 1) + sig(th) + sig(th - 1)) / 3; // real tests mix all three levels
+  Object.keys(buckets).forEach((key) => {
+    const [tt, sec] = key.split("."), items = buckets[key];
+    const n = items.reduce((s, x) => s + x.n, 0);
+    const { th, se } = fitAbility(items);
+    if (tt === "sat") {
+      const maxRaw = sec === "rw" ? 66 : 54, sh = curCurve().sat;
+      const toScore = (t) => { const row = CURVE[sec][Math.min(Math.round(shareOfTest(t) * maxRaw), CURVE[sec].length - 1)]; return clampSat(Math.round((row[0] + row[1]) / 2 / 10) * 10 + sh); };
+      out.sat[sec] = { point: toScore(th), lo: toScore(th - se), hi: toScore(th + se), n };
+    } else {
+      const toScale = (t) => Math.max(1, Math.min(36, actScale(sec, Math.round(shareOfTest(t) * ACT_MAX_RAW[sec])) + curCurve().act));
+      out.act[sec] = { point: toScale(th), lo: toScale(th - se), hi: toScale(th + se), n };
+    }
+  });
+  if (out.sat.rw && out.sat.math) out.sat.total = { point: out.sat.rw.point + out.sat.math.point, lo: out.sat.rw.lo + out.sat.math.lo, hi: out.sat.rw.hi + out.sat.math.hi };
+  const actKeys = Object.keys(out.act);
+  if (actKeys.length) {
+    const avg = (f) => Math.round(actKeys.reduce((s, k) => s + out.act[k][f], 0) / actKeys.length);
+    out.act.composite = { point: avg("point"), lo: avg("lo"), hi: avg("hi"), partial: actKeys.length < 4 };
+  }
+  return out;
+}
+function predictorHtml() {
+  const p = predictScores();
+  if (!p.attempts) return "";
+  const conf = p.questions >= 120 ? "high" : p.questions >= 40 ? "medium" : "low";
+  const tile = (big, range, label) => '<div class="pred-tile"><div class="pred-num">' + big + '</div><div class="pred-range">' + range + '</div><div class="pred-lbl">' + label + "</div></div>";
+  let tiles = "";
+  const s = p.sat;
+  if (s.total) tiles += tile(s.total.point, s.total.lo + "–" + s.total.hi, "SAT total");
+  if (s.rw) tiles += tile(s.rw.point, s.rw.lo + "–" + s.rw.hi, "Reading & Writing · " + s.rw.n + " Q");
+  if (s.math) tiles += tile(s.math.point, s.math.lo + "–" + s.math.hi, "Math · " + s.math.n + " Q");
+  const a = p.act;
+  if (a.composite) tiles += tile(a.composite.point, a.composite.lo + "–" + a.composite.hi, "ACT composite" + (a.composite.partial ? " (sections taken so far)" : ""));
+  ["english", "math", "reading", "science"].forEach((k) => { if (a[k]) tiles += tile(a[k].point, a[k].lo + "–" + a[k].hi, "ACT " + defByKey("act", k).label + " · " + a[k].n + " Q"); });
+  return '<div class="pred-card"><div class="pred-head"><h3>📈 Predicted score</h3><span class="pred-conf ' + conf + '">' + conf + " confidence</span></div>" +
+    '<div class="pred-grid">' + tiles + "</div>" +
+    '<p class="small muted" style="margin:8px 0 0">Based on ' + p.questions + " questions across " + p.attempts + " attempt" + (p.attempts > 1 ? "s" : "") +
+    ". Harder questions and recent attempts count more. Uses the " + curCurve().short + ". " + (conf === "low" ? "Answer more questions to narrow the range." : "") + "</p></div>";
+}
 
 // ---- AI TUTOR: free providers (no Claude). Default: Pollinations' free OpenAI-compatible endpoint (no key).
 // Optional: Llama 3.3 70B on Groq with the user's own free API key (stored only in this browser).

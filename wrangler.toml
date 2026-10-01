@@ -1,0 +1,17 @@
+# One Worker serves both the app (at /) and the account API (at /api/*),
+# so the app and API share an address and nothing else needs configuring.
+name = "sat-act-practice"
+main = "worker/index.js"
+compatibility_date = "2026-09-01"
+
+[build]
+command = "mkdir -p public && cp \"SAT & ACT Practice.html\" public/index.html"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sat-act-practice-db"
+database_id = "8f1793ec-e23e-439e-9285-55f183146491"

@@ -593,14 +593,11 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
     <div id="authOut">
       <p class="small muted" style="margin:0">Sign in to keep your scores, bookmarks, credits and high scores on every device.</p>
       <div class="auth-tabs"><button type="button" class="on" data-mode="in">Sign in</button><button type="button" data-mode="up">Create account</button></div>
-      <button type="button" class="g-btn" id="authGoogle"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continue with Google</button>
-      <div class="or">or use email</div>
       <form id="authForm" novalidate>
         <label for="authEmail">Email</label><input id="authEmail" type="email" autocomplete="email" required>
-        <label for="authPass">Password</label><input id="authPass" type="password" autocomplete="current-password" minlength="6" required>
+        <label for="authPass">Password</label><input id="authPass" type="password" autocomplete="current-password" minlength="8" required><div class="small muted" id="authPassHint" style="display:none;margin-top:4px">At least 8 characters.</div>
         <button type="submit" id="authSubmit" style="width:100%;margin-top:14px">Sign in</button>
       </form>
-      <button type="button" class="ghost" id="authForgot" style="margin-top:6px;padding-left:0">Forgot password?</button>
     </div>
     <div id="authIn" style="display:none">
       <p style="margin:6px 0 4px">Signed in as <strong id="authWho"></strong></p>
@@ -2496,47 +2493,56 @@ addEventListener("pointermove", (e) => { if (lineReader.on && !e.target.closest(
 addEventListener("resize", () => lineReader.paint());
 
 
-// ---- ACCOUNTS + CLOUD SAVE (Firebase Auth + Firestore, free tier) ----
-// Paste your Firebase web config here (Firebase console → Project settings → Your apps → Web app).
-// Until it's filled in, the sign-in popup explains that cloud save isn't set up and everything stays on this device.
-const FIREBASE_CONFIG = null; /* e.g. { apiKey: "…", authDomain: "your-app.firebaseapp.com", projectId: "your-app", appId: "…" } */
-const FB_VER = "10.12.2";
+// ---- ACCOUNTS + CLOUD SAVE (Cloudflare Worker + D1, see worker/index.js) ----
+// When the app is served by the Worker, the API is on the same address. If you host the HTML
+// somewhere else, put the Worker's address here, e.g. "https://sat-act-practice.yourname.workers.dev".
+const API_URL = "";
+const API_BASE = API_URL || (/^https?:$/.test(location.protocol) ? "" : null);
+const TOKEN_KEY = "satPrepAuth_v1";
 const cloud = {
-  ready: null, auth: null, db: null, user: null, timer: null, applying: false,
-  async init() {
-    if (!FIREBASE_CONFIG) return null;
-    if (this.ready) return this.ready;
-    this.ready = (async () => {
-      for (const m of ["app", "auth", "firestore"]) await loadScript("https://www.gstatic.com/firebasejs/" + FB_VER + "/firebase-" + m + "-compat.js");
-      firebase.initializeApp(FIREBASE_CONFIG);
-      this.auth = firebase.auth(); this.db = firebase.firestore();
-      this.auth.onAuthStateChanged((u) => { this.user = u; paintAccount(); if (u) this.pull(); });
-      return true;
-    })().catch(() => { this.ready = null; return null; });
-    return this.ready;
+  user: null, token: null, timer: null, applying: false,
+  async api(path, opts) {
+    if (API_BASE === null) throw { msg: "Sign-in works when the app is opened from its web address, not as a saved file." };
+    const r = await fetch(API_BASE + "/api/" + path, Object.assign({ headers: Object.assign({ "Content-Type": "application/json" }, this.token ? { Authorization: "Bearer " + this.token } : {}) }, opts || {}));
+    let j = {}; try { j = await r.json(); } catch (e) {}
+    if (r.status === 401 && path !== "login") { this.forget(); }
+    if (!r.ok) throw { msg: j.error || "Couldn't reach the server. Check your connection." };
+    return j;
   },
-  doc() { return this.db.collection("users").doc(this.user.uid); },
-  // Newest copy wins: if the cloud copy is newer, load it; otherwise upload this device's copy.
+  forget() { this.user = null; this.token = null; try { localStorage.removeItem(TOKEN_KEY); } catch (e) {} paintAccount(); },
+  async init() {
+    try { const s = JSON.parse(localStorage.getItem(TOKEN_KEY)); if (s && s.token) { this.token = s.token; this.user = { email: s.email }; } } catch (e) {}
+    paintAccount();
+    if (this.token) { try { await this.api("me"); this.pull(); } catch (e) {} }
+  },
+  async signIn(mode, email, password) {
+    const j = await this.api(mode === "in" ? "login" : "signup", { method: "POST", body: JSON.stringify({ email, password }) });
+    this.token = j.token; this.user = { email: j.email };
+    try { localStorage.setItem(TOKEN_KEY, JSON.stringify({ token: j.token, email: j.email })); } catch (e) {}
+    paintAccount(); await this.pull();
+  },
+  async signOut() { try { await this.api("logout", { method: "POST" }); } catch (e) {} this.forget(); },
+  // Newest copy wins: if the server's copy is newer, load it; otherwise upload this device's copy.
   async pull() {
     try {
-      const snap = await this.doc().get();
-      const d = snap.exists ? snap.data() : null;
-      if (d && (d.updatedAt || 0) > (profile.updatedAt || 0)) {
+      const j = await this.api("progress");
+      const d = j.data;
+      if (d && (j.updatedAt || 0) > (profile.updatedAt || 0)) {
         this.applying = true;
         Object.keys(DEFAULT_PROFILE).forEach((k) => { if (d.profile && d.profile[k] !== undefined) profile[k] = d.profile[k]; });
         if (Array.isArray(d.history)) profile.history = d.history;
         if (d.state && d.state.v === 4) state = d.state;
-        profile.updatedAt = d.updatedAt;
+        profile.updatedAt = j.updatedAt;
         saveProfile(); saveHistory(); try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
         this.applying = false; render(); showToast("☁️ Progress loaded from your account");
-      } else this.push();
-    } catch (e) { setAuthMsg("Couldn't load your saved progress. Check your connection.", true); }
+      } else await this.push();
+    } catch (e) { this.applying = false; }
   },
   async push() {
     if (!this.user) return;
     try {
       const prof = Object.assign({}, profile); delete prof.history;
-      await this.doc().set({ profile: prof, history: profile.history.slice(0, 200), state, updatedAt: profile.updatedAt || Date.now(), email: this.user.email || "" });
+      await this.api("progress", { method: "PUT", body: JSON.stringify({ updatedAt: profile.updatedAt || Date.now(), data: { profile: prof, history: profile.history.slice(0, 120), state } }) });
       const el = $("authSync"); if (el) el.textContent = "Last synced " + new Date().toLocaleTimeString();
     } catch (e) {}
   },
@@ -2550,28 +2556,12 @@ const cloud = {
 function setAuthMsg(t, err) { const m = $("authMsg"); m.textContent = t || ""; m.className = "auth-msg" + (t ? (err ? " err" : " ok") : ""); }
 function paintAccount() {
   const u = cloud.user;
-  $("acctLabel").textContent = u ? (u.displayName || u.email || "Account").split(" ")[0].split("@")[0] : "Sign in";
-  $("btnAccount").querySelector(".av").textContent = u ? ((u.displayName || u.email || "?")[0] || "?").toUpperCase() : "👤";
+  $("acctLabel").textContent = u ? u.email.split("@")[0] : "Sign in";
+  $("btnAccount").querySelector(".av").textContent = u ? (u.email[0] || "?").toUpperCase() : "👤";
   $("authOut").style.display = u ? "none" : "block"; $("authIn").style.display = u ? "block" : "none";
-  if (u) $("authWho").textContent = u.email || u.displayName || "";
+  if (u) $("authWho").textContent = u.email;
 }
 let authMode = "in";
-function authError(e) {
-  const c = (e && e.code) || "";
-  return c.includes("wrong-password") || c.includes("invalid-credential") ? "That email and password don't match." :
-    c.includes("user-not-found") ? "No account with that email. Choose Create account." :
-    c.includes("email-already-in-use") ? "That email already has an account. Choose Sign in." :
-    c.includes("weak-password") ? "Use a password with at least 6 characters." :
-    c.includes("invalid-email") ? "Enter a valid email address." :
-    c.includes("popup-closed") ? "Google sign-in was closed before it finished." :
-    c.includes("popup-blocked") ? "Your browser blocked the Google popup. Allow popups and try again." :
-    c.includes("too-many-requests") ? "Too many tries. Wait a minute and try again." : "Sign-in failed. Check your connection and try again.";
-}
-async function needCloud() {
-  if (!FIREBASE_CONFIG) { setAuthMsg("Accounts aren't set up yet: the app owner needs to add a Firebase config (see FIREBASE_CONFIG in the code). Your progress is still saved on this device.", true); return false; }
-  if (!(await cloud.init())) { setAuthMsg("Couldn't reach the sign-in service. Check your connection.", true); return false; }
-  return true;
-}
 $("btnAccount").addEventListener("click", () => {
   setAuthMsg(""); paintAccount();
   const s = aiSettings(); $("aiProvider").value = s.provider; $("groqKey").value = s.groqKey || ""; $("groqKeyWrap").style.display = s.provider === "groq" ? "block" : "none";
@@ -2584,33 +2574,20 @@ document.querySelectorAll(".auth-tabs button").forEach((b) => b.addEventListener
   document.querySelectorAll(".auth-tabs button").forEach((x) => x.classList.toggle("on", x === b));
   $("authSubmit").textContent = authMode === "in" ? "Sign in" : "Create account";
   $("authPass").autocomplete = authMode === "in" ? "current-password" : "new-password";
+  $("authPassHint").style.display = authMode === "in" ? "none" : "block";
   setAuthMsg("");
 }));
 $("authForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = $("authEmail").value.trim(), pass = $("authPass").value;
-  if (!email || pass.length < 6) { setAuthMsg("Enter your email and a password of at least 6 characters.", true); return; }
-  if (!(await needCloud())) return;
+  if (!email || !pass) { setAuthMsg("Enter your email and password.", true); return; }
+  if (authMode === "up" && pass.length < 8) { setAuthMsg("Use a password with at least 8 characters.", true); return; }
   $("authSubmit").disabled = true; setAuthMsg(authMode === "in" ? "Signing in…" : "Creating your account…");
-  try {
-    if (authMode === "in") await cloud.auth.signInWithEmailAndPassword(email, pass);
-    else await cloud.auth.createUserWithEmailAndPassword(email, pass);
-    setAuthMsg("Signed in. Your progress will sync.");
-  } catch (err) { setAuthMsg(authError(err), true); }
+  try { await cloud.signIn(authMode, email, pass); $("authPass").value = ""; setAuthMsg("Signed in. Your progress will sync."); }
+  catch (err) { setAuthMsg(err.msg || "Sign-in failed. Try again.", true); }
   $("authSubmit").disabled = false;
 });
-$("authGoogle").addEventListener("click", async () => {
-  if (!(await needCloud())) return;
-  try { await cloud.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); setAuthMsg("Signed in with Google."); }
-  catch (err) { setAuthMsg(authError(err), true); }
-});
-$("authForgot").addEventListener("click", async () => {
-  const email = $("authEmail").value.trim();
-  if (!email) { setAuthMsg("Type your email above first.", true); return; }
-  if (!(await needCloud())) return;
-  try { await cloud.auth.sendPasswordResetEmail(email); setAuthMsg("Password reset email sent to " + email + "."); } catch (err) { setAuthMsg(authError(err), true); }
-});
-$("authOutBtn").addEventListener("click", async () => { await cloud.auth.signOut(); setAuthMsg("Signed out. Progress stays on this device."); });
+$("authOutBtn").addEventListener("click", async () => { await cloud.signOut(); setAuthMsg("Signed out. Progress stays on this device."); });
 $("authSyncNow").addEventListener("click", async () => { await cloud.push(); setAuthMsg("Synced."); });
 $("aiProvider").addEventListener("change", () => { const s = aiSettings(); s.provider = $("aiProvider").value; saveAiSettings(s); $("groqKeyWrap").style.display = s.provider === "groq" ? "block" : "none"; });
 $("groqKey").addEventListener("change", () => { const s = aiSettings(); s.groqKey = $("groqKey").value.trim(); saveAiSettings(s); });
@@ -2619,7 +2596,6 @@ $("authEmail").addEventListener("keydown", (e) => e.stopPropagation());
 $("authPass").addEventListener("keydown", (e) => e.stopPropagation());
 $("curveSelect").addEventListener("change", () => { profile.curve = $("curveSelect").value; saveProfile(); renderStart(); });
 $("btnRetryBookmarks").addEventListener("click", () => startCustomSet((profile.bookmarks || []).slice(), "Bookmarked"));
-cloud.init();
 
 // ---- KEYBOARD ----
 // Shared key -> normalized direction map, used by quiz nav, arcade keyboard input, and touch/dpad/swipe,
@@ -4368,6 +4344,7 @@ if (!profile.soundOn) $('btnSound').classList.add('muted');
 loadProfile();
 loadHistory();
 loadSaved();
+cloud.init();
 if (state.done) state.view = "results";
 else if (!["start", "test", "routing"].includes(state.view)) state.view = "start";
 if (state.view !== "start" && Object.keys(state.answers).length > 0 && !state.done) {

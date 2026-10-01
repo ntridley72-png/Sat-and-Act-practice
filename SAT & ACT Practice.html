@@ -48,6 +48,59 @@ body.calc-open.calc-wide{padding-left:min(900px,100vw)}
 .pred-num{font-size:1.7rem;font-weight:800;color:var(--blue);font-variant-numeric:tabular-nums;line-height:1.1}
 .pred-range{font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .pred-lbl{font-size:.8rem;font-weight:600;margin-top:4px}
+
+/* ---- Start screen ---- */
+body:has(#screen-start[style*="block"]) .wrap{max-width:1140px}
+.start .st-head{margin:6px 2px 18px}
+.st-kicker{color:var(--blue);font-weight:800;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
+.start h1{font-size:clamp(1.6rem,3.4vw,2.3rem);letter-spacing:-.02em;margin:4px 0 10px}
+.st-chips{display:flex;gap:8px;flex-wrap:wrap}
+.st-chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:.82rem;color:var(--muted)}
+.st-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
+@media (max-width:900px){.st-grid{grid-template-columns:1fr}}
+.st-main{padding:22px 24px 0;overflow:hidden}
+.st-step{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.02rem;margin:22px 0 10px}
+.st-step.first{margin-top:4px}
+.st-n{width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;font-size:.78rem;display:grid;place-items:center;flex:none}
+.st-max{font-weight:500;font-size:.8rem;color:var(--muted)}
+.st-sub{display:block;font-weight:700;font-size:.88rem;margin:14px 0 8px}
+.st-note{font-size:.84rem;color:var(--muted);margin-top:8px}
+.start .pick.selected::after{display:none}
+.st-tests .pick{display:flex;align-items:center;gap:14px;text-align:left;padding:16px;flex:1 1 220px}
+.st-logo{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;font-weight:900;font-size:.85rem;color:#fff;flex:none;letter-spacing:.02em}
+.st-logo.sat{background:linear-gradient(135deg,#2563eb,#1e40af)}
+.st-logo.act{background:linear-gradient(135deg,#dc2626,#9f1239)}
+.st-tt{display:grid;gap:2px}
+.st-tt .t{font-size:1.1rem}
+.st-tt .d{font-size:.82rem;color:var(--muted);margin:0}
+.st-tests .pick.selected{background:#eff6ff}
+.seg{gap:6px;background:#f1f5f9;border-radius:14px;padding:5px}
+.seg .pick{flex:1 1 auto;border:0;border-radius:10px;background:transparent;padding:10px 12px;box-shadow:none;font-size:.92rem}
+.seg .pick .t{font-size:.92rem}
+.seg .pick:hover{background:#e2e8f0;box-shadow:none}
+.seg .pick.selected{background:#fff;color:var(--blue);box-shadow:0 1px 3px rgba(15,23,42,.12),0 0 0 1.5px var(--blue) inset}
+.st-custom{flex:0 1 110px;display:flex}
+.st-custom input{width:100%;border:0;border-radius:10px;padding:10px 12px;font:inherit;font-size:.92rem;background:#fff;text-align:center;min-width:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.st-more{margin-top:20px;border-top:1px solid var(--line);padding-top:12px}
+.st-more summary{cursor:pointer;font-weight:700;font-size:.9rem;color:var(--muted);list-style:none}
+.st-more summary::before{content:"▸ ";}
+.st-more[open] summary::before{content:"▾ ";}
+.st-more select{width:100%}
+.st-go{position:sticky;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:22px -24px 0;padding:14px 24px;background:rgba(255,255,255,.94);backdrop-filter:blur(6px);border-top:1px solid var(--line);flex-wrap:wrap}
+.st-summary{display:grid;gap:1px;font-size:.95rem}
+.st-summary span{font-size:.8rem;color:var(--muted)}
+.st-go #btnStart{font-size:1.05rem;padding:13px 28px}
+.st-resume{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:12px 14px;margin-bottom:6px;font-size:.9rem}
+.st-resume-btns{display:flex;gap:8px}.st-resume-btns button{padding:8px 14px}
+.st-side{display:grid;gap:14px}
+.st-side .pred-card{margin-top:0}
+.st-mini{padding:16px}
+.st-mini-h{font-weight:800;margin-bottom:8px}
+.st-mini .secondary{width:100%}
+.st-side #historyStart h3{font-size:1rem}
+@media (max-width:640px){.st-main{padding:16px 16px 0}.st-go{margin:18px -16px 0;padding:12px 16px;flex-direction:column;align-items:stretch;gap:10px}.st-go #btnStart{width:100%}.st-custom{flex-basis:100%}.seg .pick{flex:1 1 0;min-width:0;padding:10px 6px}#satModulePicker .pick{flex:1 1 40%}.st-step{flex-wrap:wrap}.st-max{flex-basis:100%;margin-left:34px}.st-chips{gap:6px}.st-chip{font-size:.75rem;padding:4px 10px}}
+
 /* ---- Bookmarks + curve ---- */
 .bb-star{background:transparent;color:var(--ink);padding:4px 8px;font-size:.85rem;font-weight:600}
 .bb-star:hover{background:#e2e8f0}
@@ -432,70 +485,93 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
   </div>
 
   <main id="app">
-    <section id="screen-start" class="card hero" style="display:none">
-      <div class="kicker">Adaptive prep, scored like the real tests</div>
-      <h1>What would you like to practice?</h1>
-      <p class="muted">Your progress saves automatically, and you can finish and see a score anytime.</p>
-      <div style="margin:14px 0;font-size:.88rem;color:var(--muted)">
-        🔥 <strong>Streak</strong> bonus: hit 3 right in a row → earn a bonus 🪙 (+30s).<br>
-        🪙 <strong>Token</strong> every 3 questions answered → 30 seconds of arcade time.
-      </div>
-      <div class="pick-label">Test</div>
-      <div class="pick-row" id="typePicker">
-        <button class="pick selected" data-type="sat"><span class="t">SAT</span><div class="d">Adaptive · 400–1600</div></button>
-        <button class="pick" data-type="act"><span class="t">ACT</span><div class="d">4 sections · 1–36</div></button>
-      </div>
-      <div id="satSectionWrap">
-        <div class="pick-label">Section <span class="sub">(SAT only)</span></div>
-        <div class="pick-row" id="sectionPicker">
-          <button class="pick" data-section="rw"><span class="t">Reading &amp; Writing</span><div class="d">Passages &amp; grammar</div></button>
-          <button class="pick" data-section="math"><span class="t">Math</span><div class="d">Algebra to geometry &amp; trig</div></button>
-          <button class="pick selected" data-section="both"><span class="t">Both</span><div class="d">Reading + Math</div></button>
+    <section id="screen-start" class="start" style="display:none">
+      <header class="st-head">
+        <div class="st-kicker">Adaptive prep · scored like the real tests</div>
+        <h1>Set up your practice</h1>
+        <div class="st-chips">
+          <span class="st-chip">🔥 3 right in a row = bonus 🪙</span>
+          <span class="st-chip">🪙 Every 3 questions = 1 arcade credit</span>
+          <span class="st-chip">💾 Saves automatically</span>
         </div>
-      </div>
-      <div id="satModuleWrap" style="display:none">
-        <div class="pick-label">Module <span class="sub">(optional — jump straight into one module instead of the full adaptive flow)</span></div>
-        <div class="pick-row" id="satModulePicker">
-          <button class="pick selected" data-module="full"><span class="t">Full (adaptive)</span><div class="d">Module 1 → routed Module 2</div></button>
-          <button class="pick" data-module="m1"><span class="t">Module 1</span><div class="d">Medium difficulty</div></button>
-          <button class="pick" data-module="m2std"><span class="t">Module 2 · Standard</span><div class="d">Easier set</div></button>
-          <button class="pick" data-module="m2hard"><span class="t">Module 2 · Harder</span><div class="d">Harder set</div></button>
+      </header>
+      <div class="st-grid">
+        <div class="st-main card">
+          <div id="resumeBox" class="st-resume" style="display:none">
+            <div id="resumeInfo"></div>
+            <div class="st-resume-btns"><button id="btnResume">Resume</button><button id="btnDiscard" class="danger">Discard</button></div>
+          </div>
+
+          <div class="st-step first"><span class="st-n">1</span>Choose a test</div>
+          <div class="pick-row st-tests" id="typePicker">
+            <button class="pick selected" data-type="sat"><span class="st-logo sat">SAT</span><span class="st-tt"><span class="t">SAT</span><span class="d">Digital, adaptive · 400–1600</span></span></button>
+            <button class="pick" data-type="act"><span class="st-logo act">ACT</span><span class="st-tt"><span class="t">ACT</span><span class="d">4 sections · 1–36</span></span></button>
+          </div>
+
+          <div id="satSectionWrap">
+            <div class="st-step"><span class="st-n">2</span>Pick a section</div>
+            <div class="pick-row seg" id="sectionPicker">
+              <button class="pick" data-section="rw"><span class="t">Reading &amp; Writing</span></button>
+              <button class="pick" data-section="math"><span class="t">Math</span></button>
+              <button class="pick selected" data-section="both"><span class="t">Both</span></button>
+            </div>
+          </div>
+          <div id="satModuleWrap" style="display:none">
+            <div class="st-sub">Module <span class="muted">· optional, jump into one module instead of the full adaptive flow</span></div>
+            <div class="pick-row seg" id="satModulePicker">
+              <button class="pick selected" data-module="full"><span class="t">Full adaptive</span></button>
+              <button class="pick" data-module="m1"><span class="t">Module 1</span></button>
+              <button class="pick" data-module="m2std"><span class="t">Module 2 · Standard</span></button>
+              <button class="pick" data-module="m2hard"><span class="t">Module 2 · Harder</span></button>
+            </div>
+          </div>
+          <div id="actSectionWrap" style="display:none">
+            <div class="st-step"><span class="st-n">2</span>Pick a section</div>
+            <div class="pick-row seg" id="actSectionPicker">
+              <button class="pick selected" data-act-section="all"><span class="t">All four</span></button>
+              <button class="pick" data-act-section="english"><span class="t">English</span></button>
+              <button class="pick" data-act-section="math"><span class="t">Math</span></button>
+              <button class="pick" data-act-section="reading"><span class="t">Reading</span></button>
+              <button class="pick" data-act-section="science"><span class="t">Science</span></button>
+            </div>
+          </div>
+          <div class="st-note" id="actNote" style="display:none">Like the real ACT, sections aren't adaptive.</div>
+
+          <div class="st-step"><span class="st-n">3</span>How many questions? <span class="st-max" id="lengthMaxNote"></span></div>
+          <div class="pick-row seg" id="lengthPicker">
+            <button class="pick" data-n="12"><span class="t">12</span></button>
+            <button class="pick" data-n="20"><span class="t">20</span></button>
+            <button class="pick selected" data-n="25"><span class="t">25</span></button>
+            <button class="pick" data-n="30"><span class="t">30</span></button>
+            <label class="st-custom"><span class="sr">Custom number of questions</span><input type="number" id="customLen" min="4" step="1" placeholder="Custom"></label>
+          </div>
+
+          <details class="st-more">
+            <summary>Scoring options</summary>
+            <label class="st-sub" for="curveSelect">Score curve</label>
+            <select id="curveSelect"></select>
+            <div class="curve-note" id="curveNote"></div>
+          </details>
+
+          <div class="st-go">
+            <div class="st-summary"><strong id="stSummary">SAT · Both sections</strong><span id="stTime"></span></div>
+            <button id="btnStart">Start practice →</button>
+          </div>
         </div>
+
+        <aside class="st-side">
+          <div id="predStart"></div>
+          <div id="bookmarkStart" class="card st-mini" style="display:none">
+            <div class="st-mini-h">⭐ Bookmarks</div>
+            <button type="button" class="secondary" id="btnRetryBookmarks"></button>
+          </div>
+          <div id="historyStart" class="card st-mini" style="display:none"></div>
+          <div class="card st-mini st-empty" id="stEmpty">
+            <div class="st-mini-h">📈 Your predicted score</div>
+            <p class="small muted" style="margin:0">Finish a practice set and your predicted SAT or ACT score shows up here. It gets more accurate the more you practice.</p>
+          </div>
+        </aside>
       </div>
-      <div class="notice info" id="actNote" style="display:none">ACT mode covers all four sections — English, Math, Reading, and Science — unless you pick a single one below. Like the real ACT, it is not adaptive.</div>
-      <div id="actSectionWrap" style="display:none">
-        <div class="pick-label">Section <span class="sub">(ACT only)</span></div>
-        <div class="pick-row" id="actSectionPicker">
-          <button class="pick selected" data-act-section="all"><span class="t">All Four</span><div class="d">English + Math + Reading + Science</div></button>
-          <button class="pick" data-act-section="english"><span class="t">English</span><div class="d">Grammar &amp; usage</div></button>
-          <button class="pick" data-act-section="math"><span class="t">Math</span><div class="d">Full item bank</div></button>
-          <button class="pick" data-act-section="reading"><span class="t">Reading</span><div class="d">Passages</div></button>
-          <button class="pick" data-act-section="science"><span class="t">Science</span><div class="d">Data &amp; reasoning</div></button>
-        </div>
-      </div>
-      <div class="pick-label">How many questions? <span class="sub" id="lengthMaxNote"></span></div>
-      <div class="pick-row" id="lengthPicker">
-        <button class="pick" data-n="12"><span class="t">12</span><div class="d">Quick check</div></button>
-        <button class="pick" data-n="20"><span class="t">20</span><div class="d">Short</div></button>
-        <button class="pick selected" data-n="25"><span class="t">25</span><div class="d">Standard</div></button>
-        <button class="pick" data-n="30"><span class="t">30</span><div class="d">Longer</div></button>
-      </div>
-      <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <label for="customLen" class="small muted">Or type a custom number:</label>
-        <input type="number" id="customLen" min="4" step="1" placeholder="e.g. 18" style="width:90px;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;font:inherit">
-      </div>
-      <div id="resumeBox" style="display:none;margin-top:18px">
-        <div class="notice info" id="resumeInfo"></div>
-        <button id="btnResume" class="secondary" style="margin-right:8px">Resume</button>
-        <button id="btnDiscard" class="danger">Discard progress</button>
-      </div>
-      <div class="pick-label">Score curve</div>
-      <select id="curveSelect"></select>
-      <div class="curve-note" id="curveNote"></div>
-      <div id="bookmarkStart" style="margin-top:16px;display:none"><button type="button" class="secondary" id="btnRetryBookmarks"></button></div>
-      <div id="predStart"></div>
-      <div id="historyStart" style="margin-top:20px;display:none"></div>
-      <div style="margin-top:20px"><button id="btnStart" style="font-size:1.1rem;padding:14px 34px">Start practice →</button></div>
     </section>
 
     <section id="screen-test" style="display:none">
@@ -1379,6 +1455,14 @@ function renderStart() {
   const bm = (profile.bookmarks || []).filter((id) => byId(id));
   $("bookmarkStart").style.display = bm.length ? "block" : "none";
   $("predStart").innerHTML = predictorHtml();
+  $("stEmpty").style.display = $("predStart").innerHTML ? "none" : "block";
+  const secName = isAct ? ({ all: "All four sections", english: "English", math: "Math", reading: "Reading", science: "Science" })[state.cfg.actSection || "all"] : ({ rw: "Reading & Writing", math: "Math", both: "Both sections" })[state.cfg.section];
+  $("stSummary").textContent = (isAct ? "ACT" : "SAT") + " · " + secName + " · " + state.cfg.total + " questions";
+  try {
+    const counts = countsFor(state.cfg), rates = SEC_PER_Q[state.cfg.testType];
+    const secs = Object.keys(counts).reduce((t, k) => t + counts[k] * (rates[k] || 75), 0);
+    $("stTime").textContent = "About " + Math.max(1, Math.round(secs / 60)) + " min at real-test pace";
+  } catch (e) { $("stTime").textContent = ""; }
   $("btnRetryBookmarks").textContent = "⭐ Retry bookmarked questions (" + bm.length + ")";
 }
 

@@ -168,6 +168,7 @@ function json(obj, status, req) { return new Response(JSON.stringify(obj), { sta
 
 // ---- AI tutor: forwards chat to Groq with the server's key, so students don't need their own. ----
 const AI_ORIGINS = /^https:\/\/(funsat\.bid|sat-act-practice\.[a-z0-9-]+\.workers\.dev)$/;
+const GROQ_MODELS = ["llama-3.3-70b-versatile", "openai/gpt-oss-120b", "meta-llama/llama-4-maverick-17b-128e-instruct", "openai/gpt-oss-20b", "llama-3.1-8b-instant"];
 const AI_PER_WINDOW = 30, AI_WINDOW_MIN = 10;
 async function aiTutor(req, env) {
   if (!env.GROQ_API_KEY) return json({ code: "no_key" }, 503, req);
@@ -184,13 +185,18 @@ async function aiTutor(req, env) {
   const row = await env.DB.prepare("INSERT INTO ai_usage (ip, win, n) VALUES (?, ?, 1) ON CONFLICT(ip, win) DO UPDATE SET n = n + 1 RETURNING n").bind(ip, win).first();
   if (row && row.n > AI_PER_WINDOW) return json({ code: "rate_limited" }, 429, req);
   if (Math.random() < 0.02) await env.DB.prepare("DELETE FROM ai_usage WHERE win < ?").bind(win - 1).run();
-  const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: "Bearer " + env.GROQ_API_KEY },
-    body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages, temperature: 0.4, max_tokens: 500 })
-  });
+  // Groq retires models from time to time; try the next one if a model is gone.
+  let r;
+  for (const model of GROQ_MODELS) {
+    r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + env.GROQ_API_KEY },
+      body: JSON.stringify({ model, messages, temperature: 0.4, max_tokens: 700 })
+    });
+    if (r.status !== 404 && r.status !== 400) break;
+  }
   if (r.status === 429) return json({ code: "rate_limited" }, 429, req);
-  if (!r.ok) return json({ code: "upstream", status: r.status }, 502, req);
+  if (!r.ok) return json({ code: "upstream", status: r.status, detail: (await r.text()).slice(0, 300) }, 502, req);
   const j = await r.json();
   const content = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content || "").trim();
   return json({ content }, 200, req);

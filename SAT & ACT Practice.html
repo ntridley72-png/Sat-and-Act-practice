@@ -277,7 +277,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 .brand .dot{width:11px;height:11px;border-radius:50%;background:var(--blue);display:inline-block}
 .badges{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .badge{background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:.82rem;color:var(--muted)}
-.autosave{color:var(--green);font-size:.82rem}
+.autosave{color:var(--green);font-size:.82rem;display:inline-block;min-width:7.5em;white-space:nowrap}
 .hero{text-align:center}
 .hero .kicker{color:var(--blue);font-weight:700;font-size:.85rem;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
 .hero h1{font-size:2rem} p{margin:0 0 12px}
@@ -1170,7 +1170,7 @@ let _autosaveTimer = null;
 function flashAutosave(ok) {
   const el = document.getElementById("autosave");
   if (!el) return;
-  el.textContent = ok ? "✓ Saved" : "⚠ Save failed";
+  el.textContent = ok ? "✓ Autosaved" : "⚠ Save failed";
   el.style.color = ok ? "" : "var(--red)";
   clearTimeout(_autosaveTimer);
   _autosaveTimer = setTimeout(() => { el.textContent = "✓ Autosaved"; el.style.color = ""; }, 1200);

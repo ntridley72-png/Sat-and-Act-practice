@@ -472,6 +472,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
     <div class="brand"><span class="dot"></span> SAT &amp; ACT Practice</div>
     <div class="badges">
       <span class="badge" id="badgeTimer">Time 0:00</span>
+      <button class="sound-btn" id="btnPause" type="button" title="Pause the timer">⏸</button>
       <span class="badge" id="badgeAcc">—</span>
       <span class="hud-streak" id="hudStreak" title="Streak → bonus arcade time at 3 in a row">
         <span>🔥</span><span id="streakPips"></span>
@@ -1791,7 +1792,7 @@ function handleAnswer(choice, btnEl) {
       profile.tokens++;
       $("tokenCount").textContent = profile.tokens;
       saveProfile();
-      const hit = sessionStreak; setTimeout(() => showUnlockModal(hit), 450);
+      showToast(sessionStreak + " in a row! +1 🪙 arcade token");
     }
   } else if (choice === -1) {
     if (sessionStreak > 0) showToast("Streak reset — but asking is how you learn!");
@@ -2119,7 +2120,7 @@ $("btnSound").addEventListener("click", () => {
 $("btnArcadeAddTime").addEventListener("click", () => arcade.addTime());
 $("btnArcadeMenu").addEventListener("click", () => { if (arcade.mode === 'menu') arcade.backToMenu(); else arcade.showMenu(); });
 window.addEventListener("beforeunload", save);
-setInterval(() => { if (!state.done && !arcdeOpen) { tickModuleClock(); state.elapsed++; $("badgeTimer").textContent = "Time " + fmtTime(state.elapsed); if (state.elapsed % 5 === 0) save(); } }, 1000);
+setInterval(() => { if (!state.done && !arcdeOpen && !testPaused) { tickModuleClock(); state.elapsed++; $("badgeTimer").textContent = "Time " + fmtTime(state.elapsed); if (state.elapsed % 5 === 0) save(); } }, 1000);
 
 
 // ---- MODULE COUNTDOWN (official pacing: SAT R&W 32 min/27 Q, Math 35 min/22 Q; ACT per-section rates) ----
@@ -4475,4 +4476,16 @@ updateHUD();
 render();
 </script>
 
+<div class="modal-overlay" id="pauseModal"><div class="modal"><h2>⏸ Paused</h2><p class="muted" style="margin-bottom:16px">The timer is stopped and the question is hidden.</p><button id="btnUnpause" type="button">▶ Resume</button></div></div>
+<script>
+let testPaused = false;
+function setPaused(p) {
+  testPaused = p;
+  document.getElementById("pauseModal").classList.toggle("show", p);
+  document.getElementById("btnPause").textContent = p ? "▶" : "⏸";
+  document.getElementById("btnPause").title = p ? "Resume" : "Pause the timer";
+}
+document.getElementById("btnPause").addEventListener("click", () => setPaused(!testPaused));
+document.getElementById("btnUnpause").addEventListener("click", () => setPaused(false));
+</script>
 </body></html>

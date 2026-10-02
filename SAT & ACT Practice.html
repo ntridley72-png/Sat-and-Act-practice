@@ -1207,7 +1207,7 @@ function makeAttemptRecord() {
   state.keys.forEach((sec) => {
     const qids = sectionQids(sec);
     const a = answeredCount(qids), c = correctCount(qids);
-    if (state.cfg.testType === "act") {
+    if (ACT_SCALE[sec]) {
       const raw = Math.round((c / Math.max(a, 1)) * ACT_MAX_RAW[sec]);
       secScores[sec] = { actScale: actScale(sec, raw), answered: a, correct: c };
     } else {
@@ -2120,7 +2120,7 @@ $("btnSound").addEventListener("click", () => {
 $("btnArcadeAddTime").addEventListener("click", () => arcade.addTime());
 $("btnArcadeMenu").addEventListener("click", () => { if (arcade.mode === 'menu') arcade.backToMenu(); else arcade.showMenu(); });
 window.addEventListener("beforeunload", save);
-setInterval(() => { if (!state.done && !arcdeOpen && !testPaused) { tickModuleClock(); state.elapsed++; $("badgeTimer").textContent = "Time " + fmtTime(state.elapsed); if (state.elapsed % 5 === 0) save(); } }, 1000);
+setInterval(() => { if (!state.done && !arcdeOpen && !testPaused && state.view === "test") { tickModuleClock(); state.elapsed++; $("badgeTimer").textContent = "Time " + fmtTime(state.elapsed); if (state.elapsed % 5 === 0) save(); } }, 1000);
 
 
 // ---- MODULE COUNTDOWN (official pacing: SAT R&W 32 min/27 Q, Math 35 min/22 Q; ACT per-section rates) ----

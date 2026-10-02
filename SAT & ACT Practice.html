@@ -1054,9 +1054,14 @@ function bankByDiff(bankKey) {
 }
 function shuffle(a) { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
 function sample(a, n) {
-  let seen = {};
-  try { seen = profile.seen || {}; } catch (e) {} // profile is not initialized yet on first load
-  return shuffle(a).sort((x, y) => (seen[x.id] || 0) - (seen[y.id] || 0)).slice(0, n);
+  // Questions already shown (answered or not) go to the back, so each new attempt gets fresh ones.
+  let seen = {}, served = {};
+  try { seen = profile.seen || {}; served = profile.served || (profile.served = {}); } catch (e) {} // profile is not initialized yet on first load
+  const uses = (q) => (seen[q.id] || 0) + (served[q.id] || 0);
+  const picked = shuffle(a).sort((x, y) => uses(x) - uses(y)).slice(0, n);
+  picked.forEach((q) => { served[q.id] = (served[q.id] || 0) + 1; });
+  try { saveProfile(); } catch (e) {}
+  return picked;
 }
 
 function weightedSampleUnique(pool, n, weightFn) {

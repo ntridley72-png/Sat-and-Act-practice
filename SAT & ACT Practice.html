@@ -1053,12 +1053,32 @@ function bankByDiff(bankKey) {
   return out;
 }
 function shuffle(a) { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
+// Approximate share of each content domain on the real Digital SAT. ACT domains fall back to the bank's mix.
+const DOMAIN_WEIGHTS = {
+  "Algebra": 0.35, "Advanced Math": 0.35, "Problem-Solving & Data Analysis": 0.15, "Geometry & Trigonometry": 0.15,
+  "Craft & Structure": 0.28, "Information & Ideas": 0.26, "Standard English Conventions": 0.26, "Expression of Ideas": 0.20
+};
 function sample(a, n) {
   // Questions already shown (answered or not) go to the back, so each new attempt gets fresh ones.
   let seen = {}, served = {};
   try { seen = profile.seen || {}; served = profile.served || (profile.served = {}); } catch (e) {} // profile is not initialized yet on first load
   const uses = (q) => (seen[q.id] || 0) + (served[q.id] || 0);
-  const picked = shuffle(a).sort((x, y) => uses(x) - uses(y)).slice(0, n);
+  // Split the n questions across content domains like the real test, then take the least-used in each.
+  const groups = {};
+  shuffle(a).sort((x, y) => uses(x) - uses(y)).forEach((q) => { (groups[q.domain] = groups[q.domain] || []).push(q); });
+  const doms = Object.keys(groups);
+  const weight = (d) => DOMAIN_WEIGHTS[d] || groups[d].length / a.length;
+  const totalW = doms.reduce((t, d) => t + weight(d), 0);
+  const quota = {}; let left = Math.min(n, a.length);
+  doms.forEach((d) => { quota[d] = Math.min(groups[d].length, Math.floor(n * weight(d) / totalW)); left -= quota[d]; });
+  // Hand out the remainder one at a time to the domains furthest below their share.
+  while (left > 0) {
+    const open = doms.filter((d) => quota[d] < groups[d].length);
+    if (!open.length) break;
+    open.sort((x, y) => (quota[x] / weight(x)) - (quota[y] / weight(y)));
+    quota[open[0]]++; left--;
+  }
+  const picked = shuffle(doms.flatMap((d) => groups[d].slice(0, quota[d])));
   picked.forEach((q) => { served[q.id] = (served[q.id] || 0) + 1; });
   try { saveProfile(); } catch (e) {}
   return picked;
@@ -1760,7 +1780,9 @@ function renderQuestion() {
   const idk = $("btnIdk"); if (idk) idk.addEventListener("click", () => handleAnswer(-1, idk));
   if (chosen != null && isMathQ(q)) wireCoach(q, chosen);
   const p = $("btnPrev"); if (p) p.addEventListener("click", () => { state.qi--; save(); render(); });
-  const n = $("btnNext"); if (n) n.addEventListener("click", () => { state.qi++; if (state.qi >= qids.length) advanceAfterModule(); else render(); });
+  const n = $("btnNext"); if (n) n.addEventListener("click", () => {
+    if (state.answers[q.id] == null && !confirm("You haven't answered this question. Skip it for now? You can come back to it.")) return;
+    state.qi++; if (state.qi >= qids.length) advanceAfterModule(); else render(); });
   $("questionCard").querySelectorAll(".qdot").forEach((b) => { b.addEventListener("click", () => { state.qi = parseInt(b.dataset.goto, 10); save(); render(); }); });
 }
 

@@ -2337,11 +2337,17 @@ async function aiChat(messages) {
   if (s.provider === "groq" && s.groqKey) {
     return ask("https://api.groq.com/openai/v1/chat/completions", { model: "llama-3.3-70b-versatile", messages, temperature: 0.4, max_tokens: 500 }, { Authorization: "Bearer " + s.groqKey });
   }
-  return ask("https://text.pollinations.ai/openai", { model: "openai", messages, temperature: 0.4, private: true });
+  // The free model occasionally returns an empty reply; retry once before giving up.
+  for (let i = 0; i < 2; i++) {
+    const out = await ask("https://text.pollinations.ai/openai", { model: "openai", messages, temperature: 0.4, private: true });
+    if (out) return out;
+  }
+  throw { code: "empty" };
 }
 function aiErrorText(e) {
   return e && e.code === "rate_limited" ? "The free AI is busy right now. Wait a few seconds and try again." :
     e && e.code === "bad_key" ? "Your Groq key was rejected. Check it in 👤 Account → AI tutor." :
+    e && e.code === "empty" ? "The free AI didn't answer that time. Try asking again." :
     e && e.name === "AbortError" ? "The AI took too long to answer. Try again." :
     "Couldn't reach the AI. Check your internet connection and try again.";
 }

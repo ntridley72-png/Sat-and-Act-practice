@@ -693,7 +693,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
     <div class="auth-msg" id="authMsg"></div>
     <div class="auth-sec">
       <label for="aiProvider">AI tutor</label>
-      <select id="aiProvider"><option value="free">Free (Pollinations, no key needed)</option><option value="groq">Llama 3.3 70B on Groq (free key)</option></select>
+      <select id="aiProvider"><option value="free">Built-in tutor (free, no key needed)</option><option value="groq">My own Groq key</option></select>
       <div id="groqKeyWrap" style="display:none"><label for="groqKey">Groq API key</label><input id="groqKey" type="password" autocomplete="off" placeholder="gsk_…"><div class="small muted" style="margin-top:4px">Get a free key at console.groq.com. It is stored only on this device.</div></div>
     </div>
   </div>
@@ -2369,6 +2369,16 @@ async function aiChat(messages) {
   };
   if (s.provider === "groq" && s.groqKey) {
     return ask("https://api.groq.com/openai/v1/chat/completions", { model: "llama-3.3-70b-versatile", messages, temperature: 0.4, max_tokens: 500 }, { Authorization: "Bearer " + s.groqKey });
+  }
+  // Built-in tutor: Groq through our own server (the key stays there). Falls back to the free public model.
+  if (typeof API_BASE === "string") {
+    try {
+      const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 30000);
+      try {
+        const r = await fetch(API_BASE + "/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages }), signal: ctrl.signal });
+        if (r.ok) { const j = await r.json(); if (j.content) return j.content; }
+      } finally { clearTimeout(t); }
+    } catch (e) {}
   }
   // The free model occasionally returns an empty reply; retry once before giving up.
   for (let i = 0; i < 2; i++) {

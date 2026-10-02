@@ -6,6 +6,7 @@
 //   GET  /api/progress                      -> { data, updatedAt }
 //   PUT  /api/progress { data, updatedAt }  -> { ok, updatedAt }
 //   POST /api/forgot   { email }            -> { ok }  (emails a reset link through Resend)
+//   POST /api/ai       { messages }         -> { content }  (AI tutor via Groq; key stays on the server)
 //   POST /api/reset    { token, password }  -> { token, email }
 // Password reset needs a Resend API key: npx wrangler secret put RESEND_API_KEY
 // and optionally MAIL_FROM (a sender on a domain you verified in Resend).
@@ -38,6 +39,7 @@ async function route(req, env, path) {
   if (path === "login" && req.method === "POST") return login(req, env);
   if (path === "forgot" && req.method === "POST") return forgot(req, env);
   if (path === "reset" && req.method === "POST") return reset(req, env);
+  if (path === "ai" && req.method === "POST") return aiTutor(req, env);
   const user = await authed(req, env);
   if (!user) return json({ error: "Please sign in again." }, 401, req);
   if (path === "logout" && req.method === "POST") {
@@ -163,3 +165,33 @@ function unhex(h) { return new Uint8Array(h.match(/../g).map((x) => parseInt(x, 
 // Logins use a bearer token (not cookies), so allowing any origin is safe and lets the app work from anywhere.
 function cors() { return { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization", "Access-Control-Max-Age": "86400" }; }
 function json(obj, status, req) { return new Response(JSON.stringify(obj), { status, headers: Object.assign({ "Content-Type": "application/json" }, cors(req)) }); }
+
+// ---- AI tutor: forwards chat to Groq with the server's key, so students don't need their own. ----
+const AI_ORIGINS = /^https:\/\/(funsat\.bid|sat-act-practice\.[a-z0-9-]+\.workers\.dev)$/;
+const AI_PER_WINDOW = 30, AI_WINDOW_MIN = 10;
+async function aiTutor(req, env) {
+  if (!env.GROQ_API_KEY) return json({ code: "no_key" }, 503, req);
+  // Only the app's own pages may use the tutor, so the key can't be borrowed by other sites.
+  if (!AI_ORIGINS.test(req.headers.get("Origin") || "")) return json({ code: "forbidden" }, 403, req);
+  let body; try { body = await req.json(); } catch { return json({ error: "Bad request." }, 400, req); }
+  const messages = Array.isArray(body.messages) ? body.messages.slice(-12)
+    .filter((m) => m && ["system", "user", "assistant"].includes(m.role) && typeof m.content === "string")
+    .map((m) => ({ role: m.role, content: m.content.slice(0, 6000) })) : [];
+  if (!messages.length) return json({ error: "Bad request." }, 400, req);
+  // Per-IP limit so one visitor can't use up the shared Groq quota.
+  const ip = req.headers.get("CF-Connecting-IP") || "?";
+  const win = Math.floor(Date.now() / (AI_WINDOW_MIN * 60000));
+  const row = await env.DB.prepare("INSERT INTO ai_usage (ip, win, n) VALUES (?, ?, 1) ON CONFLICT(ip, win) DO UPDATE SET n = n + 1 RETURNING n").bind(ip, win).first();
+  if (row && row.n > AI_PER_WINDOW) return json({ code: "rate_limited" }, 429, req);
+  if (Math.random() < 0.02) await env.DB.prepare("DELETE FROM ai_usage WHERE win < ?").bind(win - 1).run();
+  const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + env.GROQ_API_KEY },
+    body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages, temperature: 0.4, max_tokens: 500 })
+  });
+  if (r.status === 429) return json({ code: "rate_limited" }, 429, req);
+  if (!r.ok) return json({ code: "upstream", status: r.status }, 502, req);
+  const j = await r.json();
+  const content = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content || "").trim();
+  return json({ content }, 200, req);
+}

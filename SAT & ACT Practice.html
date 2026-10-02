@@ -1781,7 +1781,18 @@ function renderQuestion() {
   if (chosen != null && isMathQ(q)) wireCoach(q, chosen);
   const p = $("btnPrev"); if (p) p.addEventListener("click", () => { state.qi--; save(); render(); });
   const n = $("btnNext"); if (n) n.addEventListener("click", () => {
-    if (state.answers[q.id] == null && !confirm("You haven't answered this question. Skip it for now? You can come back to it.")) return;
+    const last = state.qi + 1 >= qids.length;
+    if (!last && state.answers[q.id] == null && !confirm("You haven't answered this question. Skip it for now? You can come back to it.")) return;
+    if (last) {
+      // Never leave a module with blanks unless the student says so: offer to go back to them first.
+      const blanks = qids.map((id, i) => state.answers[id] == null ? i : -1).filter((i) => i >= 0);
+      if (blanks.length) {
+        if (confirm(blanks.length + (blanks.length === 1 ? " question" : " questions") + " in this " + (def.adaptive ? "module" : "section") + " still unanswered.\n\nOK = go back and answer " + (blanks.length === 1 ? "it" : "them") + "\nCancel = move on anyway")) {
+          state.qi = blanks[0]; save(); render(); return;
+        }
+      }
+      state.qi++; advanceAfterModule(true); return;
+    }
     state.qi++; if (state.qi >= qids.length) advanceAfterModule(); else render(); });
   $("questionCard").querySelectorAll(".qdot").forEach((b) => { b.addEventListener("click", () => { state.qi = parseInt(b.dataset.goto, 10); save(); render(); }); });
 }
@@ -1844,7 +1855,7 @@ $("unlockPlay").addEventListener("click", () => { $("unlockModal").classList.rem
 $("unlockKeep").addEventListener("click", () => $("unlockModal").classList.remove("show"));
 
 // ---- ROUTING ----
-function advanceAfterModule() {
+function advanceAfterModule(confirmed) {
   const sec = curSection();
   const def = defByKey(state.cfg.testType, sec);
   const plan = state.plan[sec];
@@ -1865,7 +1876,7 @@ function advanceAfterModule() {
   } else {
     if (state.modIdx + 1 < plan.mods.length) { state.modIdx++; state.qi = 0; state.view = "test"; save(); render(); }
     else if (state.secIdx + 1 < state.keys.length) { state.secIdx++; state.modIdx = 0; state.qi = 0; state.view = "test"; save(); render(); }
-    else finishTest();
+    else finishTest(confirmed);
   }
 }
 
@@ -1898,8 +1909,8 @@ function renderRouting() {
 }
 
 // ---- FINISH ----
-function finishTest() {
-  if (totalAnswered() > 0 && totalAnswered() < state.keys.reduce((s, k) => s + state.counts[k], 0)) {
+function finishTest(confirmed) {
+  if (!confirmed && totalAnswered() > 0 && totalAnswered() < state.keys.reduce((s, k) => s + state.counts[k], 0)) {
     if (!confirm("You have " + (state.keys.reduce((s, k) => s + state.counts[k], 0) - totalAnswered()) + " unanswered questions. Finish anyway?")) return;
   }
   state.done = true;
@@ -2115,7 +2126,7 @@ $("btnExit").addEventListener("click", () => {
   finalizeAttempt(false);
   save(); render();
 });
-$("btnFinish").addEventListener("click", finishTest);
+$("btnFinish").addEventListener("click", () => finishTest());
 // "New test" mid-test: bail out of the current test at any time, save whatever was
 // answered to history, and drop the user back on the start screen with a clean slate
 // so they can pick fresh options (test, section, module, question count) right away.

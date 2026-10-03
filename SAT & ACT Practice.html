@@ -233,8 +233,17 @@ body.wide-test .wrap{max-width:1240px}
 .fb-zoom{position:absolute;right:8px;top:8px;display:grid;gap:4px}
 .fb-zoom button{padding:4px 9px;background:#fff;color:var(--ink);border:1px solid var(--line);font-size:.9rem}
 .cmsg .calc-show{display:block;margin-top:6px;padding:5px 10px;font-size:.8rem}
-mark.hl{background:#fde68a;color:inherit;border-radius:2px;cursor:pointer;padding:0 1px}
-body.hl-mode .passage,body.hl-mode .qtext{cursor:text;outline:2px dashed #fcd34d;outline-offset:3px}
+/* Highlighter colors are theme tokens. Light is the default; a dark theme sets data-hl="dark" (or
+   class hl-dark) on <html> or <body>, a neon/arcade theme sets data-hl="neon" (or class hl-neon).
+   Dark variants keep the theme's own light text and use a translucent fill + underline instead of
+   solid yellow, so highlighted words stay readable: 14:1 on light, and 4.5:1+ for light text
+   (#e5e7eb or brighter) on dark backgrounds from #0b1020 to #334155. */
+:root{--hl-bg:#fde68a;--hl-text:#1a1a1a;--hl-underline:#b45309;--hl-shadow:none}
+:is([data-hl="dark"],.hl-dark){--hl-bg:rgba(250,204,21,.28);--hl-text:inherit;--hl-underline:#facc15;--hl-shadow:inset 0 -2px 0 #facc15}
+:is([data-hl="neon"],.hl-neon){--hl-bg:rgba(94,240,176,.25);--hl-text:inherit;--hl-underline:#5ef0b0;--hl-shadow:inset 0 -2px 0 #5ef0b0}
+mark,.highlight{background:var(--hl-bg);color:var(--hl-text);box-shadow:var(--hl-shadow);border-radius:3px;padding:0 2px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+mark.hl{cursor:pointer}
+body.hl-mode .passage,body.hl-mode .qtext{cursor:text;outline:2px dashed var(--hl-underline);outline-offset:3px}
 .line-reader{position:fixed;left:0;right:0;pointer-events:none;z-index:700;display:none}
 .line-reader.show{display:block}
 .line-reader .shade{position:fixed;left:0;right:0;background:rgba(15,23,42,.55)}

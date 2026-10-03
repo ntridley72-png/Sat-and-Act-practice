@@ -3962,6 +3962,7 @@ const arcade = {
   menuSel: 0,
   // In-overlay game select (keeps the overlay open), unlike backToMenu which returns to the questions.
   showMenu() {
+    this.overtime = false;
     if (this.remaining > 0 && this.runMode !== 'credit') this.remainingCarry = Math.ceil(this.remaining);
     this.remaining = 0; this.game = null; this.runMode = 'timed';
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
@@ -4023,6 +4024,7 @@ const arcade = {
   },
 
   select(game) {
+    this.overtime = false;
     this.open(); // ensure overlay visible
     this.mode = 'ready';
     this.menu.style.display = 'none';
@@ -4095,8 +4097,18 @@ const arcade = {
     this._lastFrame = now;
     // Countdown
     if (this.mode === 'playing' && this.game && this.game.started) {
-      this.remaining -= dt;
-      if (this.remaining <= 0 && !this.autoRefill()) { this.remaining = 0; this.timeUp(); }
+      if (this.overtime) {
+        // Last round: the clock ran out mid-game, so let this game finish (up to 60 extra seconds).
+        this.overtimeLeft -= dt;
+        if (this.overtimeLeft <= 0) { this.overtime = false; this.remaining = 0; this.timeUp(); }
+      } else {
+        this.remaining -= dt;
+        if (this.remaining <= 0 && !this.autoRefill()) {
+          this.remaining = 0;
+          if (!this.game.over) { this.overtime = true; this.overtimeLeft = 60; showToast("⏱ Time's up: finish this round!"); }
+          else this.timeUp();
+        }
+      }
       if (this.remaining <= 5 && this.remaining > 0 && Date.now() - this._lastTickSound > 1000) {
         sndTick(); this._lastTickSound = Date.now();
       }
@@ -4143,6 +4155,7 @@ const arcade = {
   },
 
   timeUp() {
+    this.overtime = false;
     this.mode = 'timeup';
     if (this.game) { if (this.game.score > (profile.highScores[this.game.key] || 0)) profile.highScores[this.game.key] = this.game.score; saveProfile(); }
     if (this.runMode === 'credit') { this.creditTimeUp(); return; }
@@ -4176,6 +4189,7 @@ const arcade = {
   },
 
   gameOver() {
+    this.overtime = false;
     this.mode = 'over';
     if (this.runMode === 'credit') this.remaining = 0; // a credit run ends at game over
     const score = this.game ? this.game.score : 0;
@@ -4202,6 +4216,7 @@ const arcade = {
 
   // Restart the same game with whatever arcade time is left (buying more with tokens if the clock is empty).
   playAgain() {
+    this.overtime = false;
     if (!this.game) { this.backToMenu(); return; }
     if (RUN_GAMES.includes(this.game.key) && profile.tokens >= ARCDE_TOKEN_COST) {
       profile.tokens -= ARCDE_TOKEN_COST; this.runMode = 'credit'; this.remaining = RUN_MAX_SEC; saveProfile(); updateHUD();
@@ -4226,6 +4241,7 @@ const arcade = {
   },
 
   backToMenu() {
+    this.overtime = false;
     if (this.remaining > 0 && this.runMode !== 'credit') this.remainingCarry = Math.ceil(this.remaining);
     if (this.game && this.game.started && this.mode === 'playing') {
       // save partial progress by keeping remaining time
@@ -4253,6 +4269,7 @@ const arcade = {
   showMsg(show) { this.msg.style.display = show ? 'flex' : 'none'; },
 
   updateChips() {
+    if (this.overtime) { this.chipTime.innerHTML = '🏁 LAST ROUND <span id="chipTimeVal">' + Math.ceil(Math.max(0, this.overtimeLeft)) + '</span>s'; this.chipTime.classList.add('low'); this.chipTok.innerHTML = '🪙 <span id="chipTokVal">' + profile.tokens + '</span>'; return; }
     this.chipTime.innerHTML = this.runMode === 'credit' && this.mode !== 'menu' ? '🎟 RUN <span id="chipTimeVal">' + fmtTime(Math.max(0, Math.ceil(this.remaining))) + '</span>' : '⏱ <span id="chipTimeVal">' + Math.ceil(this.remaining) + '</span>s';
     const ct = this.chipTime.querySelector('span');
     if (this.remaining <= 5 && this.remaining > 0) this.chipTime.classList.add('low'); else this.chipTime.classList.remove('low');
@@ -7106,6 +7123,38 @@ class BubbleShooter {
 }
 
 // ---- SPACE INVADERS ----
+// ---- Pixel water gun (shared by the shooter games) ----
+const WATER_GUN = [
+  "....DGGD....",
+  "....DGGD....",
+  "...DOOOOD...",
+  "...DOWOOD...",
+  "..DBBBBBBD..",
+  "..DBWBBBBD..",
+  "..DBBBBBBD..",
+  "..DBBBBBBD..",
+  "...DOOOOD...",
+  "...DOOOOD...",
+  "..DOOOOOODD.",
+  "..DOOOOOOYD.",
+  "...DDOOD.YD.",
+  "....DOOD.DD.",
+  "....DOOD....",
+  "....DDDD...."
+];
+const WATER_GUN_COLORS = { O: "#f97316", B: "#38bdf8", W: "#e0f2fe", D: "#1f2937", G: "#94a3b8", Y: "#facc15" };
+// Draws the gun pointing up with its bottom-center at (cx, bottom); returns the nozzle tip position.
+function drawWaterGun(ctx, cx, bottom, px) {
+  const w = WATER_GUN[0].length * px, h = WATER_GUN.length * px, x0 = Math.round(cx - w / 2), y0 = Math.round(bottom - h);
+  WATER_GUN.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== ".") { ctx.fillStyle = WATER_GUN_COLORS[ch]; ctx.fillRect(x0 + x * px, y0 + y * px, px, px); } }));
+  return { x: x0 + 6 * px, y: y0 };
+}
+function drawWaterDrop(ctx, x, y, r) {
+  ctx.fillStyle = "#38bdf8";
+  ctx.beginPath(); ctx.moveTo(x, y - r * 1.8); ctx.quadraticCurveTo(x + r, y - r * 0.2, x, y + r); ctx.quadraticCurveTo(x - r, y - r * 0.2, x, y - r * 1.8); ctx.fill();
+  ctx.fillStyle = "rgba(224,242,254,.9)"; ctx.fillRect(Math.round(x - r * 0.35), Math.round(y - r * 0.4), Math.max(1, Math.round(r * 0.4)), Math.max(1, Math.round(r * 0.4)));
+}
+
 class Invaders {
   constructor(canvas, arcade) {
     this.canvas = canvas; this.arcade = arcade;
@@ -7174,10 +7223,8 @@ class Invaders {
       ctx.fillStyle = '#0b1020'; ctx.fillRect(a.x - 9, a.y - 5, 6, 6); ctx.fillRect(a.x + 3, a.y - 5, 6, 6);
       ctx.fillStyle = col; ctx.fillRect(a.x - 13, a.y + 8, 8, blink ? 5 : 3); ctx.fillRect(a.x + 5, a.y + 8, 8, blink ? 5 : 3);
     });
-    ctx.fillStyle = '#38bdf8';
-    ctx.beginPath(); ctx.moveTo(this.ship.x, this.ship.y - 20); ctx.lineTo(this.ship.x + this.ship.w / 2, this.ship.y + 14); ctx.lineTo(this.ship.x - this.ship.w / 2, this.ship.y + 14); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#0ea5e9'; ctx.fillRect(this.ship.x - 3, this.ship.y + 14, 6, 8);
-    ctx.fillStyle = '#fde68a'; this.bullets.forEach((b) => ctx.fillRect(b.x - 2, b.y - 10, 4, 14));
+    drawWaterGun(ctx, this.ship.x, this.ship.y + 22, 3);
+    this.bullets.forEach((b) => drawWaterDrop(ctx, b.x, b.y - 4, 4));
     ctx.fillStyle = '#f472b6'; this.bombs.forEach((b) => { ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI * 2); ctx.fill(); });
     if (!this.started) drawGameCard(ctx, W, H, 'HOW TO PLAY', [
       '1. Move with ← → or A/D. Fire with SPACE or tap.',
@@ -7262,8 +7309,8 @@ class Doom {
       while (ang < -Math.PI) ang += Math.PI * 2;
       if (Math.abs(ang) < bestDiff && dist < 12) { best = e; bestDiff = Math.abs(ang); }
     });
-    playTone(150, .07, 'square', .15);
-    this.flash = 0.08;
+    playTone(520, .05, 'triangle', .08); setTimeout(() => playTone(380, .05, 'triangle', .06), 40); // water squirt
+    this.flash = 0.12;
     if (best) { best.alive = false; this.score += 10; this.kills++; sndCoin(); }
   }
   update(dt) {
@@ -7357,7 +7404,19 @@ class Doom {
       ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(screenX - size * 0.12, H / 2 - size * 0.08, size * 0.08, 0, Math.PI * 2); ctx.fill();
       ctx.beginPath(); ctx.arc(screenX + size * 0.12, H / 2 - size * 0.08, size * 0.08, 0, Math.PI * 2); ctx.fill();
     });
-    if (this.flash > 0) { ctx.fillStyle = 'rgba(255,255,255,' + (this.flash / 0.08 * 0.25) + ')'; ctx.fillRect(0, 0, W, H); }
+    // Pixel water gun at the bottom; it bobs while you move and sprays toward the crosshair when you fire.
+    const bob = Math.sin((this.px + this.py) * 6) * 4;
+    const tip = drawWaterGun(ctx, W / 2 + 40, H + 6 + bob + (this.flash > 0 ? 6 : 0), 7);
+    if (this.flash > 0) {
+      const t = Math.min(1, this.flash / 0.12);
+      for (let k = 0; k < 9; k++) {
+        const f = k / 8, x = tip.x + (W / 2 - tip.x) * f, y = tip.y + (H / 2 - tip.y) * f - Math.sin(f * Math.PI) * 10;
+        ctx.globalAlpha = 0.35 + 0.65 * t; drawWaterDrop(ctx, x, y, 6 - f * 3);
+      }
+      ctx.globalAlpha = t; ctx.fillStyle = "#bae6fd";
+      for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; ctx.fillRect(Math.round(W / 2 + Math.cos(a) * 12 * (1.4 - t)), Math.round(H / 2 + Math.sin(a) * 9 * (1.4 - t)), 3, 3); }
+      ctx.globalAlpha = 1;
+    }
     // crosshair
     ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(W / 2 - 6, H / 2); ctx.lineTo(W / 2 + 6, H / 2); ctx.moveTo(W / 2, H / 2 - 6); ctx.lineTo(W / 2, H / 2 + 6); ctx.stroke();

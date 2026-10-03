@@ -87,7 +87,10 @@ async function route(req, env, path) {
       const previous = await env.DB.prepare("SELECT data, updated_at FROM progress WHERE user_id = ?").bind(user.id).first();
       const old = previous ? JSON.parse(previous.data) : null;
       const incomingAt = Number(body.updatedAt) || Date.now();
-      const data = previous && previous.updated_at > incomingAt ? { ...old } : { ...body.data };
+      // A client that has seen the latest server version (baseAt) always wins; otherwise fall back to edit times.
+      const baseAt = Number(body.baseAt) || 0;
+      const stale = previous && previous.updated_at > incomingAt && !(baseAt && baseAt >= previous.updated_at);
+      const data = stale ? { ...old } : { ...body.data };
       data.history = mergeAttemptHistory(old && old.history, body.data.history);
       const updatedAt = Math.max(Date.now(), incomingAt, (previous && previous.updated_at || 0) + 1);
       const result = await env.DB.prepare("INSERT INTO progress (user_id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at WHERE progress.updated_at = ?")

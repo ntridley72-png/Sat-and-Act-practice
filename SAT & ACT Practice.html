@@ -3700,13 +3700,14 @@ const cloud = {
       const j = await this.api("progress");
       const d = j.data;
       const merged = mergeAttemptHistory(profile.history, d && d.history);
-      if (d && (j.updatedAt || 0) > startedWith && (profile.updatedAt || 0) === startedWith) {
+      // Only take the server copy when it is newer than what this device last synced AND this device has no unsaved edits.
+      if (d && (j.updatedAt || 0) > (profile.syncedAt ?? profile.updatedAt ?? 0) && !profile.dirty && (profile.updatedAt || 0) === startedWith) {
         this.applying = true;
         const mine = { seen: profile.seen, served: profile.served, lastServed: profile.lastServed, qlog: profile.qlog, recentQuestions: profile.recentQuestions };
         Object.keys(DEFAULT_PROFILE).forEach((k) => { if (d.profile && d.profile[k] !== undefined) profile[k] = d.profile[k]; });
         mergeQuestionLogs(mine);
         if (d.state && d.state.v === 4) state = d.state;
-        profile.updatedAt = j.updatedAt;
+        profile.updatedAt = j.updatedAt; profile.syncedAt = j.updatedAt; profile.dirty = false;
       }
       profile.history = merged;
       if (d && d.profile) mergeQuestionLogs(d.profile); // keep what the other device recorded too
@@ -3728,7 +3729,10 @@ const cloud = {
     setSyncStatus("Saving to your account…");
     try {
       const prof = Object.assign({}, profile); delete prof.history;
-      const j = await this.api("progress", { method: "PUT", keepalive, body: JSON.stringify({ updatedAt: profile.updatedAt || Date.now(), data: { profile: prof, history: profile.history.slice(0, 120), state } }) });
+      const editAt = profile.updatedAt || 0;
+      delete prof.dirty; delete prof.syncedAt;
+      const j = await this.api("progress", { method: "PUT", keepalive, body: JSON.stringify({ updatedAt: profile.updatedAt || Date.now(), baseAt: profile.syncedAt || 0, data: { profile: prof, history: profile.history.slice(0, 120), state } }) });
+      if (j.updatedAt) { profile.syncedAt = j.updatedAt; if ((profile.updatedAt || 0) === editAt) profile.dirty = false; try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch (e) {} }
       if (j.history) { profile.history = mergeAttemptHistory(profile.history, j.history); saveHistory(); }
       setSyncStatus("Saved to your account at " + new Date().toLocaleTimeString());
       return true;
@@ -3743,13 +3747,14 @@ const cloud = {
   },
   queue() {
     if (this.applying) return;
-    profile.updatedAt = Date.now();
+    profile.updatedAt = Date.now(); profile.dirty = true;
     if (!this.user) return;
     clearTimeout(this.timer); this.timer = setTimeout(() => this.push(), 2500);
   }
 };
 addEventListener("online", () => { if (cloud.user) cloud.pull(); });
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") cloud.push(true); });
+window.addEventListener("pagehide", () => { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch (e) {} cloud.push(true); });
 function setAuthMsg(t, err) { const m = $("authMsg"); m.textContent = t || ""; m.className = "auth-msg" + (t ? (err ? " err" : " ok") : ""); }
 function paintAccount() {
   const u = cloud.user;

@@ -823,7 +823,9 @@
     const back = $("collegeBack");
     if (back) back.addEventListener("click", closeCollege);
 
-    const bind = (id, key, cast) => { const el = $(id); if (el) el.addEventListener("change", () => { c[key] = cast ? cast(el.value) : el.value; saveCollege(); renderCollegeScreen(); }); };
+    const bind = (id, key, cast) => { const el = $(id); if (!el) return;
+      el.addEventListener("input", () => { c[key] = cast ? cast(el.value) : el.value; saveCollege(); });
+      el.addEventListener("change", () => { c[key] = cast ? cast(el.value) : el.value; saveCollege(); renderCollegeScreen(); }); };
     bind("collegeTestType", "testType");
     bind("collegeSat", "sat", (v) => (v === "" ? null : clamp(Number(v), SAT_MIN, SAT_MAX)));
     bind("collegeAct", "act", (v) => (v === "" ? null : clamp(Number(v), ACT_MIN, ACT_MAX)));
@@ -841,9 +843,9 @@
       if (el) el.addEventListener("change", () => { c[key] = el.checked; saveCollege(); renderCollegeScreen(); });
     });
     const other = $("collegeOther");
-    if (other) { other.addEventListener("keydown", (e) => e.stopPropagation()); other.addEventListener("change", () => { c.circumstanceOther = other.value; saveCollege(); renderCollegeScreen(); }); }
+    if (other) { other.addEventListener("keydown", (e) => e.stopPropagation()); other.addEventListener("input", () => { c.circumstanceOther = other.value; saveCollege(); }); other.addEventListener("change", () => { c.circumstanceOther = other.value; saveCollege(); renderCollegeScreen(); }); }
     ["collegeMajor", "collegeGpa", "collegeSat", "collegeAct", "collegeOther"].forEach((id) => { const el = $(id); if (el) el.addEventListener("keydown", (e) => e.stopPropagation()); });
-    document.querySelectorAll("#screen-college [data-rigor]").forEach((el) => el.addEventListener("change", () => { c.rigor[el.dataset.rigor] = Math.max(0, Number(el.value) || 0); saveCollege(); renderCollegeScreen(); }));
+    document.querySelectorAll("#screen-college [data-rigor]").forEach((el) => el.addEventListener("input", () => { c.rigor[el.dataset.rigor] = Math.max(0, Number(el.value) || 0); saveCollege(); }) || el.addEventListener("change", () => { c.rigor[el.dataset.rigor] = Math.max(0, Number(el.value) || 0); saveCollege(); renderCollegeScreen(); }));
     const rcBtn = $("btnReviewContext");
     if (rcBtn) rcBtn.addEventListener("click", () => { const o = $("collegeOther"); if (o) c.circumstanceOther = o.value; reviewContext(); });
     const usePred = $("collegeUsePredicted");

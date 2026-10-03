@@ -411,3 +411,20 @@ body.cpop-open{overflow:hidden}
 #fxOverlay.zooming .cab3d{transition:transform .75s cubic-bezier(.65,0,.35,1);filter:none}
 #fxOverlay.zooming{transition:background-color .75s ease;background:rgba(4,7,12,.95)}
 @media (prefers-reduced-motion: reduce){#fxOverlay.zooming .cab3d{transition-duration:.01s}}
+/* ---- Profile layout A: two horizontal bands, college breakdowns right below ---- */
+.college-profile-grid .college-band{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px 16px;align-items:end;padding:18px 22px 20px}
+.college-band legend{font-size:18px;font-weight:800;padding:0 8px}
+.college-band>label,.college-gpa-pair>label{display:flex;flex-direction:column;gap:6px;margin:0;font-size:13px;color:var(--ws-muted)}
+.college-band>label>input,.college-band>label>select,.college-gpa-pair input,.college-gpa-pair select{width:100%;height:46px;box-sizing:border-box;border-radius:12px;font-size:16px;padding:0 12px;margin:0}
+.college-band-scores #collegeUsePredicted{height:46px;width:100%;margin:0;border-radius:12px;font-size:15px;font-weight:800;padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.college-band-scores>p{grid-column:1/-1;margin:0;font-size:13px}
+.college-gpa-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:8px}
+.college-gpa-pair select{font-size:15px;padding:0 8px}
+.college-band .college-rigor{display:flex;flex-direction:column;gap:6px;margin:0;font-size:13px;color:var(--ws-muted)}
+.college-band .college-rigor{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.college-band .college-rigor>span{grid-column:1/-1}
+.college-band .college-rigor label{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;margin:0}
+.college-band .college-rigor input{width:100%;height:30px;box-sizing:border-box;text-align:center;border-radius:8px;font-size:15px;padding:0}
+.college-profile-grid .college-chances{margin-top:4px}
+@media(max-width:900px){.college-profile-grid .college-band{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.college-profile-grid .college-band{grid-template-columns:1fr}}

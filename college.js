@@ -611,23 +611,25 @@
       '<summary><strong>Your profile</strong><span class="small muted"> ' + collegeSaveStatus() + "</span></summary>" +
       '<div id="collegeProfileHero" class="college-hero"></div>' +
       '<div class="college-profile-wrap"><div class="college-profile-grid">' +
-      '<fieldset><legend>Test scores</legend>' +
+      '<fieldset class="college-band college-band-scores"><legend>Test scores</legend>' +
       '<label>Primary test <select id="collegeTestType"><option value="sat"' + (c.testType === "sat" ? " selected" : "") + '>SAT</option><option value="act"' + (c.testType === "act" ? " selected" : "") + ">ACT</option></select></label>" +
       '<label>SAT total (400–1600) <input type="number" id="collegeSat" min="400" max="1600" step="10" value="' + (c.sat != null ? c.sat : "") + '" placeholder="e.g., 1350"></label>' +
       '<label>ACT composite (1–36) <input type="number" id="collegeAct" min="1" max="36" step="1" value="' + (c.act != null ? c.act : "") + '" placeholder="e.g., 30"></label>' +
-      (predSat || predAct ? '<button type="button" class="secondary" id="collegeUsePredicted">Use my predicted score' + (predSat ? " (SAT " + predSat + ")" : predAct ? " (ACT " + predAct + ")" : "") + "</button>" : "") +
+      (predSat || predAct ? '<button type="button" class="secondary" id="collegeUsePredicted">Use predicted' + (predSat ? " (SAT " + predSat + ")" : predAct ? " (ACT " + predAct + ")" : "") + "</button>" : "") +
       '<p class="small muted">Enter your best official or practice score. Predicted scores come from your practice attempts and are estimates.</p></fieldset>' +
-      '<fieldset><legend>Academics</legend>' +
+      '<fieldset class="college-band college-band-acad"><legend>Academics</legend>' +
       '<label>Grade level <select id="collegeGrade">' + [["9", "9th"], ["10", "10th"], ["11", "11th"], ["12", "12th"], ["gap", "Gap year / other"]].map(([v, t]) => '<option value="' + v + '"' + (c.grade === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label>" +
+      '<div class="college-gpa-pair">' +
       '<label>GPA <input type="number" id="collegeGpa" min="0" max="100" step="0.01" value="' + (c.gpa != null ? c.gpa : "") + '" placeholder="e.g., 3.85"></label>' +
       '<label>GPA scale <select id="collegeGpaScale">' + [["4uw", "4.0 unweighted"], ["4w", "4.0 weighted"], ["5w", "5.0 weighted"], ["100", "100-point"]].map(([v, t]) => '<option value="' + v + '"' + (c.gpaScale === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label>" +
-      '<label>Intended major <input type="text" id="collegeMajor" maxlength="80" value="' + escapeHtml(c.major || "") + '" placeholder="e.g., Computer science"></label>' +
-      '<label>Application plan <select id="collegeApplyPlan">' + [["regular", "Regular decision"], ["ea", "Early Action (non-binding)"], ["ed", "Early Decision (binding)"]].map(([v, t]) => '<option value="' + v + '"' + ((c.applyPlan === "early" ? "ea" : c.applyPlan || "regular") === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label>" +
+      '</div>' +
       '<label>Class rank <select id="collegeClassRank">' + [["", "Not ranked / don't know"], ["top5", "Top 5%"], ["top10", "Top 10%"], ["top25", "Top 25%"], ["top50", "Top 50%"], ["below", "Lower half"]].map(([v, t]) => '<option value="' + v + '"' + ((c.classRank || "") === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label>" +
       '<label>Home state <select id="collegeHomeState"><option value="">Choose…</option>' + "AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA PR RI SC SD TN TX UT VT VA WA WV WI WY".split(" ").map((s) => '<option value="' + s + '"' + (c.homeState === s ? " selected" : "") + ">" + s + "</option>").join("") + "</select></label>" +
+      '<label>Intended major <input type="text" id="collegeMajor" maxlength="80" value="' + escapeHtml(c.major || "") + '" placeholder="e.g., Computer science"></label>' +
+      '<label>Application plan <select id="collegeApplyPlan">' + [["regular", "Regular decision"], ["ea", "Early Action (non-binding)"], ["ed", "Early Decision (binding)"]].map(([v, t]) => '<option value="' + v + '"' + ((c.applyPlan === "early" ? "ea" : c.applyPlan || "regular") === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label>" +
       '<label>Essays &amp; recs (self-rated) <select id="collegeAppStrength"><option value="strong"' + (c.appStrength === "strong" ? " selected" : "") + '>Strong</option><option value="average"' + (c.appStrength !== "strong" && c.appStrength !== "developing" ? " selected" : "") + '>Average</option><option value="developing"' + (c.appStrength === "developing" ? " selected" : "") + '>Still developing</option></select></label>' +
-      '<div class="college-rigor"><span>Course rigor (count of courses)</span>' +
-      ["ap", "ib", "honors", "dual"].map((k) => '<label>' + ({ ap: "AP", ib: "IB", honors: "Honors", dual: "Dual enrollment" })[k] + ' <input type="number" min="0" max="40" step="1" data-rigor="' + k + '" value="' + (Number(c.rigor[k]) || 0) + '"></label>').join("") + "</div></fieldset>" +
+      '<div class="college-rigor"><span>Course rigor (number of AP, IB, honors, dual-enrollment courses)</span>' +
+      ["ap", "ib", "honors", "dual"].map((k) => '<label>' + ({ ap: "AP", ib: "IB", honors: "Honors", dual: "Dual" })[k] + ' <input type="number" min="0" max="40" step="1" data-rigor="' + k + '" value="' + (Number(c.rigor[k]) || 0) + '"></label>').join("") + "</div></fieldset>" +
       chancesHtml() +
       '<fieldset class="college-wide"><legend>Activities and circumstances</legend>' +
       '<div class="college-activities" id="collegeActivities">' + activityRows + "</div>" +

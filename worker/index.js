@@ -6,7 +6,8 @@
 //   GET  /api/progress                      -> { data, updatedAt }
 //   PUT  /api/progress { data, updatedAt }  -> { ok, updatedAt }
 //   POST /api/forgot   { email }            -> { ok }  (emails a reset link through Resend)
-//   POST /api/ai       { messages }         -> { content }  (AI tutor via Groq; key stays on the server)
+//   POST /api/ai       { messages }         -> { content, provider, model, usage }
+//   GET/POST/DELETE /api/help-history       -> account-owned tutor history
 //   POST /api/reset    { token, password }  -> { token, email }
 // Password reset needs a Resend API key: npx wrangler secret put RESEND_API_KEY
 // and optionally MAIL_FROM (a sender on a domain you verified in Resend).
@@ -47,6 +48,32 @@ async function route(req, env, path) {
     return json({ ok: true }, 200, req);
   }
   if (path === "me" && req.method === "GET") return json({ email: user.email }, 200, req);
+  if (path === "grade-stats" && req.method === "GET") {
+    const params = new URL(req.url).searchParams;
+    const grade = String(params.get("grade") || "").slice(0, 8);
+    const score = Number(params.get("score"));
+    if (!grade || !Number.isFinite(score)) return json({ hidden: true, count: 0 }, 200, req);
+    const rows = await env.DB.prepare("SELECT json_extract(data, '$.profile.college.grade') AS grade, json_extract(data, '$.profile.college.homeAvg') AS avg FROM progress").all();
+    const peers = (rows.results || [])
+      .map((row) => ({ grade: row.grade == null ? "" : String(row.grade), avg: Number(row.avg) }))
+      .filter((row) => row.grade === grade && Number.isFinite(row.avg) && row.avg >= 400 && row.avg <= 1600);
+    if (peers.length < 10) return json({ hidden: true, count: peers.length }, 200, req);
+    const below = peers.filter((row) => row.avg < score).length;
+    const topPercent = Math.max(1, Math.min(99, Math.round((1 - below / peers.length) * 100)));
+    return json({ hidden: false, count: peers.length, topPercent }, 200, req);
+  }
+  if (path === "help-history" && req.method === "GET") {
+    const rows = await env.DB.prepare("SELECT id, created_at AS createdAt, question_id AS questionId, question_version AS questionVersion, question_snapshot AS questionSnapshot, test_type AS testType, section, domain, skill, attempt_id AS attemptId, category, request_text AS requestText, response_text AS responseText, provider, model, status, usage_json AS usageJson FROM help_history WHERE user_id = ? ORDER BY created_at DESC LIMIT 250")
+      .bind(user.id).all();
+    return json({ items: (rows.results || []).map((row) => ({ ...row, usage: safeJson(row.usageJson), usageJson: undefined })) }, 200, req);
+  }
+  if (path === "help-history" && req.method === "POST") return saveHelpHistory(req, env, user);
+  if (path.startsWith("help-history/") && req.method === "DELETE") {
+    const id = decodeURIComponent(path.slice("help-history/".length)).slice(0, 100);
+    if (!id) return json({ error: "Invalid history entry." }, 400, req);
+    const result = await env.DB.prepare("DELETE FROM help_history WHERE user_id = ? AND id = ?").bind(user.id, id).run();
+    return json({ ok: true, deleted: result.meta.changes || 0 }, 200, req);
+  }
   if (path === "progress" && req.method === "GET") {
     const row = await env.DB.prepare("SELECT data, updated_at FROM progress WHERE user_id = ?").bind(user.id).first();
     return json(row ? { data: JSON.parse(row.data), updatedAt: row.updated_at } : { data: null, updatedAt: 0 }, 200, req);
@@ -55,10 +82,19 @@ async function route(req, env, path) {
     const text = await req.text();
     if (text.length > MAX_PROGRESS_BYTES) return json({ error: "Saved progress is too large." }, 413, req);
     let body; try { body = JSON.parse(text); } catch { return json({ error: "Bad request." }, 400, req); }
-    const updatedAt = Number(body.updatedAt) || Date.now();
-    await env.DB.prepare("INSERT INTO progress (user_id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at")
-      .bind(user.id, JSON.stringify(body.data ?? null), updatedAt).run();
-    return json({ ok: true, updatedAt }, 200, req);
+    if (!body.data || !Array.isArray(body.data.history)) return json({ error: "Invalid saved progress." }, 400, req);
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const previous = await env.DB.prepare("SELECT data, updated_at FROM progress WHERE user_id = ?").bind(user.id).first();
+      const old = previous ? JSON.parse(previous.data) : null;
+      const incomingAt = Number(body.updatedAt) || Date.now();
+      const data = previous && previous.updated_at > incomingAt ? { ...old } : { ...body.data };
+      data.history = mergeAttemptHistory(old && old.history, body.data.history);
+      const updatedAt = Math.max(Date.now(), incomingAt, (previous && previous.updated_at || 0) + 1);
+      const result = await env.DB.prepare("INSERT INTO progress (user_id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at WHERE progress.updated_at = ?")
+        .bind(user.id, JSON.stringify(data), updatedAt, previous ? previous.updated_at : -1).run();
+      if (result.meta.changes) return json({ ok: true, updatedAt, history: data.history }, 200, req);
+    }
+    return json({ error: "Progress changed on another device. Please retry." }, 409, req);
   }
   return json({ error: "Not found." }, 404, req);
 }
@@ -163,13 +199,13 @@ function timingSafeEqual(a, b) { if (a.length !== b.length) return false; let d 
 function hex(u8) { return [...u8].map((b) => b.toString(16).padStart(2, "0")).join(""); }
 function unhex(h) { return new Uint8Array(h.match(/../g).map((x) => parseInt(x, 16))); }
 // Logins use a bearer token (not cookies), so allowing any origin is safe and lets the app work from anywhere.
-function cors() { return { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization", "Access-Control-Max-Age": "86400" }; }
+function cors() { return { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization", "Access-Control-Max-Age": "86400" }; }
 function json(obj, status, req) { return new Response(JSON.stringify(obj), { status, headers: Object.assign({ "Content-Type": "application/json" }, cors(req)) }); }
 
 // ---- AI tutor: forwards chat to Groq with the server's key, so students don't need their own. ----
 const AI_ORIGINS = /^https:\/\/(funsat\.bid|sat-act-practice\.[a-z0-9-]+\.workers\.dev)$/;
-const GROQ_MODELS = ["llama-3.3-70b-versatile", "openai/gpt-oss-120b", "meta-llama/llama-4-maverick-17b-128e-instruct", "openai/gpt-oss-20b", "llama-3.1-8b-instant"];
-const AI_PER_WINDOW = 30, AI_WINDOW_MIN = 10;
+const GROQ_MODELS = ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "llama-3.3-70b-versatile", "meta-llama/llama-4-scout-17b-16e-instruct", "qwen/qwen3-32b", "llama-3.1-8b-instant"];
+const AI_PER_WINDOW = 45, AI_WINDOW_MIN = 10;
 async function aiTutor(req, env) {
   if (!env.GROQ_API_KEY) return json({ code: "no_key" }, 503, req);
   // Only the app's own pages may use the tutor, so the key can't be borrowed by other sites.
@@ -183,21 +219,74 @@ async function aiTutor(req, env) {
   const ip = req.headers.get("CF-Connecting-IP") || "?";
   const win = Math.floor(Date.now() / (AI_WINDOW_MIN * 60000));
   const row = await env.DB.prepare("INSERT INTO ai_usage (ip, win, n) VALUES (?, ?, 1) ON CONFLICT(ip, win) DO UPDATE SET n = n + 1 RETURNING n").bind(ip, win).first();
-  if (row && row.n > AI_PER_WINDOW) return json({ code: "rate_limited" }, 429, req);
+  if (row && row.n > AI_PER_WINDOW) return json({ code: "app_rate_limited", retryAfter: Math.ceil(((win + 1) * AI_WINDOW_MIN * 60000 - Date.now()) / 1000) }, 429, req);
   if (Math.random() < 0.02) await env.DB.prepare("DELETE FROM ai_usage WHERE win < ?").bind(win - 1).run();
-  // Groq retires models from time to time; try the next one if a model is gone.
-  let r;
-  for (const model of GROQ_MODELS) {
-    r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + env.GROQ_API_KEY },
-      body: JSON.stringify({ model, messages, temperature: 0.4, max_tokens: 700 })
-    });
-    if (r.status !== 404 && r.status !== 400) break;
+  // Try every Groq model so a retired model or a per-model quota still resolves. A caller may
+  // pass a model hint (used by diagnostics) to try one model first, or onlyModel to prove it works.
+  const hint = typeof body.model === "string" && GROQ_MODELS.includes(body.model) ? body.model : null;
+  const order = hint ? [hint, ...GROQ_MODELS.filter((m) => m !== hint)] : GROQ_MODELS;
+  const attempts = {};
+  let lastStatus = 503, retryAfter = 60;
+  const deadline = Date.now() + 30000;
+  for (const model of order) {
+    if (Date.now() > deadline) { attempts[model] = "deadline"; break; }
+    try {
+      const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST", signal: AbortSignal.timeout(8000),
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + env.GROQ_API_KEY },
+        body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: body.teaching ? 1000 : 700,
+          ...(body.teaching ? { response_format: { type: "json_object" } } : {}) })
+      });
+      lastStatus = r.status; attempts[model] = r.status;
+      if (r.status === 401) return json({ code: "server_key_invalid" }, 503, req);
+      if (!r.ok) { retryAfter = Math.max(1, Number(r.headers.get("retry-after")) || 60); continue; }
+      const j = await r.json();
+      const content = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content || "").trim();
+      if (content) return json({ content, provider: "groq", model, usage: normalizeUsage(j.usage), requestId: makeRequestId() }, 200, req);
+      attempts[model] = "empty";
+    } catch (e) { lastStatus = 503; attempts[model] = "timeout"; }
+    if (body.onlyModel) break;
   }
-  if (r.status === 429) return json({ code: "rate_limited" }, 429, req);
-  if (!r.ok) return json({ code: "upstream", status: r.status, detail: (await r.text()).slice(0, 300) }, 502, req);
-  const j = await r.json();
-  const content = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content || "").trim();
-  return json({ content }, 200, req);
+  return json({ code: lastStatus === 429 ? "rate_limited" : "upstream", retryAfter, status: lastStatus, attempts }, lastStatus === 429 ? 429 : 502, req);
+}
+
+async function saveHelpHistory(req, env, user) {
+  const text = await req.text();
+  if (text.length > 30000) return json({ error: "Tutor history entry is too large." }, 413, req);
+  let b; try { b = JSON.parse(text); } catch { return json({ error: "Bad request." }, 400, req); }
+  const allowedStatus = ["complete", "failed", "retried"];
+  const id = String(b.id || "").slice(0, 100);
+  const category = String(b.category || "question").slice(0, 60);
+  const requestText = String(b.requestText || "").slice(0, 1200);
+  const responseText = String(b.responseText || "").slice(0, 12000);
+  if (!/^[a-zA-Z0-9_-]{8,100}$/.test(id) || !requestText || !responseText) return json({ error: "Invalid tutor history entry." }, 400, req);
+  const values = [
+    id, user.id, Math.max(1, Number(b.createdAt) || Date.now()), String(b.questionId || "").slice(0, 100),
+    String(b.questionVersion || "1").slice(0, 40), String(b.questionSnapshot || "").slice(0, 8000),
+    String(b.testType || "").slice(0, 20), String(b.section || "").slice(0, 60), String(b.domain || "").slice(0, 100),
+    String(b.skill || "").slice(0, 100), String(b.attemptId || "").slice(0, 100), category, requestText, responseText,
+    String(b.provider || "groq").slice(0, 30), String(b.model || "").slice(0, 100),
+    allowedStatus.includes(b.status) ? b.status : "complete", JSON.stringify(normalizeUsage(b.usage))
+  ];
+  await env.DB.prepare("INSERT INTO help_history (id, user_id, created_at, question_id, question_version, question_snapshot, test_type, section, domain, skill, attempt_id, category, request_text, response_text, provider, model, status, usage_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id, id) DO UPDATE SET response_text = excluded.response_text, provider = excluded.provider, model = excluded.model, status = excluded.status, usage_json = excluded.usage_json")
+    .bind(...values).run();
+  return json({ ok: true, id }, 200, req);
+}
+
+function normalizeUsage(value) {
+  const u = value && typeof value === "object" ? value : {};
+  const num = (v) => Number.isFinite(Number(v)) ? Math.max(0, Math.round(Number(v))) : null;
+  return { promptTokens: num(u.prompt_tokens ?? u.promptTokens), completionTokens: num(u.completion_tokens ?? u.completionTokens), totalTokens: num(u.total_tokens ?? u.totalTokens) };
+}
+function safeJson(text) { try { return JSON.parse(text || "null"); } catch { return null; } }
+function makeRequestId() { return typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "help_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10); }
+
+function mergeAttemptHistory(local, remote) {
+  const records = new Map();
+  [...(Array.isArray(local) ? local : []), ...(Array.isArray(remote) ? remote : [])].forEach((rec) => {
+    if (!rec || !rec.id) return;
+    const old = records.get(rec.id);
+    if (!old || (rec.done && !old.done) || (!!rec.done === !!old.done && (rec.finishedAt || 0) >= (old.finishedAt || 0))) records.set(rec.id, rec);
+  });
+  return [...records.values()].sort((a, b) => (b.finishedAt || 0) - (a.finishedAt || 0)).slice(0, 120);
 }

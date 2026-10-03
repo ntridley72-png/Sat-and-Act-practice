@@ -8,3 +8,26 @@ CREATE TABLE IF NOT EXISTS password_resets (token_hash TEXT PRIMARY KEY, user_id
 CREATE INDEX IF NOT EXISTS resets_user ON password_resets(user_id, created_at);
 
 CREATE TABLE IF NOT EXISTS ai_usage (ip TEXT NOT NULL, win INTEGER NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (ip, win));
+
+CREATE TABLE IF NOT EXISTS help_history (
+  id TEXT NOT NULL,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at INTEGER NOT NULL,
+  question_id TEXT,
+  question_version TEXT,
+  question_snapshot TEXT,
+  test_type TEXT,
+  section TEXT,
+  domain TEXT,
+  skill TEXT,
+  attempt_id TEXT,
+  category TEXT NOT NULL,
+  request_text TEXT NOT NULL,
+  response_text TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  model TEXT,
+  status TEXT NOT NULL,
+  usage_json TEXT,
+  PRIMARY KEY (user_id, id)
+);
+CREATE INDEX IF NOT EXISTS help_history_user_created ON help_history(user_id, created_at DESC);

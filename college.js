@@ -135,7 +135,8 @@
       const where = score.value >= range.hi ? "at or above the 75th percentile" : score.value <= range.lo ? "below the 25th percentile" : Math.round(pos * 100) + "% of the way across the middle range";
       factors.push({ label: testType.toUpperCase() + " score", detail: "Your " + score.value + (score.converted ? " (converted from your other test)" : "") + " is " + where + " (" + range.lo + "–" + range.hi + ").", effect: scoreDelta > 0.15 ? "up" : scoreDelta < -0.15 ? "down" : "even" });
     } else {
-      factors.push({ label: testType.toUpperCase() + " score", detail: "Add your score to include test-position in the estimate.", effect: "missing" });
+      if (isTestBlind(college)) factors.push({ label: "Test policy", detail: "This university is test-blind, so SAT/ACT scores aren't considered. GPA, course rigor, and the rest of your application carry the decision.", effect: "context" });
+      else factors.push({ label: testType.toUpperCase() + " score", detail: "Add your score to include test-position in the estimate.", effect: "missing" });
     }
     logit += scoreDelta;
 
@@ -212,12 +213,82 @@
     };
   }
 
+  // California's public universities (UC and CSU) are test-blind: SAT/ACT scores aren't considered.
+  function isTestBlind(college) { return !!college && college.st === "CA" && college.ctrl === "public"; }
+  // National averages by grade, College Board SAT Suite of Assessments Annual Report, total group.
+  // The PSATs share the SAT's score scale, so each grade compares with the test it usually takes.
+  const NATIONAL_BY_GRADE = {
+    "12": { mean: 1029, test: "SAT", note: "Class of 2025 SAT takers (2,004,965 students)" },
+    "gap": { mean: 1029, test: "SAT", note: "Class of 2025 SAT takers (2,004,965 students)" },
+    "11": { mean: 950, test: "PSAT/NMSQT", note: "2024–25 PSAT/NMSQT takers, mostly 11th graders" },
+    "10": { mean: 904, test: "PSAT 10", note: "2024–25 PSAT 10 takers" },
+    "9": { mean: 829, test: "PSAT 8/9", note: "2024–25 PSAT 8/9 takers" }
+  };
+  const OUTCOME_COLORS = { accept: "#22c55e", waitlist: "#3b82f6", deny: "#ef4444" };
+  // Reach / target / likely / safety from the estimated accept chance.
+  function fitOf(p) {
+    return p < 0.25 ? { key: "reach", label: "Reach" } : p < 0.55 ? { key: "target", label: "Target" } : p < 0.85 ? { key: "likely", label: "Likely" } : { key: "safety", label: "Safety" };
+  }
+  function splitBar(est) {
+    return '<div class="college-split" role="img" aria-label="Accept ' + pct(est.estimate) + ", waitlist " + pct(est.waitlist) + ", deny " + pct(est.deny) + '">' +
+      '<span style="width:' + (est.estimate * 100).toFixed(1) + "%;background:" + OUTCOME_COLORS.accept + '"></span>' +
+      '<span style="width:' + (est.waitlist * 100).toFixed(1) + "%;background:" + OUTCOME_COLORS.waitlist + '"></span>' +
+      '<span style="width:' + (est.deny * 100).toFixed(1) + "%;background:" + OUTCOME_COLORS.deny + '"></span></div>';
+  }
+  // Re-run the estimate with one profile change, to show which improvement would move it most.
+  function whatIf(college, change) {
+    const c = cp(), saved = JSON.parse(JSON.stringify(c));
+    try { change(c); return estimateCollege(college).estimate; } finally { Object.keys(c).forEach((k) => delete c[k]); Object.assign(c, saved); }
+  }
+  function chancesHtml() {
+    const c = cp();
+    const saved = (c.saved || []).map((id) => BY_ID.get(Number(id))).filter(Boolean);
+    let body;
+    if (!saved.length) body = '<p class="small muted">Save colleges with ☆ and your chances at each one show up here, based on your GPA, scores, course rigor, activities, and application plan.</p>';
+    else {
+      const rows = saved.map((college) => ({ college, est: estimateCollege(college) })).sort((a, b) => a.est.estimate - b.est.estimate);
+      const counts = { reach: 0, target: 0, likely: 0, safety: 0 };
+      rows.forEach((r) => { counts[fitOf(r.est.estimate).key]++; });
+      const gpa4 = gpaOn4(c), score = scoreFor(c.testType || "sat");
+      const mix = '<div class="chance-mix">' + ["reach", "target", "likely", "safety"].map((k) => '<span class="fit fit-' + k + '"><b>' + counts[k] + "</b> " + k[0].toUpperCase() + k.slice(1) + "</span>").join("") + "</div>";
+      const advice = counts.safety + counts.likely === 0 ? "Add at least two Likely or Safety schools so you have options you're confident about." :
+        counts.reach > rows.length / 2 ? "More than half your list is a Reach. A balanced list usually has a few of each." :
+        "Your list has a healthy mix. Keep a couple of schools in each group.";
+      body = mix + '<p class="small muted chance-advice">' + advice + "</p><ul class=\"chance-list\">" + rows.map(({ college, est }) => {
+        const fit = fitOf(est.estimate);
+        const up = est.factors.filter((f) => f.effect === "up").map((f) => f.label);
+        const down = est.factors.filter((f) => f.effect === "down").map((f) => f.label);
+        // Biggest single lever: +50 SAT (or +2 ACT) versus +0.2 GPA.
+        const testType = est.testType;
+        const boostScore = est.score ? whatIf(college, (p) => { if (testType === "act") p.act = Math.min(36, (Number(p.act) || est.score.value) + 2); else p.sat = Math.min(1600, (Number(p.sat) || est.score.value) + 50); }) : null;
+        const boostGpa = gpa4 != null ? whatIf(college, (p) => { const g = Number(p.gpa); const step = p.gpaScale === "100" ? 5 : 0.2; p.gpa = Math.min(p.gpaScale === "100" ? 100 : p.gpaScale === "5w" ? 5 : 4.0, g + step); }) : null;
+        let lever = "";
+        const gS = boostScore != null ? boostScore - est.estimate : -1, gG = boostGpa != null ? boostGpa - est.estimate : -1;
+        if (Math.max(gS, gG) > 0.005) lever = gS >= gG ? (testType === "act" ? "+2 ACT points" : "+50 SAT points") + " → " + pct(boostScore) : "+" + (c.gpaScale === "100" ? "5" : "0.2") + " GPA → " + pct(boostGpa);
+        return '<li class="chance-item"><div class="chance-head"><span class="chance-name">' + escapeHtml(college.n) + '</span><span class="fit fit-' + fit.key + '">' + fit.label + "</span></div>" +
+          '<div class="chance-nums"><b>' + pct(est.estimate) + "</b> accept <span class=\"muted\">(" + pct(est.lo) + "–" + pct(est.hi) + ")</span> · " + pct(est.waitlist) + " waitlist · " + pct(est.deny) + " deny</div>" +
+          splitBar(est) +
+          '<div class="chance-facts small">' +
+          '<span>Admits ' + college.adm + "%</span>" +
+          (est.range ? "<span>" + testType.toUpperCase() + " mid-50%: " + est.range.lo + "–" + est.range.hi + "</span>" : isTestBlind(college) ? "<span>Test-blind: SAT/ACT not considered</span>" : "<span>No " + testType.toUpperCase() + " range reported</span>") +
+          (est.score && est.range ? "<span>You: " + est.score.value + "</span>" : "") +
+          "<span>" + est.confidence[0].toUpperCase() + est.confidence.slice(1) + " confidence</span></div>" +
+          ((up.length || down.length) ? '<div class="chance-tags small">' + up.map((l) => '<span class="tag-up">▲ ' + escapeHtml(l) + "</span>").join("") + down.map((l) => '<span class="tag-down">▼ ' + escapeHtml(l) + "</span>").join("") + "</div>" : "") +
+          (lever ? '<div class="chance-lever small">Biggest boost: ' + lever + "</div>" : "") +
+          "</li>";
+      }).join("") + "</ul>" +
+      (gpa4 == null || !score ? '<p class="small muted">Add your ' + (gpa4 == null ? "GPA" : "") + (gpa4 == null && !score ? " and " : "") + (!score ? "test score" : "") + " to make these estimates sharper.</p>" : "") +
+      '<p class="small muted">App estimates from each college\'s admit rate and reported score ranges plus your profile, not official predictions.</p>';
+    }
+    return '<fieldset class="college-chances"><legend>Your chances</legend>' + body + "</fieldset>";
+  }
+
   function pieHtml(est) {
     const R = 66, r = 40, C = 80;
     const slices = [
-      { label: "Accept", value: est.estimate, color: "#2bc48a" },
-      { label: "Waitlist", value: est.waitlist, color: "#ffcc4d" },
-      { label: "Deny", value: est.deny, color: "#ef4444" },
+      { label: "Accept", value: est.estimate, color: OUTCOME_COLORS.accept },
+      { label: "Waitlist", value: est.waitlist, color: OUTCOME_COLORS.waitlist },
+      { label: "Deny", value: est.deny, color: OUTCOME_COLORS.deny },
     ].filter((x) => x.value > 0.0005);
     let angle = -Math.PI / 2;
     const paths = slices.map((x) => {
@@ -256,9 +327,29 @@
   }
 
   // ---- Search ----
+  // Abbreviations built from each name's initials, skipping small words: "University of South
+  // Florida" -> usf, "University of California-San Diego" -> ucsd and uc, "San Jose State
+  // University" -> sjsu, "The University of Texas at Austin" -> uta and ut.
+  const ACRONYM_SKIP = new Set(["of", "the", "at", "and", "in", "for", "&"]);
+  function acronyms(college) {
+    if (college._ac) return college._ac;
+    const initials = (name) => name.replace(/[^A-Za-z\s-]/g, " ").split(/[\s-]+/).filter((w) => w && !ACRONYM_SKIP.has(w.toLowerCase())).map((w) => w[0].toLowerCase()).join("");
+    const full = initials(college.n), base = initials(college.n.split("-")[0]);
+    const set = new Set([full, base]);
+    for (let i = 2; i < full.length; i++) set.add(full.slice(0, i));
+    (college.aka || []).forEach((a) => set.add(String(a).toLowerCase().replace(/[^a-z]/g, "")));
+    return (college._ac = [...set].filter((a) => a.length >= 2));
+  }
+  function acronymRank(college, query) {
+    const q = String(query || "").trim().toLowerCase().replace(/[^a-z]/g, "");
+    if (!q || /\s/.test(String(query).trim())) return 0;
+    const ac = acronyms(college);
+    return ac[0] === q || ac[1] === q ? 2 : ac.includes(q) ? 1 : 0;
+  }
   function matches(college, query) {
     const q = String(query || "").trim().toLowerCase();
     if (!q) return true;
+    if (acronymRank(college, q)) return true;
     const hay = [college.n, college.st, college.city, (college.aka || []).join(" ")].join(" ").toLowerCase();
     return q.split(/\s+/).every((part) => hay.includes(part));
   }
@@ -269,6 +360,8 @@
     if (c.filter === "private") list = list.filter((x) => x.ctrl === "private");
     if (c.filter === "saved") list = list.filter((x) => c.saved.includes(x.id));
     if (c.filter === "reach") list = list.filter((x) => { const e = estimateCollege(x); return e.range && e.score && e.score.value < e.range.lo; });
+    // Exact abbreviation matches (USF, UCLA, MIT) first, then partial ones, then name matches.
+    if (c.query) list = list.map((x, i) => [x, i]).sort((a, b) => (acronymRank(b[0], c.query) - acronymRank(a[0], c.query)) || a[1] - b[1]).map((p) => p[0]);
     return list;
   }
   let selectedId = null;
@@ -384,6 +477,7 @@
       '<label>Essays &amp; recs (self-rated) <select id="collegeAppStrength"><option value="strong"' + (c.appStrength === "strong" ? " selected" : "") + '>Strong</option><option value="average"' + (c.appStrength !== "strong" && c.appStrength !== "developing" ? " selected" : "") + '>Average</option><option value="developing"' + (c.appStrength === "developing" ? " selected" : "") + '>Still developing</option></select></label>' +
       '<div class="college-rigor"><span>Course rigor (count of courses)</span>' +
       ["ap", "ib", "honors", "dual"].map((k) => '<label>' + ({ ap: "AP", ib: "IB", honors: "Honors", dual: "Dual enrollment" })[k] + ' <input type="number" min="0" max="40" step="1" data-rigor="' + k + '" value="' + (Number(c.rigor[k]) || 0) + '"></label>').join("") + "</div></fieldset>" +
+      chancesHtml() +
       '<fieldset class="college-wide"><legend>Activities and circumstances</legend>' +
       '<div class="college-activities" id="collegeActivities">' + activityRows + "</div>" +
       '<button type="button" class="secondary" id="collegeAddActivity">+ Add activity</button>' +
@@ -434,7 +528,7 @@
         '<span class="college-bar-marker" style="left:' + Math.round(pos * 100) + '%"></span></div>' +
         '<div class="college-bar-labels"><span>25th: ' + range.lo + '</span><span>75th: ' + range.hi + '</span></div></div>' +
         '<p><strong>' + (diff >= 0 ? diff + " points above your target" : Math.abs(diff) + " points below your target") + '</strong> (' + target.label + ': ' + target.value + "). You are " + Math.round(progress * 100) + "% of the way from the 25th percentile to that target.</p>" +
-        '<div class="college-equation-row"><code>score position = (' + score.value + ' - ' + range.lo + ') / (' + range.hi + ' - ' + range.lo + ') = ' + (Math.round(pos * 100) / 100).toFixed(2) + '</code><button type="button" class="secondary" data-copy-equation="score position = (' + score.value + ' - ' + range.lo + ') / (' + range.hi + ' - ' + range.lo + ') = ' + (Math.round(pos * 100) / 100).toFixed(2) + '">Copy equation</button></div>' +
+        '<div class="college-equation-row"><code>score position = (' + score.value + ' - ' + range.lo + ') / (' + range.hi + ' - ' + range.lo + ') = ' + (Math.round(pos * 100) / 100).toFixed(2) + '</code></div>' +
         (score.converted ? '<p class="small muted">Your score was converted with the official ACT/College Board concordance table because this college reports the other test.</p>' : "");
     }
     const factorHtml = est.factors.map((f) => '<li>' + effectTag(f.effect) + '<div><strong>' + escapeHtml(f.label) + '.</strong> <span class="small">' + escapeHtml(f.detail) + "</span></div></li>").join("");
@@ -459,7 +553,7 @@
       '<div><strong>Estimated outcomes</strong> <span class="college-conf college-conf-' + est.confidence + '">' + est.confidence + ' confidence</span> <span class="small muted">(' + level + ')</span>' +
       '<p class="small muted">Accept, waitlist, and deny shares come from an app model using the factors below. The accept range is ' + pct(est.lo) + ' – ' + pct(est.hi) + '. Waitlist placement is an estimate: it is more common at selective colleges and for borderline applicants, but rarely converts to admission, and some colleges admit none off the waitlist. This is not an admission decision or a guarantee.</p>' +
       (est.confNotes.length ? '<p class="small muted">Improve accuracy: ' + escapeHtml(est.confNotes.join('; ')) + '.</p>' : '') + '</div></div>' +
-      '<div class="college-equation-row"><code>estimate = sigmoid(' + "selectivity log-odds" + ' + score + GPA + rigor + activities + context)</code><button type="button" class="secondary" data-copy-equation="estimate = sigmoid(selectivity log-odds + score + GPA + rigor + activities + context)">Copy equation</button></div>' +
+      '<div class="college-equation-row"><code>estimate = sigmoid(' + "selectivity log-odds" + ' + score + GPA + rigor + activities + context)</code></div>' +
       '<p class="small muted">Sources: ' + escapeHtml(CD.meta.source || "College Scorecard") + " (" + escapeHtml(CD.meta.release || "") + "). Admit rate and ranges describe enrolled students and are the most recent figures the college reported to the U.S. Department of Education. Verify current test policies with the college.</p></details>" +
       '<div class="college-groq"><label for="collegeAsk">Ask the Groq tutor about this college plan</label>' +
       '<div class="college-groq-row"><input type="text" id="collegeAsk" maxlength="300" placeholder="e.g., What should I do this semester to improve?"><button type="button" id="collegeAskBtn">Ask</button></div>' +
@@ -500,14 +594,25 @@
       '<div class="college-search"><label for="collegeQuery">Search by name, abbreviation, or state</label><input type="search" id="collegeQuery" value="' + escapeHtml(c.query || "") + '" placeholder="e.g., UCLA, engineering, or Ohio" autocomplete="off"></div>' +
       '<div class="college-filters" role="group" aria-label="College filters"><button type="button" class="secondary' + (c.filter === "all" ? " on" : "") + '" data-filter="all">All</button><button type="button" class="secondary' + (c.filter === "public" ? " on" : "") + '" data-filter="public">Public</button><button type="button" class="secondary' + (c.filter === "private" ? " on" : "") + '" data-filter="private">Private</button><button type="button" class="secondary' + (c.filter === "saved" ? " on" : "") + '" data-filter="saved">Saved (' + c.saved.length + ")</button></div>" +
       '<div id="collegeResults">' + resultsHtml() + "</div></section>" +
-      '<div id="collegeDetailHost">' + detailHtml() + "</div>" +
+      '<div id="collegeDetailHost"' + (selectedCollege() ? ' class="as-popup" role="dialog" aria-modal="true" aria-label="' + escapeHtml(selectedCollege().n) + '"><div class="cpop-box"><button type="button" class="cpop-close" data-close-detail aria-label="Close">✕</button>' + detailHtml() + "</div>" : ">") + "</div>" +
       "</div>" + compareHtml() +
       '<p class="small muted college-foot">College data: <a href="' + escapeHtml(CD.meta.sourceUrl || "https://collegescorecard.ed.gov/data/") + '" target="_blank" rel="noopener">College Scorecard</a>, ' + escapeHtml(CD.meta.release || "") + ". " + escapeHtml(CD.meta.note || "") + ' The admissions estimate is an original app model and is not affiliated with any college. <a href="https://www.act.org/content/act/en/products-and-services/the-act/scores/act-sat-concordance.html" target="_blank" rel="noopener">Official ACT/SAT concordance</a>.</p>';
     wireCollege();
     applyPanelSize();
   }
 
-  function selectCollege(id) { selectedId = id; try { renderCollegeScreen(); } catch (e) {} }
+  let detailReturnsHome = false;
+  function selectCollege(id) { selectedId = id; document.body.classList.toggle("cpop-open", id != null); try { renderCollegeScreen(); } catch (e) {} }
+  function closeDetail() {
+    selectedId = null; document.body.classList.remove("cpop-open");
+    if (detailReturnsHome) { detailReturnsHome = false; closeCollege(); } else { try { renderCollegeScreen(); } catch (e) {} }
+  }
+  // Open a college's details as a popup from anywhere (e.g., the home screen's college tabs).
+  function openCollegeDetail(id) {
+    detailReturnsHome = state.view !== "college";
+    openCollege("");
+    selectCollege(Number(id));
+  }
   function toggleSaved(id) {
     const c = cp();
     const i = c.saved.indexOf(Number(id));
@@ -629,7 +734,7 @@
 
   // Expose a few helpers for tests and other screens.
   window.collegeFeature = {
-    estimateCollege, selectCollege, open: null, filteredColleges, concordance: { satFromAct, actFromSat },
+    estimateCollege, selectCollege, OUTCOME_COLORS, isTestBlind, NATIONAL_BY_GRADE, open: null, filteredColleges, concordance: { satFromAct, actFromSat },
     unansweredReminder, meta: CD.meta, count: COLLEGES.length,
   };
 
@@ -656,6 +761,8 @@
     render();
   }
   window.collegeFeature.open = openCollege;
+  window.collegeFeature.openDetail = openCollegeDetail;
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && selectedId != null && state.view === "college") { e.preventDefault(); e.stopPropagation(); closeDetail(); } }, true);
 
   const baseRender = render;
   render = function () {
@@ -668,6 +775,7 @@
     const open = e.target.closest("[data-college-open]");
     if (open) { e.preventDefault(); openCollege(open.dataset.collegeOpen || ""); return; }
     if (!e.target.closest("#screen-college")) return;
+    if (e.target.closest("[data-close-detail]") || e.target.id === "collegeDetailHost") { e.preventDefault(); closeDetail(); return; }
     const save = e.target.closest("[data-save]");
     if (save) { e.preventDefault(); toggleSaved(save.dataset.save); return; }
     const pick = e.target.closest("[data-select]");

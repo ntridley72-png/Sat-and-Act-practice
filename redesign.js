@@ -118,11 +118,14 @@
         const inClass = admittedPercentile(avg.score, lo, hi);
         const gradeTile = (() => {
           if (!grade) return tile("—", "Set your grade in College to compare with your class");
-          if (hsc.stats && hsc.stats.hidden) return tile("Hidden", "Not enough FunSAT users in grade " + esc(grade) + " yet");
           if (hsc.stats && hsc.stats.topPercent != null) return tile("Top " + hsc.stats.topPercent + "%", "Among FunSAT users in grade " + esc(grade) + " (n=" + hsc.stats.count + ")");
-          return tile(cloud.user ? "…" : "Sign in", "Same-grade comparison");
+          // Until enough FunSAT users share a grade, compare with College Board's national average for that grade.
+          const nat = window.collegeFeature && collegeFeature.NATIONAL_BY_GRADE && collegeFeature.NATIONAL_BY_GRADE[grade];
+          if (nat) { const d = avg.score - nat.mean; return tile((d >= 0 ? "+" : "−") + Math.abs(d) + " pts", (d >= 0 ? "Above" : "Below") + " the national grade " + esc(grade === "gap" ? "12" : grade) + " average (" + nat.test + " " + nat.mean + ")"); }
+          return tile("—", "Set your grade in College to compare with your class");
         })();
-        const pointsTile = hi == null ? tile("—", "No admitted range reported") : (avg.score >= hi ? tile("At/above", "You are at or above their 75th percentile") : tile((hi - avg.score) + " pts", "To reach their 75th percentile"));
+        const blind = window.collegeFeature && collegeFeature.isTestBlind && collegeFeature.isTestBlind(college);
+        const pointsTile = hi == null ? (blind ? tile("Test-blind", "This university doesn't consider SAT/ACT; GPA and coursework matter most") : tile("—", "No admitted range reported")) : (avg.score >= hi ? tile("At/above", "You are at or above their 75th percentile") : tile((hi - avg.score) + " pts", "To reach their 75th percentile"));
         expand =
           '<div class="hsc-expand" style="display:block">' +
           '<div class="hsc-college-head"><strong>' + esc(college.n) + "</strong><span class=\"hsc-note\">Estimates, not admission predictions</span></div>" +
@@ -131,12 +134,12 @@
           '<span class="hsc-you" style="left:' + youX.toFixed(1) + '%" title="Your average: ' + avg.score + '"></span></div>' +
           '<div class="hsc-scale-labels"><span>1000</span><span>1200</span><span>1400</span><span>1600</span></div></div>' +
           '<div class="hsc-tiles">' +
-          tile(lo != null ? lo + "–" + hi : "Not reported", "Admitted middle 50% (SAT, enrolled)") +
+          tile(lo != null ? lo + "–" + hi : blind ? "Test-blind" : "Not reported", lo != null ? "Admitted middle 50% (SAT, enrolled)" : blind ? "SAT/ACT not considered for admission" : "College didn't report an SAT range") +
           tile(inClass != null ? "~" + inClass + "%" : "—", "Your estimated percentile within their admitted class") +
           gradeTile +
           pointsTile +
           "</div>" +
-          (window.collegeFeature && collegeFeature.estimateCollege ? (() => { const e2 = collegeFeature.estimateCollege(college); return '<div class="college-split" aria-label="Estimated accept, waitlist, deny"><span style="width:' + Math.round(e2.estimate * 100) + '%;background:#2bc48a"></span><span style="width:' + Math.round(e2.waitlist * 100) + '%;background:#ffcc4d"></span><span style="width:' + Math.round(e2.deny * 100) + '%;background:#ef4444"></span></div><div class="hsc-scale-labels"><span>Accept ' + Math.round(e2.estimate * 100) + '%</span><span>Waitlist ' + Math.round(e2.waitlist * 100) + '%</span><span>Deny ' + Math.round(e2.deny * 100) + "%</span></div>"; })() : "") +
+          (window.collegeFeature && collegeFeature.estimateCollege ? (() => { const e2 = collegeFeature.estimateCollege(college); return '<div class="college-split" aria-label="Estimated accept, waitlist, deny"><span style="width:' + Math.round(e2.estimate * 100) + '%;background:#22c55e"></span><span style="width:' + Math.round(e2.waitlist * 100) + '%;background:#3b82f6"></span><span style="width:' + Math.round(e2.deny * 100) + '%;background:#ef4444"></span></div><div class="hsc-scale-labels"><span>Accept ' + Math.round(e2.estimate * 100) + '%</span><span>Waitlist ' + Math.round(e2.waitlist * 100) + '%</span><span>Deny ' + Math.round(e2.deny * 100) + "%</span></div>"; })() : "") +
           '<div class="hsc-tabs" role="tablist" aria-label="Saved colleges">' + saved.map((x) => '<button type="button" role="tab" aria-selected="' + (x.id === hsc.selected) + '" class="hsc-tab' + (x.id === hsc.selected ? " active" : "") + '" data-college-tab="' + x.id + '">' + esc(x.n) + "</button>").join("") + "</div>" +
           '<p class="hsc-note">Percentiles use an estimate from the college\'s reported enrolled range. Same-grade comparison is computed on FunSAT\'s server and hidden until enough users share your grade.</p>' +
           "</div>";
@@ -171,7 +174,11 @@
     host.dataset.wired = "1";
     host.addEventListener("click", (e) => {
       const tab = e.target.closest("[data-college-tab]");
-      if (tab) { hsc.selected = Number(tab.dataset.collegeTab); renderHomeScoreCard(); return; }
+      if (tab) {
+        hsc.selected = Number(tab.dataset.collegeTab); renderHomeScoreCard();
+        if (window.collegeFeature && collegeFeature.openDetail) collegeFeature.openDetail(hsc.selected);
+        return;
+      }
       if (e.target.closest("#hscOpenCollege")) { if (window.collegeFeature && collegeFeature.open) collegeFeature.open(); return; }
       if (e.target.closest("#hscStartPractice")) { document.getElementById("btnStart").click(); return; }
       if (e.target.closest(".hsc-tab") || e.target.closest(".hsc-tiles") || e.target.closest(".hsc-scale")) return;

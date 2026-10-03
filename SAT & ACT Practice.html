@@ -101,6 +101,9 @@ body:has(#screen-start[style*="block"]) .wrap{max-width:1140px}
 .st-side #historyStart h3{font-size:1rem}
 @media (max-width:640px){.st-main{padding:16px 16px 0}.st-go{margin:18px -16px 0;padding:12px 16px;flex-direction:column;align-items:stretch;gap:10px}.st-go #btnStart{width:100%}.st-custom{flex-basis:100%}.seg .pick{flex:1 1 0;min-width:0;padding:10px 6px}#satModulePicker .pick{flex:1 1 40%}.st-step{flex-wrap:wrap}.st-max{flex-basis:100%;margin-left:34px}.st-chips{gap:6px}.st-chip{font-size:.75rem;padding:4px 10px}}
 
+.bank-row{font-size:.92rem}
+.bank-bar{height:8px;border-radius:5px;background:var(--ws-soft,#e2e8f0);overflow:hidden;margin-top:8px}
+.bank-bar i{display:block;height:100%;background:var(--ws-accent,var(--blue))}
 /* ---- Bookmarks + curve ---- */
 .bb-star{background:transparent;color:var(--ink);padding:4px 8px;font-size:.85rem;font-weight:600}
 .bb-star:hover{background:#e2e8f0}
@@ -579,6 +582,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 
         <aside class="st-side">
           <div id="predStart"></div>
+          <div class="card st-mini" id="bankStats"></div>
           <div class="card st-mini" id="vocabStart" style="display:none"></div>
           <div class="card st-mini" id="collegeStart">
             <div class="st-mini-h">🏛️ College score goals</div>
@@ -1640,10 +1644,11 @@ function sample(a, n, weightFn = () => 1) {
     const penalty = (q) => (families[familyOf(q)] || 0) * 100 +
       familyHistory.filter((f) => f === familyOf(q)).length * 5 +
       (skills[q.skill] || 0) * 2 + (q.templateVariant ? 1 : 0);
-    const lowestPenalty = Math.min(...eligible.map(penalty));
-    const diverse = eligible.filter((q) => penalty(q) === lowestPenalty);
-    const minUses = Math.min(...diverse.map(uses));
-    const fresh = diverse.filter((q) => uses(q) === minUses);
+    // Hard rule: never pick a question you've done while one you haven't is available.
+    const minUses = Math.min(...eligible.map(uses));
+    const unused = eligible.filter((q) => uses(q) === minUses);
+    const lowestPenalty = Math.min(...unused.map(penalty));
+    const fresh = unused.filter((q) => penalty(q) === lowestPenalty);
     const oldest = Math.min(...fresh.map((q) => lastServed[q.id] || 0));
     const candidates = fresh.filter((q) => (lastServed[q.id] || 0) === oldest);
     candidates.sort((x, y) => ((counts[x.domain] || 0) / weight(x.domain)) - ((counts[y.domain] || 0) / weight(y.domain)));
@@ -1661,14 +1666,47 @@ function sample(a, n, weightFn = () => 1) {
     counts[q.domain] = (counts[q.domain] || 0) + 1;
     remaining.splice(remaining.findIndex((item) => item.id === q.id), 1);
   }
-  picked.forEach((q) => {
-    served[q.id] = uses(q) + 1;
-    lastServed[q.id] = sequence;
-  });
-  try { profile.recentQuestions = recent; profile.recentFamilies = familyHistory; saveProfile(); } catch (e) {}
+  try { saveProfile(); } catch (e) {}
   return picked;
 }
 
+// Combine question usage from two devices: a question done anywhere counts as done.
+function mergeQuestionLogs(other) {
+  if (!other) return;
+  ["seen", "served", "lastServed"].forEach((k) => {
+    const mine = profile[k] = profile[k] || {};
+    Object.entries(other[k] || {}).forEach(([id, n]) => { if (!(mine[id] >= n)) mine[id] = n; });
+  });
+  const log = profile.qlog = profile.qlog || {};
+  Object.entries(other.qlog || {}).forEach(([id, o]) => {
+    const m = log[id];
+    if (!m) { log[id] = Object.assign({}, o); return; }
+    ["shown", "answered", "correct", "last"].forEach((f) => { m[f] = Math.max(m[f] || 0, o[f] || 0); });
+  });
+  profile.recentQuestions = [...new Set([...(other.recentQuestions || []), ...(profile.recentQuestions || [])])].slice(-50);
+}
+// Record a question as done the first time it's shown in an attempt. This log is what keeps
+// questions from repeating, and it syncs to your account.
+function markShown(q) {
+  if (!q || !state.attemptId) return;
+  state.shownIds = state.shownIds || [];
+  if (state.shownIds.includes(q.id)) return;
+  state.shownIds.push(q.id);
+  const seq = profile.selectionSequence = (profile.selectionSequence || 0) + 1;
+  profile.served[q.id] = (profile.served[q.id] || 0) + 1;
+  profile.lastServed[q.id] = seq;
+  const log = profile.qlog[q.id] = profile.qlog[q.id] || { shown: 0, answered: 0, correct: 0 };
+  log.shown++; log.last = Date.now();
+  profile.recentQuestions = (profile.recentQuestions || []).filter((id) => id !== q.id).concat(q.id).slice(-50);
+  profile.recentFamilies = (profile.recentFamilies || []).concat(q.family || q.id).slice(-50);
+  saveProfile(); save();
+}
+function signedIn() { try { return !!cloud.user; } catch (e) { return false; } }
+function questionBankStats() {
+  const all = ALL_UNIQUE_QUESTIONS.filter((q) => !q.withheld);
+  const done = all.filter((q) => (profile.served[q.id] || 0) > 0 || (profile.seen[q.id] || 0) > 0).length;
+  return { total: all.length, done, fresh: all.length - done };
+}
 function weightedSampleUnique(pool, n, weightFn) {
   return sample(pool, n, weightFn);
 }
@@ -1781,17 +1819,18 @@ const DEFAULT_PROFILE = {
   tokens: 0, arcadeSeconds: ARCDE_START_SEC, qSinceToken: 0,
   bestStreak: 0, totalCorrect: 0, totalAttempts: 0,
   highScores: { pacman: 0, snake: 0, pong: 0, watersort: 0, tetris: 0, doom: 0, pressurewash: 0, "2048": 0, breakout: 0, flappy: 0, minesweeper: 0, connect4: 0, wordgame: 0, sudoku: 0, solitaire: 0, hopper: 0, stack: 0, doodle: 0, wordscape: 0, blackjack: 0, tictactoe: 0, blockblast: 0, bubbles: 0, invaders: 0 },
-  soundOn: true, history: [], seen: {}, served: {}, lastServed: {}, recentQuestions: [], selectionSequence: 0, bookmarks: [], curve: "pt4", college: null, updatedAt: 0
+  soundOn: true, history: [], seen: {}, served: {}, lastServed: {}, recentQuestions: [], recentFamilies: [], selectionSequence: 0, qlog: {}, bookmarks: [], curve: "pt4", college: null, updatedAt: 0
 };
 let profile = JSON.parse(JSON.stringify(DEFAULT_PROFILE));
 
 function loadProfile() {
   try { const p = JSON.parse(localStorage.getItem(PROFILE_KEY)); if (p && typeof p === "object") { Object.keys(DEFAULT_PROFILE).forEach((k) => { if (p[k] !== undefined) profile[k] = p[k]; }); } } catch (e) {}
   if (!Array.isArray(profile.history)) profile.history = [];
-  ["seen", "served", "lastServed"].forEach((key) => {
+  ["seen", "served", "lastServed", "qlog"].forEach((key) => {
     if (!profile[key] || typeof profile[key] !== "object" || Array.isArray(profile[key])) profile[key] = {};
   });
   if (!Array.isArray(profile.recentQuestions)) profile.recentQuestions = [];
+  if (!Array.isArray(profile.recentFamilies)) profile.recentFamilies = [];
   profile.recentQuestions = profile.recentQuestions.filter((id) => byId(id)).slice(-50);
   if (!Number.isSafeInteger(profile.selectionSequence) || profile.selectionSequence < 0) profile.selectionSequence = 0;
 }
@@ -2080,6 +2119,11 @@ function renderStart() {
   $("bookmarkStart").style.display = bm.length ? "block" : "none";
   $("predStart").innerHTML = predictorHtml();
   $("stEmpty").style.display = $("predStart").innerHTML ? "none" : "block";
+  const bs = questionBankStats();
+  $("bankStats").innerHTML = '<div class="st-mini-h">📚 Your question log</div>' +
+    '<div class="bank-row"><b>' + bs.done + '</b> done · <b>' + bs.fresh + '</b> you haven\'t seen</div>' +
+    '<div class="bank-bar"><i style="width:' + Math.round(bs.done / Math.max(1, bs.total) * 100) + '%"></i></div>' +
+    '<p class="small muted" style="margin:6px 0 0">' + (bs.fresh ? "Every question you see is recorded" + (signedIn() ? " to your account" : " on this device") + ", and new sets only use questions you haven't done until a section runs out." : "You've done every question. Repeats now start with the ones you did longest ago.") + "</p>";
   const secName = isAct ? ({ all: "All four sections", english: "English", math: "Math", reading: "Reading", science: "Science" })[state.cfg.actSection || "all"] : ({ rw: "Reading & Writing", math: "Math", both: "Both sections" })[state.cfg.section];
   $("stSummary").textContent = (isAct ? "ACT" : "SAT") + " · " + secName + " · " + state.cfg.total + " questions";
   try {
@@ -2375,7 +2419,7 @@ function coachPaint(qid) {
       const s = m.structured;
       const add = (tag, label, value) => { if (!value || (Array.isArray(value) && !value.length)) return; const section=document.createElement("div");section.className="tutor-block";const title=document.createElement("strong");title.textContent=label;section.append(title);if(Array.isArray(value)){const list=document.createElement(tag);value.forEach((x)=>{const item=document.createElement("li");item.textContent=x;list.append(item);});section.append(list);}else{const p=document.createElement("p");p.textContent=value;section.append(p);}d.append(section); };
       add("div", "Answer or hint", s.shortAnswer); add("ol", "Detailed steps", s.detailedSteps); add("ul", "Simple steps", s.simpleSteps); add("div", "Memory tip", s.memoryTip);
-      if (s.equations.length) { const section=document.createElement("div");section.className="tutor-block tutor-equations";const title=document.createElement("strong");title.textContent="Copyable equations";section.append(title);s.equations.forEach((eq)=>{const row=document.createElement("div");const code=document.createElement("code");code.className="ai-math";code.append(mathFragment(cleanAiText(eq)));const b=document.createElement("button");b.type="button";b.className="copy-equation secondary";b.textContent="Copy equation";b.dataset.copyEquation=eq;row.append(code,b);section.append(row);});d.append(section); }
+      if (s.equations.length) { const section=document.createElement("div");section.className="tutor-block tutor-equations";const title=document.createElement("strong");title.textContent="Equations";section.append(title);s.equations.forEach((eq)=>{const row=document.createElement("div");const code=document.createElement("code");code.className="ai-math";code.append(mathFragment(cleanAiText(eq)));row.append(code);section.append(row);});d.append(section); }
       add("div", "Answer check", s.verification); add("div", "Try next", s.nextPractice);
     } else renderAiText(d, parsed.text);
     if (parsed.exprs.length) {
@@ -2590,6 +2634,7 @@ function renderQuestion() {
   $("questionCard").querySelectorAll(".choice").forEach((b) => {
     b.addEventListener("click", () => { handleAnswer(parseInt(b.dataset.choice, 10), b); });
   });
+  markShown(q);
   highlighter.restore(q.id);
   highlighter.syncColors();
   const fb = $("btnFlag"); if (fb) fb.addEventListener("click", () => { state.flags = state.flags || {}; state.flags[q.id] = !state.flags[q.id]; save(); render(); });
@@ -2634,6 +2679,7 @@ function handleAnswer(choice, btnEl) {
   const q = byId(qids[qi]);
   state.answers[q.id] = choice;
   profile.seen[q.id] = (profile.seen[q.id] || 0) + 1;
+  { const log = profile.qlog[q.id] = profile.qlog[q.id] || { shown: 1, answered: 0, correct: 0 }; log.answered++; if (choice === q.ans) log.correct++; log.last = Date.now(); }
   save();
 
   // Earn 1 token (worth ARCDE_ADD_SEC = a minute of arcade time) every QUESTIONS_PER_TOKEN
@@ -3628,11 +3674,14 @@ const cloud = {
       const merged = mergeAttemptHistory(profile.history, d && d.history);
       if (d && (j.updatedAt || 0) > startedWith && (profile.updatedAt || 0) === startedWith) {
         this.applying = true;
+        const mine = { seen: profile.seen, served: profile.served, lastServed: profile.lastServed, qlog: profile.qlog, recentQuestions: profile.recentQuestions };
         Object.keys(DEFAULT_PROFILE).forEach((k) => { if (d.profile && d.profile[k] !== undefined) profile[k] = d.profile[k]; });
+        mergeQuestionLogs(mine);
         if (d.state && d.state.v === 4) state = d.state;
         profile.updatedAt = j.updatedAt;
       }
       profile.history = merged;
+      if (d && d.profile) mergeQuestionLogs(d.profile); // keep what the other device recorded too
       this.applying = true;
       saveProfile(); saveHistory(); try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
       this.applying = false; this.loading = false;

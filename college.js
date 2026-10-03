@@ -85,10 +85,19 @@
   }
 
   // ---- Estimate ----
+  // Weighted GPAs add about +1.0 per AP/IB/dual class and +0.5 per honors class, averaged over every class taken.
+  // Remove that average boost to get an unweighted-style GPA instead of shrinking the whole number.
+  function weightBump(c) {
+    const r = c.rigor || {};
+    const boosted = (Number(r.ap) || 0) + (Number(r.ib) || 0) + (Number(r.dual) || 0) + 0.5 * (Number(r.honors) || 0);
+    const courses = { "9": 6, "10": 12, "11": 18, "12": 24 }[c.grade] || 18;
+    const bump = boosted > 0 ? boosted / courses : (c.gpaScale === "5w" ? 0.3 : 0.2);
+    return Math.min(c.gpaScale === "5w" ? 1 : 0.6, bump);
+  }
   function gpaOn4(c) {
     if (!Number.isFinite(c.gpa) || c.gpa <= 0) return null;
     if (c.gpaScale === "100") return Math.max(0, Math.min(4, (c.gpa - 60) / 10));
-    if (c.gpaScale === "5w") return Math.max(0, Math.min(4, c.gpa * 0.8));
+    if (c.gpaScale === "5w" || c.gpaScale === "4w") return Math.max(0, Math.min(4, c.gpa - weightBump(c)));
     return Math.max(0, Math.min(4, c.gpa));
   }
   function expectedGpa(admitPct) {

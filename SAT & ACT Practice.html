@@ -241,7 +241,7 @@ body.wide-test .wrap{max-width:1240px}
 :root{--hl-bg:#fde68a;--hl-text:#1a1a1a;--hl-underline:#b45309;--hl-shadow:none}
 :is([data-hl="dark"],.hl-dark){--hl-bg:rgba(250,204,21,.28);--hl-text:inherit;--hl-underline:#facc15;--hl-shadow:inset 0 -2px 0 #facc15}
 :is([data-hl="neon"],.hl-neon){--hl-bg:rgba(94,240,176,.25);--hl-text:inherit;--hl-underline:#5ef0b0;--hl-shadow:inset 0 -2px 0 #5ef0b0}
-mark,.highlight{background:var(--hl-bg);color:var(--hl-text);box-shadow:var(--hl-shadow);border-radius:3px;padding:0 2px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+mark,.highlight{background:var(--hl-bg);color:var(--hl-text)!important;-webkit-text-fill-color:var(--hl-text);box-shadow:var(--hl-shadow);border-radius:3px;padding:0 2px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 mark.hl{cursor:pointer}
 body.hl-mode .passage,body.hl-mode .qtext{cursor:text;outline:2px dashed var(--hl-underline);outline-offset:3px}
 .line-reader{position:fixed;left:0;right:0;pointer-events:none;z-index:700;display:none}
@@ -253,6 +253,7 @@ body.hl-mode .passage,body.hl-mode .qtext{cursor:text;outline:2px dashed var(--h
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="SAT/ACT Prep">
 <meta name="theme-color" content="#2563eb">
+<meta name="color-scheme" content="light dark">
 <title>SAT & ACT Practice</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
 <style>
@@ -658,6 +659,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
   <div class="calc-ai-msg" id="calcAiMsg"></div>
   <div id="calcHost"></div>
 </aside>
+<button id="zenPause" type="button" title="Pause the timer (P)" aria-label="Pause">⏸ Pause</button>
 <button id="zenStudy" type="button" title="Show or hide study tools (T)" aria-label="Toggle study tools" aria-pressed="false">📖 Study tools</button>
 <button id="zenExit" type="button" title="Exit full screen (Esc)" aria-label="Exit full screen">✕ Exit full screen <span class="small">Esc</span></button>
 <div class="line-reader" id="lineReader"><div class="shade" id="lrTop"></div><div class="win" id="lrWin"></div><div class="shade" id="lrBot"></div></div>
@@ -2589,6 +2591,7 @@ function renderQuestion() {
     b.addEventListener("click", () => { handleAnswer(parseInt(b.dataset.choice, 10), b); });
   });
   highlighter.restore(q.id);
+  highlighter.syncColors();
   const fb = $("btnFlag"); if (fb) fb.addEventListener("click", () => { state.flags = state.flags || {}; state.flags[q.id] = !state.flags[q.id]; save(); render(); });
   const sb = $("btnStar"); if (sb) sb.addEventListener("click", () => {
     profile.bookmarks = profile.bookmarks || []; const at = profile.bookmarks.indexOf(q.id);
@@ -3517,6 +3520,28 @@ const highlighter = {
     state.highlights = state.highlights || {};
     state.highlights[q.id] = this.targets().map((t) => t.innerHTML);
     save();
+  },
+  // Pick highlight colors from the background the passage is actually drawn on, so every layout
+  // (light, dark, or a browser's forced dark mode) stays readable at 4.5:1 or better.
+  syncColors() {
+    const box = this.targets()[0]; if (!box) return;
+    const rgb = (s) => { const m = String(s).match(/[\d.]+/g); return m ? m.map(Number) : null; };
+    const lum = (c) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
+    const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+    let bg = null;
+    for (let el = box; el && el.nodeType === 1; el = el.parentElement) {
+      const c = rgb(getComputedStyle(el).backgroundColor);
+      if (c && (c.length < 4 || c[3] > 0.5)) { bg = c.slice(0, 3); break; }
+    }
+    if (!bg) bg = [255, 255, 255];
+    const root = document.documentElement, dark = lum(bg) < 0.2;
+    if (dark) root.dataset.hl = root.dataset.hl === "neon" ? "neon" : "dark"; else delete root.dataset.hl;
+    // Effective highlight fill (translucent tint over the page in dark mode, solid yellow in light).
+    const tint = dark ? [250, 204, 21] : null, a = 0.28;
+    const fill = dark ? bg.map((v, i) => Math.round(tint[i] * a + v * (1 - a))) : [253, 230, 138];
+    const own = rgb(getComputedStyle(box).color).slice(0, 3);
+    const pick = [own, [255, 255, 255], [17, 17, 17]].find((c) => ratio(c, fill) >= 4.5) || (ratio([255, 255, 255], fill) > ratio([17, 17, 17], fill) ? [255, 255, 255] : [17, 17, 17]);
+    root.style.setProperty("--hl-text", "rgb(" + pick.join(",") + ")");
   },
   restore(qid) {
     const saved = state.highlights && state.highlights[qid]; if (!saved) return;
@@ -7695,7 +7720,13 @@ function setPaused(p) {
   document.getElementById("pauseModal").classList.toggle("show", p);
   document.getElementById("btnPause").textContent = p ? "▶" : "⏸";
   document.getElementById("btnPause").title = p ? "Resume" : "Pause the timer";
+  const zp = document.getElementById("zenPause");
+  if (zp) { zp.textContent = p ? "▶ Resume" : "⏸ Pause"; zp.setAttribute("aria-label", p ? "Resume" : "Pause"); zp.classList.toggle("on", p); }
 }
+document.getElementById("zenPause").addEventListener("click", () => setPaused(!testPaused));
+addEventListener("keydown", (e) => {
+  if ((e.key === "p" || e.key === "P") && document.body.classList.contains("zen-mode") && !e.metaKey && !e.ctrlKey && !(e.target.closest && e.target.closest("input,textarea,select,[contenteditable],#calcPanel"))) { e.preventDefault(); setPaused(!testPaused); }
+});
 document.getElementById("btnPause").addEventListener("click", () => setPaused(!testPaused));
 document.getElementById("btnUnpause").addEventListener("click", () => setPaused(false));
 </script>

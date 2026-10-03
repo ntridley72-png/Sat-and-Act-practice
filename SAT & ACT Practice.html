@@ -1547,6 +1547,16 @@ function applyQuestionQuality(q) {
 }
 const ALL_UNIQUE_QUESTIONS = BANK.math.concat(BANK.rw, ACT_SCIENCE);
 ALL_UNIQUE_QUESTIONS.forEach(applyQuestionQuality);
+// Number-swapped copies ("Trial 1" / "Trial 2", same equation with new numbers) are one question
+// as far as rotation is concerned: same text once digits and single-letter variables are masked.
+(() => {
+  const shape = (s) => String(s || "").toLowerCase().replace(/\s+/g, " ").trim().replace(/[−-]?\d+(\.\d+)?/g, "#").replace(/\b[a-z]\b/g, "v");
+  const groups = {};
+  ALL_UNIQUE_QUESTIONS.forEach((q) => { const k = shape(q.q) + "|" + shape(q.passage); (groups[k] = groups[k] || []).push(q); });
+  Object.entries(groups).forEach(([k, list]) => list.forEach((q) => { q.dedupe = list.length > 1 ? "shape:" + k.slice(0, 120) : q.id; if (list.length > 1) q.templateVariant = true; }));
+})();
+const DEDUPE_MEMBERS = {};
+ALL_UNIQUE_QUESTIONS.forEach((q) => { (DEDUPE_MEMBERS[q.dedupe] = DEDUPE_MEMBERS[q.dedupe] || []).push(q.id); });
 
 const STORAGE_KEY = "satPrepPractice_v4";
 const HISTORY_KEY = "satPrepHistory_v1";
@@ -1612,7 +1622,10 @@ const DOMAIN_WEIGHTS = {
   "Algebra": 0.35, "Advanced Math": 0.35, "Problem-Solving & Data Analysis": 0.15, "Geometry & Trigonometry": 0.15,
   "Craft & Structure": 0.28, "Information & Ideas": 0.26, "Standard English Conventions": 0.26, "Expression of Ideas": 0.20
 };
-function sample(a, n, weightFn = () => 1) {
+function sample(a, n, weightFn = () => 1, avoidIds = []) {
+  // avoidIds: questions already in this test (e.g., module 1), so module 2 never repeats their templates.
+  const avoidDedupe = new Set(avoidIds.map((id) => { const x = byId(id); return x ? x.dedupe || x.id : id; }));
+  const inSet = {};
   // Rotate the whole eligible pool before repeating; older sets win ties.
   // Topic balance and adaptive skill weights apply within the freshest tier.
   let seen = {}, served = {}, lastServed = {}, recent = [], recentFamilies = [], sequence = 0;
@@ -1625,7 +1638,13 @@ function sample(a, n, weightFn = () => 1) {
     sequence = (profile.selectionSequence || 0) + 1;
     profile.selectionSequence = sequence;
   } catch (e) {} // Initial preview is built before the profile is loaded.
-  const uses = (q) => Math.max(seen[q.id] || 0, served[q.id] || 0);
+  // A question counts as used if you've seen it or any number-swapped copy of it.
+  const famUses = {};
+  const uses = (q) => {
+    const d = q.dedupe || q.id;
+    if (famUses[d] == null) famUses[d] = Math.max(0, ...(DEDUPE_MEMBERS[d] || [q.id]).map((id) => Math.max(seen[id] || 0, served[id] || 0)));
+    return famUses[d];
+  };
   const usable = a.filter((q) => !q.withheld);
   const remaining = shuffle([...new Map(usable.map((q) => [q.id, q])).values()]);
   const picked = [], counts = {}, sizes = {}, skills = {}, families = {};
@@ -1645,8 +1664,10 @@ function sample(a, n, weightFn = () => 1) {
       familyHistory.filter((f) => f === familyOf(q)).length * 5 +
       (skills[q.skill] || 0) * 2 + (q.templateVariant ? 1 : 0);
     // Hard rule: never pick a question you've done while one you haven't is available.
-    const minUses = Math.min(...eligible.map(uses));
-    const unused = eligible.filter((q) => uses(q) === minUses);
+    const notInSet = eligible.filter((q) => !inSet[q.dedupe || q.id] && !avoidDedupe.has(q.dedupe || q.id));
+    const pool2 = notInSet.length ? notInSet : eligible;
+    const minUses = Math.min(...pool2.map(uses));
+    const unused = pool2.filter((q) => uses(q) === minUses);
     const lowestPenalty = Math.min(...unused.map(penalty));
     const fresh = unused.filter((q) => penalty(q) === lowestPenalty);
     const oldest = Math.min(...fresh.map((q) => lastServed[q.id] || 0));
@@ -1656,7 +1677,7 @@ function sample(a, n, weightFn = () => 1) {
     const choices = candidates.filter((q) => q.domain === domain);
     let draw = Math.random() * choices.reduce((sum, q) => sum + weightFn(q), 0);
     const q = choices.find((q) => (draw -= weightFn(q)) <= 0) || choices[choices.length - 1];
-    picked.push(q);
+    picked.push(q); inSet[q.dedupe || q.id] = true;
     const family = familyOf(q);
     families[family] = (families[family] || 0) + 1;
     skills[q.skill] = (skills[q.skill] || 0) + 1;
@@ -1703,9 +1724,10 @@ function markShown(q) {
 }
 function signedIn() { try { return !!cloud.user; } catch (e) { return false; } }
 function questionBankStats() {
-  const all = ALL_UNIQUE_QUESTIONS.filter((q) => !q.withheld);
-  const done = all.filter((q) => (profile.served[q.id] || 0) > 0 || (profile.seen[q.id] || 0) > 0).length;
-  return { total: all.length, done, fresh: all.length - done };
+  const fams = {};
+  ALL_UNIQUE_QUESTIONS.filter((q) => !q.withheld).forEach((q) => { const f = q.dedupe || q.id; fams[f] = fams[f] || (profile.served[q.id] || 0) > 0 || (profile.seen[q.id] || 0) > 0; });
+  const total = Object.keys(fams).length, done = Object.values(fams).filter(Boolean).length;
+  return { total, done, fresh: total - done };
 }
 function weightedSampleUnique(pool, n, weightFn) {
   return sample(pool, n, weightFn);
@@ -2745,7 +2767,7 @@ function advanceAfterModule(confirmed) {
     const pool = bankByDiff(def.bank)[route === "harder" ? "hard" : "easy"];
     const stats = domainStats(sec, qids);
     const weightFn = (q) => { const d = stats[q.domain]; const acc = d.total ? d.correct / d.total : 1; return acc < .5 ? 3 : acc < .75 ? 2 : 1; };
-    let picked = weightedSampleUnique(pool, m2, weightFn);
+    let picked = sample(pool, m2, weightFn, [].concat(...state.keys.map((k) => sectionQids(k))));
     if (picked.length < m2) picked = picked.concat(sample(bankByDiff(def.bank).medium.filter((q) => !qids.includes(q.id)), m2 - picked.length));
     plan.mods[1] = picked.map((q) => q.id);
     state.modIdx = 1; state.qi = 0; state.view = "routing";

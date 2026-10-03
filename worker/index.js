@@ -217,8 +217,37 @@ function groqParams(model, teaching) {
   if (teaching) p.response_format = { type: "json_object" };
   return p;
 }
+// Cloudflare Workers AI: runs in this Cloudflare account through the AI binding, free daily allowance, no key.
+const CF_MODELS = ["@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/meta/llama-3.1-8b-instruct-fast"];
+const TUTOR_SCHEMA = { type: "object", properties: {
+  shortAnswer: { type: "string" }, detailedSteps: { type: "array", items: { type: "string" } }, simpleSteps: { type: "array", items: { type: "string" } },
+  memoryTip: { type: "string" }, equations: { type: "array", items: { type: "string" } }, verification: { type: "string" }, nextPractice: { type: "string" } },
+  required: ["detailedSteps", "simpleSteps"] };
+const NO_REVEAL_RULE = "Rule for this reply: the student has NOT answered yet. Help them work it out: explain the method, give a first step, hints, and what to check. Do not state, confirm, or hint at which choice or value is correct, do not name a choice letter as right, and leave shortAnswer empty.";
+// True if a reply gives away the answer to an unanswered question (names the correct letter as the answer).
+function revealsAnswer(text, letter) {
+  if (!letter) return false;
+  const L = letter.toUpperCase();
+  return new RegExp("(answer|choice|option|correct)[^.\\n]{0,25}\\(?\\b" + L + "\\b\\)?|\\b" + L + "\\)?\\s*(is|would be)\\s*(the\\s*)?(correct|right|answer)", "i").test(text);
+}
+async function workersAi(env, messages, teaching) {
+  const attempts = {};
+  for (const model of CF_MODELS) {
+    try {
+      const out = await env.AI.run(model, Object.assign({ messages, max_tokens: teaching ? 1400 : 900, temperature: 0.3 },
+        teaching ? { response_format: { type: "json_schema", json_schema: TUTOR_SCHEMA } } : {}));
+      let content = out && out.response;
+      if (content && typeof content === "object") content = JSON.stringify(content);
+      content = String(content || "").trim();
+      if (teaching) { const m = content.match(/\{[\s\S]*\}/); try { JSON.parse(m ? m[0] : content); content = m ? m[0] : content; } catch { attempts[model] = "bad_json"; continue; } }
+      if (content) return { content, model, usage: out.usage, attempts };
+      attempts[model] = "empty";
+    } catch (e) { attempts[model] = String(e && e.message || e).slice(0, 120); }
+  }
+  return { attempts };
+}
 async function aiTutor(req, env) {
-  if (!env.GROQ_API_KEY) return json({ code: "no_key" }, 503, req);
+  if (!env.AI && !env.GROQ_API_KEY) return json({ code: "no_key" }, 503, req);
   // Only the app's own pages may use the tutor, so the key can't be borrowed by other sites.
   if (!AI_ORIGINS.test(req.headers.get("Origin") || "")) { console.log("AI tutor refused origin", req.headers.get("Origin")); return json({ code: "forbidden" }, 403, req); }
   let body; try { body = await req.json(); } catch { return json({ error: "Bad request." }, 400, req); }
@@ -226,6 +255,8 @@ async function aiTutor(req, env) {
     .filter((m) => m && ["system", "user", "assistant"].includes(m.role) && typeof m.content === "string")
     .map((m) => ({ role: m.role, content: m.content.slice(0, 6000) })) : [];
   if (!messages.length) return json({ error: "Bad request." }, 400, req);
+  const noAnswer = !!body.noAnswer, correctLetter = /^[A-E]$/i.test(String(body.correctLetter || "")) ? String(body.correctLetter) : "";
+  if (noAnswer) messages.push({ role: "system", content: NO_REVEAL_RULE });
   // Per-IP limit so one visitor can't use up the shared Groq quota.
   const ip = req.headers.get("CF-Connecting-IP") || "?";
   const win = Math.floor(Date.now() / (AI_WINDOW_MIN * 60000));
@@ -234,6 +265,19 @@ async function aiTutor(req, env) {
   if (Math.random() < 0.02) await env.DB.prepare("DELETE FROM ai_usage WHERE win < ?").bind(win - 1).run();
   // Try every Groq model so a retired model or a per-model quota still resolves. A caller may
   // pass a model hint (used by diagnostics) to try one model first, or onlyModel to prove it works.
+  // 1) Cloudflare Workers AI (primary). A reply that gives away an unanswered question's answer is
+  //    retried once with the rule repeated, then rejected.
+  if (env.AI) {
+    for (let tryNo = 0; tryNo < 2; tryNo++) {
+      const r = await workersAi(env, tryNo ? messages.concat({ role: "system", content: "Your previous reply revealed the answer. " + NO_REVEAL_RULE }) : messages, !!body.teaching);
+      if (r.content && noAnswer && revealsAnswer(r.content, correctLetter)) { console.log("AI tutor reply revealed the answer; retrying"); continue; }
+      if (r.content) return json({ content: r.content, provider: "cloudflare", model: r.model, usage: normalizeUsage(r.usage), requestId: makeRequestId() }, 200, req);
+      console.log("Workers AI failed", JSON.stringify(r.attempts));
+      break;
+    }
+    if (!env.GROQ_API_KEY) return json({ code: "upstream", retryAfter: 10 }, 502, req);
+  }
+  // 2) Groq, only if a key is still configured.
   const hint = typeof body.model === "string" && GROQ_MODELS.includes(body.model) ? body.model : null;
   const order = hint ? [hint, ...GROQ_MODELS.filter((m) => m !== hint)] : GROQ_MODELS;
   const attempts = {};
@@ -256,6 +300,7 @@ async function aiTutor(req, env) {
       // A reply that hit the token cap is cut off mid-sentence; try the next model instead of returning it.
       if (choice.finish_reason === "length") { attempts[model] = "cut_off"; continue; }
       if (body.teaching && content) { try { JSON.parse(content); } catch { attempts[model] = "bad_json"; continue; } }
+      if (content && noAnswer && revealsAnswer(content, correctLetter)) { attempts[model] = "revealed_answer"; continue; }
       if (content) return json({ content, provider: "groq", model, usage: normalizeUsage(j.usage), requestId: makeRequestId() }, 200, req);
       attempts[model] = "empty";
     } catch (e) { lastStatus = 503; attempts[model] = "timeout"; }

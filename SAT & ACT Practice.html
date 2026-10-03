@@ -725,7 +725,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
       <p class="small muted" id="authSync">Your progress syncs automatically.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" id="authSyncNow">Sync now</button><button type="button" class="secondary" id="btnHelpHistory">Help history</button><button type="button" class="secondary" id="authOutBtn">Sign out</button></div>
       <section id="helpHistoryPanel" class="help-history" hidden aria-labelledby="helpHistoryTitle">
-        <div class="help-history-head"><h3 id="helpHistoryTitle">Groq help history</h3><button type="button" class="ghost" id="closeHelpHistory">Close</button></div>
+        <div class="help-history-head"><h3 id="helpHistoryTitle">Tutor help history</h3><button type="button" class="ghost" id="closeHelpHistory">Close</button></div>
         <p class="small muted">These requests are saved to your account so you can revisit the skills where you asked for help. They do not affect your score estimate.</p>
         <label for="helpHistoryFilter">Filter by subject or skill</label><select id="helpHistoryFilter"><option value="">All help</option></select>
         <div id="helpHistorySummary" class="small"></div><div id="helpHistoryList" aria-live="polite"></div>
@@ -734,7 +734,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
     <div class="auth-msg" id="authMsg"></div>
     <div class="auth-sec">
       <label for="aiProvider">AI tutor</label>
-      <select id="aiProvider"><option value="free">Groq tutor (no personal key needed)</option><option value="groq">My own Groq key</option></select>
+      <select id="aiProvider"><option value="free">Built-in AI tutor (free, no key needed)</option><option value="groq">My own Groq key</option></select>
       <div id="groqKeyWrap" style="display:none"><label for="groqKey">Groq API key</label><input id="groqKey" type="text" class="pw-mask" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore placeholder="gsk_…"><div class="small muted" style="margin-top:4px">Get a free key at console.groq.com. It is stored only on this device.</div></div>
     </div>
   </div>
@@ -2289,7 +2289,7 @@ function helpCategory(text, chosen) {
   if (/desmos|calculator|graph/.test(t)) return "calculator-help";
   return "question-help";
 }
-function parseTutorResponse(raw) {
+function parseTutorResponse(raw, opts = {}) {
   let value;
   try { const match = String(raw || "").match(/\{[\s\S]*\}/); value = JSON.parse(match ? match[0] : raw); } catch (e) { throw { code: "invalid_response" }; }
   const strings = (v, max) => Array.isArray(v) ? v.filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim()).slice(0, max) : [];
@@ -2301,11 +2301,13 @@ function parseTutorResponse(raw) {
     verification: typeof value.verification === "string" ? value.verification.trim() : "",
     nextPractice: typeof value.nextPractice === "string" ? value.nextPractice.trim() : ""
   };
-  if (!out.shortAnswer || !out.detailedSteps.length || !out.simpleSteps.length || !out.verification) throw { code: "invalid_response" };
+  // Help before answering intentionally has no answer in it; only steps are required then.
+  if (opts.noAnswer) out.shortAnswer = "";
+  if ((!opts.noAnswer && !out.shortAnswer) || (!out.detailedSteps.length && !out.simpleSteps.length)) throw { code: "invalid_response" };
   return out;
 }
 function tutorResponseText(s) {
-  return [s.shortAnswer, "Detailed steps:", ...s.detailedSteps.map((x, i) => (i + 1) + ". " + x), "Simple steps:", ...s.simpleSteps.map((x) => "• " + x), s.memoryTip && "Memory tip: " + s.memoryTip, s.equations.length && "Equations: " + s.equations.join("; "), "Checked: " + s.verification, s.nextPractice && "Next: " + s.nextPractice].filter(Boolean).join("\n");
+  return [s.shortAnswer, "Detailed steps:", ...s.detailedSteps.map((x, i) => (i + 1) + ". " + x), "Simple steps:", ...s.simpleSteps.map((x) => "• " + x), s.memoryTip && "Memory tip: " + s.memoryTip, s.equations.length && "Equations: " + s.equations.join("; "), s.verification && "Checked: " + s.verification, s.nextPractice && "Next: " + s.nextPractice].filter(Boolean).join("\n");
 }
 function plainEquation(text) {
   const superscripts = {"⁰":"0","¹":"1","²":"2","³":"3","⁴":"4","⁵":"5","⁶":"6","⁷":"7","⁸":"8","⁹":"9"};
@@ -2417,7 +2419,7 @@ async function recordTutorHelp(q, requestText, responseText, category, status) {
 }
 
 function tutorChatHtml(q) {
-  return '<div class="cchat"><div class="sec-t">Ask Groq</div><div class="cchips"><button type="button" data-chip="Explain the method in simpler steps without revealing an unanswered question’s answer.">Simpler steps</button><button type="button" data-chip="Give me a useful memory trick for this skill.">Memory tip</button><button type="button" data-chip="Give me a similar practice question without the answer.">Similar question</button></div><div class="cmsgs" id="cmsgs" aria-live="polite"></div><div class="crow"><input id="cinput" type="text" maxlength="400" placeholder="Ask about this question…" autocomplete="off" aria-label="Ask Groq"><button id="csend" type="button">Send</button></div><div class="small muted" id="cnote"></div></div>';
+  return '<div class="cchat"><div class="sec-t">Ask the AI tutor</div><div class="cchips"><button type="button" data-chip="Explain the method in simpler steps without revealing an unanswered question’s answer.">Simpler steps</button><button type="button" data-chip="Give me a useful memory trick for this skill.">Memory tip</button><button type="button" data-chip="Give me a similar practice question without the answer.">Similar question</button></div><div class="cmsgs" id="cmsgs" aria-live="polite"></div><div class="crow"><input id="cinput" type="text" maxlength="400" placeholder="Ask about this question…" autocomplete="off" aria-label="Ask the AI tutor"><button id="csend" type="button">Send</button></div><div class="small muted" id="cnote"></div></div>';
 }
 function coachHtml(q, chosen) {
   if (!isMathQ(q) || chosen == null) return '<div class="coach">' + tutorChatHtml(q) + "</div>";
@@ -2483,8 +2485,8 @@ function wireCoach(q, chosen) {
         "\n" + CALC_AI_RULES;
       const turns = [{ role: "system", content: ctx }];
       hist.slice(0, -1).forEach((m) => turns.push({ role: m.role, content: m.content }));
-      const raw = await aiChat(turns, { teaching:true });
-      const structured = parseTutorResponse(raw);
+      const raw = await aiChat(turns, { teaching:true, noAnswer: chosen == null, correctLetter: chosen == null ? String.fromCharCode(65 + q.ans) : "" });
+      const structured = parseTutorResponse(raw, { noAnswer: chosen == null });
       hist[idx].structured = structured;
       hist[idx].content = tutorResponseText(structured);
       const saved = await recordTutorHelp(q, text, hist[idx].content, helpCategory(text, chosen), "complete");
@@ -2551,7 +2553,7 @@ function explanationHtml(q, chosen) {
   const help = teachingCache[q.id];
   const simpleSteps = help && help.simple || simpleWhy.split(/(?<=[.!?])\s+(?=[A-Z“])/).filter(Boolean);
   return '<div class="explain"><strong>Detailed explanation</strong><ol><li>' + (help && help.detailed ? help.detailed.map((step) => escapeHtml(step)).join('</li><li>') : escapeHtml(tips[1]) + '</li><li>' + escapeHtml(q.exp) + '</li><li>Check the result: the correct choice is ' + escapeHtml(q.choices[q.ans]) + '.') + '</li></ol></div>' +
-    (chosen !== q.ans ? '<div class="idk-box"><strong>Simple explanation</strong><ul>' + simpleSteps.map((step) => '<li>' + escapeHtml(step) + '</li>').join('') + '<li><strong>Answer:</strong> ' + escapeHtml(q.choices[q.ans]) + '</li></ul>' + (teachingBusy[q.id] ? '<p class="small muted">Groq is simplifying these steps…</p>' : help && help.error ? '<p class="small muted">' + escapeHtml(help.error) + '</p><button type="button" id="btnRetryTeaching" class="secondary">Retry Groq explanation</button>' : help && help.simple ? '<p class="small muted">Simplified with Groq. Check the steps against the explanation above.</p>' : '') + '</div>' : '');
+    (chosen !== q.ans ? '<div class="idk-box"><strong>Simple explanation</strong><ul>' + simpleSteps.map((step) => '<li>' + escapeHtml(step) + '</li>').join('') + '<li><strong>Answer:</strong> ' + escapeHtml(q.choices[q.ans]) + '</li></ul>' + (teachingBusy[q.id] ? '<p class="small muted">The AI tutor is simplifying these steps…</p>' : help && help.error ? '<p class="small muted">' + escapeHtml(help.error) + '</p><button type="button" id="btnRetryTeaching" class="secondary">Retry explanation</button>' : help && help.simple ? '<p class="small muted">Simplified with Groq. Check the steps against the explanation above.</p>' : '') + '</div>' : '');
 }
 
 function studyHelpHtml(q) {
@@ -3347,7 +3349,7 @@ async function aiChat(messages, options = {}) {
   const askSite = async () => {
     const ctrl = new AbortController(); const timer = setTimeout(() => ctrl.abort(), 60000);
     try {
-      const r = await fetch(API_BASE + "/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages, teaching: !!options.teaching }), signal: ctrl.signal });
+      const r = await fetch(API_BASE + "/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages, teaching: !!options.teaching, noAnswer: !!options.noAnswer, correctLetter: options.correctLetter || "" }), signal: ctrl.signal });
       const j = await r.json();
       if (!r.ok) throw { code: j.code || "http", status: r.status, retryAfter: j.retryAfter };
       if (!j.content) throw { code: "empty" };
@@ -3367,16 +3369,16 @@ async function aiChat(messages, options = {}) {
   }
 }
 function aiErrorText(e) {
-  return e && e.code === "no_key" ? "The site’s Groq tutor is not configured yet. The written explanations and study tools are available below." :
-    e && e.code === "site_only" ? "Open the published site to use the Groq tutor, or add your own Groq key in Account." :
-    e && e.code === "server_key_invalid" ? "The site’s Groq key needs updating. Your written explanations still work." :
+  return e && e.code === "no_key" ? "The AI tutor isn't set up on this site yet. The written explanations and study tools are available below." :
+    e && e.code === "site_only" ? "Open the published site to use the AI tutor, or add your own Groq key in Account." :
+    e && e.code === "server_key_invalid" ? "The AI tutor needs updating. Your written explanations still work." :
     e && e.code === "app_rate_limited" ? "You’ve reached this session’s tutor limit. Retry in about " + Math.ceil((e.retryAfter || 60) / 60) + " minute(s)." :
-    e && e.code === "rate_limited" ? "Groq is at its current limit. Retry in about " + Math.ceil((e.retryAfter || 60) / 60) + " minute(s)." :
-    e && e.code === "invalid_response" ? "Groq’s explanation was incomplete. Use Retry Groq explanation to request it again." :
-    e && e.code === "upstream" ? "Groq is temporarily unavailable. Please retry." :
+    e && e.code === "rate_limited" ? "The AI tutor is at its limit. Retry in about " + Math.ceil((e.retryAfter || 60) / 60) + " minute(s)." :
+    e && e.code === "invalid_response" ? "The AI tutor's explanation came back incomplete. Try asking again." :
+    e && e.code === "upstream" ? "The AI tutor is temporarily unavailable. Please retry." :
     e && e.code === "forbidden" ? "The tutor only works on funsat.bid. Open the app there to use it." :
     e && e.code === "bad_key" ? "Your Groq key was rejected. Check it in 👤 Account → AI tutor." :
-    e && e.code === "empty" ? "The Groq tutor didn't answer that time. Try asking again." :
+    e && e.code === "empty" ? "The AI tutor didn't answer that time. Try asking again." :
     e && e.name === "AbortError" ? "The AI took too long to answer. Try again." :
     "Couldn't reach the AI. Check your internet connection and try again.";
 }
@@ -3822,7 +3824,7 @@ function renderHelpHistory() {
     const summary=document.createElement("summary");summary.textContent=(item.skill || item.domain || item.section || "Practice help") + " · " + new Date(item.createdAt).toLocaleString();details.append(summary);
     const meta=document.createElement("p");meta.className="small muted";meta.textContent=[item.testType && item.testType.toUpperCase(),item.domain,item.category,item.model].filter(Boolean).join(" · ");details.append(meta);
     const asked=document.createElement("div");const askedTitle=document.createElement("strong");askedTitle.textContent="You asked";const askedText=document.createElement("p");askedText.textContent=item.requestText;asked.append(askedTitle,askedText);details.append(asked);
-    const response=document.createElement("div");const responseTitle=document.createElement("strong");responseTitle.textContent="Groq response";const responseText=document.createElement("pre");responseText.className="help-history-response";responseText.textContent=item.responseText;response.append(responseTitle,responseText);details.append(response);
+    const response=document.createElement("div");const responseTitle=document.createElement("strong");responseTitle.textContent="Tutor response";const responseText=document.createElement("pre");responseText.className="help-history-response";responseText.textContent=item.responseText;response.append(responseTitle,responseText);details.append(response);
     if (item.questionSnapshot) { const qd=document.createElement("details");const qs=document.createElement("summary");qs.textContent="Question snapshot";const qp=document.createElement("pre");qp.className="help-history-response";try{const snap=JSON.parse(item.questionSnapshot);qp.textContent=[snap.passage,snap.question,(snap.choices||[]).map((c,i)=>String.fromCharCode(65+i)+") "+c).join("\n")].filter(Boolean).join("\n\n");}catch(e){qp.textContent=item.questionSnapshot;}qd.append(qs,qp);details.append(qd); }
     const usage=document.createElement("p");usage.className="small muted";usage.textContent=item.usage && item.usage.totalTokens != null ? "Recorded usage: "+item.usage.totalTokens+" tokens" : "Token usage was not returned by Groq.";details.append(usage);
     const del=document.createElement("button");del.type="button";del.className="secondary help-delete";del.textContent="Delete this entry";del.addEventListener("click",async()=>{del.disabled=true;try{await cloud.api("help-history/"+encodeURIComponent(item.id),{method:"DELETE"});helpHistoryItems=helpHistoryItems.filter((x)=>x.id!==item.id);renderHelpHistory();}catch(e){del.disabled=false;setAuthMsg(e.msg||"Could not delete that entry.",true);}});details.append(del);list.append(details);

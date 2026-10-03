@@ -311,3 +311,62 @@ body.cpop-open{overflow:hidden}
 #screen-college .ring-lbl,#screen-college .ring-num{color:var(--ws-ink)}
 #screen-college .hero-line,#screen-college .hero-line *:not(b):not(strong){color:var(--ws-ink)}
 #screen-college,#collegeDetailHost{--muted:#a3b0c2;--text:#e8edf4;--ink:#e8edf4;--line:#2f3b4b}
+/* ---- Your chances: full-width, larger, card grid ---- */
+.college-chances.college-wide{grid-column:1/-1;padding:18px 20px 20px}
+.college-chances legend{font-size:20px;font-weight:800;padding:0 8px}
+.chance-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.chance-mix{gap:8px;margin:0}
+.chance-mix .fit{font-size:15px;padding:6px 14px}
+.chance-sort{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ws-muted)}
+.chance-sort select{width:auto;padding:7px 10px;font-size:14px}
+.chance-advice{font-size:16px;margin:12px 0 4px;color:var(--ws-ink)}
+.chance-add{margin:14px 0 16px}
+.chance-add label{display:block;font-weight:700;font-size:14px;margin-bottom:6px;color:var(--ws-ink)}
+.chance-add input{width:100%;font-size:16px;padding:12px 14px;border-radius:12px}
+.chance-add-results{display:grid;gap:6px;margin-top:8px}
+.chance-add-results:empty{display:none}
+.chance-add-item{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;padding:11px 14px;border-radius:10px;font-size:15px;background:var(--ws-soft)!important;color:var(--ws-ink)!important;border:1px solid var(--ws-line)!important}
+.chance-add-item:hover:not(:disabled){border-color:var(--mint)!important}
+.chance-add-item>span:last-child{color:var(--mint);font-weight:800;white-space:nowrap}
+.chance-add-item:disabled{opacity:.6}
+.chance-empty{font-size:16px;color:var(--ws-muted)}
+.chance-list{grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;max-height:none;overflow:visible}
+.chance-item{padding:18px;border-radius:16px;border-left-width:5px}
+.chance-item.fitb-reach{border-left-color:#ef4444}.chance-item.fitb-target{border-left-color:#3b82f6}.chance-item.fitb-likely{border-left-color:#22c55e}.chance-item.fitb-safety{border-left-color:#5ef0b0}
+.chance-name{font-size:19px;font-weight:800;line-height:1.25}
+.chance-loc{font-size:14px;color:var(--ws-muted);margin-top:3px}
+.chance-head .fit{font-size:14px;padding:5px 12px}
+.chance-big{display:flex;align-items:center;gap:14px;margin:14px 0 10px}
+.chance-pct{font-size:44px;font-weight:900;line-height:1;letter-spacing:-.02em;color:var(--ws-ink)}
+.chance-pct-l{font-size:15px;line-height:1.35;color:var(--ws-ink)}
+.chance-pct-l .muted{font-size:13px}
+.chance-item .college-split{height:14px;margin-top:4px}
+.chance-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px;font-size:14px;color:var(--ws-ink)}
+.chance-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.chance-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.cg-cell{background:rgba(255,255,255,.04);border:1px solid var(--ws-line);border-radius:10px;padding:10px 12px}
+.cg-k{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ws-muted);font-weight:700}
+.cg-v{font-size:18px;font-weight:800;margin-top:3px;color:var(--ws-ink)}
+.cg-v .muted{font-size:14px;font-weight:600}
+.chance-sub{font-size:15px;font-weight:700;margin-top:14px;color:var(--ws-ink)}
+.chance-range{position:relative;margin:8px 0 22px}
+.cr-track{position:relative;height:12px;border-radius:999px;background:rgba(255,255,255,.08)}
+.cr-band{position:absolute;top:0;bottom:0;border-radius:999px;background:rgba(59,130,246,.55)}
+.cr-you{position:absolute;top:-6px;width:4px;height:24px;margin-left:-2px;border-radius:2px;background:var(--mint)}
+.cr-you b{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--mint);white-space:nowrap}
+.cr-labels{position:relative;height:16px;margin-top:4px;font-size:12px;color:var(--ws-muted)}
+.cr-labels span{position:absolute;transform:translateX(-50%)}
+.chance-tags{gap:8px;margin-top:10px;font-size:14px}
+.chance-what{margin-top:12px}
+.chance-what ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:4px}
+.chance-what li{display:flex;justify-content:space-between;font-size:15px;color:var(--ws-ink)}
+.chance-what b.up{color:#86efac}
+.chance-actions{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+.chance-actions .secondary{padding:9px 14px;font-size:14px}
+.chance-link{font-size:14px;font-weight:700}
+.chance-remove{margin-left:auto;font-size:14px;color:#fca5a5!important;background:transparent!important;border:0!important}
+.chance-note{font-size:14px;color:var(--ws-muted);margin:12px 0 0}
+@media(max-width:620px){.college-chances.college-wide{padding:14px}.chance-list{grid-template-columns:1fr}.chance-pct{font-size:38px}.chance-grid{grid-template-columns:1fr 1fr}}
+.chance-range{margin-top:28px}
+.chance-sort{flex-direction:row}
+.chance-sort select{margin:0}

@@ -163,12 +163,42 @@
     logit += circ;
     if (circ > 0) factors.push({ label: "Context", detail: "First-generation status, work, caregiving, and hardship are treated as context, not as score boosts. Colleges review them individually.", effect: "context" });
 
-    if (c.major) factors.push({ label: "Intended major", detail: "Some majors (for example computer science, engineering, nursing, and business) can be more competitive at a given college. This estimate does not adjust for major because colleges do not publish comparable major-level admit rates.", effect: "context" });
+    // Factors scale with selectivity: they matter more where the admit rate is low.
+    const sel = 0.5 + (1 - clamp(college.adm / 100, 0, 1));
 
-    if (c.applyPlan === "early") {
-      logit += 0.22;
-      factors.push({ label: "Early application", detail: "You selected ED/EA. Many colleges report higher early admit rates, but the size of the benefit varies and this app does not have per-college early data, so the weight is deliberately small.", effect: "up" });
+    // Residency: public universities admit in-state applicants at much higher rates.
+    if (c.homeState && college.ctrl === "public") {
+      if (c.homeState === college.st) { logit += 0.45 * sel; factors.push({ label: "In-state applicant", detail: "Public universities usually admit residents of their state at a higher rate than out-of-state applicants.", effect: "up" }); }
+      else { logit -= 0.2 * sel; factors.push({ label: "Out-of-state applicant", detail: "Public universities usually hold out-of-state applicants to a higher bar than residents.", effect: "down" }); }
     }
+
+    // Class rank adds to GPA: it shows where your grades sit at your own school.
+    const RANK = { top5: [0.45, "Top 5% of your class"], top10: [0.3, "Top 10% of your class"], top25: [0.12, "Top 25% of your class"], top50: [-0.1, "Top half of your class"], below: [-0.35, "Lower half of your class"] };
+    if (RANK[c.classRank]) {
+      const [w, label] = RANK[c.classRank];
+      logit += w * sel;
+      factors.push({ label: "Class rank", detail: label + ". Rank shows how your grades compare at your own school, which colleges read alongside GPA.", effect: w > 0 ? "up" : "down" });
+    }
+
+    // Competitive majors at selective schools (computer science, engineering, nursing, business, data science).
+    if (c.major && college.adm < 70 && /comput|\bcs\b|software|engineer|nursing|business|data sci|finance/i.test(c.major)) {
+      logit -= 0.3 * sel;
+      factors.push({ label: "Competitive major", detail: "\u201c" + c.major + "\u201d is often capped or more competitive than the college overall, so the estimate is lowered a little.", effect: "down" });
+    } else if (c.major) factors.push({ label: "Intended major", detail: "Your major isn't one that's usually capped, so it doesn't change the estimate.", effect: "context" });
+
+    // Application round: Early Decision (binding) helps much more than Early Action.
+    const plan = c.applyPlan === "early" ? "ea" : c.applyPlan;
+    if (plan === "ed" && college.ctrl === "private") {
+      logit += 0.5;
+      factors.push({ label: "Early Decision", detail: "Binding Early Decision usually has a noticeably higher admit rate at private colleges.", effect: "up" });
+    } else if (plan === "ed" || plan === "ea") {
+      logit += 0.12;
+      factors.push({ label: "Early Action", detail: "Applying early (non-binding) gives a small edge at many colleges." + (plan === "ed" ? " Most public universities don't offer binding ED, so this counts as early action." : ""), effect: "up" });
+    }
+
+    // Hooks colleges openly weigh.
+    if (c.athlete) { logit += 1.2; factors.push({ label: "Recruited athlete", detail: "Recruited athletes supported by a coach are admitted at far higher rates than other applicants.", effect: "up" }); }
+    if (c.legacy && college.ctrl === "private") { logit += college.adm < 50 ? 0.3 : 0.1; factors.push({ label: "Legacy", detail: "Some private colleges give weight to a parent who attended. Many have dropped this, so the boost is small.", effect: "up" }); }
     if (c.appStrength === "strong") {
       logit += 0.18;
       factors.push({ label: "Essays and recommendations", detail: "You rated these strong. Self-reported holistic factors get a small, bounded weight; colleges review them in context.", effect: "up" });
@@ -182,6 +212,8 @@
     if (!range || !score) half += 0.05;
     if (gpa4 == null) half += 0.04;
     if (c.grade === "9" || c.grade === "10") half += 0.03;
+    if (RANK[c.classRank]) half -= 0.01;
+    if (c.homeState) half -= 0.005;
     const lo = clamp(estimate - half, 0.005, 0.975);
     const hi = clamp(estimate + half, 0.005, 0.98);
 
@@ -240,47 +272,80 @@
     const c = cp(), saved = JSON.parse(JSON.stringify(c));
     try { change(c); return estimateCollege(college).estimate; } finally { Object.keys(c).forEach((k) => delete c[k]); Object.assign(c, saved); }
   }
+  // A colored bar showing where your score sits in a college's middle-50% range (and beyond it).
+  function rangeBarHtml(lo, hi, you, unit) {
+    if (lo == null || hi == null) return "";
+    const pad = (hi - lo) * 0.9, min = lo - pad, max = hi + pad, at = (v) => Math.max(0, Math.min(100, ((v - min) / (max - min)) * 100));
+    return '<div class="chance-range" aria-label="' + unit + ' range ' + lo + ' to ' + hi + (you != null ? ', you ' + you : '') + '">' +
+      '<div class="cr-track"><span class="cr-band" style="left:' + at(lo).toFixed(1) + '%;width:' + (at(hi) - at(lo)).toFixed(1) + '%"></span>' +
+      (you != null ? '<span class="cr-you" style="left:' + at(you).toFixed(1) + '%"><b>' + you + '</b></span>' : '') + '</div>' +
+      '<div class="cr-labels"><span style="left:' + at(lo).toFixed(1) + '%">' + lo + '</span><span style="left:' + at(hi).toFixed(1) + '%">' + hi + '</span></div></div>';
+  }
+  function chanceCardHtml(college, est, c, gpa4) {
+    const fit = fitOf(est.estimate), testType = est.testType;
+    const up = est.factors.filter((f) => f.effect === "up").map((f) => f.label);
+    const down = est.factors.filter((f) => f.effect === "down").map((f) => f.label);
+    const boostScore = est.score && !isTestBlind(college) && est.range ? whatIf(college, (p) => { if (testType === "act") p.act = Math.min(36, (Number(p.act) || est.score.value) + 2); else p.sat = Math.min(1600, (Number(p.sat) || est.score.value) + 50); }) : null;
+    const boostGpa = gpa4 != null ? whatIf(college, (p) => { const g = Number(p.gpa); p.gpa = Math.min(p.gpaScale === "100" ? 100 : p.gpaScale === "5w" ? 5 : 4.0, g + (p.gpaScale === "100" ? 5 : 0.2)); }) : null;
+    const bench = expectedGpa(college.adm);
+    const scoreWhere = est.range && est.score ? (est.score.value >= est.range.hi ? "Above their 75th percentile" : est.score.value <= est.range.lo ? "Below their 25th percentile" : "Inside their middle 50%") : isTestBlind(college) ? "Test-blind: scores aren't considered" : est.score ? "No score range reported" : "Add your score";
+    const gain = (val) => val != null && val - est.estimate >= 0.005;
+    const lever = (label, val) => !gain(val) ? "" : '<li><span>' + label + '</span><b class="up">' + pct(est.estimate) + " → " + pct(val) + "</b></li>";
+    return '<li class="chance-item fitb-' + fit.key + '">' +
+      '<div class="chance-head"><div><div class="chance-name">' + escapeHtml(college.n) + '</div><div class="chance-loc">' + escapeHtml(college.city || "") + (college.city ? ", " : "") + college.st + " · " + (college.ctrl === "public" ? "Public" : "Private") + (college.enr ? " · " + Number(college.enr).toLocaleString() + " undergrads" : "") + '</div></div><span class="fit fit-' + fit.key + '">' + fit.label + "</span></div>" +
+      '<div class="chance-big"><span class="chance-pct">' + pct(est.estimate) + '</span><span class="chance-pct-l">chance of admission<br><span class="muted">likely range ' + pct(est.lo) + "–" + pct(est.hi) + " · " + est.confidence + " confidence</span></span></div>" +
+      splitBar(est) +
+      '<div class="chance-legend"><span><i style="background:' + OUTCOME_COLORS.accept + '"></i>Accept ' + pct(est.estimate) + '</span><span><i style="background:' + OUTCOME_COLORS.waitlist + '"></i>Waitlist ' + pct(est.waitlist) + '</span><span><i style="background:' + OUTCOME_COLORS.deny + '"></i>Deny ' + pct(est.deny) + "</span></div>" +
+      '<div class="chance-grid">' +
+        '<div class="cg-cell"><div class="cg-k">Admit rate</div><div class="cg-v">' + college.adm + '%</div></div>' +
+        '<div class="cg-cell"><div class="cg-k">Your GPA vs typical</div><div class="cg-v">' + (gpa4 != null ? gpa4.toFixed(2) + ' <span class="muted">vs ~' + bench.toFixed(1) + "</span>" : '<span class="muted">add GPA</span>') + "</div></div>" +
+        '<div class="cg-cell"><div class="cg-k">SAT middle 50%</div><div class="cg-v">' + (college.sr25 != null ? college.sr25 + "–" + college.sr75 : '<span class="muted">' + (isTestBlind(college) ? "test-blind" : "not reported") + "</span>") + "</div></div>" +
+        '<div class="cg-cell"><div class="cg-k">ACT middle 50%</div><div class="cg-v">' + (college.ar25 != null ? college.ar25 + "–" + college.ar75 : '<span class="muted">' + (isTestBlind(college) ? "test-blind" : "not reported") + "</span>") + "</div></div>" +
+      "</div>" +
+      '<div class="chance-sub">' + scoreWhere + "</div>" +
+      (est.range ? rangeBarHtml(est.range.lo, est.range.hi, est.score ? est.score.value : null, testType.toUpperCase()) : "") +
+      ((up.length || down.length) ? '<div class="chance-tags">' + up.map((l) => '<span class="tag-up">▲ ' + escapeHtml(l) + "</span>").join("") + down.map((l) => '<span class="tag-down">▼ ' + escapeHtml(l) + "</span>").join("") + "</div>" : "") +
+      ((boostScore != null || boostGpa != null) ? '<div class="chance-what"><div class="cg-k">What would raise it</div>' +
+        (gain(boostScore) || gain(boostGpa) ? "<ul>" + lever(testType === "act" ? "+2 ACT points" : "+50 SAT points", boostScore) + lever("+" + (c.gpaScale === "100" ? "5" : "0.2") + " GPA", boostGpa) + "</ul>" :
+          '<p class="chance-note" style="margin-top:4px">' + (est.estimate >= 0.85 ? "You're already well placed here. Strong essays and keeping your grades up matter most now." : "Small score or GPA changes barely move this one. It's very selective, so essays, activities, and recommendations carry the most weight.") + "</p>") + "</div>" : "") +
+      '<div class="chance-actions"><button type="button" class="secondary" data-select="' + college.id + '">Full details</button>' +
+      (college.url ? '<a class="chance-link" href="' + escapeHtml(/^https?:/.test(college.url) ? college.url : "https://" + college.url) + '" target="_blank" rel="noopener">Website ↗</a>' : "") +
+      '<button type="button" class="ghost chance-remove" data-save="' + college.id + '" aria-label="Remove ' + escapeHtml(college.n) + '">Remove</button></div>' +
+      "</li>";
+  }
   function chancesHtml() {
     const c = cp();
     const saved = (c.saved || []).map((id) => BY_ID.get(Number(id))).filter(Boolean);
+    const sort = c.chanceSort || "chance";
+    const add = '<div class="chance-add"><label for="chanceAdd">Add a college</label><div class="chance-add-row"><input type="search" id="chanceAdd" placeholder="Name, state, or abbreviation (USF, UCLA, MIT)…" autocomplete="off" value="' + escapeHtml(c.chanceQuery || "") + '"></div><div id="chanceAddResults" class="chance-add-results">' + chanceAddResultsHtml(c.chanceQuery) + "</div></div>";
     let body;
-    if (!saved.length) body = '<p class="small muted">Save colleges with ☆ and your chances at each one show up here, based on your GPA, scores, course rigor, activities, and application plan.</p>';
+    if (!saved.length) body = add + '<p class="chance-empty">Add colleges above and your chances at each one show up here, based on your GPA, test score, course rigor, activities, and application plan.</p>';
     else {
-      const rows = saved.map((college) => ({ college, est: estimateCollege(college) })).sort((a, b) => a.est.estimate - b.est.estimate);
+      const rows = saved.map((college) => ({ college, est: estimateCollege(college) }));
+      rows.sort(sort === "name" ? (a, b) => a.college.n.localeCompare(b.college.n) : sort === "admit" ? (a, b) => a.college.adm - b.college.adm : (a, b) => a.est.estimate - b.est.estimate);
       const counts = { reach: 0, target: 0, likely: 0, safety: 0 };
       rows.forEach((r) => { counts[fitOf(r.est.estimate).key]++; });
       const gpa4 = gpaOn4(c), score = scoreFor(c.testType || "sat");
-      const mix = '<div class="chance-mix">' + ["reach", "target", "likely", "safety"].map((k) => '<span class="fit fit-' + k + '"><b>' + counts[k] + "</b> " + k[0].toUpperCase() + k.slice(1) + "</span>").join("") + "</div>";
       const advice = counts.safety + counts.likely === 0 ? "Add at least two Likely or Safety schools so you have options you're confident about." :
         counts.reach > rows.length / 2 ? "More than half your list is a Reach. A balanced list usually has a few of each." :
-        "Your list has a healthy mix. Keep a couple of schools in each group.";
-      body = mix + '<p class="small muted chance-advice">' + advice + "</p><ul class=\"chance-list\">" + rows.map(({ college, est }) => {
-        const fit = fitOf(est.estimate);
-        const up = est.factors.filter((f) => f.effect === "up").map((f) => f.label);
-        const down = est.factors.filter((f) => f.effect === "down").map((f) => f.label);
-        // Biggest single lever: +50 SAT (or +2 ACT) versus +0.2 GPA.
-        const testType = est.testType;
-        const boostScore = est.score ? whatIf(college, (p) => { if (testType === "act") p.act = Math.min(36, (Number(p.act) || est.score.value) + 2); else p.sat = Math.min(1600, (Number(p.sat) || est.score.value) + 50); }) : null;
-        const boostGpa = gpa4 != null ? whatIf(college, (p) => { const g = Number(p.gpa); const step = p.gpaScale === "100" ? 5 : 0.2; p.gpa = Math.min(p.gpaScale === "100" ? 100 : p.gpaScale === "5w" ? 5 : 4.0, g + step); }) : null;
-        let lever = "";
-        const gS = boostScore != null ? boostScore - est.estimate : -1, gG = boostGpa != null ? boostGpa - est.estimate : -1;
-        if (Math.max(gS, gG) > 0.005) lever = gS >= gG ? (testType === "act" ? "+2 ACT points" : "+50 SAT points") + " → " + pct(boostScore) : "+" + (c.gpaScale === "100" ? "5" : "0.2") + " GPA → " + pct(boostGpa);
-        return '<li class="chance-item"><div class="chance-head"><span class="chance-name">' + escapeHtml(college.n) + '</span><span class="fit fit-' + fit.key + '">' + fit.label + "</span></div>" +
-          '<div class="chance-nums"><b>' + pct(est.estimate) + "</b> accept <span class=\"muted\">(" + pct(est.lo) + "–" + pct(est.hi) + ")</span> · " + pct(est.waitlist) + " waitlist · " + pct(est.deny) + " deny</div>" +
-          splitBar(est) +
-          '<div class="chance-facts small">' +
-          '<span>Admits ' + college.adm + "%</span>" +
-          (est.range ? "<span>" + testType.toUpperCase() + " mid-50%: " + est.range.lo + "–" + est.range.hi + "</span>" : isTestBlind(college) ? "<span>Test-blind: SAT/ACT not considered</span>" : "<span>No " + testType.toUpperCase() + " range reported</span>") +
-          (est.score && est.range ? "<span>You: " + est.score.value + "</span>" : "") +
-          "<span>" + est.confidence[0].toUpperCase() + est.confidence.slice(1) + " confidence</span></div>" +
-          ((up.length || down.length) ? '<div class="chance-tags small">' + up.map((l) => '<span class="tag-up">▲ ' + escapeHtml(l) + "</span>").join("") + down.map((l) => '<span class="tag-down">▼ ' + escapeHtml(l) + "</span>").join("") + "</div>" : "") +
-          (lever ? '<div class="chance-lever small">Biggest boost: ' + lever + "</div>" : "") +
-          "</li>";
-      }).join("") + "</ul>" +
-      (gpa4 == null || !score ? '<p class="small muted">Add your ' + (gpa4 == null ? "GPA" : "") + (gpa4 == null && !score ? " and " : "") + (!score ? "test score" : "") + " to make these estimates sharper.</p>" : "") +
-      '<p class="small muted">App estimates from each college\'s admit rate and reported score ranges plus your profile, not official predictions.</p>';
+        counts.target + counts.likely === 0 ? "Your list jumps from Reach to Safety. Add a few Target and Likely schools in between." :
+        counts.reach === 0 ? "No Reach schools yet. Adding one or two can be worth it." : "Your list has a healthy mix. Keep a couple of schools in each group.";
+      body = '<div class="chance-top"><div class="chance-mix">' + ["reach", "target", "likely", "safety"].map((k) => '<span class="fit fit-' + k + '"><b>' + counts[k] + "</b> " + k[0].toUpperCase() + k.slice(1) + "</span>").join("") + "</div>" +
+        '<label class="chance-sort">Sort <select id="chanceSort"><option value="chance"' + (sort === "chance" ? " selected" : "") + '>Hardest first</option><option value="admit"' + (sort === "admit" ? " selected" : "") + '>Admit rate</option><option value="name"' + (sort === "name" ? " selected" : "") + ">Name</option></select></label></div>" +
+        '<p class="chance-advice">' + advice + "</p>" + add +
+        '<ul class="chance-list">' + rows.map(({ college, est }) => chanceCardHtml(college, est, c, gpa4)).join("") + "</ul>" +
+        (gpa4 == null || !score ? '<p class="chance-note">Add your ' + (gpa4 == null ? "GPA" : "") + (gpa4 == null && !score ? " and " : "") + (!score ? "test score" : "") + " above to make these estimates sharper.</p>" : "") +
+        '<p class="chance-note">Reach under 25%, Target 25–54%, Likely 55–84%, Safety 85% and up. App estimates from each college\'s admit rate and reported score ranges plus your profile, not official predictions.</p>';
     }
-    return '<fieldset class="college-chances"><legend>Your chances</legend>' + body + "</fieldset>";
+    return '<fieldset class="college-chances college-wide"><legend>Your chances</legend>' + body + "</fieldset>";
+  }
+  function chanceAddResultsHtml(query) {
+    const q = String(query || "").trim();
+    if (!q) return "";
+    const c = cp();
+    const list = COLLEGES.filter((x) => matches(x, q)).map((x, i) => [x, i]).sort((a, b) => (acronymRank(b[0], q) - acronymRank(a[0], q)) || a[1] - b[1]).map((p) => p[0]).slice(0, 6);
+    if (!list.length) return '<p class="chance-note">No match in the ' + COLLEGES.length + " colleges in the app's College Scorecard data.</p>";
+    return list.map((x) => { const isSaved = c.saved.includes(x.id); return '<button type="button" class="chance-add-item"' + (isSaved ? " disabled" : ' data-save="' + x.id + '" data-add-college="1"') + '><span><b>' + escapeHtml(x.n) + '</b><span class="muted"> · ' + x.st + " · admits " + x.adm + "%</span></span><span>" + (isSaved ? "Saved" : "+ Add") + "</span></button>"; }).join("");
   }
 
   function pieHtml(est) {
@@ -473,7 +538,9 @@
       '<label>GPA <input type="number" id="collegeGpa" min="0" max="100" step="0.01" value="' + (c.gpa != null ? c.gpa : "") + '" placeholder="e.g., 3.85"></label>' +
       '<label>GPA scale <select id="collegeGpaScale">' + [["4uw", "4.0 unweighted"], ["4w", "4.0 weighted"], ["5w", "5.0 weighted"], ["100", "100-point"]].map(([v, t]) => '<option value="' + v + '"' + (c.gpaScale === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label>" +
       '<label>Intended major <input type="text" id="collegeMajor" maxlength="80" value="' + escapeHtml(c.major || "") + '" placeholder="e.g., Computer science"></label>' +
-      '<label>Application plan <select id="collegeApplyPlan"><option value="regular"' + (c.applyPlan !== "early" ? " selected" : "") + '>Regular decision</option><option value="early"' + (c.applyPlan === "early" ? " selected" : "") + '>Early (ED/EA)</option></select></label>' +
+      '<label>Application plan <select id="collegeApplyPlan">' + [["regular", "Regular decision"], ["ea", "Early Action (non-binding)"], ["ed", "Early Decision (binding)"]].map(([v, t]) => '<option value="' + v + '"' + ((c.applyPlan === "early" ? "ea" : c.applyPlan || "regular") === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label>" +
+      '<label>Class rank <select id="collegeClassRank">' + [["", "Not ranked / don't know"], ["top5", "Top 5%"], ["top10", "Top 10%"], ["top25", "Top 25%"], ["top50", "Top 50%"], ["below", "Lower half"]].map(([v, t]) => '<option value="' + v + '"' + ((c.classRank || "") === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label>" +
+      '<label>Home state <select id="collegeHomeState"><option value="">Choose…</option>' + "AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA PR RI SC SD TN TX UT VT VA WA WV WI WY".split(" ").map((s) => '<option value="' + s + '"' + (c.homeState === s ? " selected" : "") + ">" + s + "</option>").join("") + "</select></label>" +
       '<label>Essays &amp; recs (self-rated) <select id="collegeAppStrength"><option value="strong"' + (c.appStrength === "strong" ? " selected" : "") + '>Strong</option><option value="average"' + (c.appStrength !== "strong" && c.appStrength !== "developing" ? " selected" : "") + '>Average</option><option value="developing"' + (c.appStrength === "developing" ? " selected" : "") + '>Still developing</option></select></label>' +
       '<div class="college-rigor"><span>Course rigor (count of courses)</span>' +
       ["ap", "ib", "honors", "dual"].map((k) => '<label>' + ({ ap: "AP", ib: "IB", honors: "Honors", dual: "Dual enrollment" })[k] + ' <input type="number" min="0" max="40" step="1" data-rigor="' + k + '" value="' + (Number(c.rigor[k]) || 0) + '"></label>').join("") + "</div></fieldset>" +
@@ -482,6 +549,8 @@
       '<div class="college-activities" id="collegeActivities">' + activityRows + "</div>" +
       '<button type="button" class="secondary" id="collegeAddActivity">+ Add activity</button>' +
       '<div class="college-checks">' +
+      '<label class="college-check"><input type="checkbox" id="collegeAthlete"' + (c.athlete ? " checked" : "") + "> Recruited athlete (a coach is supporting you)</label>" +
+      '<label class="college-check"><input type="checkbox" id="collegeLegacy"' + (c.legacy ? " checked" : "") + "> Parent attended (legacy)</label>" +
       '<label class="college-check"><input type="checkbox" id="collegeFirstGen"' + (c.firstGen ? " checked" : "") + "> First-generation college student</label>" +
       '<label class="college-check"><input type="checkbox" id="collegeHardship"' + (c.hardship ? " checked" : "") + "> Financial hardship</label>" +
       '<label class="college-check"><input type="checkbox" id="collegeWorking"' + (c.working ? " checked" : "") + "> Working during school</label>" +
@@ -642,6 +711,13 @@
     }
     document.querySelectorAll("#screen-college [data-filter]").forEach((b) => b.addEventListener("click", () => { c.filter = b.dataset.filter; saveCollege(); renderCollegeScreen(); }));
     document.querySelectorAll("#screen-college [data-target]").forEach((b) => b.addEventListener("click", () => { c.targetMode = b.dataset.target; saveCollege(); renderCollegeScreen(); }));
+    const addBox = $("chanceAdd");
+    if (addBox) {
+      addBox.addEventListener("input", () => { c.chanceQuery = addBox.value; const r = $("chanceAddResults"); if (r) r.innerHTML = chanceAddResultsHtml(addBox.value); });
+      addBox.addEventListener("keydown", (e) => { e.stopPropagation(); if (e.key === "Enter") { e.preventDefault(); const first = document.querySelector("#chanceAddResults [data-add-college]"); if (first) first.click(); } });
+    }
+    const sortSel = $("chanceSort");
+    if (sortSel) sortSel.addEventListener("change", () => { c.chanceSort = sortSel.value; saveCollege(); renderCollegeScreen(); });
     const custom = $("collegeCustomTarget");
     if (custom) custom.addEventListener("change", () => { c.customTarget = Number(custom.value) || null; saveCollege(); renderCollegeScreen(); });
     document.querySelectorAll("#screen-college [data-copy-equation]").forEach((b) => b.addEventListener("click", () => copyEquationText(b.dataset.copyEquation, b)));
@@ -657,16 +733,18 @@
     bind("collegeGpaScale", "gpaScale");
     bind("collegeMajor", "major");
     bind("collegeApplyPlan", "applyPlan");
+    bind("collegeClassRank", "classRank");
+    bind("collegeHomeState", "homeState");
     bind("collegeAppStrength", "appStrength");
-    ["collegeFirstGen", "collegeHardship", "collegeWorking", "collegeCaregiving"].forEach((id) => {
-      const key = { collegeFirstGen: "firstGen", collegeHardship: "hardship", collegeWorking: "working", collegeCaregiving: "caregiving" }[id];
+    ["collegeFirstGen", "collegeHardship", "collegeWorking", "collegeCaregiving", "collegeAthlete", "collegeLegacy"].forEach((id) => {
+      const key = { collegeFirstGen: "firstGen", collegeHardship: "hardship", collegeWorking: "working", collegeCaregiving: "caregiving", collegeAthlete: "athlete", collegeLegacy: "legacy" }[id];
       const el = $(id);
       if (el) el.addEventListener("change", () => { c[key] = el.checked; saveCollege(); renderCollegeScreen(); });
     });
     const other = $("collegeOther");
     if (other) { other.addEventListener("keydown", (e) => e.stopPropagation()); other.addEventListener("change", () => { c.circumstanceOther = other.value; saveCollege(); renderCollegeScreen(); }); }
     ["collegeMajor", "collegeGpa", "collegeSat", "collegeAct", "collegeOther"].forEach((id) => { const el = $(id); if (el) el.addEventListener("keydown", (e) => e.stopPropagation()); });
-    document.querySelectorAll("#screen-college [data-rigor]").forEach((el) => el.addEventListener("change", () => { c.rigor[el.dataset.rigor] = Math.max(0, Number(el.value) || 0); saveCollege(); }));
+    document.querySelectorAll("#screen-college [data-rigor]").forEach((el) => el.addEventListener("change", () => { c.rigor[el.dataset.rigor] = Math.max(0, Number(el.value) || 0); saveCollege(); renderCollegeScreen(); }));
     const usePred = $("collegeUsePredicted");
     if (usePred) usePred.addEventListener("click", () => {
       try {
@@ -734,7 +812,7 @@
 
   // Expose a few helpers for tests and other screens.
   window.collegeFeature = {
-    estimateCollege, selectCollege, OUTCOME_COLORS, isTestBlind, NATIONAL_BY_GRADE, open: null, filteredColleges, concordance: { satFromAct, actFromSat },
+    estimateCollege, selectCollege, OUTCOME_COLORS, chanceAddResultsHtml, isTestBlind, NATIONAL_BY_GRADE, open: null, filteredColleges, concordance: { satFromAct, actFromSat },
     unansweredReminder, meta: CD.meta, count: COLLEGES.length,
   };
 
@@ -777,7 +855,14 @@
     if (!e.target.closest("#screen-college")) return;
     if (e.target.closest("[data-close-detail]") || e.target.id === "collegeDetailHost") { e.preventDefault(); closeDetail(); return; }
     const save = e.target.closest("[data-save]");
-    if (save) { e.preventDefault(); toggleSaved(save.dataset.save); return; }
+    if (save) {
+      e.preventDefault();
+      const fromAdd = !!save.dataset.addCollege;
+      if (fromAdd) { cp().chanceQuery = ""; }
+      toggleSaved(save.dataset.save);
+      if (fromAdd) { const box = $("chanceAdd"); if (box) box.focus(); showToast("Added to your colleges"); }
+      return;
+    }
     const pick = e.target.closest("[data-select]");
     if (pick) { e.preventDefault(); selectCollege(Number(pick.dataset.select)); }
   });

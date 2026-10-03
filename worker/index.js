@@ -203,13 +203,24 @@ function cors() { return { "Access-Control-Allow-Origin": "*", "Access-Control-A
 function json(obj, status, req) { return new Response(JSON.stringify(obj), { status, headers: Object.assign({ "Content-Type": "application/json" }, cors(req)) }); }
 
 // ---- AI tutor: forwards chat to Groq with the server's key, so students don't need their own. ----
-const AI_ORIGINS = /^https:\/\/(funsat\.bid|sat-act-practice\.[a-z0-9-]+\.workers\.dev)$/;
+// funsat.bid (with or without www), the workers.dev address and its preview links, and local testing.
+const AI_ORIGINS = /^(https:\/\/((www\.)?funsat\.bid|([a-z0-9-]+-)?sat-act-practice\.[a-z0-9-]+\.workers\.dev)|http:\/\/(localhost|127\.0\.0\.1)(:\d+)?)$/;
 const GROQ_MODELS = ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "llama-3.3-70b-versatile", "meta-llama/llama-4-scout-17b-16e-instruct", "qwen/qwen3-32b", "llama-3.1-8b-instant"];
 const AI_PER_WINDOW = 45, AI_WINDOW_MIN = 10;
+// Reasoning models (gpt-oss, qwen3) spend output tokens "thinking" before they answer. With a small
+// cap that thinking used up the budget and the explanation came back cut off, so give them low
+// reasoning effort, hide the reasoning text, and a bigger cap.
+function groqParams(model, teaching) {
+  const p = { temperature: 0.3, max_tokens: teaching ? 1000 : 700 };
+  if (model.startsWith("openai/gpt-oss")) Object.assign(p, { reasoning_effort: "low", include_reasoning: false, max_tokens: 3000 });
+  else if (model.startsWith("qwen/")) Object.assign(p, { reasoning_format: "hidden", max_tokens: 3000 });
+  if (teaching) p.response_format = { type: "json_object" };
+  return p;
+}
 async function aiTutor(req, env) {
   if (!env.GROQ_API_KEY) return json({ code: "no_key" }, 503, req);
   // Only the app's own pages may use the tutor, so the key can't be borrowed by other sites.
-  if (!AI_ORIGINS.test(req.headers.get("Origin") || "")) return json({ code: "forbidden" }, 403, req);
+  if (!AI_ORIGINS.test(req.headers.get("Origin") || "")) { console.log("AI tutor refused origin", req.headers.get("Origin")); return json({ code: "forbidden" }, 403, req); }
   let body; try { body = await req.json(); } catch { return json({ error: "Bad request." }, 400, req); }
   const messages = Array.isArray(body.messages) ? body.messages.slice(-12)
     .filter((m) => m && ["system", "user", "assistant"].includes(m.role) && typeof m.content === "string")
@@ -227,26 +238,30 @@ async function aiTutor(req, env) {
   const order = hint ? [hint, ...GROQ_MODELS.filter((m) => m !== hint)] : GROQ_MODELS;
   const attempts = {};
   let lastStatus = 503, retryAfter = 60;
-  const deadline = Date.now() + 30000;
+  const deadline = Date.now() + 40000;
   for (const model of order) {
     if (Date.now() > deadline) { attempts[model] = "deadline"; break; }
     try {
-      const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST", signal: AbortSignal.timeout(8000),
+      const r = await fetch(env.GROQ_URL || "https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST", signal: AbortSignal.timeout(15000),
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + env.GROQ_API_KEY },
-        body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: body.teaching ? 1000 : 700,
-          ...(body.teaching ? { response_format: { type: "json_object" } } : {}) })
+        body: JSON.stringify({ model, messages, ...groqParams(model, !!body.teaching) })
       });
       lastStatus = r.status; attempts[model] = r.status;
       if (r.status === 401) return json({ code: "server_key_invalid" }, 503, req);
       if (!r.ok) { retryAfter = Math.max(1, Number(r.headers.get("retry-after")) || 60); continue; }
       const j = await r.json();
-      const content = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content || "").trim();
+      const choice = j.choices && j.choices[0] || {};
+      const content = String(choice.message && choice.message.content || "").replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+      // A reply that hit the token cap is cut off mid-sentence; try the next model instead of returning it.
+      if (choice.finish_reason === "length") { attempts[model] = "cut_off"; continue; }
+      if (body.teaching && content) { try { JSON.parse(content); } catch { attempts[model] = "bad_json"; continue; } }
       if (content) return json({ content, provider: "groq", model, usage: normalizeUsage(j.usage), requestId: makeRequestId() }, 200, req);
       attempts[model] = "empty";
     } catch (e) { lastStatus = 503; attempts[model] = "timeout"; }
     if (body.onlyModel) break;
   }
+  console.log("AI tutor failed", JSON.stringify(attempts)); // visible in `npx wrangler tail`
   return json({ code: lastStatus === 429 ? "rate_limited" : "upstream", retryAfter, status: lastStatus, attempts }, lastStatus === 429 ? 429 : 502, req);
 }
 

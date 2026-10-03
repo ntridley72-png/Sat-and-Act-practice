@@ -3302,6 +3302,7 @@ function aiErrorText(e) {
     e && e.code === "rate_limited" ? "Groq is at its current limit. Retry in about " + Math.ceil((e.retryAfter || 60) / 60) + " minute(s)." :
     e && e.code === "invalid_response" ? "Groq’s explanation was incomplete. Use Retry Groq explanation to request it again." :
     e && e.code === "upstream" ? "Groq is temporarily unavailable. Please retry." :
+    e && e.code === "forbidden" ? "The tutor only works on funsat.bid. Open the app there to use it." :
     e && e.code === "bad_key" ? "Your Groq key was rejected. Check it in 👤 Account → AI tutor." :
     e && e.code === "empty" ? "The Groq tutor didn't answer that time. Try asking again." :
     e && e.name === "AbortError" ? "The AI took too long to answer. Try again." :

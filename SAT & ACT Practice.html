@@ -1669,7 +1669,11 @@ function sample(a, n, weightFn = () => 1, avoidIds = []) {
     const minUses = Math.min(...pool2.map(uses));
     const unused = pool2.filter((q) => uses(q) === minUses);
     const lowestPenalty = Math.min(...unused.map(penalty));
-    const fresh = unused.filter((q) => penalty(q) === lowestPenalty);
+    const tier = unused.filter((q) => penalty(q) === lowestPenalty);
+    // When a template has to come back, show a copy you haven't seen rather than the same one.
+    const own = (q) => Math.max(seen[q.id] || 0, served[q.id] || 0);
+    const minOwn = Math.min(...tier.map(own));
+    const fresh = tier.filter((q) => own(q) === minOwn);
     const oldest = Math.min(...fresh.map((q) => lastServed[q.id] || 0));
     const candidates = fresh.filter((q) => (lastServed[q.id] || 0) === oldest);
     candidates.sort((x, y) => ((counts[x.domain] || 0) / weight(x.domain)) - ((counts[y.domain] || 0) / weight(y.domain)));

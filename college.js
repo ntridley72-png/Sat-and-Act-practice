@@ -125,6 +125,9 @@
     const factors = [];
     let logit = Math.log(prior / (1 - prior));
     factors.push({ label: "College selectivity", detail: "Reported admit rate " + college.adm + "%. This is the starting point for every applicant.", effect: "base" });
+    // Each factor records how much it moved the log-odds, so the card can show its effect in percentage points.
+    let mark = logit;
+    const addF = (f) => { if (f.delta == null) { f.delta = logit - mark; mark = logit; } factors.push(f); };
 
     let scoreDelta = 0;
     if (range && score) {
@@ -133,23 +136,23 @@
       const z = clamp((pos - 0.5) * 2.2, -2.2, 2.2);
       scoreDelta = 0.85 * z;
       const where = score.value >= range.hi ? "at or above the 75th percentile" : score.value <= range.lo ? "below the 25th percentile" : Math.round(pos * 100) + "% of the way across the middle range";
-      factors.push({ label: testType.toUpperCase() + " score", detail: "Your " + score.value + (score.converted ? " (converted from your other test)" : "") + " is " + where + " (" + range.lo + "–" + range.hi + ").", effect: scoreDelta > 0.15 ? "up" : scoreDelta < -0.15 ? "down" : "even" });
+      addF({ delta: scoreDelta, label: testType.toUpperCase() + " score", detail: "Your " + score.value + (score.converted ? " (converted from your other test)" : "") + " is " + where + " (" + range.lo + "–" + range.hi + ").", effect: scoreDelta > 0.15 ? "up" : scoreDelta < -0.15 ? "down" : "even" });
     } else {
-      if (isTestBlind(college)) factors.push({ label: "Test policy", detail: "This university is test-blind, so SAT/ACT scores aren't considered. GPA, course rigor, and the rest of your application carry the decision.", effect: "context" });
-      else factors.push({ label: testType.toUpperCase() + " score", detail: "Add your score to include test-position in the estimate.", effect: "missing" });
+      if (isTestBlind(college)) addF({ label: "Test policy", detail: "This university is test-blind, so SAT/ACT scores aren't considered. GPA, course rigor, and the rest of your application carry the decision.", effect: "context" });
+      else addF({ label: testType.toUpperCase() + " score", detail: "Add your score to include test-position in the estimate.", effect: "missing" });
     }
-    logit += scoreDelta;
+    logit += scoreDelta; mark = logit;
 
     const gpa4 = gpaOn4(c);
     let gpaDelta = 0;
     if (gpa4 != null) {
       const bench = expectedGpa(college.adm);
       gpaDelta = 0.55 * clamp((gpa4 - bench) / 0.25, -2, 2);
-      factors.push({ label: "GPA", detail: "Your " + gpa4.toFixed(2) + " on a 4.0 scale compared with an app benchmark of about " + bench.toFixed(1) + " for a college admitting " + college.adm + "%.", effect: gpaDelta > 0.12 ? "up" : gpaDelta < -0.12 ? "down" : "even" });
+      addF({ delta: gpaDelta, label: "GPA", detail: "Your " + gpa4.toFixed(2) + " on a 4.0 scale compared with an app benchmark of about " + bench.toFixed(1) + " for a college admitting " + college.adm + "%.", effect: gpaDelta > 0.12 ? "up" : gpaDelta < -0.12 ? "down" : "even" });
     } else {
-      factors.push({ label: "GPA", detail: "Add your GPA to include academic performance in the estimate.", effect: "missing" });
+      addF({ label: "GPA", detail: "Add your GPA to include academic performance in the estimate.", effect: "missing" });
     }
-    logit += gpaDelta;
+    logit += gpaDelta; mark = logit;
 
     // Personal context (reviewed by the AI tutor): colleges use it to explain a dip in grades,
     // not as a bonus, so it can offset part of a GPA shortfall, up to a cap set by its likely impact.
@@ -158,30 +161,30 @@
       const cap = ({ high: 0.45, moderate: 0.3, low: 0.12, none: 0 })[review.impact] || 0;
       const offset = gpaDelta < 0 ? Math.min(-gpaDelta * 0.6, cap) : 0;
       logit += offset;
-      factors.push({ label: "Your context: " + review.category,
+      addF({ label: "Your context: " + review.category,
         detail: (offset > 0 ? "Counts as partly explaining your lower GPA (worth about +" + Math.round(offset * 100) / 100 + " log-odds here). " : "Your grades are already at or above this college's typical level, so it doesn't change the number, but it still helps your application read in context. ") +
           "Only counts if you tell the college about it.", effect: offset > 0.04 ? "up" : "context" });
     }
 
     const rigor = rigorStrength(c);
     logit += rigor;
-    if (rigor > 0) factors.push({ label: "Course rigor", detail: "AP/IB/honors/dual-enrollment coursework adds a small readiness signal.", effect: "up" });
+    if (rigor > 0) addF({ label: "Course rigor", detail: "AP/IB/honors/dual-enrollment coursework adds a small readiness signal.", effect: "up" });
 
     const activity = activityStrength(c);
     logit += activity;
-    if (activity > 0) factors.push({ label: "Activities", detail: "Sustained involvement and leadership add a small holistic signal.", effect: "up" });
+    if (activity > 0) addF({ label: "Activities", detail: "Sustained involvement and leadership add a small holistic signal.", effect: "up" });
 
     const circ = circumstanceStrength(c);
     logit += circ;
-    if (circ > 0) factors.push({ label: "Context", detail: "First-generation status, work, caregiving, and hardship are treated as context, not as score boosts. Colleges review them individually.", effect: "context" });
+    if (circ > 0) addF({ label: "Context", detail: "First-generation status, work, caregiving, and hardship are treated as context, not as score boosts. Colleges review them individually.", effect: "context" });
 
     // Factors scale with selectivity: they matter more where the admit rate is low.
     const sel = 0.5 + (1 - clamp(college.adm / 100, 0, 1));
 
     // Residency: public universities admit in-state applicants at much higher rates.
     if (c.homeState && college.ctrl === "public") {
-      if (c.homeState === college.st) { logit += 0.45 * sel; factors.push({ label: "In-state applicant", detail: "Public universities usually admit residents of their state at a higher rate than out-of-state applicants.", effect: "up" }); }
-      else { logit -= 0.2 * sel; factors.push({ label: "Out-of-state applicant", detail: "Public universities usually hold out-of-state applicants to a higher bar than residents.", effect: "down" }); }
+      if (c.homeState === college.st) { logit += 0.45 * sel; addF({ label: "In-state applicant", detail: "Public universities usually admit residents of their state at a higher rate than out-of-state applicants.", effect: "up" }); }
+      else { logit -= 0.2 * sel; addF({ label: "Out-of-state applicant", detail: "Public universities usually hold out-of-state applicants to a higher bar than residents.", effect: "down" }); }
     }
 
     // Class rank adds to GPA: it shows where your grades sit at your own school.
@@ -189,37 +192,38 @@
     if (RANK[c.classRank]) {
       const [w, label] = RANK[c.classRank];
       logit += w * sel;
-      factors.push({ label: "Class rank", detail: label + ". Rank shows how your grades compare at your own school, which colleges read alongside GPA.", effect: w > 0 ? "up" : "down" });
+      addF({ label: "Class rank", detail: label + ". Rank shows how your grades compare at your own school, which colleges read alongside GPA.", effect: w > 0 ? "up" : "down" });
     }
 
     // Competitive majors at selective schools (computer science, engineering, nursing, business, data science).
     if (c.major && college.adm < 70 && /comput|\bcs\b|software|engineer|nursing|business|data sci|finance/i.test(c.major)) {
       logit -= 0.3 * sel;
-      factors.push({ label: "Competitive major", detail: "\u201c" + c.major + "\u201d is often capped or more competitive than the college overall, so the estimate is lowered a little.", effect: "down" });
-    } else if (c.major) factors.push({ label: "Intended major", detail: "Your major isn't one that's usually capped, so it doesn't change the estimate.", effect: "context" });
+      addF({ label: "Competitive major", detail: "\u201c" + c.major + "\u201d is often capped or more competitive than the college overall, so the estimate is lowered a little.", effect: "down" });
+    } else if (c.major) addF({ label: "Intended major", detail: "Your major isn't one that's usually capped, so it doesn't change the estimate.", effect: "context" });
 
     // Application round: Early Decision (binding) helps much more than Early Action.
     const plan = c.applyPlan === "early" ? "ea" : c.applyPlan;
     if (plan === "ed" && college.ctrl === "private") {
       logit += 0.5;
-      factors.push({ label: "Early Decision", detail: "Binding Early Decision usually has a noticeably higher admit rate at private colleges.", effect: "up" });
+      addF({ label: "Early Decision", detail: "Binding Early Decision usually has a noticeably higher admit rate at private colleges.", effect: "up" });
     } else if (plan === "ed" || plan === "ea") {
       logit += 0.12;
-      factors.push({ label: "Early Action", detail: "Applying early (non-binding) gives a small edge at many colleges." + (plan === "ed" ? " Most public universities don't offer binding ED, so this counts as early action." : ""), effect: "up" });
+      addF({ label: "Early Action", detail: "Applying early (non-binding) gives a small edge at many colleges." + (plan === "ed" ? " Most public universities don't offer binding ED, so this counts as early action." : ""), effect: "up" });
     }
 
     // Hooks colleges openly weigh.
-    if (c.athlete) { logit += 1.2; factors.push({ label: "Recruited athlete", detail: "Recruited athletes supported by a coach are admitted at far higher rates than other applicants.", effect: "up" }); }
-    if (c.legacy && college.ctrl === "private") { logit += college.adm < 50 ? 0.3 : 0.1; factors.push({ label: "Legacy", detail: "Some private colleges give weight to a parent who attended. Many have dropped this, so the boost is small.", effect: "up" }); }
+    if (c.athlete) { logit += 1.2; addF({ label: "Recruited athlete", detail: "Recruited athletes supported by a coach are admitted at far higher rates than other applicants.", effect: "up" }); }
+    if (c.legacy && college.ctrl === "private") { logit += college.adm < 50 ? 0.3 : 0.1; addF({ label: "Legacy", detail: "Some private colleges give weight to a parent who attended. Many have dropped this, so the boost is small.", effect: "up" }); }
     if (c.appStrength === "strong") {
       logit += 0.18;
-      factors.push({ label: "Essays and recommendations", detail: "You rated these strong. Self-reported holistic factors get a small, bounded weight; colleges review them in context.", effect: "up" });
+      addF({ label: "Essays and recommendations", detail: "You rated these strong. Self-reported holistic factors get a small, bounded weight; colleges review them in context.", effect: "up" });
     } else if (c.appStrength === "developing") {
       logit -= 0.18;
-      factors.push({ label: "Essays and recommendations", detail: "You rated these as still developing. This is self-reported and gets a small, bounded weight.", effect: "down" });
+      addF({ label: "Essays and recommendations", detail: "You rated these as still developing. This is self-reported and gets a small, bounded weight.", effect: "down" });
     }
 
     const estimate = clamp(sigmoid(logit), 0.005, 0.97);
+    factors.forEach((f) => { if (f.delta) f.pts = (estimate - clamp(sigmoid(logit - f.delta), 0.005, 0.97)) * 100; });
     let half = 0.06;
     if (!range || !score) half += 0.05;
     if (gpa4 == null) half += 0.04;
@@ -293,6 +297,15 @@
       (you != null ? '<span class="cr-you" style="left:' + at(you).toFixed(1) + '%"><b>' + you + '</b></span>' : '') + '</div>' +
       '<div class="cr-labels"><span style="left:' + at(lo).toFixed(1) + '%">' + lo + '</span><span style="left:' + at(hi).toFixed(1) + '%">' + hi + '</span></div></div>';
   }
+  // Each factor with its effect on this college's estimate, in percentage points (largest first).
+  function factorListHtml(est) {
+    const fs = est.factors.filter((f) => f.pts != null && Math.abs(f.pts) >= 0.5).sort((a, b) => Math.abs(b.pts) - Math.abs(a.pts));
+    if (!fs.length) return "";
+    const fmt = (p) => (p > 0 ? "+" : "−") + (Math.abs(p) < 1 ? Math.abs(p).toFixed(1) : Math.round(Math.abs(p))) + "%";
+    return '<div class="chance-factors"><div class="cg-k">What moves your estimate</div><ul>' +
+      fs.map((f) => '<li class="' + (f.pts > 0 ? "f-up" : "f-down") + '" title="' + escapeHtml(f.detail || "") + '"><span>' + (f.pts > 0 ? "▲ " : "▼ ") + escapeHtml(f.label) + '</span><b>' + fmt(f.pts) + "</b></li>").join("") +
+      '</ul><p class="chance-note" style="margin-top:6px">Each number is how much that one factor changes this estimate. They don\'t add up exactly, because each effect depends on the others.</p></div>';
+  }
   function chanceCardHtml(college, est, c, gpa4) {
     const fit = fitOf(est.estimate), testType = est.testType;
     const up = est.factors.filter((f) => f.effect === "up").map((f) => f.label);
@@ -316,7 +329,7 @@
       "</div>" +
       '<div class="chance-sub">' + scoreWhere + "</div>" +
       (est.range ? rangeBarHtml(est.range.lo, est.range.hi, est.score ? est.score.value : null, testType.toUpperCase()) : "") +
-      ((up.length || down.length) ? '<div class="chance-tags">' + up.map((l) => '<span class="tag-up">▲ ' + escapeHtml(l) + "</span>").join("") + down.map((l) => '<span class="tag-down">▼ ' + escapeHtml(l) + "</span>").join("") + "</div>" : "") +
+      factorListHtml(est) +
       ((boostScore != null || boostGpa != null) ? '<div class="chance-what"><div class="cg-k">What would raise it</div>' +
         (gain(boostScore) || gain(boostGpa) ? "<ul>" + lever(testType === "act" ? "+2 ACT points" : "+50 SAT points", boostScore) + lever("+" + (c.gpaScale === "100" ? "5" : "0.2") + " GPA", boostGpa) + "</ul>" :
           '<p class="chance-note" style="margin-top:4px">' + (est.estimate >= 0.85 ? "You're already well placed here. Strong essays and keeping your grades up matter most now." : "Small score or GPA changes barely move this one. It's very selective, so essays, activities, and recommendations carry the most weight.") + "</p>") + "</div>" : "") +

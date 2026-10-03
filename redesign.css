@@ -428,3 +428,8 @@ body.cpop-open{overflow:hidden}
 .college-profile-grid .college-chances{margin-top:4px}
 @media(max-width:900px){.college-profile-grid .college-band{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.college-profile-grid .college-band{grid-template-columns:1fr}}
+.chance-factors{margin-top:12px}
+.chance-factors ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:4px}
+.chance-factors li{display:flex;justify-content:space-between;gap:10px;font-size:15px;padding:4px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
+.chance-factors li b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.chance-factors .f-up{color:#86efac}.chance-factors .f-down{color:#fca5a5}

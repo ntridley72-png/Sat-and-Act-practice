@@ -246,9 +246,12 @@
   function playArcadeIntro(gameKey) {
     if (introBusy || !arcade || typeof arcade.select !== "function") return;
     introBusy = true;
-    const before = profile.tokens;
-    arcade.select(gameKey); // sets up the game (and deducts a credit when one is used)
-    const spent = before - profile.tokens >= (typeof ARCDE_TOKEN_COST === "number" ? ARCDE_TOKEN_COST : 1);
+    // Start the game only when the zoom ends, so the animation isn't competing with the game loop.
+    // A credit is spent up front only for full-run games when you have one.
+    const cost = typeof ARCDE_TOKEN_COST === "number" ? ARCDE_TOKEN_COST : 1;
+    const spent = (typeof RUN_GAMES !== "undefined" && RUN_GAMES.includes(gameKey)) && profile.tokens >= cost;
+    let started = false;
+    const startGame = () => { if (!started) { started = true; arcade.select(gameKey); } };
     const overlay = ensureFx();
     const cab = overlay.querySelector(".cab3d");
     const coin = overlay.querySelector(".fx-coin");
@@ -264,22 +267,24 @@
     overlay.classList.add("show");
     const reduced = reducedMotion();
     const finish = () => {
-      overlay.style.transition = "opacity .35s ease";
+      startGame();
+      overlay.style.transition = "opacity .3s ease";
       overlay.style.opacity = "0";
       setTimeout(() => { overlay.classList.remove("show", "zooming"); overlay.style.opacity = ""; overlay.style.transition = ""; cab.style.transform = ""; coin.style.display = ""; introBusy = false; }, reduced ? 30 : 360);
     };
     if (reduced) { text.classList.remove("insert"); text.textContent = "PLAYER 1 READY"; bounceWallet(); setTimeout(() => { text.textContent = (game ? game.name : "GAME").toUpperCase(); finish(); }, 450); return; }
     if (spent) { void coin.offsetWidth; coin.classList.add("drop"); }
-    setTimeout(() => { if (spent) { slot.classList.add("glowing"); bounceWallet(); } text.classList.remove("insert"); text.textContent = "PLAYER 1 READY"; }, spent ? 750 : 250);
-    setTimeout(() => { slot.classList.remove("glowing"); text.textContent = (game ? game.name : "GAME").toUpperCase(); }, 1350);
+    setTimeout(() => { if (spent) { slot.classList.add("glowing"); bounceWallet(); } text.classList.remove("insert"); text.textContent = "PLAYER 1 READY"; }, spent ? 700 : 200);
+    setTimeout(() => { slot.classList.remove("glowing"); text.textContent = (game ? game.name : "GAME").toUpperCase(); }, spent ? 1150 : 650);
     setTimeout(() => {
       const cb = cab.getBoundingClientRect(), scr = overlay.querySelector(".scr").getBoundingClientRect();
       const ox = ((scr.left + scr.width / 2) - cb.left) / cb.width * 100, oy = ((scr.top + scr.height / 2) - cb.top) / cb.height * 100;
       cab.style.transformOrigin = ox.toFixed(1) + "% " + oy.toFixed(1) + "%";
       overlay.classList.add("zooming");
-      cab.style.transform = "scale(9)";
-      setTimeout(finish, 1080);
-    }, 1900);
+      // Let the browser apply the transition first, then change the transform on the next frame.
+      requestAnimationFrame(() => requestAnimationFrame(() => { cab.style.transform = "scale(9)"; }));
+      setTimeout(finish, 760);
+    }, spent ? 1550 : 1000);
   }
 
   // ---- Restart current game ----

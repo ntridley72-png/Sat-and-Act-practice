@@ -151,6 +151,18 @@
     }
     logit += gpaDelta;
 
+    // Personal context (reviewed by the AI tutor): colleges use it to explain a dip in grades,
+    // not as a bonus, so it can offset part of a GPA shortfall, up to a cap set by its likely impact.
+    const review = contextReviewFor(c);
+    if (review) {
+      const cap = ({ high: 0.45, moderate: 0.3, low: 0.12, none: 0 })[review.impact] || 0;
+      const offset = gpaDelta < 0 ? Math.min(-gpaDelta * 0.6, cap) : 0;
+      logit += offset;
+      factors.push({ label: "Your context: " + review.category,
+        detail: (offset > 0 ? "Counts as partly explaining your lower GPA (worth about +" + Math.round(offset * 100) / 100 + " log-odds here). " : "Your grades are already at or above this college's typical level, so it doesn't change the number, but it still helps your application read in context. ") +
+          "Only counts if you tell the college about it.", effect: offset > 0.04 ? "up" : "context" });
+    }
+
     const rigor = rigorStrength(c);
     logit += rigor;
     if (rigor > 0) factors.push({ label: "Course rigor", detail: "AP/IB/honors/dual-enrollment coursework adds a small readiness signal.", effect: "up" });
@@ -348,6 +360,76 @@
     return list.map((x) => { const isSaved = c.saved.includes(x.id); return '<button type="button" class="chance-add-item"' + (isSaved ? " disabled" : ' data-save="' + x.id + '" data-add-college="1"') + '><span><b>' + escapeHtml(x.n) + '</b><span class="muted"> · ' + x.st + " · admits " + x.adm + "%</span></span><span>" + (isSaved ? "Saved" : "+ Add") + "</span></button>"; }).join("");
   }
 
+  // ---- Personal context review ----
+  const IMPACT_KEYS = ["high", "moderate", "low", "none"];
+  function contextReviewFor(c) {
+    const r = c.contextReview, text = String(c.circumstanceOther || "").trim();
+    return r && text && r.forText === text ? r : null;
+  }
+  // Used when the AI tutor can't be reached: a cautious keyword read with the same guidance.
+  function localContextReview(text) {
+    const t = text.toLowerCase();
+    const medical = /brain|concussion|injur|surgery|hospital|illness|cancer|disease|medical|accident|chronic/.test(t);
+    const mental = /depress|anxiety|mental|therapy|ptsd|grief|panic/.test(t);
+    const family = /divorce|died|death|passed away|parent|sibling|foster|homeless|evict|caregiv/.test(t);
+    const category = medical ? "Medical or injury" : mental ? "Mental health" : family ? "Family circumstances" : "Other circumstance";
+    return { category, summary: "Read automatically from your note (the AI tutor wasn't available).", affectedYears: (t.match(/freshman|sophomore|junior|senior|9th|10th|11th|12th/) || [""])[0],
+      impact: medical || mental || family ? "moderate" : "low", howCollegesView: "Admissions readers can consider a documented hardship when they look at grades from the affected time.", limitations: [], howToShare: [] };
+  }
+  const CONTEXT_LIMITS = [
+    "Every college decides for itself how much weight context gets. There's no fixed bonus.",
+    "Context explains a dip in grades; it doesn't replace grades or make up for missing coursework.",
+    "It only counts if the college knows about it, so you have to tell them in your application.",
+    "This app's adjustment is a rough estimate based on how colleges generally treat context."
+  ];
+  const CONTEXT_SHARE = [
+    "Use the Common App “Additional Information” section (up to 650 words) to explain what happened, when, and how it affected school. Keep it factual and short.",
+    "Ask your school counselor to mention it in their letter or school report. Colleges trust context that comes from the school.",
+    "If your grades rose after the hard period, point to that upward trend. It shows recovery.",
+    "Keep documentation (a doctor's or school note) in case a college asks, though most won't require it.",
+    "If effects are ongoing, ask your counselor about testing accommodations through College Board (SSD) or ACT."
+  ];
+  async function reviewContext() {
+    const c = cp(), text = String(c.circumstanceOther || "").trim(), box = $("contextReviewBox"), btn = $("btnReviewContext");
+    if (!text) { if (box) box.innerHTML = '<p class="small muted">Write a short note first, then review it.</p>'; return; }
+    if (btn) { btn.disabled = true; btn.textContent = "Reviewing…"; }
+    let r;
+    try {
+      if (typeof aiChat !== "function") throw new Error("no ai");
+      const raw = await aiChat([
+        { role: "system", content: "You help a US high-school student understand how colleges may consider a personal circumstance they describe. Be factual, kind, and brief. Do not diagnose, give medical or legal advice, or promise outcomes. Return ONLY JSON with: category (short label such as Medical or injury, Mental health, Family circumstances, Financial hardship, Disability or learning difference, School change, Other), summary (one sentence restating what happened in neutral terms), affectedYears (which school years, or empty), likelyGradeImpact (exactly one of: high, moderate, low, none: how much this typically explains lower grades or fewer activities during that time), howCollegesView (one sentence on how admissions readers usually treat it), limitations (2-4 short strings: what this context can and cannot do), howToShare (3-5 short concrete steps to make sure colleges recognize it, such as the Common App Additional Information section, the counselor letter, documentation, an upward grade trend, testing accommodations if effects are ongoing)." },
+        { role: "user", content: "My note: " + text + "\nGrade level: " + (c.grade || "unknown") + ". Other context I checked: " + ["firstGen", "hardship", "working", "caregiving"].filter((k) => c[k]).join(", ") }
+      ], { teaching: true, kind: "context" });
+      const m = String(raw || "").match(/\{[\s\S]*\}/); const v = JSON.parse(m ? m[0] : raw);
+      const impact = IMPACT_KEYS.includes(String(v.likelyGradeImpact).toLowerCase()) ? String(v.likelyGradeImpact).toLowerCase() : "low";
+      const list = (x) => Array.isArray(x) ? x.filter((s) => typeof s === "string" && s.trim()).map((s) => s.trim()).slice(0, 5) : [];
+      r = { category: String(v.category || "Other circumstance").slice(0, 60), summary: String(v.summary || "").slice(0, 300), affectedYears: String(v.affectedYears || "").slice(0, 60), impact,
+        howCollegesView: String(v.howCollegesView || "").slice(0, 300), limitations: list(v.limitations), howToShare: list(v.howToShare), source: "ai" };
+    } catch (e) { r = localContextReview(text); r.source = "local"; }
+    r.forText = text; r.at = Date.now();
+    c.contextReview = r; saveCollege(); renderCollegeScreen();
+    try { showToast("Context reviewed and added to your estimates"); } catch (e) {}
+  }
+  function contextReviewHtml() {
+    const c = cp(), text = String(c.circumstanceOther || "").trim(), r = c.contextReview;
+    const btn = '<button type="button" class="secondary" id="btnReviewContext"' + (text ? "" : " disabled") + ">" + (r && r.forText === text ? "Review again" : "Review my context with AI") + "</button>";
+    const privacy = '<p class="small muted">Your note is sent to the site\'s AI tutor only when you press the button. It\'s used to classify the situation; it isn\'t shared with any college.</p>';
+    if (!r || !text) return '<div class="context-review" id="contextReviewBox">' + btn + privacy + "</div>";
+    const stale = r.forText !== text;
+    const impactWord = { high: "Likely to explain a big grade dip", moderate: "Can explain a moderate grade dip", low: "Small effect on how grades are read", none: "Usually doesn't change how grades are read" }[r.impact] || "";
+    const li = (arr) => "<ul>" + arr.map((s) => "<li>" + escapeHtml(s) + "</li>").join("") + "</ul>";
+    return '<div class="context-review" id="contextReviewBox">' +
+      (stale ? '<p class="context-stale">You changed your note since the last review, so it isn\'t in the estimates. Review it again to include it.</p>' : "") +
+      '<div class="context-card' + (stale ? " stale" : "") + '">' +
+        '<div class="context-head"><span class="context-cat">' + escapeHtml(r.category) + '</span><span class="context-impact impact-' + r.impact + '">' + impactWord + "</span></div>" +
+        (r.summary ? '<p class="context-sum">' + escapeHtml(r.summary) + (r.affectedYears ? ' <span class="muted">(' + escapeHtml(r.affectedYears) + ")</span>" : "") + "</p>" : "") +
+        (r.howCollegesView ? '<p class="context-sum">' + escapeHtml(r.howCollegesView) + "</p>" : "") +
+        '<p class="context-applied">' + (stale ? "Not applied." : "Applied to your chances: it can offset part of a GPA shortfall at each college, never more than a set limit.") + "</p>" +
+        '<div class="context-cols"><div><h4>Limitations</h4>' + li(CONTEXT_LIMITS.concat(r.limitations || []).slice(0, 6)) + '</div><div><h4>How to make sure colleges recognize it</h4>' + li((r.howToShare && r.howToShare.length ? r.howToShare : []).concat(CONTEXT_SHARE).filter((s, i, a) => a.findIndex((x) => x.slice(0, 30) === s.slice(0, 30)) === i).slice(0, 6)) + "</div></div>" +
+        (r.source === "local" ? '<p class="small muted">The AI tutor wasn\'t available, so this was read automatically from keywords. Try again later for a fuller review.</p>' : "") +
+      "</div>" + btn + privacy + "</div>";
+  }
+
   function pieHtml(est) {
     const R = 66, r = 40, C = 80;
     const slices = [
@@ -505,9 +587,11 @@
     return '<aside class="college-saved-panel" id="collegeSavedPanel"><h3>Saved colleges <span class="small muted">(' + saved.length + ')</span></h3><ul class="college-saved-list">' +
       saved.map((x) => {
         const est = estimateCollege(x);
-        const where = est.range && est.score ? (est.score.value >= est.range.hi ? "above 75th" : est.score.value <= est.range.lo ? "below 25th" : "inside middle 50%") : "add your score";
-        return '<li><button type="button" class="college-saved-item' + (x.id === selectedId ? " current" : "") + '" data-select="' + x.id + '" title="Open ' + escapeHtml(x.n) + '">' +
-          '<span class="cs-name">' + escapeHtml(x.n) + '</span><span class="small muted">' + x.st + " · admits " + x.adm + "% · " + where + '</span><span class="cs-est">' + pct(est.estimate) + " est. accept</span></button>" +
+        const where = est.range && est.score ? (est.score.value >= est.range.hi ? "above 75th" : est.score.value <= est.range.lo ? "below 25th" : "mid 50%") : isTestBlind(x) ? "test-blind" : est.score ? "no range" : "add score";
+        const fit = fitOf(est.estimate);
+        return '<li class="cs-row"><button type="button" class="college-saved-item' + (x.id === selectedId ? " current" : "") + '" data-select="' + x.id + '" title="' + escapeHtml(x.n) + ": " + x.st + ", admits " + x.adm + "%, " + where + '">' +
+          '<span class="cs-name">' + escapeHtml(x.n) + '</span><span class="cs-meta">' + x.st + " · " + Math.round(x.adm) + "% admit · " + where + '</span>' +
+          '<span class="cs-est fit-' + fit.key + '">' + pct(est.estimate) + "</span></button>" +
           '<button type="button" class="ghost cs-remove" data-save="' + x.id + '" title="Remove from saved" aria-label="Remove ' + escapeHtml(x.n) + '">✕</button></li>';
       }).join("") + '</ul><p class="small muted">Also shown in the home comparison and the compare table below.</p></aside>';
   }
@@ -555,7 +639,7 @@
       '<label class="college-check"><input type="checkbox" id="collegeHardship"' + (c.hardship ? " checked" : "") + "> Financial hardship</label>" +
       '<label class="college-check"><input type="checkbox" id="collegeWorking"' + (c.working ? " checked" : "") + "> Working during school</label>" +
       '<label class="college-check"><input type="checkbox" id="collegeCaregiving"' + (c.caregiving ? " checked" : "") + "> Caregiving responsibilities</label></div>" +
-      '<label>Other context (optional) <textarea id="collegeOther" rows="2" maxlength="500" placeholder="Anything else colleges should know">' + escapeHtml(c.circumstanceOther || "") + "</textarea></label>" +
+      '<label>Other context (optional) <textarea id="collegeOther" rows="2" maxlength="500" placeholder="Anything else colleges should know">' + escapeHtml(c.circumstanceOther || "") + "</textarea></label>" + contextReviewHtml() +
       "</fieldset></div>" + savedPanelHtml() + "</div>" + unansweredReminder() + "</details>";
   }
 
@@ -745,6 +829,8 @@
     if (other) { other.addEventListener("keydown", (e) => e.stopPropagation()); other.addEventListener("change", () => { c.circumstanceOther = other.value; saveCollege(); renderCollegeScreen(); }); }
     ["collegeMajor", "collegeGpa", "collegeSat", "collegeAct", "collegeOther"].forEach((id) => { const el = $(id); if (el) el.addEventListener("keydown", (e) => e.stopPropagation()); });
     document.querySelectorAll("#screen-college [data-rigor]").forEach((el) => el.addEventListener("change", () => { c.rigor[el.dataset.rigor] = Math.max(0, Number(el.value) || 0); saveCollege(); renderCollegeScreen(); }));
+    const rcBtn = $("btnReviewContext");
+    if (rcBtn) rcBtn.addEventListener("click", () => { const o = $("collegeOther"); if (o) c.circumstanceOther = o.value; reviewContext(); });
     const usePred = $("collegeUsePredicted");
     if (usePred) usePred.addEventListener("click", () => {
       try {

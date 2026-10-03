@@ -223,6 +223,11 @@ const TUTOR_SCHEMA = { type: "object", properties: {
   shortAnswer: { type: "string" }, detailedSteps: { type: "array", items: { type: "string" } }, simpleSteps: { type: "array", items: { type: "string" } },
   memoryTip: { type: "string" }, equations: { type: "array", items: { type: "string" } }, verification: { type: "string" }, nextPractice: { type: "string" } },
   required: ["detailedSteps", "simpleSteps"] };
+const CONTEXT_SCHEMA = { type: "object", properties: {
+  category: { type: "string" }, summary: { type: "string" }, affectedYears: { type: "string" },
+  likelyGradeImpact: { type: "string" }, howCollegesView: { type: "string" },
+  limitations: { type: "array", items: { type: "string" } }, howToShare: { type: "array", items: { type: "string" } } },
+  required: ["category", "summary", "likelyGradeImpact", "limitations", "howToShare"] };
 const NO_REVEAL_RULE = "Rule for this reply: the student has NOT answered yet. Help them work it out: explain the method, give a first step, hints, and what to check. Do not state, confirm, or hint at which choice or value is correct, do not name a choice letter as right, and leave shortAnswer empty.";
 // True if a reply gives away the answer to an unanswered question (names the correct letter as the answer).
 function revealsAnswer(text, letter) {
@@ -230,12 +235,12 @@ function revealsAnswer(text, letter) {
   const L = letter.toUpperCase();
   return new RegExp("(answer|choice|option|correct)[^.\\n]{0,25}\\(?\\b" + L + "\\b\\)?|\\b" + L + "\\)?\\s*(is|would be)\\s*(the\\s*)?(correct|right|answer)", "i").test(text);
 }
-async function workersAi(env, messages, teaching) {
+async function workersAi(env, messages, teaching, schema) {
   const attempts = {};
   for (const model of CF_MODELS) {
     try {
       const out = await env.AI.run(model, Object.assign({ messages, max_tokens: teaching ? 1400 : 900, temperature: 0.3 },
-        teaching ? { response_format: { type: "json_schema", json_schema: TUTOR_SCHEMA } } : {}));
+        teaching ? { response_format: { type: "json_schema", json_schema: schema || TUTOR_SCHEMA } } : {}));
       let content = out && out.response;
       if (content && typeof content === "object") content = JSON.stringify(content);
       content = String(content || "").trim();
@@ -269,7 +274,7 @@ async function aiTutor(req, env) {
   //    retried once with the rule repeated, then rejected.
   if (env.AI) {
     for (let tryNo = 0; tryNo < 2; tryNo++) {
-      const r = await workersAi(env, tryNo ? messages.concat({ role: "system", content: "Your previous reply revealed the answer. " + NO_REVEAL_RULE }) : messages, !!body.teaching);
+      const r = await workersAi(env, tryNo ? messages.concat({ role: "system", content: "Your previous reply revealed the answer. " + NO_REVEAL_RULE }) : messages, !!body.teaching, body.kind === "context" ? CONTEXT_SCHEMA : null);
       if (r.content && noAnswer && revealsAnswer(r.content, correctLetter)) { console.log("AI tutor reply revealed the answer; retrying"); continue; }
       if (r.content) return json({ content: r.content, provider: "cloudflare", model: r.model, usage: normalizeUsage(r.usage), requestId: makeRequestId() }, 200, req);
       console.log("Workers AI failed", JSON.stringify(r.attempts));

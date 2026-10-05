@@ -32,6 +32,13 @@ for(const domain of ['Algebra','Standard English Conventions','Craft & Structure
 assert(source.includes('if (skipped) html += studyHelpHtml(q)'));
 assert(source.includes('explanationHtml(q, chosen)'));
 assert(source.includes('recentQuestions: []'));
+vm.runInContext(extract('function profileBestStreak()', '// ---- STATE HELPERS'),context);
+context.profile = {activityDays:[]};
+vm.runInContext("recordDailyActivity(new Date(2026,9,3));recordDailyActivity(new Date(2026,9,4));recordDailyActivity(new Date(2026,9,5));",context);
+assert.equal(context.profile.dailyStreak,3,'daily streak should count consecutive active dates');
+vm.runInContext("refreshDailyStreak(new Date(2026,9,7))",context);
+assert.equal(context.profile.dailyStreak,0,'daily streak should expire after a missed day');
+assert.equal(context.profile.bestDailyStreak,3,'best daily streak should be preserved');
 console.log('PASS: script syntax, 50-question repeat buffer across 30 attempts and reload, small pools, adaptive rotation, math/English/science study help.');
 vm.runInContext(extract('function mergeAttemptHistory(', 'const cloud ='), context);
 context.local = [{id:'a',done:true,finishedAt:10},{id:'b',done:false,finishedAt:20}];

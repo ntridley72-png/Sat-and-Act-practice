@@ -1,7 +1,7 @@
 /* Three complete practice layouts share the same questions, tools, and saved progress. */
 (() => {
   const themes = ['exam', 'notebook', 'focus'];
-  const labels = {exam:'Exam workspace', notebook:'Study notebook', focus:'Focus studio'};
+  const labels = {exam:'Exam', notebook:'Notebook', focus:'Focus'};
   const icons = {
     calc:'<rect x="5" y="3" width="14" height="18" rx="1"/><path d="M8 7h8M8 11h2m4 0h2m-8 4h2m4 0h2m-8 4h2m4 0h2"/>',
     highlight:'<path d="m5 15 9-11 5 4-9 11-5-4ZM3 21h12"/>',
@@ -21,8 +21,8 @@
   notesButton.innerHTML=icon('notes')+'<span>Notes</span>'; notesButton.onclick=()=>selectLearningTab('notes'); toolbar.append(notesButton);
   const select = document.createElement('select'); select.id='workspaceTheme'; select.setAttribute('aria-label','Workspace layout');
   themes.forEach((t)=>{const option=document.createElement('option');option.value=t;option.textContent=labels[t];select.append(option);}); select.value=theme;
-  const themeLabel=document.createElement('label');themeLabel.className='workspace-theme-label';themeLabel.innerHTML='<span>Layout</span>';themeLabel.append(select);
-  document.querySelector('.topbar').append(themeLabel);
+  const themeLabel=document.createElement('label');themeLabel.className='workspace-theme-label';themeLabel.innerHTML='<span class="theme-label-text">Theme</span>';themeLabel.append(select);
+  const badges=document.querySelector('.badges'),account=document.getElementById('btnAccount');badges.insertBefore(themeLabel,account);
   document.querySelector('.brand').innerHTML='Fun<span class="brand-sat">SAT</span>';
   const applyTheme=()=>{document.body.dataset.workspace=theme;document.documentElement.style.colorScheme=theme==='focus'?'dark':'light';};
   select.onchange=()=>{theme=select.value;applyTheme();try{localStorage.setItem('funsatWorkspaceTheme',theme);}catch(e){}if(state.view==='test')renderQuestion();};

@@ -205,6 +205,30 @@ body[data-workspace] #screen-college .college-profile input,body[data-workspace]
 body[data-workspace="exam"] #screen-college,body[data-workspace="exam"] #collegeDetailHost{--ws-bg:#f4f6f9;--ws-surface:#fff;--ws-soft:#f0f3f8;--ws-ink:#152033;--ws-muted:#5d6b80;--ws-line:#d9e0e9;--ws-tint:#edf3ff;--ws-accent:#195de6;--text:#152033;--muted:#5d6b80;--line:#d9e0e9}
 body[data-workspace="notebook"] #screen-college,body[data-workspace="notebook"] #collegeDetailHost{--ws-bg:#f6f3eb;--ws-surface:#fcfaf5;--ws-soft:#eeeae1;--ws-ink:#232c25;--ws-muted:#646a60;--ws-line:#d6d6cb;--ws-tint:#e9eee7;--ws-accent:#235d44;--text:#232c25;--muted:#646a60;--line:#d6d6cb}
 
+/* Concept C: an editorial toolbar with dividers and underlined active sections. */
+body[data-workspace] .topbar{padding:0!important;gap:0!important;min-height:58px;flex-wrap:nowrap!important}
+body[data-workspace] .brand{padding:0 18px;font-size:25px;letter-spacing:-.7px}
+body[data-workspace] .badges{align-self:stretch;gap:0!important;flex-wrap:nowrap!important;border-left:1px solid var(--ws-line)}
+body[data-workspace] .badge,body[data-workspace] .hud-streak,body[data-workspace] .token-badge,body[data-workspace] .autosave{height:100%;display:inline-flex;align-items:center;padding:0 12px;border-right:1px solid var(--ws-line)!important;font-size:12px}
+body[data-workspace] #badgeTimer,body[data-workspace] #badgeAcc,body[data-workspace] .token-badge.wallet{border-radius:0!important;border-top:0!important;border-bottom:0!important;border-left:0!important;background:transparent!important;color:var(--ws-ink)!important;box-shadow:none!important}
+body[data-workspace] .token-badge.wallet{gap:5px;padding:0 10px!important}
+body[data-workspace] .token-badge.wallet .coin{width:17px;height:17px;box-shadow:inset 0 0 0 1px #b77708;font-size:9px}
+body[data-workspace] .token-badge.wallet .coin::after{font-size:9px}
+body[data-workspace] #autosave{display:none}
+body[data-workspace] .arcade-btn,body[data-workspace] .acct-btn,body[data-workspace] .icon-btn,body[data-workspace] .sound-btn,body[data-workspace] .workspace-theme-label{position:relative;height:100%;min-height:58px;border:0!important;border-right:1px solid var(--ws-line)!important;border-radius:0!important;background:transparent!important;color:var(--ws-ink)!important;box-shadow:none!important;transform:none!important;padding:0 14px}
+body[data-workspace] .arcade-btn:hover,body[data-workspace] .acct-btn:hover,body[data-workspace] .icon-btn:hover,body[data-workspace] .sound-btn:hover{background:var(--ws-tint)!important;box-shadow:none!important;transform:none!important}
+body[data-workspace] .arcade-btn.active::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:3px;background:var(--ws-accent)}
+body[data-workspace] .arcade-btn.active{color:var(--ws-accent)!important;font-weight:800}
+body[data-workspace] .acct-btn .av{width:auto;height:auto;border-radius:0;background:transparent;color:currentColor;font-size:0}
+body[data-workspace] .acct-btn .av::before{content:"";display:block;width:19px;height:19px;border:1.8px solid currentColor;border-radius:0;clip-path:polygon(30% 0,70% 0,70% 38%,90% 55%,90% 100%,10% 100%,10% 55%,30% 38%)}
+body[data-workspace] .acct-btn{white-space:nowrap}
+body[data-workspace] .workspace-theme-label{display:flex;align-items:center;gap:7px;font-size:13px;white-space:nowrap}
+body[data-workspace] .theme-label-text{font-weight:700}
+body[data-workspace] #workspaceTheme{height:30px!important;border:0!important;border-left:1px solid var(--ws-line)!important;border-radius:0!important;background:transparent!important;padding:0 22px 0 8px!important;font-size:12px}
+body[data-workspace] #btnHome{border-left:1px solid var(--ws-line)!important}
+@media(max-width:1100px){body[data-workspace] .badge,body[data-workspace] .token-badge,body[data-workspace] #autosave{display:none}body[data-workspace] .arcade-btn,body[data-workspace] .acct-btn,body[data-workspace] .workspace-theme-label{padding:0 10px}.theme-label-text{display:none}}
+@media(max-width:760px){body[data-workspace] .topbar{flex-wrap:wrap!important;padding:6px!important}body[data-workspace] .badges{width:100%;overflow-x:auto;border:1px solid var(--ws-line)}body[data-workspace] .arcade-btn,body[data-workspace] .acct-btn,body[data-workspace] .icon-btn,body[data-workspace] .sound-btn,body[data-workspace] .workspace-theme-label{min-height:44px}.hud-streak{display:inline-flex!important}}
+
 /* Saved colleges beside the profile + acceptance pie */
 .college-profile-wrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;margin-top:16px;align-items:start}
 .college-saved-panel{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px;position:sticky;top:80px}

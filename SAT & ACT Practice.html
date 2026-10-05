@@ -361,9 +361,8 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 .foot{margin-top:26px;color:var(--muted);font-size:.78rem;text-align:center}
 
 /* HUD / streak / tokens */
-.hud-streak{display:flex;align-items:center;gap:6px;font-size:.82rem;font-weight:700;color:var(--ink)}
-.hud-streak .pip{width:8px;height:8px;border-radius:50%;background:#cbd5e1;transition:background .2s,box-shadow .2s}
-.hud-streak .pip.on{background:var(--gold);box-shadow:0 0 6px var(--gold)}
+.hud-streak{display:flex;align-items:center;gap:5px;font-size:.82rem;font-weight:750;color:var(--ink);white-space:nowrap}
+.hud-streak-days{font-variant-numeric:tabular-nums}
 .token-badge{background:linear-gradient(135deg,var(--gold),#d97706);color:#fff;border-radius:999px;padding:3px 10px;font-size:.82rem;font-weight:700;display:inline-flex;align-items:center;gap:4px}
 .arcade-btn{background:linear-gradient(135deg,var(--purple),#a855f7);color:#fff;border-color:transparent;border-radius:999px;padding:4px 12px;font-size:.82rem;font-weight:700}
 .arcade-btn:hover{background:linear-gradient(135deg,#7c3aed,#8b5cf6);box-shadow:0 0 10px rgba(124,58,237,.4)}
@@ -492,8 +491,8 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
       <span class="badge" id="badgeTimer">Time 0:00</span>
       <button class="icon-btn" id="btnPause" type="button" title="Pause the timer" aria-label="Pause">⏸</button>
       <span class="badge" id="badgeAcc">—</span>
-      <span class="hud-streak" id="hudStreak" title="Streak → bonus arcade time at 3 in a row">
-        <span>🔥</span><span id="streakPips"></span>
+      <span class="hud-streak" id="hudStreak" title="Days in a row with at least one answered question">
+        <span>🔥</span><span class="hud-streak-days" id="streakPips">0 days</span>
       </span>
       <span class="token-badge wallet" id="tokenBadge" title="Every 3 questions = 1 arcade credit"><span class="coin" aria-hidden="true"></span><span id="tokenCount">0</span></span>
       <button class="arcade-btn" id="btnPractice" type="button" title="Set up SAT or ACT practice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><span>Practice</span></button>
@@ -511,7 +510,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
         <div class="st-kicker">Adaptive prep · scored like the real tests</div>
         <h1>Set up your practice</h1>
         <div class="st-chips">
-          <span class="st-chip">🔥 3 right in a row = bonus 🪙</span>
+      <span class="st-chip">🔥 3-correct answer combo = bonus 🪙</span>
           <span class="st-chip">🪙 Every 3 questions = 1 arcade credit</span>
           <span class="st-chip">💾 Saves automatically</span>
         </div>
@@ -1726,6 +1725,8 @@ function mergeQuestionLogs(other) {
     ["shown", "answered", "correct", "last"].forEach((f) => { m[f] = Math.max(m[f] || 0, o[f] || 0); });
   });
   profile.recentQuestions = [...new Set([...(other.recentQuestions || []), ...(profile.recentQuestions || [])])].slice(-50);
+  profile.activityDays = [...new Set([...(other.activityDays || []), ...(profile.activityDays || [])])].sort().slice(-730);
+  refreshDailyStreak();
 }
 // Record a question as done the first time it's shown in an attempt. This log is what keeps
 // questions from repeating, and it syncs to your account.
@@ -1860,7 +1861,7 @@ function flashAutosave(ok) {
 // ---- PROFILE ----
 const DEFAULT_PROFILE = {
   tokens: 0, arcadeSeconds: ARCDE_START_SEC, qSinceToken: 0,
-  bestStreak: 0, totalCorrect: 0, totalAttempts: 0,
+  bestStreak: 0, dailyStreak: 0, bestDailyStreak: 0, activityDays: [], totalCorrect: 0, totalAttempts: 0,
   highScores: { pacman: 0, snake: 0, pong: 0, watersort: 0, tetris: 0, doom: 0, pressurewash: 0, "2048": 0, breakout: 0, flappy: 0, minesweeper: 0, connect4: 0, wordgame: 0, sudoku: 0, solitaire: 0, hopper: 0, stack: 0, doodle: 0, wordscape: 0, blackjack: 0, tictactoe: 0, blockblast: 0, bubbles: 0, invaders: 0, racing: 0, drift: 0 },
   soundOn: true, history: [], seen: {}, served: {}, lastServed: {}, recentQuestions: [], recentFamilies: [], selectionSequence: 0, qlog: {}, bookmarks: [], curve: "pt4", college: null, updatedAt: 0
 };
@@ -1874,6 +1875,9 @@ function loadProfile() {
   });
   if (!Array.isArray(profile.recentQuestions)) profile.recentQuestions = [];
   if (!Array.isArray(profile.recentFamilies)) profile.recentFamilies = [];
+  if (!Array.isArray(profile.activityDays)) profile.activityDays = [];
+  profile.activityDays = [...new Set(profile.activityDays.filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)))].sort().slice(-730);
+  refreshDailyStreak();
   profile.recentQuestions = profile.recentQuestions.filter((id) => byId(id)).slice(-50);
   if (!Number.isSafeInteger(profile.selectionSequence) || profile.selectionSequence < 0) profile.selectionSequence = 0;
 }
@@ -1948,9 +1952,23 @@ function finalizeAttempt(force) {
 }
 
 function profileBestStreak() {
-  let best = 0, cur = 0;
-  // not stored per-question; approximate from history best streak + session streak
-  return Math.max(profile.bestStreak, sessionBestStreak);
+  return profile.bestDailyStreak || 0;
+}
+
+function localDayKey(date = new Date()) {
+  const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,'0'),d=String(date.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+d;
+}
+function dayOrdinal(key) { const [y,m,d]=key.split('-').map(Number); return Math.round(Date.UTC(y,m-1,d)/86400000); }
+function refreshDailyStreak(now = new Date()) {
+  const days=[...new Set(profile.activityDays||[])].sort();let best=0,run=0,prev=null;
+  for(const day of days){const n=dayOrdinal(day);run=prev!==null&&n===prev+1?run+1:1;best=Math.max(best,run);prev=n;}
+  const today=dayOrdinal(localDayKey(now)),last=days.length?dayOrdinal(days[days.length-1]):-Infinity;
+  profile.dailyStreak=(last===today||last===today-1)?run:0;profile.bestDailyStreak=Math.max(profile.bestDailyStreak||0,best);profile.bestStreak=profile.bestDailyStreak;return profile.dailyStreak;
+}
+function recordDailyActivity(now = new Date()) {
+  const key=localDayKey(now),days=profile.activityDays=profile.activityDays||[];
+  if(!days.includes(key))days.push(key);profile.activityDays=[...new Set(days)].sort().slice(-730);refreshDailyStreak(now);
 }
 
 // ---- STATE HELPERS ----
@@ -2096,19 +2114,16 @@ function render() {
   if (state.view === "routing") renderRouting();
   else renderQuestion();
 }
-function showScreen(id) { ["screen-start", "screen-test", "screen-results", "screen-college"].forEach((s) => { $(s).style.display = s === id ? "block" : "none"; }); 
+function showScreen(id) { ["screen-start", "screen-test", "screen-results", "screen-college"].forEach((s) => { $(s).style.display = s === id ? "block" : "none"; });
+  const practiceActive=id!=="screen-college";$("btnPractice")?.classList.toggle("active",practiceActive);$("btnCollege")?.classList.toggle("active",id==="screen-college");
   if (id !== "screen-test") { try { calcTool.close(); if (lineReader.on) lineReader.toggle(); if (highlighter.on) highlighter.toggle(); } catch (e) {} }
 }
 
 function updateHUD() {
   $("tokenCount").textContent = profile.tokens;
-  const chips = document.querySelectorAll(".hud-streak .pip");
-  // rebuild pips if count changed
   const streakEl = $("streakPips");
-  const needed = STREAK_TARGET;
-  let html = "";
-  for (let i = 0; i < needed; i++) html += `<span class="pip${i < sessionStreak ? ' on' : ''}"></span>`;
-  streakEl.innerHTML = html;
+  const daily=refreshDailyStreak();
+  streakEl.textContent=daily+' '+(daily===1?'day':'days');
   // token badge pulse
   if (sessionTokensEarned > 0 && !arcdeOpen) {
     $("tokenBadge").classList.add("pulse-gold");
@@ -2227,7 +2242,7 @@ function renderHistorySummary() {
 }
 
 function renderHistoryDetail(rec) {
-  let html = `<strong>${rec.testType === "sat" ? "SAT" : "ACT"} · ${historySectionLabel(rec)}</strong> · ${rec.total} questions · ${rec.totalCorrect}/${rec.totalAnswered} (${rec.accuracy}%) · ${fmtTime(rec.elapsed)} · ${rec.tokensEarned} tokens earned · best streak ${rec.bestStreak}<br><br>`;
+  let html = `<strong>${rec.testType === "sat" ? "SAT" : "ACT"} · ${historySectionLabel(rec)}</strong> · ${rec.total} questions · ${rec.totalCorrect}/${rec.totalAnswered} (${rec.accuracy}%) · ${fmtTime(rec.elapsed)} · ${rec.tokensEarned} tokens earned · best daily streak ${rec.bestStreak}<br><br>`;
   if (rec.secScores) {
     historyKeysFor(rec).forEach((sec) => {
       const s = rec.secScores[sec]; if (!s) return;
@@ -2725,6 +2740,7 @@ function handleAnswer(choice, btnEl) {
   state.answers[q.id] = choice;
   profile.seen[q.id] = (profile.seen[q.id] || 0) + 1;
   { const log = profile.qlog[q.id] = profile.qlog[q.id] || { shown: 1, answered: 0, correct: 0 }; log.answered++; if (choice === q.ans) log.correct++; log.last = Date.now(); }
+  recordDailyActivity();
   save();
 
   // Earn 1 token (worth ARCDE_ADD_SEC = a minute of arcade time) every QUESTIONS_PER_TOKEN
@@ -3720,7 +3736,7 @@ const cloud = {
       // Only take the server copy when it is newer than what this device last synced AND this device has no unsaved edits.
       if (d && (j.updatedAt || 0) > (profile.syncedAt ?? profile.updatedAt ?? 0) && !profile.dirty && (profile.updatedAt || 0) === startedWith) {
         this.applying = true;
-        const mine = { seen: profile.seen, served: profile.served, lastServed: profile.lastServed, qlog: profile.qlog, recentQuestions: profile.recentQuestions };
+        const mine = { seen: profile.seen, served: profile.served, lastServed: profile.lastServed, qlog: profile.qlog, recentQuestions: profile.recentQuestions, activityDays: profile.activityDays };
         Object.keys(DEFAULT_PROFILE).forEach((k) => { if (d.profile && d.profile[k] !== undefined) profile[k] = d.profile[k]; });
         mergeQuestionLogs(mine);
         if (d.state && d.state.v === 4) state = d.state;
@@ -4024,6 +4040,7 @@ const arcade = {
   open() {
     arcdeOpen = true;
     this.overlay.classList.add('show');
+    $('btnArcade')?.classList.add('active');
     this.mode = 'menu';
     this.menu.style.display = '';
     this.stage.classList.remove('active');
@@ -4037,6 +4054,7 @@ const arcade = {
   close() {
     arcdeOpen = false;
     this.overlay.classList.remove('show');
+    $('btnArcade')?.classList.remove('active');
     this.mode = 'menu';
     this.game = null;
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
@@ -4282,6 +4300,7 @@ const arcade = {
     this.updateChips();
     this.buildMenu();
     this.overlay.classList.remove('show');
+    $('btnArcade')?.classList.remove('active');
     this.stage.classList.remove('active');
     const washCustomize = $('washCustomize'); if (washCustomize) washCustomize.classList.remove('show');
     quizTimerRunning = !state.done;
@@ -7760,18 +7779,65 @@ function drawCustomCar(ctx, x, y, angle, scale, paint, wheels) {
   ctx.restore();
 }
 class NeonRacing {
-  constructor(canvas, arcade){this.canvas=canvas;this.arcade=arcade;this.ctx=canvas.getContext('2d');this.name='Neon Racing';this.key='racing';this.W=420;this.H=300;this.reset();}
-  reset(){const p=PressureWasher.preferences();this.paint=p.paint;this.wheels=p.wheels;this.x=this.W/2;this.speed=105;this.distance=0;this.score=0;this.lives=3;this.started=false;this.over=false;this.traffic=[];this.spawn=0;this.flash=0;this.steer=0;}
-  input(dir){if(dir==='left'||dir==='right')this.steer=dir==='left'?-0.7:0.7;if(dir==='up')this.speed=Math.min(245,this.speed+18);if(dir==='down')this.speed=Math.max(65,this.speed-22);}
-  update(dt){if(!this.started||this.over)return;const k=this.arcade._heldKeys||{};const steer=(k.ArrowLeft||k.a||k.A?-1:0)+(k.ArrowRight||k.d||k.D?1:0);this.x+=(steer||this.steer)*175*dt;this.steer*=Math.pow(.05,dt);if(k.ArrowUp||k.w||k.W)this.speed=Math.min(245,this.speed+55*dt);else this.speed=Math.max(105,this.speed-18*dt);if(k.ArrowDown||k.s||k.S)this.speed=Math.max(55,this.speed-95*dt);this.x=Math.max(112,Math.min(308,this.x));this.distance+=this.speed*dt;this.score=Math.floor(this.distance/8);this.spawn-=dt;if(this.spawn<=0){this.spawn=Math.max(.38,1.05-this.speed/340);this.traffic.push({x:[135,180,240,285][Math.floor(Math.random()*4)],y:-35,s:70+Math.random()*65,col:['#f43f5e','#facc15','#22c55e','#38bdf8'][Math.floor(Math.random()*4)]});}for(const c of this.traffic)c.y+=(this.speed-c.s*.35)*dt;for(const c of this.traffic){if(!c.hit&&Math.abs(c.x-this.x)<19&&Math.abs(c.y-242)<31){c.hit=true;this.lives--;this.flash=.35;this.speed=Math.max(70,this.speed*.62);sndGameOver();if(this.lives<=0)this.over=true;}}this.traffic=this.traffic.filter(c=>c.y<this.H+45);this.flash=Math.max(0,this.flash-dt);}
-  draw(ctx){const W=this.W,H=this.H;ctx.fillStyle='#07111f';ctx.fillRect(0,0,W,H);ctx.fillStyle='#082f49';ctx.fillRect(85,0,250,H);ctx.fillStyle='#111827';ctx.fillRect(96,0,228,H);ctx.fillStyle='#22d3ee';ctx.fillRect(92,0,3,H);ctx.fillStyle='#f472b6';ctx.fillRect(325,0,3,H);const off=this.distance%54;ctx.fillStyle='#e2e8f0';for(let y=-54+off;y<H;y+=54){ctx.fillRect(171,y,3,27);ctx.fillRect(247,y,3,27);}for(const c of this.traffic)drawCustomCar(ctx,c.x,c.y,0,.82,c.col==='#38bdf8'?'blue':c.col==='#22c55e'?'green':c.col==='#facc15'?'orange':'red','sport');drawCustomCar(ctx,this.x,242,0,1,this.paint,this.wheels);if(this.flash){ctx.fillStyle='rgba(239,68,68,'+this.flash+')';ctx.fillRect(0,0,W,H);}drawGameHud(ctx,W,'NEON RACING','SCORE '+this.score+'  ·  ❤ '+this.lives);ctx.fillStyle='#cbd5e1';ctx.font='11px system-ui';ctx.fillText('← → steer  ·  ↑ gas  ·  ↓ brake',12,58);if(!this.started)drawGameCard(ctx,W,H,'NEON RACING',['Pass traffic to score.','The road gets faster as you accelerate.','Three crashes end the run.'],'Press SPACE or tap to start');}
+  constructor(canvas, arcade) { this.canvas=canvas; this.arcade=arcade; this.ctx=canvas.getContext('2d'); this.name='Neon Racing'; this.key='racing'; this.W=420; this.H=300; this.smooth=true; this.reset(); }
+  reset() {
+    const p=PressureWasher.preferences(); this.paint=p.paint; this.wheels=p.wheels;
+    this.roadX=0; this.roadVelocity=0; this.speed=0; this.distance=0; this.score=0; this.lives=3;
+    this.started=false; this.over=false; this.traffic=[]; this.spawn=.7; this.flash=0; this.touch={};
+  }
+  input(dir) { this.touch[dir]=.5; if (dir==='up') this.speed=Math.max(this.speed,36); }
+  control(dir, k) { return !!(this.touch[dir]>0 || (dir==='left'&&(k.ArrowLeft||k.a||k.A)) || (dir==='right'&&(k.ArrowRight||k.d||k.D)) || (dir==='up'&&(k.ArrowUp||k.w||k.W)) || (dir==='down'&&(k.ArrowDown||k.s||k.S))); }
+  update(dt) {
+    if(!this.started||this.over)return; const k=this.arcade._heldKeys||{};
+    Object.keys(this.touch).forEach(d=>this.touch[d]=Math.max(0,this.touch[d]-dt));
+    const throttle=this.control('up',k), brake=this.control('down',k), steer=(this.control('right',k)?1:0)-(this.control('left',k)?1:0);
+    this.speed+=((throttle?118:0)-22-this.speed*.075-(brake?175:0))*dt; this.speed=Math.max(0,Math.min(255,this.speed));
+    const grip=.55+this.speed/190; this.roadVelocity+=(steer*grip-this.roadVelocity*4.5)*dt; this.roadX+=this.roadVelocity*dt;
+    const curve=Math.sin(this.distance/720)*.18+Math.sin(this.distance/1900)*.24; this.roadX-=curve*this.speed*dt/440;
+    if(Math.abs(this.roadX)>.93){this.speed=Math.max(35,this.speed-105*dt); this.roadX=Math.max(-1.06,Math.min(1.06,this.roadX));}
+    this.distance+=this.speed*dt; this.score=Math.floor(this.distance/7);
+    this.spawn-=dt; if(this.spawn<=0&&this.speed>25){this.spawn=.72+Math.random()*.75;this.traffic.push({lane:[-.64,-.22,.22,.64][Math.floor(Math.random()*4)],z:1.05,speed:55+Math.random()*95,paint:['red','blue','green','orange','purple'][Math.floor(Math.random()*5)],hit:false});}
+    for(const c of this.traffic){c.z-=(Math.max(30,this.speed-c.speed)*dt)/620;if(!c.hit&&c.z<.13&&c.z>-.05&&Math.abs(c.lane-this.roadX)<.24){c.hit=true;this.lives--;this.flash=.45;this.speed*=.38;this.roadVelocity+=(this.roadX<c.lane?-1:1)*.8;sndGameOver();if(this.lives<=0)this.over=true;}}
+    this.traffic=this.traffic.filter(c=>c.z>-.12); this.flash=Math.max(0,this.flash-dt);
+  }
+  roadPoint(z) { const horizon=91, y=horizon+Math.pow(1-z,1.72)*224, half=18+Math.pow(1-z,1.52)*190, bend=(Math.sin((this.distance+z*560)/720)*.18+Math.sin((this.distance+z*1150)/1900)*.24)*half*1.5; return {y,half,cx:210+bend}; }
+  draw(ctx) {
+    const W=this.W,H=this.H, sky=ctx.createLinearGradient(0,0,0,155);sky.addColorStop(0,'#07152d');sky.addColorStop(.58,'#315d86');sky.addColorStop(1,'#f4a261');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#182b37';ctx.beginPath();ctx.moveTo(0,100);for(let x=0;x<=W;x+=35)ctx.lineTo(x,72+Math.sin(x*.043)*24+Math.sin(x*.017)*16);ctx.lineTo(W,150);ctx.lineTo(0,150);ctx.fill();
+    ctx.fillStyle='#1d5b37';ctx.fillRect(0,91,W,H-91);
+    for(let i=22;i>=0;i--){const z0=i/22,z1=(i+1)/22,a=this.roadPoint(z0),b=this.roadPoint(z1);ctx.fillStyle=i%2?'#30343b':'#353a42';ctx.beginPath();ctx.moveTo(a.cx-a.half,a.y);ctx.lineTo(a.cx+a.half,a.y);ctx.lineTo(b.cx+b.half,b.y);ctx.lineTo(b.cx-b.half,b.y);ctx.fill();ctx.strokeStyle=i%2?'#fff':'#e5484d';ctx.lineWidth=Math.max(1,(1-z0)*7);ctx.beginPath();ctx.moveTo(a.cx-a.half,a.y);ctx.lineTo(b.cx-b.half,b.y);ctx.moveTo(a.cx+a.half,a.y);ctx.lineTo(b.cx+b.half,b.y);ctx.stroke();if(i%3===0){ctx.strokeStyle='rgba(255,255,255,.72)';ctx.lineWidth=Math.max(1,(1-z0)*3);[-.5,0,.5].forEach(l=>{ctx.beginPath();ctx.moveTo(a.cx+a.half*l,a.y);ctx.lineTo(b.cx+b.half*l,b.y);ctx.stroke();});}}
+    [...this.traffic].sort((a,b)=>b.z-a.z).forEach(c=>{const p=this.roadPoint(Math.max(0,Math.min(1,c.z))),scale=.18+(1-c.z)*.9;drawCustomCar(ctx,p.cx+c.lane*p.half*.82,p.y-18*scale,0,scale,c.paint,'sport');});
+    const playerX=210+this.roadX*150;drawCustomCar(ctx,playerX,254,-this.roadVelocity*.12,1.18,this.paint,this.wheels);
+    ctx.fillStyle='rgba(3,8,18,.78)';rrPath(ctx,12,248,92,39,9);ctx.fill();ctx.fillStyle='#e2e8f0';ctx.font='700 18px system-ui';ctx.fillText(Math.round(this.speed)+' km/h',23,273);ctx.font='10px system-ui';ctx.fillStyle='#94a3b8';ctx.fillText('SPEED',23,284);
+    drawGameHud(ctx,W,'NEON RACING','SCORE '+this.score+'  ·  ❤ '+this.lives);if(this.flash){ctx.fillStyle='rgba(239,68,68,'+this.flash+')';ctx.fillRect(0,0,W,H);}if(!this.started)drawGameCard(ctx,W,H,'NEON RACING',['Hold throttle and follow the bending road.','Brake before traffic and steer around it.','Grass slows the car; three crashes end the run.'],'Press SPACE or tap to start');
+  }
 }
 class DriftCircuit {
-  constructor(canvas,arcade){this.canvas=canvas;this.arcade=arcade;this.ctx=canvas.getContext('2d');this.name='Drift Circuit';this.key='drift';this.W=420;this.H=300;this.reset();}
-  reset(){const p=PressureWasher.preferences();this.paint=p.paint;this.wheels=p.wheels;this.x=210;this.y=210;this.a=-Math.PI/2;this.vx=0;this.vy=0;this.turn=0;this.score=0;this.combo=1;this.started=false;this.over=false;this.wallHits=0;this.skids=[];}
-  input(dir){if(dir==='left'||dir==='right')this.turn=dir==='left'?-1:1;if(dir==='up'){this.vx+=Math.cos(this.a)*18;this.vy+=Math.sin(this.a)*18;}if(dir==='down'){this.vx*=.75;this.vy*=.75;}}
-  update(dt){if(!this.started||this.over)return;const k=this.arcade._heldKeys||{};const throttle=k.ArrowUp||k.w||k.W||Math.hypot(this.vx,this.vy)<28;const steer=(k.ArrowLeft||k.a||k.A?-1:0)+(k.ArrowRight||k.d||k.D?1:0)||this.turn;const speed=Math.hypot(this.vx,this.vy);if(throttle){this.vx+=Math.cos(this.a)*82*dt;this.vy+=Math.sin(this.a)*82*dt;}if(k.ArrowDown||k.s||k.S){this.vx*=Math.pow(.08,dt);this.vy*=Math.pow(.08,dt);}this.a+=steer*(1.25+Math.min(1.4,speed/90))*dt;this.turn*=Math.pow(.03,dt);const forward=this.vx*Math.cos(this.a)+this.vy*Math.sin(this.a),side=-this.vx*Math.sin(this.a)+this.vy*Math.cos(this.a);this.vx=(Math.cos(this.a)*forward+(-Math.sin(this.a))*side*.985)*Math.pow(.84,dt);this.vy=(Math.sin(this.a)*forward+Math.cos(this.a)*side*.985)*Math.pow(.84,dt);this.x+=this.vx*dt;this.y+=this.vy*dt;const drifting=Math.abs(side)>24&&speed>48&&Math.abs(steer)>.2;if(drifting){this.combo=Math.min(8,this.combo+dt*.7);this.score+=Math.round(Math.abs(side)*dt*this.combo);this.skids.push({x:this.x,y:this.y,t:1});}else this.combo=Math.max(1,this.combo-dt*.9);this.skids.forEach(s=>s.t-=dt*.55);this.skids=this.skids.filter(s=>s.t>0);const dx=this.x-210,dy=this.y-160,outer=(dx*dx)/(185*185)+(dy*dy)/(125*125),inner=(dx*dx)/(78*78)+(dy*dy)/(45*45);if(outer>1||inner<1){this.x-=this.vx*dt;this.y-=this.vy*dt;this.vx*=-.32;this.vy*=-.32;this.combo=1;this.wallHits++;sndTick();if(this.wallHits>=6)this.over=true;}}
-  draw(ctx){const W=this.W,H=this.H;ctx.fillStyle='#052e2b';ctx.fillRect(0,0,W,H);ctx.fillStyle='#1f2937';ctx.beginPath();ctx.ellipse(210,160,190,130,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#064e3b';ctx.beginPath();ctx.ellipse(210,160,74,42,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#22d3ee';ctx.lineWidth=4;ctx.beginPath();ctx.ellipse(210,160,187,127,0,0,Math.PI*2);ctx.stroke();ctx.strokeStyle='#f472b6';ctx.beginPath();ctx.ellipse(210,160,78,46,0,0,Math.PI*2);ctx.stroke();ctx.strokeStyle='rgba(15,23,42,.45)';ctx.lineWidth=3;for(const s of this.skids){ctx.globalAlpha=s.t;ctx.beginPath();ctx.arc(s.x,s.y,3,0,Math.PI*2);ctx.stroke();}ctx.globalAlpha=1;drawCustomCar(ctx,this.x,this.y,this.a+Math.PI/2,1,this.paint,this.wheels);drawGameHud(ctx,W,'DRIFT CIRCUIT','SCORE '+this.score+'  ·  COMBO x'+this.combo.toFixed(1));ctx.fillStyle='#cbd5e1';ctx.font='11px system-ui';ctx.fillText('Hold ↑ and steer through the corners · 6 wall hits ends the run',12,58);if(!this.started)drawGameCard(ctx,W,H,'DRIFT CIRCUIT',['Throttle into a corner, then hold steer.','Long sideways slides build your combo.','Stay between the neon walls.'],'Press SPACE or tap to start');}
+  constructor(canvas,arcade) { this.canvas=canvas;this.arcade=arcade;this.ctx=canvas.getContext('2d');this.name='Drift Circuit';this.key='drift';this.W=420;this.H=300;this.smooth=true;this.reset(); }
+  reset() {
+    const p=PressureWasher.preferences();this.paint=p.paint;this.wheels=p.wheels;this.x=210;this.y=244;this.a=Math.PI;this.vx=0;this.vy=0;this.score=0;this.combo=1;this.started=false;this.over=false;this.damage=0;this.touch={};this.skids=[];this.lastRear=null;this.lapAngle=Math.atan2((this.y-158)/86,(this.x-210)/138);this.lapProgress=0;this.laps=0;
+  }
+  input(dir) { this.touch[dir]=.55; if(dir==='up'&&Math.hypot(this.vx,this.vy)<4){this.vx=Math.cos(this.a)*10;this.vy=Math.sin(this.a)*10;} }
+  control(dir,k){return !!(this.touch[dir]>0||(dir==='left'&&(k.ArrowLeft||k.a||k.A))||(dir==='right'&&(k.ArrowRight||k.d||k.D))||(dir==='up'&&(k.ArrowUp||k.w||k.W))||(dir==='down'&&(k.ArrowDown||k.s||k.S)));}
+  update(dt) {
+    if(!this.started||this.over)return;const k=this.arcade._heldKeys||{};Object.keys(this.touch).forEach(d=>this.touch[d]=Math.max(0,this.touch[d]-dt));
+    const throttle=this.control('up',k),brake=this.control('down',k),steer=(this.control('right',k)?1:0)-(this.control('left',k)?1:0);let forward=this.vx*Math.cos(this.a)+this.vy*Math.sin(this.a),side=-this.vx*Math.sin(this.a)+this.vy*Math.cos(this.a);
+    if(throttle)forward+=118*dt;if(brake)forward-=Math.sign(forward||1)*165*dt;forward*=Math.pow(.75,dt);const speed=Math.abs(forward);this.a+=steer*(.55+Math.min(1.45,speed/58))*dt*(forward>=0?1:-1);
+    const lateralGrip=brake?.965:.90;side*=Math.pow(lateralGrip,dt*60);this.vx=Math.cos(this.a)*forward-Math.sin(this.a)*side;this.vy=Math.sin(this.a)*forward+Math.cos(this.a)*side;this.x+=this.vx*dt;this.y+=this.vy*dt;
+    const slip=Math.abs(side),drifting=slip>8&&speed>30&&Math.abs(steer)>.1;if(drifting){this.combo=Math.min(10,this.combo+dt*1.15);this.score+=Math.ceil((slip+speed*.12)*this.combo*dt);const rear={x:this.x-Math.cos(this.a)*13,y:this.y-Math.sin(this.a)*13};if(this.lastRear)this.skids.push({x1:this.lastRear.x,y1:this.lastRear.y,x2:rear.x,y2:rear.y,t:1});this.lastRear=rear;}else{this.combo=Math.max(1,this.combo-dt*.7);this.lastRear=null;}
+    this.skids.forEach(s=>s.t-=dt*.18);this.skids=this.skids.filter(s=>s.t>0).slice(-260);
+    const dx=this.x-210,dy=this.y-158,q=Math.sqrt((dx*dx)/(138*138)+(dy*dy)/(86*86));if(q<.70||q>1.30||this.x<12||this.x>408||this.y<60||this.y>292){this.x-=this.vx*dt;this.y-=this.vy*dt;this.vx*=-.24;this.vy*=-.24;this.combo=1;this.damage++;this.lastRear=null;sndTick();if(this.damage>=8)this.over=true;}
+    const angle=Math.atan2((this.y-158)/86,(this.x-210)/138),delta=Math.atan2(Math.sin(angle-this.lapAngle),Math.cos(angle-this.lapAngle));if(delta<0)this.lapProgress+=-delta;this.lapAngle=angle;if(this.lapProgress>Math.PI*2){this.lapProgress-=Math.PI*2;this.laps++;this.score+=1000;showToast('🏁 Lap '+this.laps+'! +1000');}
+  }
+  draw(ctx) {
+    const W=this.W,H=this.H;ctx.fillStyle='#163f2b';ctx.fillRect(0,0,W,H);for(let x=0;x<W;x+=28)for(let y=72;y<H;y+=28){ctx.fillStyle=(x+y)%56?'#18472f':'#1b5035';ctx.fillRect(x,y,28,28);}
+    ctx.fillStyle='#30343a';ctx.beginPath();ctx.ellipse(210,158,181,120,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#1a4e33';ctx.beginPath();ctx.ellipse(210,158,96,51,0,0,Math.PI*2);ctx.fill();
+    ctx.lineWidth=3;ctx.setLineDash([12,10]);ctx.strokeStyle='rgba(255,255,255,.42)';ctx.beginPath();ctx.ellipse(210,158,138,86,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.lineWidth=5;ctx.strokeStyle='#e5e7eb';ctx.beginPath();ctx.ellipse(210,158,181,120,0,0,Math.PI*2);ctx.stroke();ctx.strokeStyle='#e5484d';ctx.beginPath();ctx.ellipse(210,158,96,51,0,0,Math.PI*2);ctx.stroke();
+    ctx.strokeStyle='#171717';ctx.lineWidth=3;ctx.lineCap='round';for(const s of this.skids){ctx.globalAlpha=s.t*.5;ctx.beginPath();ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke();}ctx.globalAlpha=1;
+    ctx.fillStyle='#fff';for(let i=0;i<8;i++){ctx.fillRect(202+i*4,235,4,8);ctx.fillStyle=ctx.fillStyle==='#fff'?'#111':'#fff';}
+    drawCustomCar(ctx,this.x,this.y,this.a+Math.PI/2,1,this.paint,this.wheels);drawGameHud(ctx,W,'DRIFT CIRCUIT','SCORE '+this.score+' · x'+this.combo.toFixed(1)+' · LAP '+this.laps+' · DMG '+this.damage+'/8');ctx.fillStyle='rgba(3,8,18,.72)';rrPath(ctx,12,250,98,35,8);ctx.fill();ctx.fillStyle='#e2e8f0';ctx.font='700 16px system-ui';ctx.fillText(Math.round(Math.hypot(this.vx,this.vy))+' km/h',23,272);
+    if(!this.started)drawGameCard(ctx,W,H,'DRIFT CIRCUIT',['Hold ↑ to accelerate around the circuit.','Turn into a corner, then tap ↓ to break traction.','Sustain a slide to build the multiplier.'],'Press SPACE or tap to start');
+  }
 }
 
 // ---- INIT ----

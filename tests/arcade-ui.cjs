@@ -59,6 +59,18 @@ const SHOTS = path.join(__dirname, "screenshots");
     if (!info.wantsSmooth && info.smooth !== "pixelated") throw new Error(key + " should keep retro pixels: " + info.smooth);
     // Start and interact.
     await page.evaluate(() => { arcade.play(); arcade.game.started = true; }, key);
+    if (key === "racing" || key === "drift") {
+      const before = await page.evaluate(() => ({ x: arcade.game.x, y: arcade.game.y, distance: arcade.game.distance || 0, speed: arcade.game.speed || 0 }));
+      await page.keyboard.down("ArrowUp");
+      await page.keyboard.down("ArrowLeft");
+      await page.waitForTimeout(700);
+      await page.keyboard.up("ArrowLeft");
+      await page.keyboard.up("ArrowUp");
+      const after = await page.evaluate(() => ({ x: arcade.game.x, y: arcade.game.y, distance: arcade.game.distance || 0, speed: arcade.game.speed || Math.hypot(arcade.game.vx || 0, arcade.game.vy || 0) }));
+      if (!(after.speed > 3)) throw new Error(key + " did not accelerate: " + JSON.stringify({ before, after }));
+      if (key === "racing" && !(after.distance > before.distance)) throw new Error("racing did not advance");
+      if (key === "drift" && !(Math.hypot(after.x - before.x, after.y - before.y) > 3)) throw new Error("drift car did not move");
+    }
     if (interaction[key]) await page.evaluate(() => {
       const actions = {
         "2048": () => arcade.game.input("left"),

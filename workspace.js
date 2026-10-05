@@ -47,7 +47,7 @@
   function addEquationCopies(q, body, detailed) {
     const equations=equationCandidates(q.q);
     const explanationEquations=state.answers[q.id]!=null?equationCandidates(q.exp):[];
-    const place=(host,items)=>items.forEach((equation)=>{const row=document.createElement('div');row.className='equation-copy-row';const code=document.createElement('code');code.textContent=equation;row.append(code);host.append(row);});
+    const place=(host,items)=>items.forEach((equation)=>{const row=document.createElement('div');row.className='equation-copy-row';const code=document.createElement('code');code.textContent=equation;const button=document.createElement('button');button.type='button';button.className='secondary copy-equation';button.textContent='Copy equation';button.onclick=()=>copyEquationText(equation,button);row.append(code,button);host.append(row);});
     if(equations.length){const questionText=body.querySelector('.qtext');const holder=document.createElement('div');holder.className='question-equations';place(holder,equations);questionText?.after(holder);}
     if(detailed&&explanationEquations.length){const holder=document.createElement('div');holder.className='explanation-equations';place(holder,explanationEquations);detailed.append(holder);}
   }

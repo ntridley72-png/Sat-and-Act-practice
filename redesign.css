@@ -286,6 +286,7 @@ body[data-workspace] .hsc-tab.active{background:var(--mint);border-color:var(--m
 #collegeDetailHost.as-popup{position:fixed;inset:0;z-index:950;background:rgba(5,8,14,.72);backdrop-filter:blur(3px);display:flex;align-items:flex-start;justify-content:center;padding:max(24px,env(safe-area-inset-top)) 16px 24px;overflow-y:auto;animation:fadeIn .15s ease}
 .cpop-box{position:relative;width:min(980px,100%);margin:auto 0}
 .cpop-box .college-detail{max-height:none!important;box-shadow:0 24px 70px rgba(0,0,0,.55)}
+.cpop-box .college-resize{display:none}
 .cpop-close{position:absolute;top:-14px;right:-14px;z-index:2;width:36px;height:36px;padding:0;border-radius:50%;display:grid;place-items:center;font-size:16px}
 body[data-workspace] .cpop-close{background:var(--ws-surface);color:var(--ws-ink);border:1px solid var(--ws-line)}
 body.cpop-open{overflow:hidden}

@@ -442,6 +442,8 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 .arcade-stage{display:none;flex-direction:column;flex:1;position:relative}
 .arcade-stage.active{display:flex}
 .arcade-stage canvas{display:block;background:#0b1120;margin:8px auto 0;border-radius:8px;image-rendering:pixelated;max-width:calc(100% - 16px);width:420px;height:auto}
+.wash-customize{display:none;align-items:end;justify-content:center;gap:8px;flex-wrap:wrap;margin:8px auto 0;padding:8px 10px;border:1px solid #334155;border-radius:8px;background:#0f172a;color:#cbd5e1;font-size:12px;max-width:calc(100% - 16px)}
+.wash-customize.show{display:flex}.wash-customize label{display:flex;flex-direction:column;gap:3px}.wash-customize select{min-width:100px;padding:5px 8px;border:1px solid #475569;border-radius:6px;background:#111827;color:#fff}
 .arcade-status{position:static;margin:8px auto 0;background:rgba(15,23,42,.85);border:1px solid #334155;border-radius:999px;padding:5px 16px;font-size:.85rem;font-weight:700;pointer-events:none;white-space:nowrap;max-width:calc(100% - 20px);overflow:hidden;text-overflow:ellipsis;text-align:center}
 .arcade-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;pointer-events:none}
 .arcade-msg .msg-box{pointer-events:auto;background:rgba(15,23,42,.92);border-radius:16px;padding:20px 32px;text-align:center;animation:modalPop .25s ease}
@@ -686,6 +688,11 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
   </div>
   <div class="arcade-stage" id="arcadeStage">
     <div class="arcade-status" id="arcadeStatus"></div>
+    <div class="wash-customize" id="washCustomize" aria-label="Power Wash customization">
+      <label>Job<select id="washSubject"><option value="random">Surprise me</option><option value="car">Car</option><option value="house">House</option><option value="deck">Deck</option></select></label>
+      <label>Car paint<select id="washPaint"><option value="red">Rally red</option><option value="blue">Ocean blue</option><option value="green">Emerald</option><option value="purple">Royal purple</option><option value="orange">Sunset orange</option><option value="silver">Silver</option></select></label>
+      <label>Wheels<select id="washWheels"><option value="sport">Sport</option><option value="classic">Classic</option><option value="blackout">Blackout</option></select></label>
+    </div>
     <canvas id="gameCanvas" width="420" height="300"></canvas>
     <div class="arcade-msg" id="arcadeMsg" style="display:none"></div>
     <div class="dpad" id="dpad">
@@ -1587,7 +1594,7 @@ const GAME_RULES = {
   tetris: "Stack the falling blocks. Complete a row to clear it. ←→ move, ↑ rotate, ↓ drop.",
   watersort: "START HERE: tap a tube to pick up the color on top, then tap another tube to pour. You can pour onto the same color or into an empty tube. Each tube holds 4 layers. Sort every color into its own tube to win — fewer moves is a better score. ←→ choose a tube, ↑/↓ (or tap) pour.",
   doom: "Move with WASD or arrows, turn with ←→, and shoot with Space. Clear the maze without getting cornered.",
-  pressurewash: "Hold the mouse to spray the dirty surface. Scroll to widen or narrow the nozzle. Clean enough of the surface to advance.",
+  pressurewash: "Choose a job and customize the car's paint and wheels before starting. Hold the mouse to spray; scroll adjusts the nozzle. Clean 95% to finish.",
   "2048": "Slide tiles with the arrow keys, WASD, or a swipe. Equal tiles merge and add to your score; a new 2 or 4 spawns each move. Reach 2048 to win — no moves left ends the run.",
   breakout: "Move the paddle with the mouse, arrow keys, or touch. Press SPACE / tap to launch. Clear every brick to level up; catch drops for a wider paddle, slow ball, or extra ball. Three lives.",
   flappy: "Tap, click, or press SPACE / ↑ to flap. Fly through the pipe gaps — they get faster and tighter as you score.",
@@ -1642,7 +1649,8 @@ function sample(a, n, weightFn = () => 1, avoidIds = []) {
   const famUses = {};
   const uses = (q) => {
     const d = q.dedupe || q.id;
-    if (famUses[d] == null) famUses[d] = Math.max(0, ...(DEDUPE_MEMBERS[d] || [q.id]).map((id) => Math.max(seen[id] || 0, served[id] || 0)));
+    const members = typeof DEDUPE_MEMBERS !== "undefined" ? DEDUPE_MEMBERS : {};
+    if (famUses[d] == null) famUses[d] = Math.max(0, ...(members[d] || [q.id]).map((id) => Math.max(seen[id] || 0, served[id] || 0)));
     return famUses[d];
   };
   const usable = a.filter((q) => !q.withheld);
@@ -1665,7 +1673,8 @@ function sample(a, n, weightFn = () => 1, avoidIds = []) {
       (skills[q.skill] || 0) * 2 + (q.templateVariant ? 1 : 0);
     // Hard rule: never pick a question you've done while one you haven't is available.
     const notInSet = eligible.filter((q) => !inSet[q.dedupe || q.id] && !avoidDedupe.has(q.dedupe || q.id));
-    const pool2 = notInSet.length ? notInSet : eligible;
+    const newFamilies = notInSet.filter((q) => !families[familyOf(q)]);
+    const pool2 = newFamilies.length ? newFamilies : notInSet.length ? notInSet : eligible;
     const minUses = Math.min(...pool2.map(uses));
     const unused = pool2.filter((q) => uses(q) === minUses);
     const lowestPenalty = Math.min(...unused.map(penalty));
@@ -1691,7 +1700,11 @@ function sample(a, n, weightFn = () => 1, avoidIds = []) {
     counts[q.domain] = (counts[q.domain] || 0) + 1;
     remaining.splice(remaining.findIndex((item) => item.id === q.id), 1);
   }
-  try { saveProfile(); } catch (e) {}
+  try {
+    profile.recentQuestions = recent.slice(-50);
+    profile.recentFamilies = familyHistory.slice(-50);
+    saveProfile();
+  } catch (e) {}
   return picked;
 }
 
@@ -2553,7 +2566,7 @@ function explanationHtml(q, chosen) {
   const help = teachingCache[q.id];
   const simpleSteps = help && help.simple || simpleWhy.split(/(?<=[.!?])\s+(?=[A-Z“])/).filter(Boolean);
   return '<div class="explain"><strong>Detailed explanation</strong><ol><li>' + (help && help.detailed ? help.detailed.map((step) => escapeHtml(step)).join('</li><li>') : escapeHtml(tips[1]) + '</li><li>' + escapeHtml(q.exp) + '</li><li>Check the result: the correct choice is ' + escapeHtml(q.choices[q.ans]) + '.') + '</li></ol></div>' +
-    (chosen !== q.ans ? '<div class="idk-box"><strong>Simple explanation</strong><ul>' + simpleSteps.map((step) => '<li>' + escapeHtml(step) + '</li>').join('') + '<li><strong>Answer:</strong> ' + escapeHtml(q.choices[q.ans]) + '</li></ul>' + (teachingBusy[q.id] ? '<p class="small muted">The AI tutor is simplifying these steps…</p>' : help && help.error ? '<p class="small muted">' + escapeHtml(help.error) + '</p><button type="button" id="btnRetryTeaching" class="secondary">Retry explanation</button>' : help && help.simple ? '<p class="small muted">Simplified with Groq. Check the steps against the explanation above.</p>' : '') + '</div>' : '');
+    (chosen !== q.ans ? '<div class="idk-box"><strong>Simple explanation</strong><ul>' + simpleSteps.map((step) => '<li>' + escapeHtml(step) + '</li>').join('') + '<li><strong>Answer:</strong> ' + escapeHtml(q.choices[q.ans]) + '</li></ul>' + (teachingBusy[q.id] ? '<p class="small muted">The AI tutor is simplifying these steps…</p>' : help && help.error ? '<p class="small muted">' + escapeHtml(help.error) + '</p><button type="button" id="btnRetryTeaching" class="secondary">Retry Groq explanation</button>' : help && help.simple ? '<p class="small muted">Simplified with Groq. Check the steps against the explanation above.</p>' : '') + '</div>' : '');
 }
 
 function studyHelpHtml(q) {
@@ -4063,6 +4076,8 @@ const arcade = {
     else if (game === 'bubbles') this.game = new BubbleShooter(canvas, this);
     else if (game === 'invaders') this.game = new Invaders(canvas, this);
     this.fitCanvas(this.game.W, this.game.H, !!this.game.smooth);
+    const washCustomize = $('washCustomize');
+    if (washCustomize) washCustomize.classList.toggle('show', game === 'pressurewash');
     this.game.reset();
     // Any minutes already earned (5 questions = 1 token = ARCDE_ADD_SEC) are applied automatically
     // right when a game opens, so "a minute of playtime per 5 questions" shows up immediately
@@ -4259,6 +4274,7 @@ const arcade = {
     this.buildMenu();
     this.overlay.classList.remove('show');
     this.stage.classList.remove('active');
+    const washCustomize = $('washCustomize'); if (washCustomize) washCustomize.classList.remove('show');
     quizTimerRunning = !state.done;
     saveProfile();
   },
@@ -7445,7 +7461,9 @@ class PressureWasher {
   }
   reset() {
     const subjects = ['car', 'house', 'deck'];
-    this.subject = subjects[Math.floor(Math.random() * subjects.length)];
+    const prefs = PressureWasher.preferences();
+    this.subject = prefs.subject === 'random' ? subjects[Math.floor(Math.random() * subjects.length)] : prefs.subject;
+    this.paint = prefs.paint; this.wheels = prefs.wheels;
     this.label = { car: 'SEDAN', house: 'FRONT OF HOUSE', deck: 'BACKYARD DECK' }[this.subject];
     this.score = 0; this.over = false; this.started = false; this.win = false;
     this.nozzleR = 22; this.sprayT = 0; this.last = null; this.winT = 0;
@@ -7481,15 +7499,21 @@ class PressureWasher {
       c.lineTo(132, H - 122); c.quadraticCurveTo(162, H - 170, 206, H - 172); c.lineTo(280, H - 170);
       c.quadraticCurveTo(318, H - 166, 342, H - 124); c.lineTo(372, H - 118); c.quadraticCurveTo(386, H - 114, 386, H - 98);
       c.lineTo(384, H - 60); c.closePath();
-      c.fillStyle = lin(0, H - 172, 0, H - 60, ['#ef5350', '#c62828', '#8e1414']); c.fill();
+      const paints = {
+        red: ['#ef5350', '#c62828', '#8e1414'], blue: ['#60a5fa', '#2563eb', '#1e3a8a'],
+        green: ['#4ade80', '#16a34a', '#14532d'], purple: ['#c084fc', '#7e22ce', '#4c1d95'],
+        orange: ['#fb923c', '#ea580c', '#7c2d12'], silver: ['#e2e8f0', '#94a3b8', '#475569']
+      };
+      const paint = paints[this.paint] || paints.red;
+      c.fillStyle = lin(0, H - 172, 0, H - 60, paint); c.fill();
       if (!mask) {
         c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(60, H - 112, 310, 6);
         c.beginPath(); c.moveTo(142, H - 124); c.quadraticCurveTo(167, H - 162, 207, H - 164); c.lineTo(272, H - 162); c.quadraticCurveTo(305, H - 158, 326, H - 124); c.closePath();
         c.fillStyle = lin(0, H - 164, 0, H - 124, ['#b3d4e8', '#3d5f78']); c.fill();
-        c.fillStyle = '#7f1414'; c.fillRect(233, H - 166, 7, 44);
+        c.fillStyle = gameShade(paint[1], -45); c.fillRect(233, H - 166, 7, 44);
         c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.moveTo(175, H - 158); c.lineTo(190, H - 158); c.lineTo(168, H - 126); c.lineTo(153, H - 126); c.closePath(); c.fill();
         c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1.5; c.beginPath(); [148, 236, 320].forEach((dx) => { c.moveTo(dx, H - 122); c.lineTo(dx + 2, H - 64); }); c.stroke();
-        c.fillStyle = '#5c0d0d'; c.fillRect(196, H - 104, 18, 4); c.fillRect(282, H - 104, 18, 4);
+        c.fillStyle = gameShade(paint[2], -20); c.fillRect(196, H - 104, 18, 4); c.fillRect(282, H - 104, 18, 4);
         c.fillStyle = '#fff7c2'; c.beginPath(); c.ellipse(52, H - 102, 9, 6, -0.2, 0, Math.PI * 2); c.fill();
         c.fillStyle = '#ff3b30'; c.fillRect(376, H - 110, 8, 14);
         c.fillStyle = '#262626'; c.fillRect(34, H - 72, 32, 11); c.fillRect(358, H - 72, 30, 11);
@@ -7497,7 +7521,8 @@ class PressureWasher {
       [[108, H - 56], [312, H - 56]].forEach(([wx, wy]) => {
         c.fillStyle = M('#161616'); c.beginPath(); c.arc(wx, wy, 26, 0, Math.PI * 2); c.fill();
         if (!mask) {
-          const g = c.createRadialGradient(wx - 4, wy - 4, 2, wx, wy, 16); g.addColorStop(0, '#f1f5f9'); g.addColorStop(1, '#8a949e');
+          const rims = this.wheels === 'classic' ? ['#fff7ed', '#c0a070'] : this.wheels === 'blackout' ? ['#64748b', '#111827'] : ['#f1f5f9', '#8a949e'];
+          const g = c.createRadialGradient(wx - 4, wy - 4, 2, wx, wy, 16); g.addColorStop(0, rims[0]); g.addColorStop(1, rims[1]);
           c.fillStyle = g; c.beginPath(); c.arc(wx, wy, 16, 0, Math.PI * 2); c.fill();
           c.strokeStyle = '#5b6570'; c.lineWidth = 3; c.beginPath();
           for (let k = 0; k < 5; k++) { const a = k * Math.PI * 2 / 5; c.moveTo(wx + Math.cos(a) * 4, wy + Math.sin(a) * 4); c.lineTo(wx + Math.cos(a) * 14, wy + Math.sin(a) * 14); }
@@ -7560,6 +7585,10 @@ class PressureWasher {
         c.globalCompositeOperation = 'destination-out'; c.beginPath(); c.arc(W - 70, 74, 26, 0, Math.PI * 2); c.fill(); c.globalCompositeOperation = 'source-over';
       }
     }
+  }
+  static preferences() {
+    const defaults = { subject: 'random', paint: 'red', wheels: 'sport' };
+    try { return Object.assign(defaults, JSON.parse(localStorage.getItem('funsatWashCustomize') || '{}')); } catch (e) { return defaults; }
   }
   drawDirt() {
     const d = this.dctx, W = this.W, H = this.H;
@@ -7704,6 +7733,19 @@ class PressureWasher {
 
 // ---- INIT ----
 arcade.init();
+(() => {
+  const ids = { washSubject: 'subject', washPaint: 'paint', washWheels: 'wheels' };
+  const prefs = PressureWasher.preferences();
+  Object.entries(ids).forEach(([id, key]) => {
+    const el = $(id); if (!el) return;
+    el.value = prefs[key];
+    el.addEventListener('change', () => {
+      prefs[key] = el.value;
+      try { localStorage.setItem('funsatWashCustomize', JSON.stringify(prefs)); } catch (e) {}
+      if (arcade.game instanceof PressureWasher && arcade.mode === 'ready') { arcade.game.reset(); arcade.game.draw(arcade.ctx); }
+    });
+  });
+})();
 addEventListener('pointerdown', (e) => {
   const wasReadyToStart = arcade.mode === 'ready' && arcade.game && !arcade.game.started && !e.target.closest('button');
   if (wasReadyToStart) {

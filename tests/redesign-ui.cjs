@@ -45,6 +45,8 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   const tabs = await page.locator("#homeScoreCard .hsc-tab").count();
   if (tabs < 2) throw new Error("expected saved-college tabs, saw " + tabs);
   await page.click("#homeScoreCard .hsc-tab:nth-child(2)");
+  await page.waitForSelector("[data-close-detail]");
+  await page.click("[data-close-detail]");
   await page.waitForTimeout(120);
 
   // Profile hero ring on the College screen.
@@ -56,6 +58,7 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   await page.waitForSelector(".college-detail .college-pie");
   if ((await page.locator(".college-detail .college-pie-legend li").count()) < 3) throw new Error("acceptance pie should show accept, waitlist, and deny");
   if (await page.locator("#collegeProfileHero .ring-num").textContent() === "—") throw new Error("profile ring should show a percentile for SAT 1340");
+  await page.click("[data-close-detail]");
   await page.click("#collegeBack");
 
   // Enter advances to the next question (12 questions guarantees a multi-question module).

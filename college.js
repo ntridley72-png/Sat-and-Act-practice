@@ -694,6 +694,7 @@
     const score = est.score;
     const range = est.range;
     const saved = c.saved.includes(college.id);
+    const money = (n) => n == null ? "—" : "$" + Number(n).toLocaleString();
     let targetBlock = '<p class="small muted">This college has not reported ' + (est.testType === "sat" ? "SAT" : "ACT") + " ranges to the Department of Education. The estimate uses selectivity" + (gpaOn4(c) != null ? " and GPA" : "") + " only.</p>";
     if (range && score && target) {
       const pos = clamp((score.value - range.lo) / Math.max(1, range.hi - range.lo), 0, 1);
@@ -717,7 +718,9 @@
       '<div><span class="college-stat-num">' + college.adm + '%</span><span class="small muted">reporting admit rate</span></div>' +
       '<div><span class="college-stat-num">' + rangeText(college) + '</span><span class="small muted">SAT EBRW+Math, enrolled</span></div>' +
       '<div><span class="college-stat-num">' + actText(college) + '</span><span class="small muted">ACT composite, enrolled</span></div>' +
-      '<div><span class="college-stat-num">' + (range && range.mid != null ? range.mid : "—") + '</span><span class="small muted">reported median (' + est.testType.toUpperCase() + ')</span></div></div>' +
+      '<div><span class="college-stat-num">' + (range && range.mid != null ? range.mid : "—") + '</span><span class="small muted">reported median (' + est.testType.toUpperCase() + ')</span></div>' +
+      '<div><span class="college-stat-num">' + money(college.net) + '</span><span class="small muted">average annual net price</span></div>' +
+      '<div><span class="college-stat-num">' + money(college.tuIn) + (college.ctrl === "public" && college.tuOut != null ? ' / ' + money(college.tuOut) : '') + '</span><span class="small muted">annual tuition' + (college.ctrl === "public" ? ' (in / out of state)' : '') + '</span></div></div>' +
       '<div class="college-target"><div class="college-target-head"><strong>Score goal</strong><span class="small muted">Default: 75th percentile (adjustable)</span></div>' +
       '<div class="college-target-btns" role="group" aria-label="Target score">' +
       '<button type="button" class="secondary' + (c.targetMode === "p75" ? " on" : "") + '" data-target="p75">75th percentile</button>' +
@@ -725,7 +728,6 @@
       '<button type="button" class="secondary' + (c.targetMode === "custom" ? " on" : "") + '" data-target="custom">Custom</button>' +
       (c.targetMode === "custom" ? '<input type="number" id="collegeCustomTarget" min="' + SAT_MIN + '" max="' + SAT_MAX + '" step="10" value="' + (c.customTarget != null ? c.customTarget : "") + '" aria-label="Custom target score">' : "") +
       "</div>" + targetBlock + "</div>" +
-      '<div class="college-estimate">' + pieHtml(est) +
       '<div class="college-estimate">' + pieHtml(est) +
       '<div><strong>Estimated outcomes</strong> <span class="college-conf college-conf-' + est.confidence + '">' + est.confidence + ' confidence</span> <span class="small muted">(' + level + ')</span>' +
       '<p class="small muted">Accept, waitlist, and deny shares come from an app model using the factors below. The accept range is ' + pct(est.lo) + ' – ' + pct(est.hi) + '. Waitlist placement is an estimate: it is more common at selective colleges and for borderline applicants, but rarely converts to admission, and some colleges admit none off the waitlist. This is not an admission decision or a guarantee.</p>' +
@@ -750,6 +752,7 @@
       "<tr><td>Admit rate</td>" + cells.map((x) => "<td>" + x.college.adm + "%</td>").join("") + "</tr>" +
       "<tr><td>SAT enrolled</td>" + cells.map((x) => "<td>" + rangeText(x.college) + "</td>").join("") + "</tr>" +
       "<tr><td>ACT enrolled</td>" + cells.map((x) => "<td>" + actText(x.college) + "</td>").join("") + "</tr>" +
+      "<tr><td>Average net price</td>" + cells.map((x) => "<td>" + (x.college.net == null ? "—" : "$" + Number(x.college.net).toLocaleString()) + "</td>").join("") + "</tr>" +
       "<tr><td>Your position</td>" + cells.map((x) => "<td>" + scoreLine(x.college) + "</td>").join("") + "</tr>" +
       "<tr><td>Estimated range</td>" + cells.map((x) => "<td>" + pct(x.est.lo) + " – " + pct(x.est.hi) + "</td>").join("") + "</tr>" +
       "</tbody></table></div>" +
@@ -947,6 +950,9 @@
     try { scrollTo(0, 0); } catch (e) {}
   }
   function closeCollege() {
+    selectedId = null;
+    detailReturnsHome = false;
+    document.body.classList.remove("cpop-open");
     state.view = collegeReturnView === "test" || collegeReturnView === "routing" ? collegeReturnView : collegeReturnView === "results" ? "results" : "start";
     render();
   }

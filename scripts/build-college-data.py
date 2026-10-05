@@ -30,6 +30,7 @@ import os
 import re
 import sys
 import urllib.request
+import urllib.parse
 import zipfile
 from datetime import date
 
@@ -37,11 +38,13 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "college-data.js")
 CACHE = os.path.join(ROOT, "scripts", ".cache")
 DATA_PAGE = "https://collegescorecard.ed.gov/data/"
+BULK_URL = "https://ed-public-download.scorecard.network/downloads/Most-Recent-Cohorts-Institution_06102026.zip"
 PAGE_UA = {"User-Agent": "Mozilla/5.0 (funsat.bid college data build script)"}
 
 SELECTIVE_ADMIT = 0.55
 LARGEST_N = 150
 MIN_UG = 500
+API_URL = "https://api.data.gov/ed/collegescorecard/v1/schools.json"
 
 # Common abbreviations and shorthands students actually search for.
 ALIASES = {
@@ -172,13 +175,17 @@ def download_csv():
     cached = os.path.join(CACHE, "Most-Recent-Cohorts-Institution.csv")
     if os.path.exists(cached) and os.path.getsize(cached) > 1_000_000:
         return cached
-    with urllib.request.urlopen(urllib.request.Request(DATA_PAGE, headers=PAGE_UA), timeout=60) as response:
-        page = response.read().decode("utf-8", "replace")
-    matches = re.findall(r'href="(https://[^"]*Most-Recent-Cohorts-Institution[^"]*\.zip)"', page)
-    if not matches:
-        sys.exit("Could not find the College Scorecard bulk file link on " + DATA_PAGE)
     zip_path = os.path.join(CACHE, "scorecard.zip")
-    urllib.request.urlretrieve(matches[0], zip_path)
+    try:
+        with urllib.request.urlopen(urllib.request.Request(DATA_PAGE, headers=PAGE_UA), timeout=60) as response:
+            page = response.read().decode("utf-8", "replace")
+        matches = re.findall(r'href="(https://[^"]*Most-Recent-Cohorts-Institution[^"]*\.zip)"', page)
+        url = matches[0] if matches else BULK_URL
+    except Exception:
+        # The consumer site sometimes blocks automated page requests. The official
+        # versioned download remains public and needs no API key.
+        url = BULK_URL
+    urllib.request.urlretrieve(url, zip_path)
     with zipfile.ZipFile(zip_path) as archive:
         name = next(n for n in archive.namelist() if n.endswith("Most-Recent-Cohorts-Institution.csv"))
         archive.extract(name, CACHE)
@@ -226,6 +233,20 @@ def build(path):
                 "enr": int(ug),
                 "url": (row.get("INSTURL") or "").replace("http://", "https://"),
             }
+            # Published sticker price and average net price after grants. Public-school
+            # tuition is split by residency; net price is the clearest comparison.
+            tuition_in = num(row.get("TUITIONFEE_IN"))
+            tuition_out = num(row.get("TUITIONFEE_OUT"))
+            net_price = num(row.get("NPT4_PUB") if row.get("CONTROL") == "1" else row.get("NPT4_PRIV"))
+            cost = num(row.get("COSTT4_A")) or num(row.get("COSTT4_P"))
+            if tuition_in is not None:
+                entry["tuIn"] = int(tuition_in)
+            if tuition_out is not None:
+                entry["tuOut"] = int(tuition_out)
+            if net_price is not None:
+                entry["net"] = int(net_price)
+            if cost is not None:
+                entry["cost"] = int(cost)
             if sat_ok:
                 entry["sr25"] = int(sv25 + sm25)
                 entry["sr75"] = int(sv75 + sm75)
@@ -249,22 +270,69 @@ def build(path):
     colleges = sorted(selective, key=lambda entry: entry["n"])
     return colleges
 
+def enrich_existing_from_api():
+    """Fill cost fields in the checked-in data when the bulk host blocks downloads."""
+    with open(OUT, encoding="utf-8") as handle:
+        raw = handle.read()
+    payload = json.loads(raw.split("=", 1)[1].rsplit(";", 1)[0])
+    colleges = payload["colleges"]
+    ids = ",".join(str(c["id"]) for c in colleges)
+    fields = ",".join((
+        "id", "latest.cost.tuition.in_state", "latest.cost.tuition.out_of_state",
+        "latest.cost.avg_net_price.overall", "latest.cost.attendance.academic_year",
+    ))
+    found = {}
+    page = 0
+    while True:
+        query = urllib.parse.urlencode({"api_key": "DEMO_KEY", "id": ids, "fields": fields, "per_page": 100, "page": page})
+        req = urllib.request.Request(API_URL + "?" + query, headers=PAGE_UA)
+        with urllib.request.urlopen(req, timeout=60) as response:
+            data = json.load(response)
+        for row in data.get("results", []):
+            found[int(row["id"])] = row
+        if (page + 1) * data["metadata"]["per_page"] >= data["metadata"]["total"]:
+            break
+        page += 1
+    keys = {
+        "latest.cost.tuition.in_state": "tuIn", "latest.cost.tuition.out_of_state": "tuOut",
+        "latest.cost.avg_net_price.overall": "net", "latest.cost.attendance.academic_year": "cost",
+    }
+    for college in colleges:
+        row = found.get(college["id"], {})
+        for source, target in keys.items():
+            if row.get(source) is not None:
+                college[target] = int(row[source])
+    payload["meta"]["fetched"] = date.today().isoformat()
+    payload["meta"]["release"] = "June 2026 release (file published 2026-06-10)"
+    payload["meta"]["note"] = ("SAT and ACT ranges describe enrolled students, not admitted students. Tuition is published "
+        "sticker tuition; average net price is the average annual price after grants and scholarships. Values are the "
+        "most recent each college reported to the U.S. Department of Education. Verify current policies and costs.")
+    with open(OUT, "w", encoding="utf-8") as handle:
+        handle.write("/* Generated by scripts/build-college-data.py. Do not edit by hand. */\nwindow.COLLEGE_DATA = ")
+        json.dump(payload, handle, ensure_ascii=False, separators=(",", ":"))
+        handle.write(";\n")
+    print("Enriched %s colleges with cost data from the College Scorecard API" % len(found))
+
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "--enrich-api":
+        enrich_existing_from_api()
+        return
     csv_path = sys.argv[1] if len(sys.argv) > 1 else download_csv()
     colleges = build(csv_path)
     payload = {
         "meta": {
             "source": "U.S. Department of Education, College Scorecard, Most-Recent-Cohorts-Institution",
             "sourceUrl": "https://collegescorecard.ed.gov/data/",
-            "release": "May 2026 release (file published 2026-05-26)",
+            "release": "June 2026 release (file published 2026-06-10)",
             "fetched": date.today().isoformat(),
             "selection": ("Four-year public and private nonprofit colleges with at least 500 undergraduates: every "
                           "college admitting 55% or fewer applicants, plus the 150 largest by undergraduate enrollment. "
                           "Colleges that do not report test ranges (for example, test-free University of California "
                           "campuses) are included with ranges shown as not reported."),
-            "note": ("SAT and ACT ranges describe enrolled students, not admitted students. Values are the most "
-                     "recent each college reported to the U.S. Department of Education. Verify current testing "
-                     "policies with each college."),
+            "note": ("SAT and ACT ranges describe enrolled students, not admitted students. Tuition is published "
+                     "sticker tuition; average net price is the average annual price after grants and scholarships. "
+                     "Values are the most recent each college reported to the U.S. Department of Education. Verify "
+                     "current testing policies and costs with each college."),
             "count": len(colleges),
         },
         "concordance": {

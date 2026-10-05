@@ -38,6 +38,7 @@ const SHOTS = path.join(ROOT, "tests", "screenshots");
   await page.waitForSelector(".college-detail .college-pie");
   const firstEstimate = await page.textContent(".college-detail .pie-center");
   await page.click(".college-detail [data-save]");
+  await page.click("[data-close-detail]");
   await page.fill("#collegeQuery", "University of Michigan");
   await page.waitForTimeout(300);
   await page.click(".college-row-main");
@@ -45,12 +46,8 @@ const SHOTS = path.join(ROOT, "tests", "screenshots");
   await page.click(".college-detail [data-save]");
   await page.waitForSelector(".college-compare table");
 
-  // Keyboard resize of the detail panel.
-  const before = await page.$eval("#collegeDetail", (el) => getComputedStyle(el).maxHeight);
-  await page.focus("#collegeResize");
-  await page.keyboard.press("End");
-  const after = await page.$eval("#collegeDetail", (el) => getComputedStyle(el).maxHeight);
-  if (before === after) throw new Error("resize handle did not change the panel size");
+  // The current detail view is a responsive modal; close it before changing layouts.
+  await page.click("[data-close-detail]");
 
   // Themes: screenshot the college screen in each layout.
   fs.mkdirSync(SHOTS, { recursive: true });
@@ -93,5 +90,5 @@ const SHOTS = path.join(ROOT, "tests", "screenshots");
 
   await browser.close();
   if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
-  console.log("PASS: college UI loads, searches by abbreviation, estimates, saves, compares, resizes, themes, and persists. Estimate seen: " + firstEstimate);
+  console.log("PASS: college UI loads, searches by abbreviation, estimates, saves, compares, themes, and persists. Estimate seen: " + firstEstimate);
 })().catch((error) => { console.error(error); process.exit(1); });

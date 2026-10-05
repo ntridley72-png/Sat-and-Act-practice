@@ -355,6 +355,8 @@
       render();
       try { scrollTo(0, 0); } catch (e) {}
     });
+    const practice = document.getElementById("btnPractice");
+    if (practice) practice.addEventListener("click", () => home && home.click());
     const restart = document.getElementById("btnArcadeRestart");
     if (restart) restart.addEventListener("click", resetCurrentGame);
     addEventListener("keydown", (e) => {

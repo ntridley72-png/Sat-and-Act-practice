@@ -187,6 +187,24 @@ body[data-workspace] .arcade-hud .chip, body[data-workspace] .cab-top { color: v
   .ring .ring-progress { transition: none; }
 }
 
+/* The redesign follows the selected workspace palette everywhere. */
+body[data-workspace="exam"]{--bg:#f4f6f9;--panel:#fff;--line:#d9e0e9;--text:#152033;--muted:#5d6b80;--mint:#195de6;--mint2:#1248b8;--violet:#6246c7;--blue:#195de6}
+body[data-workspace="notebook"]{--bg:#f6f3eb;--panel:#fcfaf5;--line:#d6d6cb;--text:#232c25;--muted:#646a60;--mint:#235d44;--mint2:#174c36;--violet:#725d38;--blue:#235d44}
+body[data-workspace="focus"]{--bg:#11171c;--panel:#171e24;--line:#35424d;--text:#eef4f7;--muted:#adbcc8;--mint:#8df0bd;--mint2:#5ecb91;--violet:#9f91ff;--blue:#7cb3ff}
+body[data-workspace] .topbar{background:var(--ws-bg)!important;border-color:var(--ws-line)!important}
+body[data-workspace] .icon-btn,body[data-workspace] .sound-btn{background:var(--ws-tint)!important;color:var(--ws-accent)!important;border-color:var(--ws-line)!important}
+body[data-workspace] .arcade-btn,body[data-workspace] .acct-btn,body[data-workspace] #workspaceTheme,body[data-workspace] #badgeTimer,body[data-workspace] #badgeAcc{background:var(--ws-surface)!important;color:var(--ws-ink)!important;border-color:var(--ws-line)!important}
+body[data-workspace] #screen-start,body[data-workspace] #screen-college{background:var(--ws-bg)!important;color:var(--ws-ink)!important}
+body[data-workspace] #screen-start .st-main,body[data-workspace] #screen-start .st-side .card,body[data-workspace] #screen-college .college-card,body[data-workspace] #screen-college .college-find{background:var(--ws-surface)!important;color:var(--ws-ink)!important;border-color:var(--ws-line)!important}
+body[data-workspace] .home-score-card,body[data-workspace] .hsc-tile,body[data-workspace] .hsc-tab,body[data-workspace] .hero-chip{background:var(--ws-soft)!important;color:var(--ws-ink)!important;border-color:var(--ws-line)!important}
+body[data-workspace] .home-score-card .hsc-title,body[data-workspace] .hsc-tile .t-val,body[data-workspace] .college-profile fieldset,body[data-workspace] .hero-chip{color:var(--ws-ink)!important}
+body[data-workspace] .home-score-card .hsc-sub,body[data-workspace] .hsc-tile .t-lbl,body[data-workspace] .hsc-note{color:var(--ws-muted)!important}
+body[data-workspace] .hsc-scale-track{background:var(--ws-soft)!important;border-color:var(--ws-line)!important}
+body[data-workspace] #screen-college .college-profile fieldset{background:var(--ws-surface)!important;border-color:var(--ws-line)!important}
+body[data-workspace] #screen-college .college-profile input,body[data-workspace] #screen-college .college-profile select,body[data-workspace] #screen-college .college-profile textarea{background:var(--ws-surface)!important;color:var(--ws-ink)!important;border-color:var(--ws-line)!important}
+body[data-workspace="exam"] #screen-college,body[data-workspace="exam"] #collegeDetailHost{--ws-bg:#f4f6f9;--ws-surface:#fff;--ws-soft:#f0f3f8;--ws-ink:#152033;--ws-muted:#5d6b80;--ws-line:#d9e0e9;--ws-tint:#edf3ff;--ws-accent:#195de6;--text:#152033;--muted:#5d6b80;--line:#d9e0e9}
+body[data-workspace="notebook"] #screen-college,body[data-workspace="notebook"] #collegeDetailHost{--ws-bg:#f6f3eb;--ws-surface:#fcfaf5;--ws-soft:#eeeae1;--ws-ink:#232c25;--ws-muted:#646a60;--ws-line:#d6d6cb;--ws-tint:#e9eee7;--ws-accent:#235d44;--text:#232c25;--muted:#646a60;--line:#d6d6cb}
+
 /* Saved colleges beside the profile + acceptance pie */
 .college-profile-wrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;margin-top:16px;align-items:start}
 .college-saved-panel{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px;position:sticky;top:80px}

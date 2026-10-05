@@ -23,7 +23,16 @@ const RESET_MINUTES = 60, MAX_RESETS_PER_HOUR = 3;
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (!url.pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
+    if (!url.pathname.startsWith("/api/")) {
+      const asset = await env.ASSETS.fetch(request);
+      const headers = new Headers(asset.headers);
+      // The app is updated in place; force browsers and Cloudflare edges to
+      // revalidate so a deploy is visible on the next refresh.
+      headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      headers.set("Pragma", "no-cache");
+      headers.set("Expires", "0");
+      return new Response(asset.body, { status: asset.status, statusText: asset.statusText, headers });
+    }
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(request) });
     try {
       const res = await route(request, env, url.pathname.slice(5));

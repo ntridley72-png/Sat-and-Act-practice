@@ -19,6 +19,7 @@ command = "mkdir -p public && cp \"SAT & ACT Practice.html\" public/index.html &
 [assets]
 directory = "./public"
 binding = "ASSETS"
+run_worker_first = true
 
 # Cloudflare Workers AI for the tutor (free daily allowance, no API key).
 [ai]

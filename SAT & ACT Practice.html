@@ -496,6 +496,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
         <span>🔥</span><span id="streakPips"></span>
       </span>
       <span class="token-badge wallet" id="tokenBadge" title="Every 3 questions = 1 arcade credit"><span class="coin" aria-hidden="true"></span><span id="tokenCount">0</span></span>
+      <button class="arcade-btn" id="btnPractice" type="button" title="Set up SAT or ACT practice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><span>Practice</span></button>
       <button class="arcade-btn" id="btnCollege" type="button" title="Compare your scores with colleges"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5L2 9z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/></svg><span>College</span></button>
       <button class="arcade-btn" id="btnArcade" title="Play mini-games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h4M9 10v4"/><circle cx="15.5" cy="11" r="1"/><circle cx="17.5" cy="13.5" r="1"/><path d="M4 8h16a2 2 0 0 1 2 2v5a3 3 0 0 1-3 3 3 3 0 0 1-2.4-1.2L15 15H9l-1.6 1.8A3 3 0 0 1 5 18a3 3 0 0 1-3-3v-5a2 2 0 0 1 2-2z"/></svg><span>Arcade</span></button>
       <button class="sound-btn" id="btnSound" title="Toggle sound">🔊</button>
@@ -689,7 +690,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
   <div class="arcade-stage" id="arcadeStage">
     <div class="arcade-status" id="arcadeStatus"></div>
     <div class="wash-customize" id="washCustomize" aria-label="Power Wash customization">
-      <label>Job<select id="washSubject"><option value="random">Surprise me</option><option value="car">Car</option><option value="house">House</option><option value="deck">Deck</option></select></label>
+      <label class="wash-job">Power Wash job<select id="washSubject"><option value="random">Surprise me</option><option value="car">Car</option><option value="house">House</option><option value="deck">Deck</option></select></label>
       <label>Car paint<select id="washPaint"><option value="red">Rally red</option><option value="blue">Ocean blue</option><option value="green">Emerald</option><option value="purple">Royal purple</option><option value="orange">Sunset orange</option><option value="silver">Silver</option></select></label>
       <label>Wheels<select id="washWheels"><option value="sport">Sport</option><option value="classic">Classic</option><option value="blackout">Blackout</option></select></label>
     </div>
@@ -1583,6 +1584,7 @@ const GAME_LIST = [
   { key: "2048", name: "2048" }, { key: "breakout", name: "BREAKOUT" }, { key: "flappy", name: "SKY RUNNER" }, { key: "minesweeper", name: "MINESWEEPER" },
   { key: "connect4", name: "CONNECT 4" }, { key: "wordgame", name: "VOCAB SPRINT" }, { key: "sudoku", name: "SUDOKU" }, { key: "solitaire", name: "SOLITAIRE" },
   { key: "hopper", name: "CROSSY HOPPER" }, { key: "doodle", name: "DOODLE JUMP" }, { key: "invaders", name: "SPACE INVADERS" }, { key: "blockblast", name: "BLOCK BLAST" },
+  { key: "racing", name: "NEON RACING" }, { key: "drift", name: "DRIFT CIRCUIT" },
   { key: "bubbles", name: "BUBBLE SHOOTER" }, { key: "wordscape", name: "WORD FINDER" }, { key: "stack", name: "STACK TOWER" }, { key: "blackjack", name: "BLACKJACK" },
   { key: "tictactoe", name: "TIC-TAC-TOE" }
 ];
@@ -1611,7 +1613,9 @@ const GAME_RULES = {
   wordscape: "Spell every listed word using the letter buttons (or type). ENTER submits, tap the last letter to undo. Found words save to your Vocab practice stats.",
   stack: "A block slides side to side. Press SPACE / tap to drop it — the overhang is sliced off, so the tower narrows. Miss the block below and the run ends.",
   blackjack: "Press SPACE / tap DEAL, then HIT (H) or STAND (S). Closest to 21 wins; the dealer draws to 17. Win +100, Blackjack +250, streaks add bonus points.",
-  tictactoe: "You are X, the CPU is O. Tap a square or press 1–9. Win +150 × level; winning raises the level, and from level 3 the CPU plays perfectly."
+  tictactoe: "You are X, the CPU is O. Tap a square or press 1–9. Win +150 × level; winning raises the level, and from level 3 the CPU plays perfectly.",
+  racing: "Race through traffic with ← → or A/D. Hold ↑ or W to accelerate and ↓ or S to brake. Pass cars and survive as the road gets faster.",
+  drift: "Hold ↑ or W for throttle and steer with ← → or A/D. Slide sideways through the neon gates to build a drift combo without hitting the wall."
 };
 const $ = (id) => document.getElementById(id);
 const _QINDEX = {};
@@ -1857,7 +1861,7 @@ function flashAutosave(ok) {
 const DEFAULT_PROFILE = {
   tokens: 0, arcadeSeconds: ARCDE_START_SEC, qSinceToken: 0,
   bestStreak: 0, totalCorrect: 0, totalAttempts: 0,
-  highScores: { pacman: 0, snake: 0, pong: 0, watersort: 0, tetris: 0, doom: 0, pressurewash: 0, "2048": 0, breakout: 0, flappy: 0, minesweeper: 0, connect4: 0, wordgame: 0, sudoku: 0, solitaire: 0, hopper: 0, stack: 0, doodle: 0, wordscape: 0, blackjack: 0, tictactoe: 0, blockblast: 0, bubbles: 0, invaders: 0 },
+  highScores: { pacman: 0, snake: 0, pong: 0, watersort: 0, tetris: 0, doom: 0, pressurewash: 0, "2048": 0, breakout: 0, flappy: 0, minesweeper: 0, connect4: 0, wordgame: 0, sudoku: 0, solitaire: 0, hopper: 0, stack: 0, doodle: 0, wordscape: 0, blackjack: 0, tictactoe: 0, blockblast: 0, bubbles: 0, invaders: 0, racing: 0, drift: 0 },
   soundOn: true, history: [], seen: {}, served: {}, lastServed: {}, recentQuestions: [], recentFamilies: [], selectionSequence: 0, qlog: {}, bookmarks: [], curve: "pt4", college: null, updatedAt: 0
 };
 let profile = JSON.parse(JSON.stringify(DEFAULT_PROFILE));
@@ -4075,9 +4079,14 @@ const arcade = {
     else if (game === 'blockblast') this.game = new BlockBlast(canvas, this);
     else if (game === 'bubbles') this.game = new BubbleShooter(canvas, this);
     else if (game === 'invaders') this.game = new Invaders(canvas, this);
+    else if (game === 'racing') this.game = new NeonRacing(canvas, this);
+    else if (game === 'drift') this.game = new DriftCircuit(canvas, this);
     this.fitCanvas(this.game.W, this.game.H, !!this.game.smooth);
     const washCustomize = $('washCustomize');
-    if (washCustomize) washCustomize.classList.toggle('show', game === 'pressurewash');
+    if (washCustomize) {
+      washCustomize.classList.toggle('show', ['pressurewash', 'racing', 'drift'].includes(game));
+      const job = washCustomize.querySelector('.wash-job'); if (job) job.style.display = game === 'pressurewash' ? '' : 'none';
+    }
     this.game.reset();
     // Any minutes already earned (5 questions = 1 token = ARCDE_ADD_SEC) are applied automatically
     // right when a game opens, so "a minute of playtime per 5 questions" shows up immediately
@@ -4093,7 +4102,7 @@ const arcade = {
     saveProfile(); updateHUD();
     this.remaining = startSec;
     this.lastTick = Date.now();
-    const hint = { tetris: ' (←→ move, ↑ rotate, ↓ drop)', watersort: ' (←→ choose, ↑/↓ pour)', doom: ' (WASD/arrows move+turn, Space to shoot)', pressurewash: ' (hold mouse to spray, scroll to adjust nozzle)' }[game] || '';
+    const hint = { tetris: ' (←→ move, ↑ rotate, ↓ drop)', watersort: ' (←→ choose, ↑/↓ pour)', doom: ' (WASD/arrows move+turn, Space to shoot)', pressurewash: ' (hold mouse to spray, scroll to adjust nozzle)', racing: ' (←→ steer, ↑ gas, ↓ brake)', drift: ' (↑ gas, ←→ drift)' }[game] || '';
     this.statusEl.textContent = this.game.name + (this.runMode === 'credit' ? ' — 1 credit: play until game over' : '') + ' — Press SPACE or tap to start' + hint;
     this.updateChips();
     this.showMsg(false);
@@ -4353,6 +4362,11 @@ function drawArcadeSprite(c, key, f) {
     x.fillStyle = '#7fb6d9'; x.fillRect(0, 0, clean, 32);
     px(12, 13, 4, 2, '#222'); px(15, 12, 1, 1, '#facc15');
     if (f % 2 === 0) { x.strokeStyle = '#fff'; x.lineWidth = 1; x.beginPath(); x.moveTo(30, 25); x.lineTo(clean / 1, 10); x.stroke(); }
+  } else if (key === 'racing' || key === 'drift') {
+    x.fillStyle = '#111827'; x.fillRect(0, 0, 32, 32);
+    x.fillStyle = '#334155'; x.fillRect(6, 0, 20, 32);
+    x.fillStyle = '#facc15'; for (let y = -4 + (f % 4) * 3; y < 32; y += 12) x.fillRect(15, y, 2, 6);
+    x.save(); x.translate(16, 20); if (key === 'drift') x.rotate(-0.35); x.fillStyle = key === 'drift' ? '#a855f7' : '#22d3ee'; x.fillRect(-4, -7, 8, 14); x.fillStyle = '#e0f2fe'; x.fillRect(-3, -4, 6, 4); x.restore();
   } else if (key === '2048') {
     const cols = ['#eee4da', '#f2b179', '#f67c5f', '#edcf72'];
     [[2, 2], [17, 2], [2, 17], [17, 17]].forEach(([a, b], i) => { px(a, b, 13, 13, cols[i % 4]); x.fillStyle = '#5b4a36'; x.fillRect((a + 3) * 2, (b + 5) * 2, 14, 6); });
@@ -7729,6 +7743,35 @@ class PressureWasher {
     }
     ctx.textAlign = 'start';
   }
+}
+
+// ---- NEON RACING + DRIFT CIRCUIT ----
+const CAR_PAINTS = { red:'#ef4444', blue:'#3b82f6', green:'#22c55e', purple:'#a855f7', orange:'#f97316', silver:'#cbd5e1' };
+function drawCustomCar(ctx, x, y, angle, scale, paint, wheels) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.scale(scale, scale);
+  const col = CAR_PAINTS[paint] || CAR_PAINTS.red;
+  ctx.fillStyle = 'rgba(0,0,0,.35)'; rrPath(ctx,-11,-19,22,40,6); ctx.fill();
+  ctx.fillStyle = wheels === 'blackout' ? '#020617' : wheels === 'classic' ? '#e7c989' : '#64748b';
+  ctx.fillRect(-14,-13,4,10);ctx.fillRect(10,-13,4,10);ctx.fillRect(-14,7,4,10);ctx.fillRect(10,7,4,10);
+  const g=ctx.createLinearGradient(-10,-18,10,18);g.addColorStop(0,gameShade(col,35));g.addColorStop(.5,col);g.addColorStop(1,gameShade(col,-45));
+  ctx.fillStyle=g;rrPath(ctx,-10,-20,20,40,6);ctx.fill();
+  ctx.fillStyle='#bae6fd';rrPath(ctx,-7,-11,14,10,3);ctx.fill();ctx.fillStyle='rgba(15,23,42,.75)';ctx.fillRect(-6,4,12,8);
+  ctx.fillStyle='#fef08a';ctx.fillRect(-7,-19,4,2);ctx.fillRect(3,-19,4,2);ctx.fillStyle='#ef4444';ctx.fillRect(-7,17,4,2);ctx.fillRect(3,17,4,2);
+  ctx.restore();
+}
+class NeonRacing {
+  constructor(canvas, arcade){this.canvas=canvas;this.arcade=arcade;this.ctx=canvas.getContext('2d');this.name='Neon Racing';this.key='racing';this.W=420;this.H=300;this.reset();}
+  reset(){const p=PressureWasher.preferences();this.paint=p.paint;this.wheels=p.wheels;this.x=this.W/2;this.speed=105;this.distance=0;this.score=0;this.lives=3;this.started=false;this.over=false;this.traffic=[];this.spawn=0;this.flash=0;this.steer=0;}
+  input(dir){if(dir==='left'||dir==='right')this.steer=dir==='left'?-0.7:0.7;if(dir==='up')this.speed=Math.min(245,this.speed+18);if(dir==='down')this.speed=Math.max(65,this.speed-22);}
+  update(dt){if(!this.started||this.over)return;const k=this.arcade._heldKeys||{};const steer=(k.ArrowLeft||k.a||k.A?-1:0)+(k.ArrowRight||k.d||k.D?1:0);this.x+=(steer||this.steer)*175*dt;this.steer*=Math.pow(.05,dt);if(k.ArrowUp||k.w||k.W)this.speed=Math.min(245,this.speed+55*dt);else this.speed=Math.max(105,this.speed-18*dt);if(k.ArrowDown||k.s||k.S)this.speed=Math.max(55,this.speed-95*dt);this.x=Math.max(112,Math.min(308,this.x));this.distance+=this.speed*dt;this.score=Math.floor(this.distance/8);this.spawn-=dt;if(this.spawn<=0){this.spawn=Math.max(.38,1.05-this.speed/340);this.traffic.push({x:[135,180,240,285][Math.floor(Math.random()*4)],y:-35,s:70+Math.random()*65,col:['#f43f5e','#facc15','#22c55e','#38bdf8'][Math.floor(Math.random()*4)]});}for(const c of this.traffic)c.y+=(this.speed-c.s*.35)*dt;for(const c of this.traffic){if(!c.hit&&Math.abs(c.x-this.x)<19&&Math.abs(c.y-242)<31){c.hit=true;this.lives--;this.flash=.35;this.speed=Math.max(70,this.speed*.62);sndGameOver();if(this.lives<=0)this.over=true;}}this.traffic=this.traffic.filter(c=>c.y<this.H+45);this.flash=Math.max(0,this.flash-dt);}
+  draw(ctx){const W=this.W,H=this.H;ctx.fillStyle='#07111f';ctx.fillRect(0,0,W,H);ctx.fillStyle='#082f49';ctx.fillRect(85,0,250,H);ctx.fillStyle='#111827';ctx.fillRect(96,0,228,H);ctx.fillStyle='#22d3ee';ctx.fillRect(92,0,3,H);ctx.fillStyle='#f472b6';ctx.fillRect(325,0,3,H);const off=this.distance%54;ctx.fillStyle='#e2e8f0';for(let y=-54+off;y<H;y+=54){ctx.fillRect(171,y,3,27);ctx.fillRect(247,y,3,27);}for(const c of this.traffic)drawCustomCar(ctx,c.x,c.y,0,.82,c.col==='#38bdf8'?'blue':c.col==='#22c55e'?'green':c.col==='#facc15'?'orange':'red','sport');drawCustomCar(ctx,this.x,242,0,1,this.paint,this.wheels);if(this.flash){ctx.fillStyle='rgba(239,68,68,'+this.flash+')';ctx.fillRect(0,0,W,H);}drawGameHud(ctx,W,'NEON RACING','SCORE '+this.score+'  ·  ❤ '+this.lives);ctx.fillStyle='#cbd5e1';ctx.font='11px system-ui';ctx.fillText('← → steer  ·  ↑ gas  ·  ↓ brake',12,58);if(!this.started)drawGameCard(ctx,W,H,'NEON RACING',['Pass traffic to score.','The road gets faster as you accelerate.','Three crashes end the run.'],'Press SPACE or tap to start');}
+}
+class DriftCircuit {
+  constructor(canvas,arcade){this.canvas=canvas;this.arcade=arcade;this.ctx=canvas.getContext('2d');this.name='Drift Circuit';this.key='drift';this.W=420;this.H=300;this.reset();}
+  reset(){const p=PressureWasher.preferences();this.paint=p.paint;this.wheels=p.wheels;this.x=210;this.y=210;this.a=-Math.PI/2;this.vx=0;this.vy=0;this.turn=0;this.score=0;this.combo=1;this.started=false;this.over=false;this.wallHits=0;this.skids=[];}
+  input(dir){if(dir==='left'||dir==='right')this.turn=dir==='left'?-1:1;if(dir==='up'){this.vx+=Math.cos(this.a)*18;this.vy+=Math.sin(this.a)*18;}if(dir==='down'){this.vx*=.75;this.vy*=.75;}}
+  update(dt){if(!this.started||this.over)return;const k=this.arcade._heldKeys||{};const throttle=k.ArrowUp||k.w||k.W||Math.hypot(this.vx,this.vy)<28;const steer=(k.ArrowLeft||k.a||k.A?-1:0)+(k.ArrowRight||k.d||k.D?1:0)||this.turn;const speed=Math.hypot(this.vx,this.vy);if(throttle){this.vx+=Math.cos(this.a)*82*dt;this.vy+=Math.sin(this.a)*82*dt;}if(k.ArrowDown||k.s||k.S){this.vx*=Math.pow(.08,dt);this.vy*=Math.pow(.08,dt);}this.a+=steer*(1.25+Math.min(1.4,speed/90))*dt;this.turn*=Math.pow(.03,dt);const forward=this.vx*Math.cos(this.a)+this.vy*Math.sin(this.a),side=-this.vx*Math.sin(this.a)+this.vy*Math.cos(this.a);this.vx=(Math.cos(this.a)*forward+(-Math.sin(this.a))*side*.985)*Math.pow(.84,dt);this.vy=(Math.sin(this.a)*forward+Math.cos(this.a)*side*.985)*Math.pow(.84,dt);this.x+=this.vx*dt;this.y+=this.vy*dt;const drifting=Math.abs(side)>24&&speed>48&&Math.abs(steer)>.2;if(drifting){this.combo=Math.min(8,this.combo+dt*.7);this.score+=Math.round(Math.abs(side)*dt*this.combo);this.skids.push({x:this.x,y:this.y,t:1});}else this.combo=Math.max(1,this.combo-dt*.9);this.skids.forEach(s=>s.t-=dt*.55);this.skids=this.skids.filter(s=>s.t>0);const dx=this.x-210,dy=this.y-160,outer=(dx*dx)/(185*185)+(dy*dy)/(125*125),inner=(dx*dx)/(78*78)+(dy*dy)/(45*45);if(outer>1||inner<1){this.x-=this.vx*dt;this.y-=this.vy*dt;this.vx*=-.32;this.vy*=-.32;this.combo=1;this.wallHits++;sndTick();if(this.wallHits>=6)this.over=true;}}
+  draw(ctx){const W=this.W,H=this.H;ctx.fillStyle='#052e2b';ctx.fillRect(0,0,W,H);ctx.fillStyle='#1f2937';ctx.beginPath();ctx.ellipse(210,160,190,130,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#064e3b';ctx.beginPath();ctx.ellipse(210,160,74,42,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#22d3ee';ctx.lineWidth=4;ctx.beginPath();ctx.ellipse(210,160,187,127,0,0,Math.PI*2);ctx.stroke();ctx.strokeStyle='#f472b6';ctx.beginPath();ctx.ellipse(210,160,78,46,0,0,Math.PI*2);ctx.stroke();ctx.strokeStyle='rgba(15,23,42,.45)';ctx.lineWidth=3;for(const s of this.skids){ctx.globalAlpha=s.t;ctx.beginPath();ctx.arc(s.x,s.y,3,0,Math.PI*2);ctx.stroke();}ctx.globalAlpha=1;drawCustomCar(ctx,this.x,this.y,this.a+Math.PI/2,1,this.paint,this.wheels);drawGameHud(ctx,W,'DRIFT CIRCUIT','SCORE '+this.score+'  ·  COMBO x'+this.combo.toFixed(1));ctx.fillStyle='#cbd5e1';ctx.font='11px system-ui';ctx.fillText('Hold ↑ and steer through the corners · 6 wall hits ends the run',12,58);if(!this.started)drawGameCard(ctx,W,H,'DRIFT CIRCUIT',['Throttle into a corner, then hold steer.','Long sideways slides build your combo.','Stay between the neon walls.'],'Press SPACE or tap to start');}
 }
 
 // ---- INIT ----

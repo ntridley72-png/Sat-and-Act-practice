@@ -823,11 +823,11 @@ const QUESTIONS_PER_TOKEN = 3;
 const RUN_GAMES = ["pacman", "snake", "pong", "tetris", "breakout", "flappy", "hopper", "doodle", "invaders", "dirtbike"];
 const RUN_MAX_SEC = 300;
 const GAME_LIST = [
-  { key: "pacman", name: "PAC-MAN" }, { key: "snake", name: "SNAKE" }, { key: "pong", name: "PONG" }, { key: "tetris", name: "TETRIS" },
+  { key: "pacman", name: "DOT MUNCHER" }, { key: "snake", name: "SNAKE" }, { key: "pong", name: "PONG" }, { key: "tetris", name: "LINE DROP" },
   { key: "watersort", name: "WATER SORT" }, { key: "doom", name: "ARENA PROTOCOL" }, { key: "pressurewash", name: "DETAILING BAY" },
   { key: "2048", name: "2048" }, { key: "breakout", name: "BREAKOUT" }, { key: "flappy", name: "SKY RUNNER" }, { key: "minesweeper", name: "MINESWEEPER" },
-  { key: "battleships", name: "BATTLESHIPS" }, { key: "connect4", name: "CONNECT 4" }, { key: "wordgame", name: "VOCAB SPRINT" }, { key: "sudoku", name: "SUDOKU" }, { key: "solitaire", name: "SOLITAIRE" },
-  { key: "hopper", name: "CROSSY HOPPER" }, { key: "doodle", name: "DOODLE JUMP" }, { key: "invaders", name: "SPACE INVADERS" }, { key: "blockblast", name: "BLOCK BLAST" },
+  { key: "battleships", name: "FLEET HUNTER" }, { key: "connect4", name: "FOUR IN A ROW" }, { key: "wordgame", name: "VOCAB SPRINT" }, { key: "sudoku", name: "SUDOKU" }, { key: "solitaire", name: "SOLITAIRE" },
+  { key: "hopper", name: "CROSSY HOPPER" }, { key: "doodle", name: "LEDGE LEAPER" }, { key: "invaders", name: "STAR DEFENDER" }, { key: "blockblast", name: "BLOCK FIT" },
   { key: "racing", name: "NEON RACING" }, { key: "drift", name: "DRIFT CIRCUIT" }, { key: "dirtbike", name: "DIRT BIKE TRAILS" },
   { key: "bubbles", name: "BUBBLE SHOOTER" }, { key: "wordscape", name: "WORD FINDER" }, { key: "stack", name: "STACK TOWER" }, { key: "blackjack", name: "BLACKJACK" },
   { key: "tictactoe", name: "TIC-TAC-TOE" }
@@ -1371,6 +1371,8 @@ function render() {
 function showScreen(id) { ["screen-start", "screen-test", "screen-results", "screen-college", "screen-subjects", "screen-scholarships"].forEach((s) => { $(s).style.display = s === id ? "block" : "none"; });
   document.body.classList.toggle("practice-test-active", id === "screen-test");
   if (window.FunSatAds && typeof window.FunSatAds.setPracticeMode === "function") window.FunSatAds.setPracticeMode(id === "screen-test");
+  // Slots inside this screen were skipped while it was hidden; mount them now.
+  if (id !== "screen-test" && window.FunSatAds) window.FunSatAds.mount();
   const practiceActive = id === "screen-start" || id === "screen-test" || id === "screen-results";
   $("btnPractice")?.classList.toggle("active",practiceActive);
   $("btnSubjectPractice")?.classList.toggle("active",id==="screen-subjects");
@@ -4091,7 +4093,7 @@ class Snake {
   }
 }
 
-// ---- PACMAN ----
+// ---- DOT MUNCHER ----
 const MAZE = [
   "###################",
   "#.O#.......#.......#",
@@ -4120,7 +4122,7 @@ const MAZE_W = 19, MAZE_H = 21;
 class PacMan {
   constructor(canvas, arcade) {
     this.canvas = canvas; this.ctx = canvas.getContext('2d'); this.arcade = arcade;
-    this.name = 'Pac-Man'; this.key = 'pacman'; this.score = 0; this.over = false; this.started = false;
+    this.name = 'Dot Muncher'; this.key = 'pacman'; this.score = 0; this.over = false; this.started = false;
     this.T = 22; this.W = MAZE_W * this.T; this.H = MAZE_H * this.T;
     this.reset();
   }
@@ -4384,7 +4386,7 @@ class PacMan {
         });
       }
     });
-    // Pac-Man: solid yellow wedge facing his direction
+    // Solid yellow wedge facing the direction of travel
     const pacX = (this.px + this.t) * T + T / 2, pacY = (this.py + this.t) * T + T / 2, r = T / 2 - 0.5;
     const d = this.dir || { x: 1, y: 0 };
     const ang = Math.atan2(d.y || 0, d.x === undefined ? 1 : d.x);
@@ -4412,7 +4414,7 @@ class PacMan {
   }
 }
 
-// ---- TETRIS ----
+// ---- LINE DROP ----
 const TETROMINOES = {
   I: { color: '#00f0f0', cells: [[0,1],[1,1],[2,1],[3,1]] },
   O: { color: '#f0f000', cells: [[1,0],[2,0],[1,1],[2,1]] },
@@ -4426,7 +4428,7 @@ const TETRIS_TYPES = Object.keys(TETROMINOES);
 class Tetris {
   constructor(canvas, arcade) {
     this.canvas = canvas; this.ctx = canvas.getContext('2d'); this.arcade = arcade;
-    this.name = 'Tetris'; this.key = 'tetris'; this.score = 0; this.over = false; this.started = false;
+    this.name = 'Line Drop'; this.key = 'tetris'; this.score = 0; this.over = false; this.started = false;
     this.W = 420; this.H = 300;
     this.cols = 10; this.rows = 15; this.cell = 18;
     this.boardX = 8; this.boardY = 28;
@@ -4546,7 +4548,7 @@ class Tetris {
     panel(by + 146, 52, 'LEVEL  LINES');
     ctx.fillText(String(this.level).padStart(2, '0') + '     ' + String(this.lines).padStart(3, '0'), sx + 8, by + 188);
     ctx.fillStyle = '#fff'; ctx.font = 'bold 14px "Courier New", monospace'; ctx.textAlign = 'center';
-    ctx.fillText('TETRIS', bx + this.cols * c / 2, 18);
+    ctx.fillText('LINE DROP', bx + this.cols * c / 2, 18);
     ctx.textAlign = 'start';
   }
 }
@@ -5290,7 +5292,7 @@ class Minesweeper {
   }
 }
 
-// ---- BATTLESHIPS VS CPU ----
+// ---- FLEET HUNTER VS CPU ----
 class Battleships {
   static SIZE = 10;
   static CELL = 22;
@@ -5300,7 +5302,7 @@ class Battleships {
   ];
   constructor(canvas, arcade) {
     this.canvas = canvas; this.arcade = arcade;
-    this.name = 'Battleships'; this.key = 'battleships'; this.W = 740; this.H = 560; this.smooth = true;
+    this.name = 'Fleet Hunter'; this.key = 'battleships'; this.W = 740; this.H = 560; this.smooth = true;
     this.reset();
   }
   reset(round) {
@@ -5538,7 +5540,7 @@ class Battleships {
     const bg = ctx.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#0b1a2e'); bg.addColorStop(1, '#07101d');
     ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
     const best = Math.max((profile.highScores && profile.highScores.battleships) || 0, this.score);
-    drawGameHud(ctx, W, 'BATTLESHIPS', 'ROUND ' + this.round + '  ·  SCORE ' + this.score + '  ·  BEST ' + best);
+    drawGameHud(ctx, W, 'FLEET HUNTER', 'ROUND ' + this.round + '  ·  SCORE ' + this.score + '  ·  BEST ' + best);
     ctx.fillStyle = '#94a3b8'; ctx.font = '700 12px Inter, system-ui, sans-serif';
     ctx.fillText('YOUR FLEET', 24, 100);
     ctx.fillText('OPPONENT WATERS', W - 24 - Battleships.CELL * Battleships.SIZE, 100);
@@ -5593,7 +5595,7 @@ class Battleships {
 class ConnectFour {
   constructor(canvas, arcade) {
     this.canvas = canvas; this.arcade = arcade;
-    this.name = 'Connect 4'; this.key = 'connect4'; this.score = 0; this.over = false; this.started = false;
+    this.name = 'Four in a Row'; this.key = 'connect4'; this.score = 0; this.over = false; this.started = false;
     this.W = 520; this.H = 500; this.smooth = true;
     this.reset(1);
   }
@@ -5712,7 +5714,7 @@ class ConnectFour {
     const W = this.W, H = this.H, now = performance.now();
     const bg = ctx.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#111c2e'); bg.addColorStop(1, '#0a111f');
     ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-    drawGameHud(ctx, W, 'CONNECT 4', 'LEVEL ' + this.level + '  ·  SCORE ' + this.score);
+    drawGameHud(ctx, W, 'FOUR IN A ROW', 'LEVEL ' + this.level + '  ·  SCORE ' + this.score);
     const g = this.geo();
     rrPath(ctx, g.x - 8, g.y - 8, 7 * g.cell + 16, 6 * g.cell + 16, 12); ctx.fillStyle = '#1d4ed8'; ctx.fill();
     rrPath(ctx, g.x - 8, g.y - 8, 7 * g.cell + 16, 6 * g.cell + 16, 12); ctx.strokeStyle = 'rgba(147,197,253,0.5)'; ctx.stroke();
@@ -5743,7 +5745,7 @@ class ConnectFour {
       ctx.font = '800 24px Inter, system-ui, sans-serif'; ctx.fillText(this.roundFlash, W / 2, H / 2); ctx.textAlign = 'start';
     }
     if (!this.started) drawGameCard(ctx, W, H, 'HOW TO PLAY', [
-      '1. You are red; the CPU is yellow. Connect 4 discs in a row to win.',
+      '1. You are red; the CPU is yellow. Line up four discs in a row to win.',
       '2. Click a column, or use ← → then ↓ / SPACE to drop.',
       '3. Discs fall to the lowest open slot in the column.',
       '4. Win a round to score and face a stronger CPU next level.',
@@ -6371,11 +6373,11 @@ class StackTower {
   }
 }
 
-// ---- DOODLE JUMPER ----
+// ---- LEDGE LEAPER ----
 class Doodle {
   constructor(canvas, arcade) {
     this.canvas = canvas; this.arcade = arcade;
-    this.name = 'Doodle Jump'; this.key = 'doodle'; this.score = 0; this.over = false; this.started = false;
+    this.name = 'Ledge Leaper'; this.key = 'doodle'; this.score = 0; this.over = false; this.started = false;
     this.W = 480; this.H = 600; this.smooth = true; this.runGame = true; this.swipeable = true;
     this.reset();
   }
@@ -6432,7 +6434,7 @@ class Doodle {
     ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.arc(-4.4, -4, 1.9, 0, Math.PI * 2); ctx.arc(5.6, -4, 1.9, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = '#166534'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, p.r * 0.7, 0.4, Math.PI - 0.4); ctx.stroke();
     ctx.restore();
-    drawGameHud(ctx, W, 'DOODLE JUMP', 'HEIGHT ' + this.score + 'm');
+    drawGameHud(ctx, W, 'LEDGE LEAPER', 'HEIGHT ' + this.score + 'm');
     if (!this.started) drawGameCard(ctx, W, H, 'HOW TO PLAY', [
       '1. You bounce automatically. Steer left/right with the arrow keys, A/D, or the mouse.',
       '2. Land on platforms to bounce back up — falling past the bottom ends the run.',
@@ -6812,7 +6814,7 @@ class TicTacToe {
   }
 }
 
-// ---- BLOCK BLAST ----
+// ---- BLOCK FIT ----
 const BLAST_SHAPES = [
   [[0, 0]], [[0, 0], [0, 1]], [[0, 0], [1, 0]], [[0, 0], [0, 1], [0, 2]], [[0, 0], [1, 0], [2, 0]],
   [[0, 0], [0, 1], [1, 0], [1, 1]], [[0, 0], [0, 1], [0, 2], [1, 0]], [[0, 0], [0, 1], [1, 1], [1, 2]],
@@ -6823,7 +6825,7 @@ const BLAST_SHAPES = [
 class BlockBlast {
   constructor(canvas, arcade) {
     this.canvas = canvas; this.arcade = arcade;
-    this.name = 'Block Blast'; this.key = 'blockblast'; this.score = 0; this.over = false; this.started = false;
+    this.name = 'Block Fit'; this.key = 'blockblast'; this.score = 0; this.over = false; this.started = false;
     this.W = 520; this.H = 560; this.smooth = true;
     this.reset();
   }
@@ -6873,7 +6875,7 @@ class BlockBlast {
     const W = this.W, H = this.H, now = performance.now(), n = this.n, cell = this.cell;
     const bg = ctx.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#131c31'); bg.addColorStop(1, '#0a1020');
     ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-    drawGameHud(ctx, W, 'BLOCK BLAST', 'SCORE ' + this.score + (this.combo > 1 ? '  ·  COMBO x' + this.combo : ''));
+    drawGameHud(ctx, W, 'BLOCK FIT', 'SCORE ' + this.score + (this.combo > 1 ? '  ·  COMBO x' + this.combo : ''));
     rrPath(ctx, this.ox - 6, this.oy - 6, n * cell + 12, n * cell + 12, 12); ctx.fillStyle = 'rgba(2,6,23,0.5)'; ctx.fill();
     for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
       const x = this.ox + c * cell + 2, y = this.oy + r * cell + 2, s = cell - 4, v = this.grid[r][c];
@@ -7026,7 +7028,7 @@ class BubbleShooter {
   }
 }
 
-// ---- SPACE INVADERS ----
+// ---- STAR DEFENDER ----
 // ---- Pixel water gun (shared by the shooter games) ----
 const WATER_GUN = [
   "....DGGD....",
@@ -7062,7 +7064,7 @@ function drawWaterDrop(ctx, x, y, r) {
 class Invaders {
   constructor(canvas, arcade) {
     this.canvas = canvas; this.arcade = arcade;
-    this.name = 'Space Invaders'; this.key = 'invaders'; this.score = 0; this.over = false; this.started = false;
+    this.name = 'Star Defender'; this.key = 'invaders'; this.score = 0; this.over = false; this.started = false;
     this.W = 620; this.H = 480; this.smooth = true; this.runGame = true;
     this.reset();
   }
@@ -7117,7 +7119,7 @@ class Invaders {
     ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = 'rgba(226,232,240,0.75)';
     this.stars.forEach((s) => ctx.fillRect(s.x, (s.y + now * 12 * s.s) % H, s.s, s.s));
-    drawGameHud(ctx, W, 'SPACE INVADERS', 'SCORE ' + this.score + '  ·  WAVE ' + this.wave + '  ·  LIVES ' + Math.max(0, this.lives));
+    drawGameHud(ctx, W, 'STAR DEFENDER', 'SCORE ' + this.score + '  ·  WAVE ' + this.wave + '  ·  LIVES ' + Math.max(0, this.lives));
     const blink = Math.floor(now * 2) % 2 === 0;
     this.aliens.forEach((a) => {
       if (!a.alive) return;

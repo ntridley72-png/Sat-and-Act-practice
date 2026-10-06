@@ -65,7 +65,14 @@
   const PREVIEW_SIZES = {
     "home-sidebar": [300, 250, "Sidebar 300x250"],
     "article-top": [728, 250, "In-article (fluid)"],
-    "article-bottom": [728, 280, "Responsive 728x280"]
+    "article-bottom": [728, 280, "Responsive 728x280"],
+    "article-mid": [728, 250, "In-article (fluid)"],
+    "anchor": [728, 90, "Sticky anchor 728x90"],
+    "results-top": [728, 250, "Results 728x250"],
+    "college-list": [728, 250, "In-feed (fluid)"],
+    "scholarships-list": [728, 250, "In-feed (fluid)"],
+    "subjects-list": [728, 250, "In-feed (fluid)"],
+    "arcade-menu": [300, 250, "Arcade menu 300x250"]
   };
 
   function renderPlaceholder(host, name) {
@@ -85,11 +92,43 @@
     return true;
   }
 
+  // The sticky anchor is the one unit that follows the reader, so a dismissal has
+  // to stick too. Session scope, not local: it clears on a new visit but never
+  // nags within one. Storage can throw in private mode, so every access is guarded.
+  const ANCHOR_DISMISSED = "funsat.anchorDismissed";
+
+  function anchorDismissed() {
+    try { return sessionStorage.getItem(ANCHOR_DISMISSED) === "1"; } catch (error) { return false; }
+  }
+
+  function addAnchorDismiss(host) {
+    const close = document.createElement("button");
+    close.type = "button";
+    close.className = "sponsor-dismiss";
+    close.setAttribute("aria-label", "Close ad");
+    close.textContent = "\u00d7";
+    close.addEventListener("click", () => {
+      host.remove();
+      try { sessionStorage.setItem(ANCHOR_DISMISSED, "1"); } catch (error) {}
+    });
+    host.appendChild(close);
+  }
+
   function mount() {
     document.querySelectorAll("[data-ad-slot]").forEach((host) => {
       if (host.dataset.adMounted) return;
-      host.dataset.adMounted = "true";
       const name = host.dataset.adSlot;
+      const isAnchor = host.classList.contains("sponsor-anchor");
+      if (isAnchor && anchorDismissed()) { host.remove(); return; }
+      // Every app screen starts display:none. An adsbygoogle unit pushed while its
+      // container is hidden measures zero width, comes back unfilled and does not
+      // retry, so leave the slot unmounted until its screen is actually laid out.
+      // showScreen calls mount() again on each switch. The slot itself is always
+      // display:none at this point (it ships hidden), so the container is what
+      // gets measured.
+      const box = host.parentElement;
+      if (box && !box.offsetWidth && !box.getClientRects().length) return;
+      host.dataset.adMounted = "true";
       const label = document.createElement("span");
       label.className = "sponsor-label";
       label.textContent = "Sponsored";
@@ -101,7 +140,10 @@
           : config.provider === "adsense"
             ? renderAdSense(host, (config.slots || {})[name])
             : false;
+      if (rendered && isAnchor) addAnchorDismiss(host);
       host.hidden = !rendered;
+      // An unfilled anchor would otherwise hold a fixed strip of empty page.
+      if (!rendered && isAnchor) host.remove();
     });
   }
 

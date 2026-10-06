@@ -116,7 +116,7 @@
     return all.map((x) => ({ x, st: statsFor(x.key) })).filter((e) => e.st && e.st.r + e.st.w >= 4).sort((a, b) => a.st.accuracy - b.st.accuracy).slice(0, 4);
   }
   function renderSubjectsScreen() {
-    const host = $id("screen-subjects");
+    const host = $id("subjectsBody") || $id("screen-subjects");
     if (!host) return;
     refreshInventory();
     const byDomain = itemsFor();
@@ -136,6 +136,7 @@
       }).join("") + "</div></section>").join("") : '<p class="small muted">No questions available for this section yet.</p>') +
       '<div class="subject-start"><div class="small muted">' + (selectedItem ? esc(selectedItem.skill) + " · " + Math.min(pick.length, selectedItem.ids.length) + " question set" : "Pick a skill to begin") + '</div><button type="button" id="subjectStartBtn"' + (selectedItem ? "" : " disabled") + ">Start subject drill →</button></div>";
     wireSubjects();
+    if (window.FunSatAds) window.FunSatAds.mount();
   }
   function wireSubjects() {
     const host = $id("screen-subjects");

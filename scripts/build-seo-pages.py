@@ -18,8 +18,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from seo_common import (ORIGIN, ROOT, SITE_NAME, STATES, TODAY, breadcrumbs, e,
-                        faq_schema, load_colleges, load_scholarships, money,
-                        num, page, pct, slugify, write)
+                        faq_schema, inject_ads, inject_fonts, load_colleges, load_scholarships,
+                        money, num, page, pct, slugify, write)
 
 HOME = ("Home", "/")
 
@@ -92,6 +92,8 @@ def college_page(c, data):
                      ("ACT 75th percentile", str(c["ar75"]))]
             if c.get("ar50"):
                 rows.append(("ACT midpoint (estimated)", str(c["ar50"])))
+        if c.get("satAvg"):
+            rows.append(("Average SAT of enrolled students", str(c["satAvg"])))
         if c.get("test"):
             rows.append(("Test policy", e(str(c["test"]))))
         scores += table(rows, ("Measure", "Score"))
@@ -131,6 +133,8 @@ def college_page(c, data):
         ("Students receiving Pell grants", pct(c.get("pell"))),
         ("Students taking federal loans", pct(c.get("loan"))),
         ("Median federal loan debt at graduation", money(c.get("debt"))),
+        ("Median family income of students", money(c.get("fam"))),
+        ("Federal loan default rate", pct(c.get("cdr"))),
     ], ("Measure", "Amount"))
     if c.get("np"):
         cost += (f"<p>Net price is the number that matters: {money(c['np'])} is what a typical "
@@ -144,7 +148,22 @@ def college_page(c, data):
         ("First-year retention", pct(c.get("ret"))),
         ("Median earnings 10 years after entry", money(c.get("ern"))),
         ("Students who are first-generation", pct(c.get("fg"))),
+        ("Graduation rate, Pell grant recipients", pct(c.get("gpell"))),
     ], ("Measure", "Value"))
+
+    if c.get("gpell") and c.get("gr"):
+        gap = c["gr"] - c["gpell"]
+        if abs(gap) >= 1:
+            worse = gap > 0
+            out += (f"<p>Students on Pell grants graduate at {pct(c['gpell'])}, "
+                    f"{abs(gap):.0f} points {'below' if worse else 'above'} the "
+                    f"{pct(c['gr'])} rate for the class as a whole. That gap is a fair proxy for "
+                    f"how well a college supports students who arrive with less money behind "
+                    f"them, and few colleges publish it prominently.</p>")
+        else:
+            out += (f"<p>Students on Pell grants graduate at {pct(c['gpell'])}, essentially "
+                    f"level with the {pct(c['gr'])} rate for the class as a whole &mdash; a sign "
+                    f"the college supports lower-income students about as well as everyone else.</p>")
 
     # --- majors
     majors = ""
@@ -203,6 +222,7 @@ def college_page(c, data):
         f'<a href="/colleges/{o["slug"]}/">{e(o["n"])}</a>' for o in c.get("_related", []))
     links = (f'<div class="glinks">'
              f'<a href="/colleges/{slugify(state)}/">Colleges in {e(state)}</a>'
+             f'<a href="/college-costs/{slugify(state)}/">What college costs in {e(state)}</a>'
              f'<a href="/colleges/">All colleges</a>'
              f'<a href="/guides/what-is-a-good-sat-score/">What is a good SAT score?</a>'
              f'<a href="/guides/college-admissions-chances/">Admissions chances</a>'
@@ -256,6 +276,7 @@ def state_hub(state, cols):
             f'<div class="gcard"><p>See how your own score compares against every school on '
             f'this list.</p><a class="cta" href="/">Take a free practice test &rarr;</a></div>'
             f'<div class="glinks"><a href="/colleges/">All colleges</a>'
+            f'<a href="/college-costs/{slugify(state)}/">What college costs in {e(state)}</a>'
             f'<a href="/guides/what-is-a-good-sat-score/">What is a good SAT score?</a>'
             f'<a href="/guides/">Study guides</a></div>')
     return path, page(
@@ -424,6 +445,7 @@ def scholarships_hub(items):
 
 # ------------------------------------------------------------------ guides
 
+
 GUIDE_TITLES = {}
 
 
@@ -444,14 +466,7 @@ def rewrite_guides(out):
         html_text = re.sub(r'(<meta property="og:url" content=")[^"]*(")', rf'\g<1>{ORIGIN}{path}\g<2>', html_text)
         html_text = re.sub(r'("mainEntityOfPage":")[^"]*(")', rf'\g<1>{ORIGIN}{path}\g<2>', html_text)
 
-        if "FUNSAT_ADS" not in html_text:
-            html_text = html_text.replace("</head>",
-                '<script>window.FUNSAT_ADS=' + '{provider:"adsense",client:"ca-pub-7330416749956065",childDirected:true,slots:{"article-top":{id:"4774752824",format:"fluid",layout:"in-article"},"article-bottom":"2337300905"}}' + ';</script>\n'
-                '<script defer src="/ads.js"></script>\n</head>', 1)
-            html_text = html_text.replace('<p class="gfoot">',
-                '<div class="sponsor-slot" data-ad-slot="article-bottom" hidden></div>\n<p class="gfoot">', 1)
-            html_text = html_text.replace('</table>',
-                '</table><div class="sponsor-slot" data-ad-slot="article-top" hidden></div>', 1)
+        html_text = inject_fonts(inject_ads(html_text))
 
         m = re.search(r"<h1>(.*?)</h1>", html_text, re.S)
         h1 = re.sub(r"<[^>]+>", "", m.group(1)).strip() if m else slug
@@ -470,6 +485,353 @@ def rewrite_guides(out):
     # guide.css lives alongside the guides and is referenced absolutely.
     write(out / "guides" / "guide.css", (ROOT / "guides" / "guide.css").read_text(encoding="utf8"))
     return paths
+
+
+# ------------------------------------------------------------ arcade games
+# "<game> unblocked" is what students search from a school Chromebook. The games
+# are real and already on the site, so these are genuine pages about genuine
+# content rather than doorways: each one carries the actual controls and rules
+# pulled straight from the app's own catalogue.
+
+GAME_RE = re.compile(r'\{\s*key:\s*"([^"]+)",\s*name:\s*"([^"]+)"\s*\}')
+KV_RE = re.compile(r'(?:"([a-z0-9]+)"|([a-z0-9]+)):\s*"([^"]+)"')
+RULE_RE = re.compile(r'\n\s*(?:"([a-z0-9]+)"|([a-z0-9]+)):\s*"((?:[^"\\]|\\.)*)"')
+
+
+def load_games():
+    """Read the arcade catalogue out of app.js so these pages can never drift
+    from the games the site actually ships."""
+    src = (ROOT / "app.js").read_text(encoding="utf8")
+
+    def block(name, close):
+        i = src.find(f"const {name}")
+        return src[i:src.find(close, i) + 1]
+
+    genres, rules = {}, {}
+    for a, b, c in KV_RE.findall(block("GAME_GENRES", "};")):
+        genres[a or b] = c
+    for a, b, c in RULE_RE.findall(block("GAME_RULES", "\n};")):
+        rules[a or b] = c.replace('\\"', '"')
+    out = []
+    for key, name in GAME_RE.findall(block("GAME_LIST", "];")):
+        out.append({"key": key, "name": name.title() if name.isupper() else name,
+                    "raw": name, "slug": slugify(name),
+                    "genre": genres.get(key, "Arcade"), "rule": rules.get(key, "")})
+    return out
+
+
+WHY_UNBLOCKED = (
+    "<h2>Why these work at school</h2>"
+    "<p>Every game here runs in the browser tab you already have open. There is nothing to "
+    "install, no plugin, no Flash, and no separate games domain to reach &mdash; which is why they "
+    "keep working on a managed school Chromebook where the usual gaming sites do not. They are "
+    "part of a study site, so the arcade sits alongside the practice tests rather than replacing "
+    "them.</p>"
+    "<p>Game time is earned: answering SAT and ACT practice questions unlocks arcade credits. "
+    "That is the trade &mdash; the break is free, but it is attached to the work.</p>")
+
+
+def game_page(g, others):
+    path = f"/unblocked-games/{g['slug']}/"
+    name = g["name"]
+    title = f"{name} Unblocked \u2014 Play Free in Your Browser | {SITE_NAME}"
+    if len(title) > 75:
+        title = f"{name} Unblocked \u2014 Free Browser Game | {SITE_NAME}"
+    description = (f"Play {name} unblocked, free and in your browser \u2014 no download and no "
+                   f"install. {g['rule'][:110]}").strip()[:300]
+
+    siblings = [o for o in others if o["genre"] == g["genre"] and o["key"] != g["key"]][:6]
+    sib_html = "".join(f'<li><a href="/unblocked-games/{o["slug"]}/">{e(o["name"])}</a></li>'
+                       for o in siblings)
+
+    faqs = [
+        (f"Is {name} free to play?",
+         f"Yes. {name} runs free in the browser on {SITE_NAME}. There is no download, no install "
+         f"and no account needed to play."),
+        (f"How do you play {name}?",
+         g["rule"] or f"{name} runs in the browser; the controls are shown on the start screen."),
+        (f"Does {name} work on a school Chromebook?",
+         f"It runs in a normal browser tab with no plugin or download, so it works on a managed "
+         f"Chromebook the same way any other web page does. Whether a particular network allows "
+         f"this site is set by that school, not by us."),
+    ]
+
+    body = (f'<nav class="gnav"><a href="/">&larr; {SITE_NAME}</a>'
+            f'<a href="/unblocked-games/">All games</a></nav>'
+            f'<p class="gkicker">{e(g["genre"])} &middot; Unblocked games</p>'
+            f'<h1>{e(name)} Unblocked</h1>'
+            f'<p>{e(name)} is one of the {len(others) + 1} browser games in the {SITE_NAME} '
+            f'arcade. It loads in the page, needs no download, and runs on a school Chromebook '
+            f'as readily as on a laptop.</p>'
+            f'<h2>How to play {e(name)}</h2>'
+            f'<p>{e(g["rule"])}</p>'
+            f'{table([("Genre", e(g["genre"])), ("Players", "One"), ("Download", "None"),
+                      ("Cost", "Free"), ("Runs on", "Any modern browser")], ("Detail", "Value"))}'
+            f'{WHY_UNBLOCKED}'
+            f'<div class="gcard"><h2>Play {e(name)} now</h2>'
+            f'<p>Open the arcade, pick {e(name)} from the cabinet, and earn credits by answering '
+            f'practice questions between runs.</p>'
+            f'<a class="cta" href="/">Open the arcade &rarr;</a></div>'
+            + (f'<h2>More {e(g["genre"].lower())} games</h2><ul>{sib_html}</ul>' if sib_html else "")
+            + '<h2>Frequently asked questions</h2>'
+            + "".join(f"<h3>{e(q)}</h3><p>{e(a)}</p>" for q, a in faqs)
+            + '<div class="glinks">'
+              '<a href="/unblocked-games/">All unblocked games</a>'
+              '<a href="/">Free SAT practice</a>'
+              '<a href="/guides/how-to-stop-procrastinating/">How to stop procrastinating</a>'
+              '<a href="/guides/how-to-build-a-study-schedule/">Build a study schedule</a></div>')
+
+    schema = [breadcrumbs([HOME, ("Unblocked games", "/unblocked-games/"), (name, path)]),
+              faq_schema(faqs)]
+    return path, page(path=path, title=title, description=description, body=body, schema=schema)
+
+
+def games_hub(games):
+    path = "/unblocked-games/"
+    title = f"Unblocked Games \u2014 {len(games)} Free Browser Games, No Download | {SITE_NAME}"
+    description = (f"{len(games)} free unblocked browser games that run on a school Chromebook "
+                   f"with no download: puzzle, racing, action, word and classic arcade. Earn "
+                   f"game time by answering SAT and ACT practice questions.")
+
+    by_genre = {}
+    for g in games:
+        by_genre.setdefault(g["genre"], []).append(g)
+    sections = ""
+    for genre in sorted(by_genre):
+        items = "".join(
+            f'<li><a href="/unblocked-games/{g["slug"]}/">{e(g["name"])}</a> '
+            f'&mdash; {e(g["rule"].split(".")[0])}.</li>'
+            for g in sorted(by_genre[genre], key=lambda x: x["name"]))
+        sections += f'<h2>{e(genre)}</h2><ul>{items}</ul>'
+
+    faqs = [
+        ("What are unblocked games?",
+         "Unblocked games are browser games that load as an ordinary web page, with no download, "
+         "plugin or separate games site to reach. That is why they keep working on managed school "
+         "devices where dedicated gaming domains are filtered."),
+        (f"How many games are there on {SITE_NAME}?",
+         f"There are {len(games)} browser games in the arcade, across puzzle, racing, action, "
+         f"word and classic arcade categories."),
+        ("Do the games cost anything?",
+         "No. Every game is free. Arcade credits are earned by answering SAT and ACT practice "
+         "questions rather than bought."),
+    ]
+
+    body = (f'<nav class="gnav"><a href="/">&larr; {SITE_NAME}</a>'
+            f'<a href="/guides/">Study guides</a></nav>'
+            f'<p class="gkicker">Unblocked games</p>'
+            f'<h1>Unblocked Games: {len(games)} Free Browser Games</h1>'
+            f'<p>Every game below runs in a browser tab. Nothing to download, nothing to install, '
+            f'and no separate gaming domain to reach &mdash; which is what keeps them working on a '
+            f'school Chromebook. They sit inside a free SAT and ACT practice site, and game time '
+            f'is unlocked by answering practice questions.</p>'
+            f'{sections}'
+            f'{WHY_UNBLOCKED}'
+            f'<div class="gcard"><h2>Earn your game time</h2>'
+            f'<p>Answer three practice questions, get an arcade credit. It is a reasonable trade '
+            f'and the practice is genuinely useful.</p>'
+            f'<a class="cta" href="/">Start practising &rarr;</a></div>'
+            + '<h2>Frequently asked questions</h2>'
+            + "".join(f"<h3>{e(q)}</h3><p>{e(a)}</p>" for q, a in faqs)
+            + '<div class="glinks">'
+              '<a href="/">Free SAT practice test</a>'
+              '<a href="/guides/">Study guides</a>'
+              '<a href="/sat-act-conversion/">SAT to ACT conversion</a></div>')
+
+    return path, page(path=path, title=title, description=description, body=body,
+                      schema=[breadcrumbs([HOME, ("Unblocked games", path)]), faq_schema(faqs)])
+
+
+# ------------------------------------------------------ college cost pages
+# Written for the parent rather than the applicant: what it costs, what comes
+# out the other end, and who actually graduates. Every figure is already in the
+# College Scorecard extract, so nothing here is invented or estimated.
+
+def _median(vals):
+    vals = sorted(v for v in vals if v)
+    if not vals:
+        return None
+    n = len(vals)
+    return vals[n // 2] if n % 2 else (vals[n // 2 - 1] + vals[n // 2]) / 2
+
+
+def cost_row(c):
+    return (f'<tr><th><a href="/colleges/{c["slug"]}/">{e(c["n"])}</a></th>'
+            f'<td>{money(c.get("np"))}</td><td>{pct(c.get("gr"))}</td>'
+            f'<td>{money(c.get("ern"))}</td></tr>')
+
+
+def cost_table(rows):
+    return ('<table class="gtable"><thead><tr><th>College</th><th>Avg. net price</th>'
+            '<th>Grad rate</th><th>Median earnings</th></tr></thead><tbody>'
+            + "".join(cost_row(c) for c in rows) + '</tbody></table>')
+
+
+def state_cost_page(state_name, cols, national):
+    slug = slugify(state_name)
+    path = f"/college-costs/{slug}/"
+    priced = [c for c in cols if c.get("np")]
+    med_np = _median([c.get("np") for c in priced])
+    med_in = _median([c.get("ti") for c in cols])
+    med_out = _median([c.get("to") for c in cols])
+    med_debt = _median([c.get("debt") for c in cols])
+    med_ern = _median([c.get("ern") for c in cols])
+    cheapest = sorted(priced, key=lambda c: c["np"])[:10]
+    best_earn = sorted([c for c in cols if c.get("ern")], key=lambda c: -c["ern"])[:8]
+
+    title = f"What College Costs in {state_name}: Net Price & Debt | {SITE_NAME}"
+    description = (f"The real cost of college in {state_name}: average net price "
+                   f"{money(med_np)}, median graduate debt {money(med_debt)}, and earnings ten "
+                   f"years on. Federal data for {len(cols)} four-year colleges.")[:300]
+
+    cmp_line = ""
+    if med_np and national.get("np"):
+        diff = med_np - national["np"]
+        cmp_line = (f" That is {money(abs(diff))} {'above' if diff > 0 else 'below'} the "
+                    f"{money(national['np'])} median across every college we track.")
+
+    faqs = [
+        (f"How much does college cost in {state_name}?",
+         f"Across the {len(cols)} four-year colleges we track in {state_name}, the median net "
+         f"price \u2014 what a typical first-year family actually pays after grant aid \u2014 is "
+         f"{money(med_np)}. Published tuition is {money(med_in)} in-state and {money(med_out)} "
+         f"out-of-state, but very few families pay the sticker price."),
+        (f"What is the cheapest college in {state_name}?",
+         f"By average net price, {cheapest[0]['n']} at {money(cheapest[0]['np'])} per year, "
+         f"according to the most recent federal data." if cheapest else
+         f"Net price is not reported for colleges in {state_name} in the current data."),
+        (f"How much debt do students leave {state_name} colleges with?",
+         f"The median federal loan debt at graduation is {money(med_debt)}. That covers federal "
+         f"loans only, so private and parent borrowing sits on top of it."),
+    ]
+
+    body = (f'<nav class="gnav"><a href="/">&larr; {SITE_NAME}</a>'
+            f'<a href="/college-costs/">All states</a></nav>'
+            f'<p class="gkicker">{e(state_name)} &middot; College costs</p>'
+            f'<h1>What College Actually Costs in {e(state_name)}</h1>'
+            f'<p>Sticker price is close to meaningless. The number that matters is <strong>net '
+            f'price</strong>: what a typical first-year family pays after grants and scholarships '
+            f'come off. Across the {len(cols)} four-year colleges we track in {e(state_name)}, '
+            f'the median net price is <strong>{money(med_np)}</strong>.{cmp_line}</p>'
+            f'<h2>The headline numbers</h2>'
+            f'{table([("Median net price (what families pay)", money(med_np)),
+                      ("Median published in-state tuition", money(med_in)),
+                      ("Median published out-of-state tuition", money(med_out)),
+                      ("Median federal loan debt at graduation", money(med_debt)),
+                      ("Median earnings 10 years after entry", money(med_ern)),
+                      ("Four-year colleges covered", str(len(cols)))], ("Measure", "Value"))}'
+            f'<h2>Lowest net price in {e(state_name)}</h2>'
+            f'<p>Ranked by what families actually pay, not by published tuition. Graduation rate '
+            f'and earnings are shown beside it, because a cheap college you do not finish is not '
+            f'a saving.</p>'
+            f'{cost_table(cheapest)}'
+            + (f'<h2>Strongest earnings ten years on</h2>'
+               f'<p>Median earnings of former students a decade after they first enrolled. It '
+               f'reflects the subjects a college teaches and who it admits as much as the '
+               f'teaching itself, so read it alongside cost rather than on its own.</p>'
+               f'{cost_table(best_earn)}' if best_earn else "")
+            + f'<h2>Questions worth asking before you pay</h2>'
+              f'<p>Ask every college on the list for its net price calculator and run it with your '
+              f'real numbers &mdash; the published average hides enormous variation by income. Ask '
+              f'what share of need it meets, whether aid is renewable for four years, and what the '
+              f'graduation rate is for students receiving Pell grants specifically. That last figure '
+              f'is on each of our college profiles and is the one most likely to be missing from a '
+              f'glossy brochure.</p>'
+            + f'<div class="gcard"><h2>Where does your child\'s score land?</h2>'
+              f'<p>Free adaptive SAT and ACT practice with an unofficial score estimate, then see '
+              f'how that score sits against the reported range at every college on your list.</p>'
+              f'<a class="cta" href="/">Start free practice &rarr;</a></div>'
+            + '<h2>Frequently asked questions</h2>'
+            + "".join(f"<h3>{e(q)}</h3><p>{e(a)}</p>" for q, a in faqs)
+            + f'<p class="muted"><small>Source: U.S. Department of Education College Scorecard. '
+              f'Net price is the average for first-year students receiving federal aid and varies '
+              f'sharply by family income. Figures can lag the current admissions cycle.</small></p>'
+            + f'<div class="glinks">'
+              f'<a href="/college-costs/">College costs by state</a>'
+              f'<a href="/colleges/{slug}/">Colleges in {e(state_name)}</a>'
+              f'<a href="/guides/fafsa-guide-for-beginners/">FAFSA guide</a>'
+              f'<a href="/scholarships/">Scholarship search</a>'
+              f'<a href="/guides/how-to-get-a-full-ride-scholarship/">Full-ride scholarships</a></div>')
+
+    return path, page(path=path, title=title, description=description, body=body, schema=[
+        breadcrumbs([HOME, ("College costs", "/college-costs/"), (state_name, path)]),
+        faq_schema(faqs)])
+
+
+def costs_hub(by_state, colleges):
+    path = "/college-costs/"
+    national = {"np": _median([c.get("np") for c in colleges]),
+                "debt": _median([c.get("debt") for c in colleges]),
+                "ern": _median([c.get("ern") for c in colleges]),
+                "gr": _median([c.get("gr") for c in colleges])}
+    title = f"What College Costs by State: Net Price, Debt & Earnings | {SITE_NAME}"
+    description = (f"Median net price, graduate debt and earnings for {len(colleges)} four-year "
+                   f"colleges, broken down by state. Federal data, written for parents working "
+                   f"out what a degree will actually cost.")
+
+    rows = []
+    for st_name in sorted(by_state):
+        cols = by_state[st_name]
+        rows.append(f'<tr><th><a href="/college-costs/{slugify(st_name)}/">{e(st_name)}</a></th>'
+                    f'<td>{money(_median([c.get("np") for c in cols]))}</td>'
+                    f'<td>{money(_median([c.get("debt") for c in cols]))}</td>'
+                    f'<td>{len(cols)}</td></tr>')
+    table_html = ('<table class="gtable"><thead><tr><th>State</th><th>Median net price</th>'
+                  '<th>Median debt</th><th>Colleges</th></tr></thead><tbody>'
+                  + "".join(rows) + '</tbody></table>')
+
+    faqs = [
+        ("What is net price and why does it matter more than tuition?",
+         "Net price is what a family actually pays after grants and scholarships are deducted. "
+         "Published tuition is a list price that a majority of students never pay, so comparing "
+         "colleges on tuition alone will mislead you."),
+        ("How much debt is normal for a college graduate?",
+         f"The median federal loan debt at graduation across the colleges we track is "
+         f"{money(national['debt'])}. This counts federal loans only; private and parent loans "
+         f"are additional and are not captured in federal reporting."),
+        ("Is an expensive college worth it?",
+         "Sometimes. Compare net price against graduation rate and median earnings ten years on, "
+         "all three of which are on every college profile here. A cheaper college with a much "
+         "lower graduation rate is often the worse financial decision."),
+    ]
+
+    body = (f'<nav class="gnav"><a href="/">&larr; {SITE_NAME}</a>'
+            f'<a href="/colleges/">All colleges</a></nav>'
+            f'<p class="gkicker">For parents &middot; College costs</p>'
+            f'<h1>What College Actually Costs, by State</h1>'
+            f'<p>If you are working out what a degree will cost your family, published tuition is '
+            f'the wrong number to start from. Most students do not pay it. The figure below is '
+            f'<strong>net price</strong> &mdash; the average a first-year family pays after grant '
+            f'aid &mdash; for {len(colleges)} four-year colleges, grouped by state.</p>'
+            f'<h2>The national picture</h2>'
+            f'{table([("Median net price", money(national["np"])),
+                      ("Median federal loan debt at graduation", money(national["debt"])),
+                      ("Median earnings 10 years after entry", money(national["ern"])),
+                      ("Median six-year graduation rate", pct(national["gr"]))],
+                     ("Measure", "Value"))}'
+            f'<p>Read those four together. Net price tells you the outlay, debt tells you what is '
+            f'borrowed to cover it, earnings tell you what tends to come back, and the graduation '
+            f'rate tells you how often the whole thing completes at all. A college that scores '
+            f'well on cost and badly on completion is not a bargain.</p>'
+            f'<h2>Cost by state</h2>'
+            f'{table_html}'
+            f'<div class="gcard"><h2>Start with the score</h2>'
+            f'<p>Aid and admission both move with test scores. Free adaptive SAT and ACT practice, '
+            f'an unofficial estimate, and a view of how it lands against each college\'s range.</p>'
+            f'<a class="cta" href="/">Start free practice &rarr;</a></div>'
+            + '<h2>Frequently asked questions</h2>'
+            + "".join(f"<h3>{e(q)}</h3><p>{e(a)}</p>" for q, a in faqs)
+            + '<p class="muted"><small>Source: U.S. Department of Education College Scorecard. '
+              'Medians are across the four-year colleges in our dataset, which covers larger and '
+              'better-known institutions rather than every college in the country.</small></p>'
+            + '<div class="glinks">'
+              '<a href="/colleges/">All college profiles</a>'
+              '<a href="/scholarships/">Scholarship search</a>'
+              '<a href="/guides/fafsa-guide-for-beginners/">FAFSA guide</a>'
+              '<a href="/guides/college-admissions-chances/">Admissions chances</a></div>')
+
+    return path, page(path=path, title=title, description=description, body=body,
+                      schema=[breadcrumbs([HOME, ("College costs", path)]), faq_schema(faqs)]), national
 
 
 # ----------------------------------------------------------------- sitemap
@@ -571,6 +933,27 @@ def main():
         write(out / p.lstrip("/") / "index.html", h)
         entries.append((p, "0.6", "monthly"))
 
+    p, h = conversion_page(colleges, data["concordance"], data)
+    write(out / p.lstrip("/") / "index.html", h)
+    entries.append((p, "0.9", "monthly"))
+
+    games = load_games()
+    p, h = games_hub(games)
+    write(out / p.lstrip("/") / "index.html", h)
+    entries.append((p, "0.8", "weekly"))
+    for g in games:
+        p, h = game_page(g, [o for o in games if o["key"] != g["key"]])
+        write(out / p.lstrip("/") / "index.html", h)
+        entries.append((p, "0.6", "monthly"))
+
+    p, h, national = costs_hub(by_state, colleges)
+    write(out / p.lstrip("/") / "index.html", h)
+    entries.append((p, "0.9", "monthly"))
+    for st_name, cols in sorted(by_state.items()):
+        p, h = state_cost_page(st_name, cols, national)
+        write(out / p.lstrip("/") / "index.html", h)
+        entries.append((p, "0.7", "monthly"))
+
     sat_scores = list(range(900, 1560, 10))
     act_scores = list(range(17, 37))
     for scores, test in ((sat_scores, "sat"), (act_scores, "act")):
@@ -596,6 +979,8 @@ def main():
     print(f"  scholarships: {len(items)} profiles + 1 hub")
     print(f"  guides: {len(GUIDE_TITLES)}")
     print(f"  score lookups: {len(sat_scores)} SAT + {len(act_scores)} ACT + 2 hubs")
+    print(f"  unblocked games: {len(games)} + 1 hub")
+    print(f"  college costs: {len(by_state)} states + 1 hub")
 
 
 
@@ -680,7 +1065,7 @@ def score_page(colleges, concordance, score, test):
             f'<p>A <strong>{score}</strong> out of {maxs} is {verdict} for test takers '
             f'nationally &mdash; approximately the <strong>{p}th percentile</strong>, meaning you '
             f'scored at or above roughly {p}% of students. It converts to {equiv} on the '
-            f'official concordance.</p>'
+            f'<a href="/sat-act-conversion/">official concordance</a>.</p>'
             f'<h2>What a {score} means for your college list</h2>'
             f'{table([("Approximate national percentile", f"{p}th"),
                       (f"Equivalent {'ACT' if test == 'sat' else 'SAT'} score",
@@ -723,7 +1108,8 @@ def score_page(colleges, concordance, score, test):
                f'{score - 10 if test == "sat" else score - 1} {label}</a>')
             + (f'<a href="{crumb_path}{score + 10 if test == "sat" else score + 1}/">'
                f'{score + 10 if test == "sat" else score + 1} {label}</a>')
-            + '<a href="/guides/what-is-a-good-sat-score/">What is a good SAT score?</a>'
+            + '<a href="/sat-act-conversion/">SAT to ACT conversion</a>'
+              '<a href="/guides/what-is-a-good-sat-score/">What is a good SAT score?</a>'
               '<a href="/guides/how-to-improve-your-sat-score/">How to improve your score</a>'
               '<a href="/colleges/">All colleges</a></div>')
 
@@ -737,6 +1123,200 @@ def score_page(colleges, concordance, score, test):
              f"four-year colleges we track."),
         ]),
     ])
+
+
+CONVERTER_JS = """
+(function(){
+  var MAP = window.FUNSAT_CONCORDANCE || {};
+  var acts = Object.keys(MAP).map(Number).sort(function(a,b){return a-b});
+  function satForAct(a){
+    var best = acts[0];
+    for (var i=0;i<acts.length;i++){ if (Math.abs(acts[i]-a) < Math.abs(best-a)) best = acts[i]; }
+    return MAP[String(best)];
+  }
+  function actForSat(s){
+    var best = acts[0], bd = Infinity;
+    for (var i=0;i<acts.length;i++){
+      var d = Math.abs(MAP[String(acts[i])] - s);
+      if (d < bd){ bd = d; best = acts[i]; }
+    }
+    return best;
+  }
+  function start(){
+    var sat = document.getElementById('convSat');
+    var act = document.getElementById('convAct');
+    var out = document.getElementById('convOut');
+    if (!sat || !act || !out) return;
+    var lock = false;
+    function say(msg){ out.textContent = msg; }
+    // An out-of-range entry is clamped in the field as well as in the maths, so
+    // the box never shows a number the answer below is not actually using.
+    function clamp(el, lo, hi){
+      if (el.value.trim() === '') return null;
+      var n = Number(el.value);
+      if (!isFinite(n)) return null;
+      var c = Math.max(lo, Math.min(hi, Math.round(n)));
+      if (c !== n) el.value = c;
+      return c;
+    }
+    function fromSat(){
+      if (lock) return; lock = true;
+      var v = clamp(sat, 400, 1600);
+      if (v === null) { act.value = ''; say('Enter an SAT total to see its ACT equivalent.'); }
+      else {
+        var a = actForSat(v);
+        act.value = a;
+        say('An SAT total of ' + v + ' is comparable to an ACT composite of ' + a + '.');
+      }
+      lock = false;
+    }
+    function fromAct(){
+      if (lock) return; lock = true;
+      var v = clamp(act, 1, 36);
+      if (v === null) { sat.value = ''; say('Enter an ACT composite to see its SAT equivalent.'); }
+      else {
+        var sv = satForAct(v);
+        sat.value = sv;
+        say('An ACT composite of ' + v + ' is comparable to an SAT total of ' + sv + '.');
+      }
+      lock = false;
+    }
+    sat.addEventListener('input', fromSat);
+    act.addEventListener('input', fromAct);
+    fromSat();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
+"""
+
+# ------------------------------------------------- SAT/ACT concordance page
+# "sat to act conversion" is a high-volume evergreen head term and a tool-shaped
+# intent, which is the kind a small site can win: the page answers the query
+# outright instead of competing on domain authority. The table is the official
+# ACT/College Board concordance we already carry for the score lookups.
+
+def conversion_page(colleges, concordance, data):
+    path = "/sat-act-conversion/"
+    title = f"SAT to ACT Conversion: Official Concordance Table | {SITE_NAME}"
+    description = ("Convert any SAT score to its ACT equivalent and back, using the official "
+                   "ACT/College Board concordance. Full table, instant converter, and which "
+                   "score to actually send to colleges.")
+
+    pairs = sorted(((int(a), sv) for a, sv in concordance["actToSat"].items()), reverse=True)
+    act_hi, act_lo = pairs[0][0], pairs[-1][0]
+
+    # Each row links out to the score lookup pages, which turns a flat reference
+    # table into the hub of the score cluster.
+    rows = []
+    for act, sat in pairs:
+        pc = percentile_for(sat)
+        sat_link = f'<a href="/sat-scores/{int(round(sat / 10) * 10)}/">{sat}</a>' if 900 <= sat <= 1550 else str(sat)
+        act_link = f'<a href="/act-scores/{act}/">{act}</a>' if 17 <= act <= 36 else str(act)
+        rows.append(f"<tr><th>{act_link}</th><td>{sat_link}</td><td>{pc}th</td></tr>")
+    table_html = ('<table class="gtable"><thead><tr><th>ACT composite</th>'
+                  '<th>SAT total</th><th>Approx. percentile</th></tr></thead>'
+                  '<tbody>' + "".join(rows) + '</tbody></table>')
+
+    # The converter is progressive enhancement: the table above answers the
+    # question with JavaScript off, and this just makes it instant.
+    converter = (
+        '<div class="gcard conv">'
+        '<h2>Convert a score</h2>'
+        '<div class="conv-row">'
+        '<label for="convSat">SAT total (400&ndash;1600)</label>'
+        '<input id="convSat" type="number" min="400" max="1600" step="10" value="1200" '
+        'inputmode="numeric" autocomplete="off">'
+        '</div>'
+        '<div class="conv-row">'
+        '<label for="convAct">ACT composite (1&ndash;36)</label>'
+        '<input id="convAct" type="number" min="1" max="36" step="1" value="25" '
+        'inputmode="numeric" autocomplete="off">'
+        '</div>'
+        '<p class="conv-out" id="convOut" role="status" aria-live="polite"></p>'
+        '</div>')
+
+    body = (f'<nav class="gnav"><a href="/">&larr; {SITE_NAME}</a>'
+            f'<a href="/sat-scores/">SAT score lookup</a></nav>'
+            f'<p class="gkicker">Score conversion</p>'
+            f'<h1>SAT to ACT Conversion</h1>'
+            f'<p>Colleges treat the SAT and the ACT as interchangeable, and they compare the two '
+            f'using a published <strong>concordance</strong> &mdash; a lookup table built by ACT '
+            f'and the College Board from students who sat both tests. It is not a prediction of '
+            f'what you would score on the other test. It answers one question only: what ACT '
+            f'score carries the same weight as this SAT score, and the reverse.</p>'
+            f'{converter}'
+            f'<h2>Official SAT to ACT concordance table</h2>'
+            f'<p>ACT composites from {act_hi} down to {act_lo}, with the SAT total each one '
+            f'corresponds to. Percentiles are approximate and shift each cohort.</p>'
+            f'{table_html}'
+            f'<h2>Which score should you actually send?</h2>'
+            f'<p>Convert both of your scores and send whichever sits higher against a college&rsquo;s '
+            f'own reported range &mdash; not whichever number looks bigger. A 1300 SAT and a 28 ACT '
+            f'are read as the same result, so the one that clears more of your list is the one worth '
+            f'submitting. Our {len(colleges)} college profiles print both ranges side by side.</p>'
+            f'<p>Two things the table will not tell you. Superscoring is set by each college, not by '
+            f'the concordance, so a college that superscores the SAT may not superscore the ACT. And '
+            f'converting a score never changes it: if you are near a cutoff, retaking the test you '
+            f'are stronger at beats hunting for a favourable conversion.</p>'
+            f'<div class="gcard"><h2>Not sure which test suits you?</h2>'
+            f'<p>Take a free adaptive practice test in both formats, get an unofficial score '
+            f'estimate for each, and compare them on the same scale.</p>'
+            f'<a class="cta" href="/">Start free practice &rarr;</a></div>'
+            f'<h2>Frequently asked questions</h2>'
+            + "".join(f"<h3>{e(q)}</h3><p>{e(a)}</p>" for q, a in CONVERSION_FAQS(concordance))
+            + f'<p class="muted"><small>Source: {e(concordance.get("source", "ACT and College Board official concordance"))}. '
+              f'Percentile estimates are our own and are labelled as estimates throughout. '
+              f'Concordance tables are updated rarely; confirm against '
+              f'<a href="{e(concordance.get("sourceUrl", "https://www.act.org/"))}" target="_blank" rel="noopener">'
+              f'the official ACT page</a> before relying on a borderline figure.</small></p>'
+            + '<div class="glinks">'
+              '<a href="/sat-scores/">SAT score lookup</a>'
+              '<a href="/act-scores/">ACT score lookup</a>'
+              '<a href="/guides/digital-sat-vs-act/">Digital SAT vs ACT</a>'
+              '<a href="/guides/what-is-a-good-sat-score/">What is a good SAT score?</a>'
+              '<a href="/colleges/">All colleges</a></div>')
+
+    extra = ('<style>'
+             '.conv-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:10px 0}'
+             '.conv-row label{flex:1 1 220px;min-width:0}'
+             '.conv-row input{width:120px;padding:9px 10px;font:inherit;'
+             'border:1px solid var(--ws-line);background:var(--ws-surface);color:var(--ws-ink)}'
+             '.conv-out{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--ws-line);'
+             'font-size:17px;line-height:1.5}'
+             '</style>\n'
+             '<script>window.FUNSAT_CONCORDANCE=' +
+             json.dumps({str(a): s for a, s in pairs}, separators=(",", ":")) + ';</script>\n'
+             '<script>' + CONVERTER_JS + '</script>\n')
+
+    schema = [
+        breadcrumbs([HOME, ("SAT to ACT conversion", path)]),
+        faq_schema(CONVERSION_FAQS(concordance)),
+    ]
+    return path, page(path=path, title=title, description=description, body=body,
+                      schema=schema, extra_head=extra)
+
+
+def CONVERSION_FAQS(concordance):
+    a2s = {int(a): sv for a, sv in concordance["actToSat"].items()}
+    return [
+        ("What ACT score is equivalent to a 1200 SAT?",
+         f"A 1200 SAT converts to roughly a {sat_to_act(concordance, 1200)} ACT composite on the "
+         f"official concordance. Colleges treat the two as equivalent."),
+        ("What SAT score is equivalent to a 30 ACT?",
+         f"A 30 ACT corresponds to about a {a2s.get(30)} SAT total."),
+        ("Is the SAT to ACT conversion exact?",
+         "No. The concordance is a statistical relationship drawn from students who took both "
+         "tests, so it tells you how colleges compare the two scores. It does not predict what "
+         "you would actually score on the other test."),
+        ("Should I send my SAT or my ACT score?",
+         "Convert both, then compare each against the reported range of the colleges on your "
+         "list. Send the one that sits higher within those ranges rather than the one with the "
+         "larger raw number."),
+        ("Do colleges prefer the SAT or the ACT?",
+         "Neither. U.S. colleges that consider test scores accept both and use the concordance "
+         "to compare them, so the choice is about which format suits you."),
+    ]
 
 
 def score_hub(scores, test):

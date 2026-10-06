@@ -96,7 +96,7 @@
   }
 
   function renderScholarshipScreen() {
-    const host = $id("screen-scholarships");
+    const host = $id("scholarshipBody") || $id("screen-scholarships");
     if (!host) return;
     const c = sp();
     host.innerHTML =
@@ -115,6 +115,7 @@
       '<div class="scholar-list" id="scholarResults">' + resultsHtml() + "</div>" +
       '<p class="small muted college-foot">Scholarship catalog is an original app list of real programs; it is not affiliated with any provider. Amounts and deadlines are typical values that change every cycle. Need-based programs usually also require the FAFSA. <a href="https://studentaid.gov/" target="_blank" rel="noopener">FAFSA</a> · <a href="https://bigfuture.collegeboard.org/pay-for-college" target="_blank" rel="noopener">College Board paying for college</a>.</p>';
     updateCount();
+    if (window.FunSatAds) window.FunSatAds.mount();
   }
   function updateCount() {
     const el = $id("scholarCount");

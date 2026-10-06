@@ -35,6 +35,86 @@ STATES = {
 
 e = html.escape
 
+# ----------------------------------------------------------------------- ads
+# One definition of the content-page ad setup, shared by page(), the guide
+# rewriter and the landing-page copier so the three never drift apart.
+#
+# Slot ids come from the AdSense account. An empty id makes ads.js leave that
+# slot hidden, so an unconfigured unit degrades silently rather than reserving
+# blank space. Fill ARTICLE_MID and ANCHOR in once their units exist.
+# The @font-face rules live in workspace.css, so a browser only discovers the
+# font files after that stylesheet parses. Preloading the text face moves it onto
+# the critical path and keeps LCP from waiting a round trip. Only the variable
+# text face is preloaded: the mono cuts carry figures, which can swap in late.
+FONT_PRELOAD = (
+    '<link rel="preload" as="font" type="font/woff2" '
+    'href="/fonts/archivo-400-700.woff2" crossorigin>'
+)
+
+
+AD_CLIENT = "ca-pub-7330416749956065"
+AD_SLOTS = {
+    "article-top": '{id:"4774752824",format:"fluid",layout:"in-article"}',
+    "article-mid": '{id:"4774752824",format:"fluid",layout:"in-article"}',
+    "article-bottom": '"2337300905"',
+    # Web anchor units are an Auto ads format, not something you can create by
+    # hand, so the sticky slot runs a responsive display unit instead.
+    "anchor": '"8000691126"',
+}
+AD_CONFIG = (
+    '<script>window.FUNSAT_ADS={provider:"adsense",client:"' + AD_CLIENT + '",'
+    'childDirected:true,slots:{'
+    + ",".join(f'"{k}":{v}' for k, v in AD_SLOTS.items())
+    + '}};</script>\n<script defer src="/ads.js"></script>'
+)
+# The anchor is the only unit that follows the reader, so it carries its own
+# dismiss button (added by ads.js) and is confined to content pages.
+AD_ANCHOR = '<div class="sponsor-slot sponsor-anchor" data-ad-slot="anchor" hidden></div>'
+
+
+def ad_slot(name):
+    return f'<div class="sponsor-slot" data-ad-slot="{name}" hidden></div>'
+
+
+def inject_fonts(html_text):
+    """Preload the self-hosted text face on a hand-written content page."""
+    if "archivo-400-700.woff2" in html_text:
+        return html_text
+    return html_text.replace("</head>", FONT_PRELOAD + "\n</head>", 1)
+
+
+def inject_ads(html_text):
+    """Add the ad config and slots to a hand-written content page (a guide or a
+    landing page). No-op if the page already declares FUNSAT_ADS, so the build
+    stays idempotent. Mirrors page() so hand-written and generated pages carry
+    the same units in the same places."""
+    if "FUNSAT_ADS" in html_text:
+        return html_text
+    html_text = html_text.replace("</head>", AD_CONFIG + "\n</head>", 1)
+    # Bottom unit above the footer line, anchor last so it closes over the page.
+    html_text = html_text.replace('<p class="gfoot">',
+                                  ad_slot("article-bottom") + '\n<p class="gfoot">', 1)
+    html_text = html_text.replace("</body>", AD_ANCHOR + "</body>", 1)
+    # In-content units go after the headline, never before it: a unit above the <h1>
+    # pushes the content the reader came for below the fold and reads as an
+    # interstitial. Everything is measured from the end of the <h1>.
+    start = html_text.find("</h1>")
+    if start == -1:
+        return html_text
+    start += len("</h1>")
+    head, body = html_text[:start], html_text[start:]
+    for marker in ("</table>", "</p>"):
+        placed = _insert_after_nth(body, ad_slot("article-top"), marker, 1)
+        if placed:
+            body = placed
+            break
+    else:
+        return html_text
+    # A second unit only once there is real content below the first; the 8th
+    # paragraph keeps the two from stacking on a short guide.
+    body = _insert_after_nth(body, ad_slot("article-mid"), "</p>", 8) or body
+    return head + body
+
 
 def slugify(text):
     text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
@@ -117,16 +197,38 @@ def faq_schema(pairs):
     }
 
 
+def _insert_after_nth(body, slot, marker, n):
+    """Insert `slot` after the nth occurrence of `marker`, or return None."""
+    i = -1
+    for _ in range(n):
+        i = body.find(marker, i + 1)
+        if i == -1:
+            return None
+    i += len(marker)
+    return body[:i] + slot + body[i:]
+
+
 def _insert_midroll(body):
-    """Place the in-article unit after the first table, falling back to the first
-    paragraph, so it lands inside the content rather than above or below it."""
-    slot = '<div class="sponsor-slot" data-ad-slot="article-top" hidden></div>'
+    """Place the in-article units inside the content: the first after the opening
+    table (falling back to the first paragraph), the second further down so the
+    two never sit next to each other. Short pages keep a single unit.
+
+    Everything is measured from the end of the <h1>, because some bodies open with
+    breadcrumbs or a kicker paragraph and a unit above the headline pushes the
+    content the reader came for below the fold."""
+    start = body.find("</h1>")
+    start = start + len("</h1>") if start != -1 else 0
+    head, rest = body[:start], body[start:]
     for marker in ("</table>", "</p>"):
-        i = body.find(marker)
-        if i != -1:
-            i += len(marker)
-            return body[:i] + slot + body[i:]
-    return body + slot
+        placed = _insert_after_nth(rest, ad_slot("article-top"), marker, 1)
+        if placed:
+            rest = placed
+            break
+    else:
+        return body + ad_slot("article-top")
+    # A second unit only earns its place when there is real content below the
+    # first one; the 6th paragraph keeps it clear of the top unit.
+    return head + (_insert_after_nth(rest, ad_slot("article-mid"), "</p>", 6) or rest)
 
 
 def page(*, path, title, description, body, schema, extra_head=""):
@@ -150,15 +252,16 @@ def page(*, path, title, description, body, schema, extra_head=""):
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+{FONT_PRELOAD}
 <link rel="stylesheet" href="/workspace.css">
 <link rel="stylesheet" href="/guides/guide.css">
-<script>window.FUNSAT_ADS={{provider:"adsense",client:"ca-pub-7330416749956065",childDirected:true,slots:{{"article-top":{{id:"4774752824",format:"fluid",layout:"in-article"}},"article-bottom":"2337300905"}}}};</script>
-<script defer src="/ads.js"></script>
+{AD_CONFIG}
 {extra_head}<script type="application/ld+json">{graph}</script>
 </head><body data-workspace="exam"><div class="gwrap">
 {midroll_body}
 <div class="sponsor-slot" data-ad-slot="article-bottom" hidden></div>
 <p class="gfoot">{SITE_NAME} is a free browser-based SAT and ACT prep app: digital SAT and ACT practice tests, unofficial score calculators, a built-in graphing calculator, college admissions chances from official U.S. Department of Education data, and a scholarship search. <a href="/">Start free practice &rarr;</a></p>
+{AD_ANCHOR}
 </div></body></html>
 """
 

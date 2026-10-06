@@ -822,7 +822,7 @@
   }
 
   function renderCollegeScreen() {
-    const host = $("screen-college");
+    const host = $("collegeBody") || $("screen-college");
     if (!host) return;
     const c = cp();
     host.innerHTML =
@@ -842,6 +842,7 @@
       '<p class="small muted college-foot">College data: <a href="' + escapeHtml(CD.meta.sourceUrl || "https://collegescorecard.ed.gov/data/") + '" target="_blank" rel="noopener">College Scorecard</a>, ' + escapeHtml(CD.meta.release || "") + ". " + escapeHtml(CD.meta.note || "") + ' The admissions estimate is an original app model and is not affiliated with any college. <a href="https://www.act.org/content/act/en/products-and-services/the-act/scores/act-sat-concordance.html" target="_blank" rel="noopener">Official ACT/SAT concordance</a>.</p>';
     wireCollege();
     applyPanelSize();
+    if (window.FunSatAds) window.FunSatAds.mount();
   }
 
   let detailReturnsHome = false;

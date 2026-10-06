@@ -139,7 +139,7 @@ def page(*, path, title, description, body, schema, extra_head=""):
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="/workspace.css">
 <link rel="stylesheet" href="/guides/guide.css">
-<script>window.FUNSAT_ADS={{provider:"adsense",client:"ca-pub-7330416749956065",childDirected:true,slots:{{"article-top":"","article-bottom":""}}}};</script>
+<script>window.FUNSAT_ADS={{provider:"adsense",client:"ca-pub-7330416749956065",childDirected:true,slots:{{"article-top":"","article-bottom":"2337300905"}}}};</script>
 <script defer src="/ads.js"></script>
 {extra_head}<script type="application/ld+json">{graph}</script>
 </head><body data-workspace="exam"><div class="gwrap">

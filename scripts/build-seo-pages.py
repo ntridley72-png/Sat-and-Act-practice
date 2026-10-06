@@ -446,7 +446,7 @@ def rewrite_guides(out):
         if "FUNSAT_ADS" not in html_text:
             html_text = html_text.replace("</head>",
                 '<script>window.FUNSAT_ADS={provider:"adsense",client:"ca-pub-7330416749956065",'
-                'childDirected:true,slots:{"article-top":"","article-bottom":""}};</script>\n'
+                'childDirected:true,slots:{"article-top":"","article-bottom":"2337300905"}};</script>\n'
                 '<script defer src="/ads.js"></script>\n</head>', 1)
             html_text = html_text.replace('<p class="gfoot">',
                 '<div class="sponsor-slot" data-ad-slot="article-bottom" hidden></div>\n<p class="gfoot">', 1)

@@ -139,9 +139,12 @@ def page(*, path, title, description, body, schema, extra_head=""):
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="/workspace.css">
 <link rel="stylesheet" href="/guides/guide.css">
+<script>window.FUNSAT_ADS={{provider:"adsense",client:"ca-pub-7330416749956065",childDirected:true,slots:{{"article-top":"","article-bottom":""}}}};</script>
+<script defer src="/ads.js"></script>
 {extra_head}<script type="application/ld+json">{graph}</script>
 </head><body data-workspace="exam"><div class="gwrap">
 {body}
+<div class="sponsor-slot" data-ad-slot="article-bottom" hidden></div>
 <p class="gfoot">{SITE_NAME} is a free browser-based SAT and ACT prep app: digital SAT and ACT practice tests, unofficial score calculators, a built-in graphing calculator, college admissions chances from official U.S. Department of Education data, and a scholarship search. <a href="/">Start free practice &rarr;</a></p>
 </div></body></html>
 """

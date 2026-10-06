@@ -443,6 +443,14 @@ def rewrite_guides(out):
         html_text = re.sub(r'(<meta property="og:url" content=")[^"]*(")', rf'\g<1>{ORIGIN}{path}\g<2>', html_text)
         html_text = re.sub(r'("mainEntityOfPage":")[^"]*(")', rf'\g<1>{ORIGIN}{path}\g<2>', html_text)
 
+        if "FUNSAT_ADS" not in html_text:
+            html_text = html_text.replace("</head>",
+                '<script>window.FUNSAT_ADS={provider:"adsense",client:"ca-pub-7330416749956065",'
+                'childDirected:true,slots:{"article-top":"","article-bottom":""}};</script>\n'
+                '<script defer src="/ads.js"></script>\n</head>', 1)
+            html_text = html_text.replace('<p class="gfoot">',
+                '<div class="sponsor-slot" data-ad-slot="article-bottom" hidden></div>\n<p class="gfoot">', 1)
+
         m = re.search(r"<h1>(.*?)</h1>", html_text, re.S)
         h1 = re.sub(r"<[^>]+>", "", m.group(1)).strip() if m else slug
         GUIDE_TITLES[slug] = h1

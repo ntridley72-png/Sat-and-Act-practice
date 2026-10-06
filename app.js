@@ -8657,22 +8657,26 @@ class DriftCircuit {
   static WHEEL_COLORS = { silver: "#cbd5e1", black: "#0f172a", gold: "#f0c14b", bronze: "#b45309", white: "#f8fafc" };
   static DECALS = { none: "None", stripes: "Stripes", flames: "Flames", camo: "Camo", two: "Two-tone" };
   static TRACKS = {
-    oval: { name: "Sunset Ring", points: [[0.50, 0.12], [0.80, 0.18], [0.92, 0.42], [0.86, 0.72], [0.62, 0.88], [0.34, 0.86], [0.12, 0.68], [0.08, 0.38]], width: 147 },
-    club: { name: "Club Circuit", points: [[0.48, 0.08], [0.78, 0.14], [0.94, 0.36], [0.90, 0.62], [0.70, 0.82], [0.44, 0.90], [0.20, 0.78], [0.06, 0.52], [0.14, 0.24]], width: 136 },
-    tech: { name: "Technical Park", points: [[0.50, 0.08], [0.76, 0.10], [0.92, 0.28], [0.88, 0.50], [0.96, 0.70], [0.74, 0.90], [0.46, 0.88], [0.26, 0.94], [0.08, 0.74], [0.12, 0.46], [0.06, 0.26]], width: 126 },
-    canyon: { name: "Canyon Switchbacks", points: [[0.18,0.16],[0.48,0.08],[0.80,0.14],[0.92,0.34],[0.72,0.46],[0.94,0.66],[0.74,0.90],[0.43,0.82],[0.18,0.92],[0.07,0.66],[0.28,0.50],[0.08,0.30]], width: 119 },
-    harbor: { name: "Harbor Sprint", points: [[0.10,0.24],[0.52,0.12],[0.91,0.22],[0.88,0.44],[0.54,0.48],[0.92,0.66],[0.76,0.88],[0.34,0.86],[0.08,0.68]], width: 144 },
-    ridge: { name: "Mountain Ridge", points: [[0.40,0.06],[0.72,0.14],[0.90,0.34],[0.68,0.44],[0.94,0.62],[0.70,0.91],[0.38,0.78],[0.12,0.92],[0.06,0.58],[0.24,0.36],[0.10,0.18]], width: 122 }
+    oval: { name: "Sunset Ring", points: [[0.50, 0.12], [0.80, 0.18], [0.92, 0.42], [0.86, 0.72], [0.62, 0.88], [0.34, 0.86], [0.12, 0.68], [0.08, 0.38]], width: 210 },
+    club: { name: "Club Circuit", points: [[0.48, 0.08], [0.78, 0.14], [0.94, 0.36], [0.90, 0.62], [0.70, 0.82], [0.44, 0.90], [0.20, 0.78], [0.06, 0.52], [0.14, 0.24]], width: 194 },
+    tech: { name: "Technical Park", points: [[0.50, 0.08], [0.76, 0.10], [0.92, 0.28], [0.88, 0.50], [0.96, 0.70], [0.74, 0.90], [0.46, 0.88], [0.26, 0.94], [0.08, 0.74], [0.12, 0.46], [0.06, 0.26]], width: 180 },
+    canyon: { name: "Canyon Switchbacks", points: [[0.18,0.16],[0.48,0.08],[0.80,0.14],[0.92,0.34],[0.72,0.46],[0.94,0.66],[0.74,0.90],[0.43,0.82],[0.18,0.92],[0.07,0.66],[0.28,0.50],[0.08,0.30]], width: 170 },
+    // Harbour and ridge used to double back on themselves hard enough that the
+    // two road surfaces merged (closest-approach ratios of 3.17 and 1.63 against
+    // the road width). Both now ease the return leg out to 1.20, matching oval.
+    harbor: { name: "Harbor Sprint", points: [[0.10,0.24],[0.52,0.12],[0.91,0.22],[0.93,0.46],[0.90,0.68],[0.76,0.88],[0.34,0.86],[0.08,0.68]], width: 166 },
+    ridge: { name: "Mountain Ridge", points: [[0.40,0.06],[0.72,0.14],[0.92,0.34],[0.80,0.48],[0.94,0.64],[0.70,0.91],[0.38,0.78],[0.12,0.92],[0.06,0.58],[0.24,0.36],[0.10,0.18]], width: 144 }
   };
+
   // The circuit is a world the chase camera moves through, not a fit-to-screen
   // layout, so the whole thing can be scaled up. Layout and road width are scaled
   // by the SAME factor: the road gets wider relative to the car (which does not
   // scale), while the spacing between track sections keeps its original ratio, so
   // no two sections merge that did not already run close.
-  static WORLD_SCALE = 1.75;
+  static WORLD_SCALE = 2.5;
 
   static PHYSICS = {
-    engine: 430, brake: 590, drag: 0.35, rolling: 26, maxSpeed: 700,
+    engine: 520, brake: 700, drag: 0.35, rolling: 26, maxSpeed: 880,
     steerBase: 1.1, steerSpeed: 1.9, gripRoad: 7.8, gripGrass: 3.2, gripHandbrake: 1.4,
     handbrakeDrag: 0.55, slideYaw: 0.0009, collisionCooldown: 0.8, damageLimit: 8,
     smokeMax: 140, skidMax: 360, minDriftSpeed: 85, minDriftSlip: 0.12

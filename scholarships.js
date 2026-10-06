@@ -30,6 +30,13 @@
     ["athletics", "Athletics"],
   ];
   const TAG_LABEL = new Map(TAGS);
+  // Grouped by the question each filter answers, so the row can be scanned
+  // instead of read end to end.
+  const TAG_GROUPS = [
+    ["Who you are", ["need", "firstgen", "identity", "women", "lgbtq", "undocumented", "foster", "military"]],
+    ["What you do", ["stem", "arts", "writing", "service", "cte", "athletics"]],
+    ["How it works", ["merit", "noessay", "state"]],
+  ];
   const DEFAULTS = { v: 1, query: "", grade: "all", tags: [], savedOnly: false, sort: "featured", saved: [] };
 
   function sp() {
@@ -89,10 +96,29 @@
   }
   function chipsHtml() {
     const c = sp();
-    const chips = TAGS.map(([key, label]) =>
-      '<button type="button" class="secondary scholar-chip' + (c.tags.includes(key) ? " on" : "") + '" data-scholar-tag="' + key + '" aria-pressed="' + c.tags.includes(key) + '">' + esc(label) + "</button>").join("");
-    return '<button type="button" class="secondary scholar-chip' + (c.savedOnly ? " on" : "") + '" data-scholar-saved aria-pressed="' + c.savedOnly + '">★ My list (' + c.saved.length + ")</button>" + chips +
-      '<button type="button" class="secondary scholar-chip" data-scholar-reset>Reset</button>';
+    const chip = (key) =>
+      '<button type="button" class="secondary scholar-chip' + (c.tags.includes(key) ? " on" : "") +
+      '" data-scholar-tag="' + key + '" aria-pressed="' + c.tags.includes(key) + '">' +
+      esc(TAG_LABEL.get(key) || key) + "</button>";
+
+    const groups = TAG_GROUPS.map(([label, keys]) =>
+      '<div class="scholar-group"><span class="scholar-group-label">' + esc(label) + "</span>" +
+      '<div class="scholar-group-chips">' + keys.map(chip).join("") + "</div></div>").join("");
+
+    // Actions are not filters, so they sit on their own row. Reset only appears
+    // when there is something to reset, which keeps the default view quieter.
+    const active = c.tags.length + (c.savedOnly ? 1 : 0) + (c.grade !== "all" ? 1 : 0);
+    const actions =
+      '<div class="scholar-actions">' +
+      '<button type="button" class="secondary scholar-chip scholar-mylist' + (c.savedOnly ? " on" : "") +
+      '" data-scholar-saved aria-pressed="' + c.savedOnly + '">\u2605 My list (' + c.saved.length + ")</button>" +
+      (active
+        ? '<span class="scholar-active-count">' + active + " filter" + (active === 1 ? "" : "s") + " on</span>" +
+          '<button type="button" class="ghost scholar-reset" data-scholar-reset>Clear all</button>'
+        : "") +
+      "</div>";
+
+    return actions + '<div class="scholar-groups">' + groups + "</div>";
   }
 
   function renderScholarshipScreen() {

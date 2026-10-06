@@ -431,3 +431,29 @@ body[data-workspace] .st-chip.on,body[data-workspace] .subject-tab.active{color:
 /* Inline icons replace the old emoji: they take the text colour and sit on the
    baseline, so they restyle with the theme instead of fighting it. */
 body[data-workspace] .ui-icon{display:inline-block;vertical-align:-.17em;margin-right:.4em;flex:none}
+
+/* ---------- No clipped text ----------
+   A control whose label is cut ("Use predicted (SAT…") cannot be understood, so
+   buttons and chips wrap and grow instead of hiding their own text. Applied
+   broadly because the same pattern had crept into several components. */
+body[data-workspace] button,body[data-workspace] .st-chip,body[data-workspace] .subject-chip,
+body[data-workspace] .scholar-chip,body[data-workspace] .hsc-tab,body[data-workspace] .subject-tab{
+white-space:normal;overflow-wrap:anywhere;height:auto;min-height:40px}
+body[data-workspace] .college-saved-item{white-space:normal}
+
+/* ---------- Scholarship filters ----------
+   Seventeen chips in one flat row forced you to read every option. Grouping them
+   under the question each answers makes the row scannable, and separating the
+   actions means "Clear all" is no longer mistaken for a filter. */
+body[data-workspace] .scholar-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 12px}
+body[data-workspace] .scholar-active-count{font-family:var(--ws-mono);font-size:12px;color:var(--ws-muted)}
+body[data-workspace] .scholar-reset{min-height:32px;padding:4px 10px;font-size:13px;background:transparent;color:var(--ws-accent);border:0;text-decoration:underline}
+body[data-workspace] .scholar-groups{display:flex;flex-direction:column;gap:10px;margin-bottom:6px}
+body[data-workspace] .scholar-group{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+body[data-workspace] .scholar-group-label{flex:0 0 108px;font-family:var(--ws-mono);font-size:11px;font-weight:500;
+letter-spacing:.09em;text-transform:uppercase;color:var(--ws-muted)}
+body[data-workspace] .scholar-group-chips{flex:1 1 320px;min-width:0;display:flex;flex-wrap:wrap;gap:6px}
+/* An active filter has to be unmistakable: fill plus a mark, not a tint. */
+body[data-workspace] .scholar-chip.on{background:var(--ws-accent);color:var(--ws-on-accent);border-color:var(--ws-accent)}
+body[data-workspace] .scholar-chip.on::before{content:"\2713";margin-right:5px;font-weight:700}
+@media(max-width:620px){body[data-workspace] .scholar-group-label{flex:1 1 100%}}

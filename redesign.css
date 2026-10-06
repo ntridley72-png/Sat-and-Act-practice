@@ -10,7 +10,7 @@
 /* ---------- Top bar ---------- */
 body[data-workspace] .topbar {
   position: sticky; top: 0; z-index: 60; display: flex; align-items: center; flex-wrap: wrap; gap: 12px;
-  padding: 12px 18px; background: linear-gradient(180deg, #141b25, #10161f);
+  padding: 12px 18px; background: linear-gradient(180deg, var(--ws-bg), var(--ws-bg));
   border-bottom: 1px solid var(--line); box-shadow: none;
 }
 body[data-workspace] .brand { color: var(--text); font-weight: 900; letter-spacing: -.02em; font-size: 23px; display: flex; align-items: center; gap: 2px; }
@@ -30,23 +30,23 @@ body[data-workspace] .sound-btn.muted::before { -webkit-mask-image: var(--icon-s
 body[data-workspace] #btnPause { font-size: 16px; color: var(--mint); }
 .pill {
   height: 40px; display: inline-flex; align-items: center; gap: 8px; padding: 0 16px; border-radius: 999px;
-  border: 1px solid var(--line); background: #24241f; color: var(--text); font-weight: 700; font-size: 15px;
+  border: 1px solid var(--line); background: var(--panel); color: var(--text); font-weight: 700; font-size: 15px;
 }
-body[data-workspace] .arcade-btn, body[data-workspace] .acct-btn { height: 40px; display: inline-flex; align-items: center; gap: 8px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: #24241f; color: var(--text); font-weight: 700; font-size: 15px; transition: transform .12s, background .12s, color .12s, border-color .12s; }
+body[data-workspace] .arcade-btn, body[data-workspace] .acct-btn { height: 40px; display: inline-flex; align-items: center; gap: 8px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font-weight: 700; font-size: 15px; transition: transform .12s, background .12s, color .12s, border-color .12s; }
 body[data-workspace] .arcade-btn:hover:not(:disabled), body[data-workspace] .acct-btn:hover { transform: translateY(-1px); }
 body[data-workspace] .arcade-btn.on, body[data-workspace] .arcade-btn.active { background: rgba(255, 122, 61, .16); border-color: var(--mint); color: var(--mint); }
 body[data-workspace] .arcade-btn svg, body[data-workspace] .acct-btn svg { width: 20px; height: 20px; }
 body[data-workspace] .acct-btn .av { width: 28px; height: 28px; border-radius: 50%; background: var(--mint); color: #14140f; font-weight: 900; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; }
 body[data-workspace] .token-badge.wallet {
   height: 40px; display: inline-flex; align-items: center; gap: 8px; padding: 0 14px 0 10px; border-radius: 999px;
-  background: linear-gradient(180deg, #2a2412, #1f1a0d); border: 1px solid #5b4614; color: var(--gold); font-weight: 800; font-size: 15px;
+  background: var(--ws-tint); border: 1px solid var(--ws-line); color: var(--ws-ink); font-weight: 800; font-size: 15px;
 }
 body[data-workspace] .hud-streak { color: var(--muted); }
 body[data-workspace] #autosave { color: var(--muted); }
 .workspace-theme-label { color: var(--muted); }
-body[data-workspace] #workspaceTheme { height: 40px; border-radius: 999px; border: 1px solid var(--line); background: #24241f; color: var(--text); font-weight: 600; padding: 0 30px 0 14px; }
+body[data-workspace] #workspaceTheme { height: 40px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font-weight: 600; padding: 0 30px 0 14px; }
 body[data-workspace] .badge { background: transparent; border: 0; color: var(--muted); }
-body[data-workspace] #badgeTimer, body[data-workspace] #badgeAcc { background: #24241f; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; color: var(--text); }
+body[data-workspace] #badgeTimer, body[data-workspace] #badgeAcc { background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; color: var(--text); }
 
 /* gold coin */
 .coin {
@@ -148,7 +148,7 @@ body[data-workspace] .hsc-expand { display: none; margin-top: 18px; border-top: 
 .hsc-tile .t-val { font-weight: 800; font-size: 17px; color: var(--text); }
 .hsc-tile .t-lbl { color: var(--muted); font-size: 11px; margin-top: 4px; line-height: 1.4; }
 .hsc-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 12px 2px 4px; }
-.hsc-tab { flex: none; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: #24241f; color: var(--text); font-weight: 700; font-size: 13px; white-space: nowrap; }
+.hsc-tab { flex: none; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font-weight: 700; font-size: 13px; white-space: nowrap; }
 .hsc-tab.active { background: var(--blue); border-color: var(--blue); color: #fff; }
 body[data-workspace] .hsc-cta { min-height: 44px; border-radius: 12px; background: var(--mint); color: #1a1008; font-weight: 800; }
 .hsc-note { color: var(--muted); font-size: 11px; margin-top: 8px; }
@@ -158,15 +158,15 @@ body[data-workspace] .hsc-cta { min-height: 44px; border-radius: 12px; backgroun
 .college-hero .hero-line { color: var(--muted); font-size: 14px; margin: 4px 0 10px; }
 .college-hero h3 { margin: 0; font-size: 20px; }
 body[data-workspace] .college-profile fieldset { border-radius: 0; background: var(--panel) !important; border-color: var(--line) !important; color: var(--text); }
-body[data-workspace] #screen-college .college-profile input, body[data-workspace] #screen-college .college-profile select { height: 46px; border-radius: 12px; background: #191916 !important; border: 1px solid var(--line) !important; color: var(--text) !important; }
-body[data-workspace] #screen-college .college-profile textarea { border-radius: 12px; background: #191916 !important; border: 1px solid var(--line) !important; color: var(--text) !important; }
+body[data-workspace] #screen-college .college-profile input, body[data-workspace] #screen-college .college-profile select { height: 46px; border-radius: 12px; background: var(--ws-surface) !important; border: 1px solid var(--line) !important; color: var(--text) !important; }
+body[data-workspace] #screen-college .college-profile textarea { border-radius: 12px; background: var(--ws-surface) !important; border: 1px solid var(--line) !important; color: var(--text) !important; }
 body[data-workspace] #collegeUsePredicted {
   width: 100%; min-height: 54px; border-radius: 14px; font-size: 18px; font-weight: 800;
   background: var(--mint); border: 0; color: #1a1008;
 }
 body[data-workspace] #screen-college .college-profile label { color: var(--muted); }
 .hero-chips { display: flex; gap: 8px; flex-wrap: wrap; }
-.hero-chip { background: #24241f; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; font-size: 12px; color: var(--text); font-weight: 600; }
+.hero-chip { background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; font-size: 12px; color: var(--text); font-weight: 600; }
 .hero-chip b { color: var(--mint); }
 
 /* ---------- Coin in the arcade HUD ---------- */
@@ -259,7 +259,7 @@ body[data-workspace] .arcade-btn.active::after{left:14px;right:14px}
 .college-saved-panel h3{margin:0 0 10px;font-size:16px;color:var(--text)}
 .college-saved-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 .college-saved-list li{display:flex;gap:6px;align-items:stretch}
-body[data-workspace] .college-saved-item{flex:1;display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;background:#191916!important;border:1px solid var(--line);border-radius:12px;padding:10px;color:var(--text)!important;min-width:0;font-weight:400}
+body[data-workspace] .college-saved-item{flex:1;display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;background:var(--ws-surface)!important;border:1px solid var(--line);border-radius:12px;padding:10px;color:var(--text)!important;min-width:0;font-weight:400}
 body[data-workspace] .college-saved-item:hover:not(:disabled){border-color:var(--mint)}
 body[data-workspace] .college-saved-item.current{border-color:var(--mint);background:rgba(255,122,61,.08)!important}
 .cs-name{font-weight:700;font-size:14px;overflow-wrap:anywhere}
@@ -272,9 +272,9 @@ body[data-workspace] .college-saved-item.current{border-color:var(--mint);backgr
 .college-pie-legend li{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text)}
 .pie-dot{width:12px;height:12px;border-radius:3px;display:inline-block;flex:none}
 .college-conf{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:999px;margin-left:4px}
-.college-conf-high{background:rgba(43,196,138,.18);color:#6ee7b7}
-.college-conf-medium{background:rgba(232,187,94,.16);color:#e8bb5e}
-.college-conf-low{background:rgba(239,68,68,.16);color:#fca5a5}
+.college-conf-high{background:rgba(43,196,138,.18);color:var(--ws-success)}
+.college-conf-medium{background:rgba(232,187,94,.16);color:var(--ws-warn)}
+.college-conf-low{background:rgba(239,68,68,.16);color:var(--ws-error)}
 .college-split{display:flex;height:10px;border-radius:999px;overflow:hidden;margin-top:12px;border:1px solid var(--line)}
 .college-split span{display:block;height:100%}
 .pw-mask{-webkit-text-security:disc}
@@ -322,17 +322,17 @@ body.zen-mode #screen-test>.card:first-child{margin-top:58px}
 @media(max-width:700px){#zenPause{top:8px;left:auto;right:auto;left:50%;transform:translateX(-50%);padding:7px 10px;font-size:11px}}
 
 /* College tabs: the layouts' generic button style was painting every tab mint with white text. */
-body[data-workspace] .hsc-tab{background:#24241f;color:var(--text);border:1px solid var(--line)}
+body[data-workspace] .hsc-tab{background:var(--panel);color:var(--text);border:1px solid var(--line)}
 body[data-workspace] .hsc-tab:hover{border-color:var(--mint)}
 body[data-workspace] .hsc-tab.active{background:var(--mint);border-color:var(--mint);color:#fff}
 /* Your chances panel on the college profile */
 .college-chances{min-width:0}
 .chance-mix{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
 .fit{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700;white-space:nowrap}
-.fit-reach{background:rgba(239,68,68,.16);color:#fca5a5}
-.fit-target{background:rgba(59,130,246,.18);color:#93c5fd}
-.fit-likely{background:rgba(34,197,94,.16);color:#86efac}
-.fit-safety{background:rgba(255,122,61,.2);color:#a7f3d0}
+.fit-reach{background:rgba(239,68,68,.16);color:var(--ws-error)}
+.fit-target{background:rgba(59,130,246,.18);color:var(--ws-accent)}
+.fit-likely{background:rgba(34,197,94,.16);color:var(--ws-success)}
+.fit-safety{background:rgba(255,122,61,.2);color:var(--ws-success)}
 .chance-advice{margin:4px 0 10px}
 .chance-list{list-style:none;margin:0;padding:0;display:grid;gap:10px;max-height:620px;overflow:auto}
 .chance-item{border:1px solid var(--ws-line,var(--line));border-radius:12px;padding:10px 12px;background:var(--ws-soft,rgba(255,255,255,.03))}
@@ -343,7 +343,7 @@ body[data-workspace] .hsc-tab.active{background:var(--mint);border-color:var(--m
 .chance-item .college-split{margin-top:8px}
 .chance-facts{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;color:var(--ws-muted,var(--muted))}
 .chance-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.tag-up{color:#86efac}.tag-down{color:#fca5a5}
+.tag-up{color:var(--ws-success)}.tag-down{color:var(--ws-error)}
 .chance-lever{margin-top:6px;color:var(--ws-ink,var(--text))}
 
 /* College details open as a popup instead of a side panel. */
@@ -368,13 +368,13 @@ body.cpop-open{overflow:hidden}
 .cpop-box .college-detail strong,.cpop-box .college-pie-legend,.cpop-box .college-pie-legend *,.cpop-box h2,.cpop-box h3,.cpop-box .college-detail p{color:var(--ws-ink,var(--text))}
 .cpop-box .pie-center,.cpop-box .pie-center-sub{fill:var(--ws-ink,var(--text))}
 .cpop-box .small.muted,.cpop-box .muted{color:var(--ws-muted,var(--muted))}
-.college-equation-row,.equation-copy-row{background:var(--ws-soft,#24241f)}
+.college-equation-row,.equation-copy-row{background:var(--ws-soft,var(--panel))}
 .college-equation-row code,.equation-copy-row code,.tutor-equations code{color:var(--ws-ink,var(--text))}
 /* The college screen uses the redesign's dark chrome in every layout, so give it a matching dark set
    of layout tokens. Without this, Exam/Notebook mixed light boxes with dark cards and text vanished. */
-#screen-college,#collegeDetailHost{--ws-bg:#121210;--ws-surface:#1b1b18;--ws-soft:#24241f;--ws-ink:#ecebe4;--ws-muted:#9d9a90;--ws-line:#34332d;--ws-rule:#4a483f;--ws-tint:#2e1d12;color:var(--ws-ink)}
+#screen-college,#collegeDetailHost{--ws-bg:#121210;--ws-surface:#1b1b18;--ws-soft:var(--panel);--ws-ink:#ecebe4;--ws-muted:#9d9a90;--ws-line:#34332d;--ws-rule:#4a483f;--ws-tint:#2e1d12;color:var(--ws-ink)}
 #screen-college,#collegeDetailHost{--ws-accent:#ff7a3d;--ws-on-accent:#1a1008;--ws-success:#7fcf9a;--ws-warn:#e8bb5e;--ws-error:#ff8f85;--blue:#ff7a3d}
-#screen-college a,#collegeDetailHost a{color:#ff9a66}
+#screen-college a,#collegeDetailHost a{color:var(--ws-accent)}
 #screen-college .ring-lbl,#screen-college .ring-num{color:var(--ws-ink)}
 #screen-college .hero-line,#screen-college .hero-line *:not(b):not(strong){color:var(--ws-ink)}
 #screen-college,#collegeDetailHost{--muted:#a3b0c2;--text:#e8edf4;--ink:#e8edf4;--line:#2f3b4b}
@@ -427,11 +427,11 @@ body.cpop-open{overflow:hidden}
 .chance-what{margin-top:12px}
 .chance-what ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:4px}
 .chance-what li{display:flex;justify-content:space-between;font-size:15px;color:var(--ws-ink)}
-.chance-what b.up{color:#86efac}
+.chance-what b.up{color:var(--ws-success)}
 .chance-actions{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
 .chance-actions .secondary{padding:9px 14px;font-size:14px}
 .chance-link{font-size:14px;font-weight:700}
-.chance-remove{margin-left:auto;font-size:14px;color:#fca5a5!important;background:transparent!important;border:0!important}
+.chance-remove{margin-left:auto;font-size:14px;color:var(--ws-error)!important;background:transparent!important;border:0!important}
 .chance-note{font-size:14px;color:var(--ws-muted);margin:12px 0 0}
 @media(max-width:620px){.college-chances.college-wide{padding:14px}.chance-list{grid-template-columns:1fr}.chance-pct{font-size:38px}.chance-grid{grid-template-columns:1fr 1fr}}
 .chance-range{margin-top:28px}
@@ -441,26 +441,26 @@ body.cpop-open{overflow:hidden}
 .college-saved-panel{max-height:calc(100vh - 100px);display:flex;flex-direction:column}
 .college-saved-list{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px;overflow-y:auto;min-height:0}
 .cs-row{display:flex;align-items:stretch;gap:4px}
-.college-saved-panel .college-saved-item{flex:1;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:8px;row-gap:1px;align-items:center;text-align:left;padding:7px 10px;border-radius:10px;background:rgba(255,255,255,.04)!important;border:1px solid var(--ws-line)!important;color:var(--ws-ink)!important}
+.college-saved-panel .college-saved-item{flex:1;min-width:0;height:auto;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:8px;row-gap:1px;align-items:center;text-align:left;padding:7px 10px;border-radius:10px;background:rgba(255,255,255,.04)!important;border:1px solid var(--ws-line)!important;color:var(--ws-ink)!important}
 .college-saved-panel .college-saved-item:hover,.college-saved-panel .college-saved-item.current{border-color:var(--mint)!important}
-.college-saved-panel .cs-name{grid-column:1;font-size:14px;font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.college-saved-panel .cs-name{grid-column:1;font-size:14px;font-weight:700;line-height:1.25;white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .college-saved-panel .cs-meta{grid-column:1;font-size:12px;color:var(--ws-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .college-saved-panel .cs-est{grid-column:2;grid-row:1/3;font-size:16px;font-weight:900;padding:4px 8px;border-radius:8px;min-width:52px;text-align:center}
 .college-saved-panel .cs-remove{flex:none;width:30px;padding:0;font-size:13px;color:var(--ws-muted)!important;background:transparent!important;border:0!important}
-.college-saved-panel .cs-remove:hover{color:#fca5a5!important}
+.college-saved-panel .cs-remove:hover{color:var(--ws-error)!important}
 /* ---- Context review card ---- */
 .context-review{margin-top:10px;display:grid;gap:8px}
 .context-review>.secondary{justify-self:start}
-.context-stale{font-size:14px;color:#f6d087;margin:0}
+.context-stale{font-size:14px;color:var(--ws-warn);margin:0}
 .context-card{border:1px solid var(--ws-line);border-radius:14px;padding:14px 16px;background:rgba(255,255,255,.03)}
 .context-card.stale{opacity:.6}
 .context-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .context-cat{font-weight:800;font-size:16px;color:var(--ws-ink)}
 .context-impact{font-size:13px;font-weight:700;padding:3px 10px;border-radius:999px}
-.impact-high{background:rgba(255,122,61,.18);color:#a7f3d0}.impact-moderate{background:rgba(59,130,246,.18);color:#93c5fd}
+.impact-high{background:rgba(255,122,61,.18);color:var(--ws-success)}.impact-moderate{background:rgba(59,130,246,.18);color:var(--ws-accent)}
 .impact-low,.impact-none{background:rgba(255,255,255,.08);color:var(--ws-muted)}
 .context-sum{font-size:15px;margin:8px 0 0;color:var(--ws-ink)}
-.context-applied{font-size:14px;margin:8px 0 0;color:#86efac}
+.context-applied{font-size:14px;margin:8px 0 0;color:var(--ws-success)}
 .context-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px}
 .context-cols h4{margin:0 0 4px;font-size:14px;color:var(--ws-ink)}
 .context-cols ul{margin:0;padding-left:18px;font-size:14px;color:var(--ws-ink)}
@@ -483,7 +483,7 @@ body.cpop-open{overflow:hidden}
 .college-band legend{font-size:18px;font-weight:800;padding:0 8px}
 .college-band>label,.college-gpa-pair>label{display:flex;flex-direction:column;gap:6px;margin:0;font-size:13px;color:var(--ws-muted)}
 .college-band>label>input,.college-band>label>select,.college-gpa-pair input,.college-gpa-pair select{width:100%;height:46px;box-sizing:border-box;border-radius:12px;font-size:16px;padding:0 12px;margin:0}
-.college-band-scores #collegeUsePredicted{height:46px;width:100%;margin:0;border-radius:12px;font-size:15px;font-weight:800;padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.college-band-scores #collegeUsePredicted{min-height:46px;height:auto;width:100%;margin:0;border-radius:0;font-size:15px;font-weight:800;padding:10px 12px;line-height:1.25;white-space:normal;overflow-wrap:anywhere}
 .college-band-scores>p{grid-column:1/-1;margin:0;font-size:13px}
 .college-gpa-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:8px}
 .college-gpa-pair select{font-size:15px;padding:0 8px}
@@ -499,7 +499,7 @@ body.cpop-open{overflow:hidden}
 .chance-factors ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:4px}
 .chance-factors li{display:flex;justify-content:space-between;gap:10px;font-size:15px;padding:4px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
 .chance-factors li b{font-variant-numeric:tabular-nums;white-space:nowrap}
-.chance-factors .f-up{color:#86efac}.chance-factors .f-down{color:#fca5a5}
+.chance-factors .f-up{color:var(--ws-success)}.chance-factors .f-down{color:var(--ws-error)}
 
 /* Drift garage overlay */
 .drift-garage{position:fixed;inset:0;z-index:1280;display:none;align-items:center;justify-content:center;background:rgba(4,7,12,.82)}
@@ -512,7 +512,7 @@ body.cpop-open{overflow:hidden}
 .dg-section{margin-bottom:18px}
 .dg-section h4{margin:0 0 8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mint,#ff7a3d)}
 .dg-cars{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
-.dg-car{border:1px solid var(--line,#34332d);border-radius:12px;padding:10px;background:#191916;display:flex;flex-direction:column;gap:6px}
+.dg-car{border:1px solid var(--line,#34332d);border-radius:12px;padding:10px;background:var(--ws-surface);display:flex;flex-direction:column;gap:6px}
 .dg-car.active{border-color:var(--mint,#ff7a3d)}
 .dg-car.locked{opacity:.65}
 .dg-car b{font-size:14px}
@@ -520,7 +520,7 @@ body.cpop-open{overflow:hidden}
 .dg-swatches{display:flex;gap:8px;flex-wrap:wrap}
 .dg-swatch{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer}
 .dg-swatch.on{border-color:#fff;box-shadow:0 0 0 2px var(--mint,#ff7a3d)}
-.dg-pill{height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--line,#34332d);background:#191916;color:var(--text,#e8edf4);font-weight:700;font-size:12px}
+.dg-pill{height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--line,#34332d);background:var(--ws-surface);color:var(--text,#e8edf4);font-weight:700;font-size:12px}
 .dg-pill.on{background:var(--mint,#ff7a3d);color:#1a1008;border-color:var(--mint,#ff7a3d)}
 .dg-pill:disabled{opacity:.5}
 .dg-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}

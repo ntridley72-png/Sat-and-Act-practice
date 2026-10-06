@@ -251,9 +251,13 @@ body[data-workspace] .cab-search input,.cab-search input{flex:1;font:inherit;fon
 @media(max-width:700px){.cab-launcher{grid-template-columns:1fr}}
 .cab-tile{position:relative}
 .cab-hero{display:grid;grid-template-columns:1.3fr .8fr;gap:12px;margin:10px 0 12px}
-.cab .cab-hero-main{min-height:190px;align-content:end;justify-items:start;text-align:left;background:linear-gradient(160deg,#101b34,#1d3a6b)!important;border-color:#2b2bff;color:#fff;gap:4px}
+.cab .cab-hero-main{position:relative;overflow:hidden;min-height:190px;align-content:end;justify-items:start;text-align:left;background:#101b34!important;border-color:#2b2bff;color:#fff;gap:4px}
+.cab-hero-art{position:absolute;inset:0;z-index:0;line-height:0}
+.cab-hero-art svg{width:100%;height:100%;display:block}
+.cab .cab-hero-main>:not(.cab-hero-art){position:relative;z-index:1}
+.cab .cab-hero-main::after{content:"";position:absolute;left:0;right:0;bottom:0;height:62%;z-index:0;background:linear-gradient(180deg,rgba(10,7,24,0),rgba(10,7,24,.88) 62%,rgba(10,7,24,.96))}
 .cab-hero-name{font-size:20px;font-weight:800;letter-spacing:.02em}
-.cab-hero-line{font-size:10px;color:#9db4dd;font-weight:400;letter-spacing:0}
+.cab-hero-line{font-size:10px;color:#cdd8f0;font-weight:400;letter-spacing:0}
 .cab-play{margin-top:8px;background:#ff7a3d;color:#06281b;border:0;border-radius:4px;padding:9px 14px;font-weight:800;font-size:10px}
 .cab-hero-side{display:grid;gap:8px}
 .cab-chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}

@@ -13,7 +13,7 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   const errors = [];
   page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
 
-  await page.goto(BASE + PAGE_PATH, { waitUntil: "load" });
+  await page.goto(BASE + PAGE_PATH, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("body[data-workspace]");
 
   // Garage is reachable from the arcade menu before picking a game.
@@ -144,7 +144,31 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   const continued = await page.evaluate(() => { const before = profile.tokens; document.getElementById("continueRun").click(); return { before, after: profile.tokens, over: arcade.game.over, mode: arcade.mode }; });
   if (continued.after !== continued.before - 1 || continued.over || continued.mode !== "playing") throw new Error("continue with token failed: " + JSON.stringify(continued));
 
+  // Parking Lot Sandbox: centre spawn, no laps or damage, obstacles bounce, lot boundary bounces.
+  const sandbox = await page.evaluate(() => {
+    const g = DriftCircuit.garage(); g.track = "lot";
+    arcade.select("drift");
+    const game = arcade.game; game.reset(); game.started = true;
+    const spawn = { x: Math.round(game.x), y: Math.round(game.y), cx: Math.round(game.worldW / 2), cy: Math.round(game.worldH / 2) };
+    arcade._heldKeys.ArrowUp = true; arcade._heldKeys.ArrowRight = true; arcade._heldKeys[" "] = true;
+    for (let i = 0; i < 360; i++) game.update(0.016);
+    arcade._heldKeys.ArrowUp = false; arcade._heldKeys.ArrowRight = false; arcade._heldKeys[" "] = false;
+    const driven = { laps: game.laps, damage: game.damage, score: game.score, sandbox: game.sandbox, obstacles: game.obstacles.length };
+    game.x = 10; game.vx = -100; game.update(0.016);
+    const bounced = { x: Math.round(game.x), vx: Math.round(game.vx) };
+    game.draw(arcade.ctx);
+    g.track = "oval"; game.reset();
+    return { spawn, driven, bounced, backToTrack: !game.sandbox && game.laps === 0 };
+  });
+  if (!sandbox.driven.sandbox) throw new Error("lot track should be a sandbox: " + JSON.stringify(sandbox));
+  if (sandbox.spawn.x !== sandbox.spawn.cx || sandbox.spawn.y !== sandbox.spawn.cy) throw new Error("sandbox should spawn at lot centre: " + JSON.stringify(sandbox.spawn));
+  if (sandbox.driven.laps !== 0 || sandbox.driven.damage !== 0) throw new Error("sandbox must not count laps or damage: " + JSON.stringify(sandbox.driven));
+  if (sandbox.driven.obstacles < 10) throw new Error("sandbox obstacles missing: " + JSON.stringify(sandbox.driven));
+  if (sandbox.driven.score <= 0) throw new Error("sandbox drifting should still score: " + JSON.stringify(sandbox.driven));
+  if (sandbox.bounced.x < 20 || sandbox.bounced.vx <= 0) throw new Error("lot boundary should bounce the car back: " + JSON.stringify(sandbox.bounced));
+  if (!sandbox.backToTrack) throw new Error("switching back to a circuit track should re-enable laps: " + JSON.stringify(sandbox));
+
   await browser.close();
   if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
-  console.log("PASS: 3D drift + racing, garage v2 (finishes, kits, wheels, decals, themes, modes, handling, sounds), token conversion, silent mid-game spends, death summary, and continue all work.");
+  console.log("PASS: 3D drift + racing, parking-lot sandbox (centre spawn, obstacles, boundary bounce, no laps/damage, still scores), garage v2 (finishes, kits, wheels, decals, themes, modes, handling, sounds), token conversion, silent mid-game spends, death summary, and continue all work.");
 })().catch((error) => { console.error(error); process.exit(1); });

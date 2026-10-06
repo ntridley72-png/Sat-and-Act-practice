@@ -7686,6 +7686,22 @@ const CAR_PAINTS = { red:'#ef4444', blue:'#3b82f6', green:'#22c55e', purple:'#a8
 // the same silhouette at different sizes. Each style now has its own half-width
 // profile sampled nose -> tail, which is what actually makes them recognisable
 // from above. Values are fractions of the car's half-width.
+// Rear-view silhouette per style: [y, halfWidthFraction] from sill to roofline.
+// The chase view used one fixed wedge for every car, so the only thing that
+// changed between models was overall width. Supers sit low and wide, kei cars
+// sit tall and narrow, muscle cars carry their width high in the hips.
+const REAR_PROFILES = {
+  boxy:   [[-4, .50], [-14, .53], [-27, .53], [-35, .46]],
+  hatch:  [[-4, .50], [-13, .54], [-25, .53], [-33, .44]],
+  sedan:  [[-4, .51], [-13, .56], [-24, .51], [-31, .40]],
+  curve:  [[-4, .52], [-13, .58], [-23, .52], [-29, .38]],
+  coupe:  [[-4, .52], [-12, .59], [-22, .50], [-28, .36]],
+  wedge:  [[-4, .56], [-11, .62], [-20, .51], [-26, .34]],
+  muscle: [[-4, .60], [-12, .65], [-22, .54], [-29, .38]],
+  super:  [[-3, .63], [-10, .68], [-19, .53], [-25, .33]],
+  ev:     [[-4, .52], [-13, .57], [-26, .54], [-34, .42]]
+};
+
 const CAR_PROFILES = {
   boxy:   [.80, .97, 1.00, 1.00, 1.00, .98, .88],
   hatch:  [.76, .95, 1.00, 1.00, 1.00, .98, .92],
@@ -7865,11 +7881,17 @@ function startCarAudio(gameKey) {
 function updateCarAudio(a, rpm, throttle, slip, dt) {
   if (!a) return;
   try {
-    a.eg.gain.value = ((throttle ? .05 : .018) + rpm * .05) * (a.vol == null ? .7 : a.vol);
-    a.osc.frequency.value = a.spec.base + rpm * a.spec.base * 1.9;
-    a.sub.frequency.value = (a.spec.base + rpm * a.spec.base * 1.9) / 2;
-    a.filter.frequency.value = 500 + rpm * 1900;
-    a.ng.gain.value = Math.min(.08, slip * .006) * (a.vol == null ? .7 : a.vol);
+    const r = Math.max(0, Math.min(1, rpm || 0)), vol = (a.vol == null ? .7 : a.vol);
+    // Wider pitch sweep so speed is audible across the whole range rather than
+    // only near the top, and a brighter filter so the note opens up as it climbs.
+    const pitch = a.spec.base * (1 + Math.pow(r, 1.02) * 3.6);
+    a.eg.gain.value = ((throttle ? .055 : .014) + Math.pow(r, .85) * .105) * vol;
+    a.osc.frequency.value = pitch;
+    a.sub.frequency.value = pitch / 2;
+    a.filter.frequency.value = 520 + Math.pow(r, .8) * 3600;
+    // Tyre noise: slip dominates (that is the squeal), speed adds road roar.
+    const sl = Math.max(0, Math.min(1, (slip || 0) / 12));
+    a.ng.gain.value = Math.min(.14, sl * .1 + r * .018) * vol;
     if (a.lastThrottle && !throttle) blowOff(a);
     a.lastThrottle = throttle;
   } catch (e) {}
@@ -8363,7 +8385,7 @@ class NeonRacing {
       t.renderZ += (t.z - t.renderZ) * renderBlend;
     });
     if (throttle && Math.random() < .04) exhaustPop(this.audio, false);
-    updateCarAudio(this.audio, clamp(this.speed / NeonRacing.ROAD.maxSpeed, 0, 1), throttle, (this.offRoad ? 14 : 0) + this.hitFlashSlip || 0, dt);
+    updateCarAudio(this.audio, clamp(this.speed / NeonRacing.ROAD.maxSpeed, 0, 1), throttle, (this.offRoad ? 7 : 0) + Math.abs(this.slip || 0) * 9, dt);
   }
   updatePlayer(dt, throttle, brake, steerInput, car, g) {
     const R = NeonRacing.ROAD;
@@ -8512,19 +8534,33 @@ class NeonRacing {
       ctx.fillStyle = wcol; ctx.beginPath(); ctx.arc(wx, -7 * scale, 3.5 * scale, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = Math.max(1, scale); ctx.beginPath(); ctx.arc(wx, -7 * scale, 2 * scale, 0, Math.PI * 2); ctx.stroke();
     }
-    // Low, wide stepped wedge inspired by bright 1990s arcade cover cars.
-    ctx.fillStyle = grad; ctx.beginPath();
-    ctx.moveTo(-Wd * .52, -4 * scale); ctx.lineTo(-Wd * .58, -13 * scale); ctx.lineTo(-Wd * .52, -23 * scale); ctx.lineTo(-Wd * .38, -29 * scale);
-    ctx.lineTo(Wd * .38, -29 * scale); ctx.lineTo(Wd * .52, -23 * scale); ctx.lineTo(Wd * .58, -13 * scale); ctx.lineTo(Wd * .52, -4 * scale); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = gameShade(base, 18); ctx.beginPath(); ctx.moveTo(-Wd * .4, -29 * scale); ctx.lineTo(-Wd * .22, -41 * scale); ctx.lineTo(Wd * .22, -41 * scale); ctx.lineTo(Wd * .4, -29 * scale); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = gameShade(base, 25); ctx.beginPath(); ctx.moveTo(-Wd * .46, -25 * scale); ctx.lineTo(Wd * .46, -25 * scale); ctx.lineTo(Wd * .39, -20 * scale); ctx.lineTo(-Wd * .39, -20 * scale); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = gameShade(base, -32); rrPath(ctx, -Wd * .5, -11 * scale, Wd, 8 * scale, 2 * scale); ctx.fill();
+    // Body silhouette driven by the car's style, not one shared wedge.
+    const prof = REAR_PROFILES[sh.style] || REAR_PROFILES.curve;
     const roofH = sh.roofH == null ? 1 : sh.roofH;
+    const py = (i) => prof[i][0] * roofH * scale, pw = (i) => Wd * prof[i][1];
+    const topY = py(3), topW = pw(3), beltY = py(2);
+    ctx.fillStyle = grad; ctx.beginPath();
+    ctx.moveTo(-pw(0), py(0));
+    for (let i = 1; i < 4; i++) ctx.lineTo(-pw(i), py(i));
+    for (let i = 3; i >= 0; i--) ctx.lineTo(pw(i), py(i));
+    ctx.closePath(); ctx.fill();
+    // Cabin sits on the roofline wherever the profile put it.
+    const cabH = 12 * roofH * scale;
+    ctx.fillStyle = gameShade(base, 18); ctx.beginPath();
+    ctx.moveTo(-topW * .92, topY); ctx.lineTo(-topW * .56, topY - cabH);
+    ctx.lineTo(topW * .56, topY - cabH); ctx.lineTo(topW * .92, topY);
+    ctx.closePath(); ctx.fill();
+    // Belt-line highlight follows the shoulder.
+    ctx.fillStyle = gameShade(base, 25); ctx.beginPath();
+    ctx.moveTo(-pw(2) * .96, beltY); ctx.lineTo(pw(2) * .96, beltY);
+    ctx.lineTo(pw(2) * .82, beltY + 5 * scale); ctx.lineTo(-pw(2) * .82, beltY + 5 * scale);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = gameShade(base, -32); rrPath(ctx, -Wd * .5, -11 * scale, Wd, 8 * scale, 2 * scale); ctx.fill();
     ctx.fillStyle = '#56d7ef'; ctx.beginPath();
-    ctx.moveTo(-Wd * .34, (-29 + (1 - roofH) * 3) * scale); ctx.lineTo(-Wd * .2, (-39 + (sh.cabinX || 0) * 4) * scale); ctx.lineTo(Wd * .2, (-39 + (sh.cabinX || 0) * 4) * scale); ctx.lineTo(Wd * .34, (-29 + (1 - roofH) * 3) * scale); ctx.closePath(); ctx.fill();
+    ctx.moveTo(-topW * .8, topY - 1.5 * scale); ctx.lineTo(-topW * .48, topY - cabH + 2 * scale + (sh.cabinX || 0) * 4 * scale); ctx.lineTo(topW * .48, topY - cabH + 2 * scale + (sh.cabinX || 0) * 4 * scale); ctx.lineTo(topW * .8, topY - 1.5 * scale); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = 'rgba(226,232,240,.72)'; ctx.lineWidth = Math.max(1, 1.2 * scale); ctx.stroke();
-    ctx.fillStyle = 'rgba(15,23,42,.35)'; ctx.fillRect(-1 * scale, -40 * scale, 2 * scale, 12 * scale);
-    ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillRect(-Wd * .44, -27 * scale, 8 * scale, 3 * scale); ctx.fillRect(Wd * .31, -24 * scale, 5 * scale, 3 * scale);
+    ctx.fillStyle = 'rgba(15,23,42,.35)'; ctx.fillRect(-1 * scale, topY - cabH + 2 * scale, 2 * scale, cabH);
+    ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillRect(-pw(2) * .86, beltY - 2 * scale, 8 * scale, 3 * scale); ctx.fillRect(pw(2) * .6, beltY + scale, 5 * scale, 3 * scale);
     if (o.spoiler && o.spoiler !== 'none') { ctx.fillStyle = gameShade(base, -38); ctx.fillRect(-Wd * .58, -30 * scale, Wd * 1.16, 2.7 * scale); ctx.fillRect(-Wd * .4, -30 * scale, 2 * scale, 6 * scale); ctx.fillRect(Wd * .38, -30 * scale, 2 * scale, 6 * scale); }
     if (o.decal === 'stripes') { ctx.fillStyle = 'rgba(255,255,255,.72)'; ctx.fillRect(-1.6 * scale, -42 * scale, 3.2 * scale, 38 * scale); }
     // Lamps, plate, bumper, and exhaust provide recognizable rear detail.
@@ -8875,7 +8911,8 @@ class DriftCircuit {
     // two road surfaces merged (closest-approach ratios of 3.17 and 1.63 against
     // the road width). Both now ease the return leg out to 1.20, matching oval.
     harbor: { name: "Harbor Sprint", points: [[0.10,0.24],[0.52,0.12],[0.91,0.22],[0.93,0.46],[0.90,0.68],[0.76,0.88],[0.34,0.86],[0.08,0.68]], width: 166 },
-    ridge: { name: "Mountain Ridge", points: [[0.40,0.06],[0.72,0.14],[0.92,0.34],[0.80,0.48],[0.94,0.64],[0.70,0.91],[0.38,0.78],[0.12,0.92],[0.06,0.58],[0.24,0.36],[0.10,0.18]], width: 144 }
+    ridge: { name: "Mountain Ridge", points: [[0.40,0.06],[0.72,0.14],[0.92,0.34],[0.80,0.48],[0.94,0.64],[0.70,0.91],[0.38,0.78],[0.12,0.92],[0.06,0.58],[0.24,0.36],[0.10,0.18]], width: 144 },
+    lot: { name: "Parking Lot Sandbox", sandbox: true, points: [[0.5, 0.12], [0.86, 0.12], [0.86, 0.86], [0.14, 0.86], [0.14, 0.12]], width: 210 }
   };
 
   // The circuit is a world the chase camera moves through, not a fit-to-screen
@@ -8947,12 +8984,25 @@ class DriftCircuit {
     }
     this.path = samples; this.pathLength = samples[samples.length - 1].acc || samples.reduce((s, p) => s + p.len, 0);
     this.halfWidth = def.width * .68;
+    this.sandbox = !!def.sandbox;
+    this.worldW = W; this.worldH = H;
+    this.obstacles = [];
+    if (this.sandbox) {
+      const cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.5;
+      // Slalom cones plus two tire-stack clusters and a centre stack: a figure-eight playground.
+      for (let i = 0; i < 12; i++) this.obstacles.push({ x: cx + Math.cos(i / 12 * Math.PI * 2) * R * 0.62, y: cy + Math.sin(i / 12 * Math.PI * 2) * R * 0.62, r: 13, kind: 'cone' });
+      this.obstacles.push({ x: cx - R * 0.28, y: cy - R * 0.28, r: 24, kind: 'stack' });
+      this.obstacles.push({ x: cx + R * 0.28, y: cy + R * 0.28, r: 24, kind: 'stack' });
+      this.obstacles.push({ x: cx, y: cy, r: 30, kind: 'stack' });
+    }
     this.props = [];
     for (let i = 0; i < samples.length; i += 7) {
       const p = samples[i], side = i % 14 === 0 ? -1 : 1, off = this.halfWidth * 1.4 + 10 + (i % 3) * 14;
       this.props.push({ x: p.x + p.nx * off * side, y: p.y + p.ny * off * side, kind: i % 21 === 0 ? 'sign' : i % 10 === 0 ? 'stack' : 'tree', seed: i, side });
     }
-    this.checkpoints = [0, Math.floor(samples.length / 4), Math.floor(samples.length / 2), Math.floor((samples.length * 3) / 4)];
+    if (this.sandbox) { this.props = []; this.checkpoints = [0]; } else {
+      this.checkpoints = [0, Math.floor(samples.length / 4), Math.floor(samples.length / 2), Math.floor((samples.length * 3) / 4)];
+    }
   }
   reset() {
     this.stopAudio();
@@ -8962,6 +9012,7 @@ class DriftCircuit {
     const start = this.path[0];
     this.x = start.x + start.nx * 10; this.y = start.y + start.ny * 10; this.a = Math.atan2(start.ty, start.tx);
     this.camYaw = this.a;
+    if (this.sandbox) { this.x = this.worldW / 2; this.y = this.worldH / 2; this.a = 0; this.camYaw = 0; }
     this.vx = 0; this.vy = 0; this.steer = 0; this.throttle = 0; this.brake = 0; this.handbrake = false;
     this.score = 0; this.combo = 1; this.started = false; this.over = false; this.banked = false; this.damage = 0;
     this.laps = 0; this.lapProgress = 0; this.lapArmed = true; this.checkpoint = 0; this.bestLap = null; this.lapStart = 0; this.lapTime = 0;
@@ -8998,8 +9049,8 @@ class DriftCircuit {
     this.handbrake = this.control('drift', k) || this.touch.drift > 0;
     const steerInput = (this.control('right', k) ? 1 : 0) - (this.control('left', k) ? 1 : 0);
     this.steer += (steerInput - this.steer) * Math.min(1, dt * 9);
-    const near = this.nearestOnPath();
-    const onRoad = near.lateral < this.halfWidth;
+    const near = this.sandbox ? { i: 0, p: this.path[0], lateral: 0, signed: 0 } : this.nearestOnPath();
+    const onRoad = this.sandbox ? true : near.lateral < this.halfWidth;
     const power = (car.power || 1) * (g.tune.power || 1) / ((car.weight || 1) * (g.tune.weight || 1));
     // Velocity in the car frame
     const cos = Math.cos(this.a), sin = Math.sin(this.a);
@@ -9035,7 +9086,7 @@ class DriftCircuit {
     this.slip = Math.abs(vl); this.speedNow = Math.hypot(vf, vl);
     // Barrier collision with cooldown, no per-frame damage
     const barrier = this.halfWidth * 1.4;
-    if (near.lateral > barrier) {
+    if (!this.sandbox && near.lateral > barrier) {
       const p = near.p, sign = near.signed > 0 ? 1 : -1;
       this.x = p.x + p.nx * (barrier - 2) * sign; this.y = p.y + p.ny * (barrier - 2) * sign;
       const vn = (this.vx * p.nx + this.vy * p.ny) * sign;
@@ -9050,9 +9101,33 @@ class DriftCircuit {
         if (this.damage >= P.damageLimit) { this.over = true; stopCarAudio(this.audio); this.audio = null; }
       }
     }
+    // Sandbox: rectangular lot boundary and obstacle bounces, no damage, no laps.
+    if (this.sandbox) {
+      const m = 26, Wd = this.worldW, Hd = this.worldH;
+      const bounce = (nx2, ny2) => {
+        const vn = this.vx * nx2 + this.vy * ny2;
+        if (vn < 0) { this.vx -= 1.55 * vn * nx2; this.vy -= 1.55 * vn * ny2; this.vx *= .84; this.vy *= .84; this.shake = Math.max(this.shake, 4); }
+      };
+      if (this.x < m) { this.x = m; bounce(1, 0); }
+      else if (this.x > Wd - m) { this.x = Wd - m; bounce(-1, 0); }
+      if (this.y < m) { this.y = m; bounce(0, 1); }
+      else if (this.y > Hd - m) { this.y = Hd - m; bounce(0, -1); }
+      this.obstacles.forEach((ob) => {
+        const dx = this.x - ob.x, dy = this.y - ob.y, d = Math.hypot(dx, dy) || 1, minD = ob.r + 13;
+        if (d < minD) {
+          const nx2 = dx / d, ny2 = dy / d;
+          this.x = ob.x + nx2 * minD; this.y = ob.y + ny2 * minD;
+          bounce(nx2, ny2);
+          if (this.collideCooldown <= 0) {
+            this.collideCooldown = .3; this.shake = 5;
+            for (let i = 0; i < 6; i++) this.sparks.push({ x: this.x, y: this.y, vx: (Math.random() - .5) * 200, vy: (Math.random() - .5) * 200, life: .3 });
+          }
+        }
+      });
+    }
     if (!onRoad && this.speedNow > 60 && Math.random() < .5) this.dust.push({ x: this.x, y: this.y, life: .5, max: .5, size: 12 + Math.random() * 8 });
     this.updateDrift(dt, onRoad);
-    this.checkLap(near);
+    if (!this.sandbox) this.checkLap(near);
     this.collideCooldown = Math.max(0, this.collideCooldown - dt);
     // Stable behind-the-car chase camera: follow the heading with a slow lag so drifts read clearly.
     this.camYaw += Math.atan2(Math.sin(this.a - this.camYaw), Math.cos(this.a - this.camYaw)) * Math.min(1, dt * 3.4);
@@ -9226,6 +9301,32 @@ class DriftCircuit {
         RacingGL.drawMesh(RacingGL.mesh('cone'), RacingGL.matrices.mPose(Math.sin(ma) * mr, -4, Math.cos(ma) * mr, 0, 7 + (m % 3) * 2, mh, 7 + (m % 3) * 2), RacingGL.hexRgb(theme.prop).map((c) => c * .55));
       }
     }
+    if (this.track3d.sandbox) {
+      const Wd = this.worldW * S, Hd = this.worldH * S, hw = this.halfWidth * S;
+      const asphalt = [0.16, 0.17, 0.2], paint = [0.88, 0.9, 0.93];
+      RacingGL.drawMesh(RacingGL.mesh('box'), RacingGL.matrices.mPose(Wd / 2, -0.5, Hd / 2, 0, Wd / 2, 0.5, Hd / 2), asphalt);
+      RacingGL.drawMesh(RacingGL.mesh('box'), RacingGL.matrices.mPose(Wd / 2, -0.58, Hd / 2, 0, Wd / 2 + 1.4, 0.5, Hd / 2 + 1.4), [0.12, 0.13, 0.15]);
+      // parking bays along two edges
+      for (let i = 0; i < 10; i++) {
+        const t2 = 0.08 + i * 0.084;
+        RacingGL.drawMesh(RacingGL.mesh('box'), RacingGL.matrices.mPose(6 + t2 * (Wd - 12), 0.02, 18, 0, 0.08, 0.02, 5), paint);
+        RacingGL.drawMesh(RacingGL.mesh('box'), RacingGL.matrices.mPose(6 + t2 * (Wd - 12), 0.02, Hd - 18, 0, 0.08, 0.02, 5), paint);
+      }
+      // perimeter wall + obstacle posts (cones and tire stacks)
+      const wallC = RacingGL.hexRgb(theme.prop).map((c) => c * .8);
+      RacingGL.drawMesh(RacingGL.mesh('box'), RacingGL.matrices.mPose(Wd / 2, 0.6, -1.2, 0, Wd / 2 + 1.4, 1.2, 0.2), wallC);
+      RacingGL.drawMesh(RacingGL.mesh('box'), RacingGL.matrices.mPose(Wd / 2, 0.6, Hd + 1.2, 0, Wd / 2 + 1.4, 1.2, 0.2), wallC);
+      RacingGL.drawMesh(RacingGL.mesh('box'), RacingGL.matrices.mPose(-1.2, 0.6, Hd / 2, 0, 0.2, 1.2, Hd / 2 + 1.4), wallC);
+      RacingGL.drawMesh(RacingGL.mesh('box'), RacingGL.matrices.mPose(Wd + 1.2, 0.6, Hd / 2, 0, 0.2, 1.2, Hd / 2 + 1.4), wallC);
+      this.obstacles.forEach((ob) => {
+        const pose = RacingGL.matrices.mPose(ob.x * S, 0, ob.y * S, 0);
+        if (ob.kind === 'cone') RacingGL.drawMesh(RacingGL.mesh('cone'), RacingGL.matrices.mMul(pose, RacingGL.matrices.mPose(0, 0.35, 0, 0, 0.4, 0.5, 0.4)), [1, .45, .1]);
+        else {
+          RacingGL.drawMesh(RacingGL.mesh('cyl'), RacingGL.matrices.mMul(pose, RacingGL.matrices.mPose(0, 0.22, 0, 0, 0.55, 0.22, 0.55)), [0.1, 0.1, 0.12]);
+          RacingGL.drawMesh(RacingGL.mesh('cyl'), RacingGL.matrices.mMul(pose, RacingGL.matrices.mPose(0, 0.46, 0, 0, 0.48, 0.18, 0.48)), [0.85, 0.86, 0.9]);
+        }
+      });
+    } else {
     const line = this.track3d.centers[0];
     const yaw0 = Math.atan2(line.tx, line.tz);
     RacingGL.drawMesh(RacingGL.mesh('box'), RacingGL.matrices.mPose(line.x + line.nx * (line.half + .5), line.y, line.z + line.nz * (line.half + .5), yaw0, .16, 1.5, .16), [0.82, 0.84, 0.88]);
@@ -9247,8 +9348,9 @@ class DriftCircuit {
         RacingGL.drawMesh(RacingGL.mesh('cyl'), RacingGL.matrices.mMul(pose, RacingGL.matrices.mPose(0, .3, 0, 0, .45, .3, .45)), [.7, .72, .76]);
       }
     });
+    }
     if (g.cam !== 'hood') {
-      const near = this.nearestOnPath();
+      const near = this.sandbox ? { p: { elev: 0 } } : this.nearestOnPath();
       const yaw = Math.atan2(Math.cos(this.a), Math.sin(this.a));
       RacingGL.drawCar(RacingGL.matrices.mPose(this.x * S, (near.p.elev || 0) * S, this.y * S, yaw), CAR_PAINTS[g.paint] || g.paint, { shape: this.car().shape, wing: g.spoiler, neon: g.neon, wheelColor: g.wheelColor || '#111111', shadow: tier.shadows, finish: g.finish, vehicleScale: .78 });
     }
@@ -9285,7 +9387,7 @@ class DriftCircuit {
     this.dust.forEach((sm) => { const p2 = this.project(sm.x, sm.y, 4); if (!p2) return; const rad = Math.max(1, sm.size * 80 / p2.z); ctx.fillStyle = 'rgba(180,150,110,' + ((sm.life / sm.max) * .4).toFixed(2) + ')'; ctx.beginPath(); ctx.arc(p2.x, p2.y, rad, 0, Math.PI * 2); ctx.fill(); });
     this.sparks.forEach((sp2) => { const p2 = this.project(sp2.x, sp2.y, 5); if (!p2) return; ctx.fillStyle = 'rgba(255,200,90,' + (sp2.life / .3).toFixed(2) + ')'; ctx.fillRect(p2.x, p2.y, 2, 2); });
     // car: top-down sprite rotated into the chase view
-    const nearZ = this.nearestOnPath();
+    const nearZ = this.sandbox ? { p: { elev: 0 } } : this.nearestOnPath();
     const carP = this.project(this.x, this.y, nearZ.p.elev || 0);
     if (!usedGL && carP && g.cam !== 'hood') {
       const rot = this.a - this.camYaw;
@@ -9301,11 +9403,11 @@ class DriftCircuit {
     this.glActive = false;
     if (this.flash > 0) { ctx.fillStyle = 'rgba(239,68,68,' + this.flash * .35 + ')'; ctx.fillRect(0, 0, W, H); }
     const mph = Math.round(this.speedNow / 2 * 0.6214);
-    drawGameHud(ctx, W, 'DRIFT CIRCUIT · ' + this.trackDef().name, 'SCORE ' + this.score + ' · x' + this.combo.toFixed(1) + ' · LAP ' + this.laps + ' · DMG ' + this.damage + '/8 · $' + this.earned);
+    drawGameHud(ctx, W, 'DRIFT CIRCUIT · ' + this.trackDef().name, this.sandbox ? 'SCORE ' + this.score + ' · x' + this.combo.toFixed(1) + ' · SANDBOX · $' + this.earned : 'SCORE ' + this.score + ' · x' + this.combo.toFixed(1) + ' · LAP ' + this.laps + ' · DMG ' + this.damage + '/8 · $' + this.earned);
     this.drawDriftMeter(ctx, 18, H - 108);
     ctx.fillStyle = 'rgba(3,8,18,.72)'; rrPath(ctx, 14, H - 46, 176, 36, 8); ctx.fill();
-    ctx.fillStyle = '#e2e8f0'; ctx.font = '700 16px system-ui'; ctx.fillText(mph + ' mph' + (this.bestLap ? ' · best ' + this.bestLap.toFixed(1) + 's' : ''), 24, H - 22);
-    if (!this.started) drawGameCard(ctx, W, H, 'DRIFT CIRCUIT', ['↑/W accelerate · ↓/S brake · ← → or A/D steer.', 'Hold SPACE (or the DRIFT button) with steering to slide; release to regain grip.', 'Score builds from slip angle, speed, and how long you hold a controlled drift.', 'Hitting barriers costs damage; 8 hits ends the run.'], 'Press SPACE or tap to start');
+    ctx.fillStyle = '#e2e8f0'; ctx.font = '700 16px system-ui'; ctx.fillText(mph + ' mph' + (!this.sandbox && this.bestLap ? ' · best ' + this.bestLap.toFixed(1) + 's' : ''), 24, H - 22);
+    if (!this.started) drawGameCard(ctx, W, H, 'DRIFT CIRCUIT', ['↑/W accelerate · ↓/S brake · ← → or A/D steer.', 'Hold SPACE (or the DRIFT button) with steering to slide; release to regain grip.', 'Score builds from slip angle, speed, and how long you hold a controlled drift.', this.sandbox ? 'Open lot: no laps and no damage. Cones and tire stacks bounce you — practise donuts and transitions.' : 'Hitting barriers costs damage; 8 hits ends the run.'], 'Press SPACE or tap to start');
     if (this.over) { ctx.fillStyle = 'rgba(2,6,23,.62)'; ctx.fillRect(0, 0, W, H); ctx.textAlign = 'center'; ctx.fillStyle = '#fca5a5'; ctx.font = '800 30px Inter, system-ui, sans-serif'; ctx.fillText('WRECKED', W / 2, H / 2 - 6); ctx.fillStyle = '#e2e8f0'; ctx.font = '700 16px ui-monospace, monospace'; ctx.fillText('Score ' + this.score + ' · Laps ' + this.laps + ' · $' + this.earned, W / 2, H / 2 + 24); ctx.textAlign = 'start'; }
   }
   drawDriftMeter(ctx, x, y) {

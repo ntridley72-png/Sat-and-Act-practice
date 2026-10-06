@@ -14,7 +14,7 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
   page.on("console", (m) => { if (m.type() === "error" && !/\/api\/|501|404/.test(m.text())) errors.push("console: " + m.text()); });
 
-  await page.goto(BASE + PAGE_PATH, { waitUntil: "load" });
+  await page.goto(BASE + PAGE_PATH, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("body[data-workspace]");
 
   // ---- 1. Racing starts, accelerates, advances distance, steers laterally ----

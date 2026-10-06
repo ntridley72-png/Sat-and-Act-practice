@@ -12,7 +12,7 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto(BASE + PAGE_PATH, { waitUntil: "load" });
+  await page.goto(BASE + PAGE_PATH, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => window.DirtBike && typeof arcade !== "undefined");
 
   const result = await page.evaluate(() => {

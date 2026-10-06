@@ -16,7 +16,7 @@ const SHOTS = path.join(__dirname, "screenshots");
   page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
   page.on("console", (m) => { if (m.type() === "error") errors.push("console: " + m.text()); });
 
-  await page.goto(BASE + PAGE_PATH, { waitUntil: "load" });
+  await page.goto(BASE + PAGE_PATH, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("body[data-workspace]");
   await page.evaluate(() => arcade.open());
   await page.waitForSelector("#arcadeOverlay.show");

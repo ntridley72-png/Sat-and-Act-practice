@@ -17,7 +17,7 @@ const SHOTS = path.join(ROOT, "tests", "screenshots");
   page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
   page.on("console", (msg) => { if (msg.type() === "error") errors.push("console: " + msg.text()); });
 
-  await page.goto(BASE + PAGE_PATH, { waitUntil: "load" });
+  await page.goto(BASE + PAGE_PATH, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("body[data-workspace]");
 
   await page.click("#btnScholarships");
@@ -60,7 +60,7 @@ const SHOTS = path.join(ROOT, "tests", "screenshots");
   const savedName = (await page.textContent(".scholar-card .scholar-name")).trim();
   if (savedName !== firstName) throw new Error("My list showed the wrong scholarship: " + savedName);
 
-  await page.reload({ waitUntil: "load" });
+  await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForSelector("body[data-workspace]");
   await page.click("#btnScholarships");
   await page.waitForSelector("#screen-scholarships", { state: "visible" });

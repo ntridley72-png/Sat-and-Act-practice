@@ -16,7 +16,7 @@ function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); re
   const errors = [];
   page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
 
-  await page.goto(BASE + PAGE_PATH, { waitUntil: "load" });
+  await page.goto(BASE + PAGE_PATH, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("body[data-workspace]");
   await page.fill("#customLen", "4");
   await page.dispatchEvent("#customLen", "change");

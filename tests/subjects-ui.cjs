@@ -13,7 +13,7 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   const errors = [];
   page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
 
-  await page.goto(BASE + PAGE_PATH, { waitUntil: "load" });
+  await page.goto(BASE + PAGE_PATH, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("body[data-workspace]");
 
   // Tabs exist and the subject tab opens the picker with active state.

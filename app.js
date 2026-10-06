@@ -7828,9 +7828,9 @@ const RacingGL = (function () {
     W: 1, H: 1, scale: 1, theme: null, ndc: false,
   };
   const TIERS = [
-    { scale: 0.55, distance: 80, propEvery: 3, shadows: false, cars: 6 },
-    { scale: 0.78, distance: 115, propEvery: 2, shadows: true, cars: 10 },
-    { scale: 1.0, distance: 170, propEvery: 1, shadows: true, cars: 16 },
+    { scale: 0.72, distance: 150, propEvery: 3, shadows: false, cars: 6 },
+    { scale: 0.92, distance: 240, propEvery: 2, shadows: true, cars: 10 },
+    { scale: 1.0, distance: 360, propEvery: 1, shadows: true, cars: 16 },
   ];
   function tierDef() { return TIERS[state.tier]; }
 
@@ -8133,6 +8133,28 @@ const RacingGL = (function () {
    narrows toward the horizon and rises/falls with the hill value. The player drives in
    road-width units where -1 and +1 are the edges. */
 class NeonRacing {
+  // Per-map circuit geometry for the 3D view. r = base radius, h2/h3 = harmonic
+  // amplitudes (higher = more corners), skew = lateral stretch, phase = where the
+  // corners fall around the lap.
+  // Roadside dressing per map: what lines the track and how densely.
+  static DRESSING = {
+    oval:   { every: 6, signEvery: 18, off: 1.45, kind: 'tree',  posts: true },
+    club:   { every: 5, signEvery: 12, off: 1.35, kind: 'tree',  posts: true },
+    tech:   { every: 4, signEvery: 10, off: 1.25, kind: 'post',  posts: true },
+    canyon: { every: 8, signEvery: 24, off: 1.70, kind: 'tree',  posts: false },
+    harbor: { every: 5, signEvery: 14, off: 1.55, kind: 'stack', posts: true },
+    ridge:  { every: 7, signEvery: 21, off: 1.60, kind: 'tree',  posts: false }
+  };
+
+  static ROUTES3D = {
+    oval:   { r: 250, h2: 28, h3: 10, skew: 1.00, phase: 0.0 },
+    club:   { r: 215, h2: 54, h3: 26, skew: 0.88, phase: 0.6 },
+    tech:   { r: 180, h2: 72, h3: 44, skew: 0.74, phase: 1.2 },
+    canyon: { r: 230, h2: 66, h3: 34, skew: 1.15, phase: 2.1 },
+    harbor: { r: 275, h2: 34, h3: 14, skew: 1.30, phase: 0.3 },
+    ridge:  { r: 200, h2: 80, h3: 38, skew: 0.80, phase: 1.7 }
+  };
+
   static ROAD = {
     segLen: 200, roadW: 1900, lanes: 3, drawDist: 200, camH: 900,
     camDepth: 1 / Math.tan((100 / 2) * Math.PI / 180),
@@ -8179,11 +8201,12 @@ class NeonRacing {
     for (let i = 0; i < N; i++) {
       const hill = Math.sin(i / (shape.long * .67)) * shape.hill + Math.sin(i / shape.short) * shape.detail;
       const curve = Math.sin(i / shape.long) * shape.curve + Math.sin(i / shape.short) * (shape.curve * .4);
+      const D = NeonRacing.DRESSING[route] || NeonRacing.DRESSING.oval;
       const scenery = [];
-      if (i % 6 === 0) scenery.push({ side: -1.45, kind: i % 18 === 0 ? 'sign' : 'tree', seed: i });
-      if (i % 6 === 3) scenery.push({ side: 1.45, kind: i % 12 === 0 ? 'sign' : 'tree', seed: i });
-      if (i % 2 === 0) scenery.push({ side: -1.12, kind: 'post', seed: i });
-      if (i % 2 === 1) scenery.push({ side: 1.12, kind: 'post', seed: i });
+      if (i % D.every === 0) scenery.push({ side: -D.off, kind: i % D.signEvery === 0 ? 'sign' : D.kind, seed: i });
+      if (i % D.every === Math.floor(D.every / 2)) scenery.push({ side: D.off, kind: i % (D.signEvery * 0.67 | 0 || 12) === 0 ? 'sign' : D.kind, seed: i });
+      if (D.posts && i % 2 === 0) scenery.push({ side: -1.12, kind: 'post', seed: i });
+      if (D.posts && i % 2 === 1) scenery.push({ side: 1.12, kind: 'post', seed: i });
       this.segments.push({ index: i, curve, y: hill, scenery, p1: {}, p2: {} });
     }
     this.segmentCount = N;
@@ -8397,8 +8420,15 @@ class NeonRacing {
   buildTrack3D(theme) {
     const R = NeonRacing.ROAD, N = this.segmentCount, S = 0.006, half = R.roadW / 2 * S, step = 3;
     const themeRef = theme || this.theme();
+    const route = DriftCircuit.garage().track || 'oval';
+    const F = NeonRacing.ROUTES3D[route] || NeonRacing.ROUTES3D.oval;
     const pts = [];
-    const shape = (t) => [Math.sin(t) * 210 + Math.sin(2 * t) * 46 + Math.sin(3 * t) * 22, Math.cos(t) * 210 + Math.cos(2 * t) * 46 + Math.cos(3 * t) * 22];
+    // Radius plus two harmonics, with a per-route phase and lateral skew, so each
+    // map is a genuinely different circuit rather than the same loop re-coloured.
+    const shape = (t) => [
+      (Math.sin(t) * F.r + Math.sin(2 * t + F.phase) * F.h2 + Math.sin(3 * t) * F.h3) * F.skew,
+      Math.cos(t) * F.r + Math.cos(2 * t + F.phase) * F.h2 + Math.cos(3 * t) * F.h3
+    ];
     for (let i = 0; i <= N; i += step) {
       const seg = this.segments[i % N], t = (i % N) / N * Math.PI * 2;
       const [px, pz] = shape(t), [qx, qz] = shape(t + 0.012);
@@ -8416,7 +8446,7 @@ class NeonRacing {
     const curbsR = RacingGL.wallStrip(pts, { side: -1, off: (q) => q.half, height: () => 0.12, color: (i) => (i % 2 ? white : curbColor) });
     const walls = RacingGL.wallStrip(pts, { side: 1, off: (q) => q.half + 1.5, height: () => 0.75, color: () => prop });
     const wallsR = RacingGL.wallStrip(pts, { side: -1, off: (q) => q.half + 1.5, height: () => 0.75, color: () => prop });
-    this.track3d = { pts, road, shoulder, edgeL, edgeR, dash, curbs, curbsR, walls, wallsR, themeRef, step };
+    this.track3d = { pts, road, shoulder, edgeL, edgeR, dash, curbs, curbsR, walls, wallsR, themeRef, routeRef: route, step };
     return this.track3d;
   }
   worldAt(zDist, lateral) {
@@ -8430,7 +8460,11 @@ class NeonRacing {
   }
   renderWorld3D(ctx, W, H, g, theme) {
     if (!RacingGL.available()) return false;
-    if (!this.track3d || this.track3d.themeRef !== theme) this.buildTrack3D(theme);
+    const routeNow = DriftCircuit.garage().track || 'oval';
+    if (!this.track3d || this.track3d.themeRef !== theme || this.track3d.routeRef !== routeNow) {
+      if (this.routeBuilt !== routeNow) { this.buildTrack(); this.routeBuilt = routeNow; }
+      this.buildTrack3D(theme);
+    }
     const R = NeonRacing.ROAD, tier = RacingGL.tierDef(), S = 0.006, half = R.roadW / 2 * S;
     const p3 = this.worldAt(this.playerZ, this.renderPlayerX * half);
     if (!RacingGL.begin(W, H, theme, { near: tier.distance * R.segLen * S * .45, far: tier.distance * R.segLen * S })) return false;
@@ -8475,6 +8509,12 @@ class NeonRacing {
         } else if (sc.kind === 'sign') {
           RacingGL.drawMesh(RacingGL.mesh('box'), RacingGL.matrices.mMul(pose, RacingGL.matrices.mPose(0, .7, 0, 0, .08, .7, .08)), [.4, .42, .46]);
           RacingGL.drawMesh(RacingGL.mesh('box'), RacingGL.matrices.mMul(pose, RacingGL.matrices.mPose(0, 1.7, 0, 0, .8, .5, .06)), RacingGL.hexRgb(theme.accent));
+        } else if (sc.kind === 'stack') {
+          // Harbour containers: two stacked crates, hue varied by seed so a run of
+          // them along the quayside does not read as one repeated object.
+          const hue = [[.72, .28, .24], [.22, .38, .62], [.74, .62, .24]][sc.seed % 3];
+          RacingGL.drawMesh(RacingGL.mesh('box'), RacingGL.matrices.mMul(pose, RacingGL.matrices.mPose(0, .55, 0, 0, 1.5, .55, .75)), hue);
+          if (sc.seed % 2) RacingGL.drawMesh(RacingGL.mesh('box'), RacingGL.matrices.mMul(pose, RacingGL.matrices.mPose(0, 1.6, 0, 0, 1.35, .5, .68)), hue.map((c) => c * .78));
         } else {
           RacingGL.drawMesh(RacingGL.mesh('box'), RacingGL.matrices.mMul(pose, RacingGL.matrices.mPose(0, .45, 0, 0, .07, .45, .07)), [.78, .8, .85]);
         }

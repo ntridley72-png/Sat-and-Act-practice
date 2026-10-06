@@ -34,16 +34,23 @@
     document.head.appendChild(script);
   }
 
-  function renderAdSense(host, slotId) {
+  function renderAdSense(host, slot) {
+    // A slot is either a bare unit id, or { id, format, layout } for units that
+    // need a specific presentation (in-article units are fluid, not auto).
+    const spec = typeof slot === "string" ? { id: slot } : (slot || {});
+    const slotId = spec.id;
     if (!config.client || !slotId) return false;
     loadAdSense();
     const ad = document.createElement("ins");
     ad.className = "adsbygoogle";
     ad.style.display = "block";
+    if (spec.layout === "in-article") ad.style.textAlign = "center";
     ad.dataset.adClient = config.client;
     ad.dataset.adSlot = slotId;
-    ad.dataset.adFormat = "auto";
-    ad.dataset.fullWidthResponsive = "true";
+    ad.dataset.adFormat = spec.format || "auto";
+    if (spec.layout) ad.dataset.adLayout = spec.layout;
+    // full_width_responsive is meaningless for fluid units and Google warns on it.
+    if (!spec.format || spec.format === "auto") ad.dataset.fullWidthResponsive = "true";
     if (config.childDirected) ad.dataset.tagForChildDirectedTreatment = "1";
     host.appendChild(ad);
     try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (error) {}

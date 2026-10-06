@@ -117,9 +117,22 @@ def faq_schema(pairs):
     }
 
 
+def _insert_midroll(body):
+    """Place the in-article unit after the first table, falling back to the first
+    paragraph, so it lands inside the content rather than above or below it."""
+    slot = '<div class="sponsor-slot" data-ad-slot="article-top" hidden></div>'
+    for marker in ("</table>", "</p>"):
+        i = body.find(marker)
+        if i != -1:
+            i += len(marker)
+            return body[:i] + slot + body[i:]
+    return body + slot
+
+
 def page(*, path, title, description, body, schema, extra_head=""):
     """Render a complete document. `path` is origin-relative and ends with '/'."""
     canonical = ORIGIN + path
+    midroll_body = _insert_midroll(body)
     graph = json.dumps({"@context": "https://schema.org", "@graph": schema},
                        separators=(",", ":"), ensure_ascii=False)
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
@@ -139,11 +152,11 @@ def page(*, path, title, description, body, schema, extra_head=""):
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="/workspace.css">
 <link rel="stylesheet" href="/guides/guide.css">
-<script>window.FUNSAT_ADS={{provider:"adsense",client:"ca-pub-7330416749956065",childDirected:true,slots:{{"article-top":"","article-bottom":"2337300905"}}}};</script>
+<script>window.FUNSAT_ADS={{provider:"adsense",client:"ca-pub-7330416749956065",childDirected:true,slots:{{"article-top":{{id:"4774752824",format:"fluid",layout:"in-article"}},"article-bottom":"2337300905"}}}};</script>
 <script defer src="/ads.js"></script>
 {extra_head}<script type="application/ld+json">{graph}</script>
 </head><body data-workspace="exam"><div class="gwrap">
-{body}
+{midroll_body}
 <div class="sponsor-slot" data-ad-slot="article-bottom" hidden></div>
 <p class="gfoot">{SITE_NAME} is a free browser-based SAT and ACT prep app: digital SAT and ACT practice tests, unofficial score calculators, a built-in graphing calculator, college admissions chances from official U.S. Department of Education data, and a scholarship search. <a href="/">Start free practice &rarr;</a></p>
 </div></body></html>

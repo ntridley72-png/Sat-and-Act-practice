@@ -445,11 +445,12 @@ def rewrite_guides(out):
 
         if "FUNSAT_ADS" not in html_text:
             html_text = html_text.replace("</head>",
-                '<script>window.FUNSAT_ADS={provider:"adsense",client:"ca-pub-7330416749956065",'
-                'childDirected:true,slots:{"article-top":"","article-bottom":"2337300905"}};</script>\n'
+                '<script>window.FUNSAT_ADS=' + '{provider:"adsense",client:"ca-pub-7330416749956065",childDirected:true,slots:{"article-top":{id:"4774752824",format:"fluid",layout:"in-article"},"article-bottom":"2337300905"}}' + ';</script>\n'
                 '<script defer src="/ads.js"></script>\n</head>', 1)
             html_text = html_text.replace('<p class="gfoot">',
                 '<div class="sponsor-slot" data-ad-slot="article-bottom" hidden></div>\n<p class="gfoot">', 1)
+            html_text = html_text.replace('</table>',
+                '</table><div class="sponsor-slot" data-ad-slot="article-top" hidden></div>', 1)
 
         m = re.search(r"<h1>(.*?)</h1>", html_text, re.S)
         h1 = re.sub(r"<[^>]+>", "", m.group(1)).strip() if m else slug

@@ -57,6 +57,34 @@
     return true;
   }
 
+  // Preview-only placeholders. Opt in with ?adpreview=1 so real visitors never
+  // see a mock ad: an empty-looking box reads as broken, and anything that
+  // imitates an ad sitting beside live AdSense code is not worth the risk.
+  const PREVIEW = /[?&]adpreview=1\b/.test(location.search);
+
+  const PREVIEW_SIZES = {
+    "home-sidebar": [300, 250, "Sidebar 300x250"],
+    "article-top": [728, 250, "In-article (fluid)"],
+    "article-bottom": [728, 280, "Responsive 728x280"]
+  };
+
+  function renderPlaceholder(host, name) {
+    const [w, h, caption] = PREVIEW_SIZES[name] || [728, 250, name];
+    const svg =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' ' + h + '">' +
+      '<rect width="100%" height="100%" fill="#e8eaed" stroke="#9aa0a6" stroke-width="2" stroke-dasharray="10 7"/>' +
+      '<text x="50%" y="46%" fill="#5f6368" font-family="system-ui,sans-serif" font-size="' + Math.round(h / 9) +
+      '" font-weight="700" text-anchor="middle">Ad placeholder</text>' +
+      '<text x="50%" y="63%" fill="#80868b" font-family="system-ui,sans-serif" font-size="' + Math.round(h / 14) +
+      '" text-anchor="middle">' + caption + '</text></svg>';
+    const img = document.createElement("img");
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+    img.alt = "";
+    img.style.cssText = "display:block;width:100%;max-width:" + w + "px;height:auto;margin:0 auto";
+    host.appendChild(img);
+    return true;
+  }
+
   function mount() {
     document.querySelectorAll("[data-ad-slot]").forEach((host) => {
       if (host.dataset.adMounted) return;
@@ -66,11 +94,13 @@
       label.className = "sponsor-label";
       label.textContent = "Sponsored";
       host.appendChild(label);
-      const rendered = config.provider === "direct"
-        ? renderDirect(host, (config.slots || {})[name])
-        : config.provider === "adsense"
-          ? renderAdSense(host, (config.slots || {})[name])
-          : false;
+      const rendered = PREVIEW
+        ? renderPlaceholder(host, name)
+        : config.provider === "direct"
+          ? renderDirect(host, (config.slots || {})[name])
+          : config.provider === "adsense"
+            ? renderAdSense(host, (config.slots || {})[name])
+            : false;
       host.hidden = !rendered;
     });
   }

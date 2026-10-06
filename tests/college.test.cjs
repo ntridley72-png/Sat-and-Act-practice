@@ -126,10 +126,12 @@ const feature = loadFeature(profile);
 
   // Official ACT Composite rule is applied in both the results screen and the predictor.
   const html = fs.readFileSync("SAT & ACT Practice.html", "utf8");
-  assert((html.match(/\["english", "math", "reading"\]/g) || []).length >= 2, "ACT composite uses English, Math, and Reading in both places");
-  assert(html.includes("Science is optional and does not change it"), "ACT Science disclosure present");
-  assert(html.includes("unansweredReminderHtml"), "unanswered questions are surfaced without changing estimates");
-  assert(html.includes('data-college-open="predicted"'), "predicted-score screen links into College Score Goals");
+  const app = fs.existsSync("app.js") ? fs.readFileSync("app.js", "utf8") : "";
+  const appSource = app + "\n" + html;
+  assert((appSource.match(/\["english", "math", "reading"\]/g) || []).length >= 2, "ACT composite uses English, Math, and Reading in both places");
+  assert(appSource.includes("Science is optional and does not change it"), "ACT Science disclosure present");
+  assert(appSource.includes("unansweredReminderHtml"), "unanswered questions are surfaced without changing estimates");
+  assert(appSource.includes('data-college-open="predicted"'), "predicted-score screen links into College Score Goals");
 
   console.log("PASS: college dataset is sourced and internally consistent; the estimate rises with scores, GPA, and admit rate; conversions, targets, and the unanswered-questions rule behave.");
 })().catch((error) => { console.error(error); process.exit(1); });

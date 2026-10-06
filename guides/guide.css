@@ -1,0 +1,31 @@
+.gwrap{max-width:820px;margin:0 auto;padding:28px 20px 60px}
+.gnav{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--ws-line);padding-bottom:14px;margin-bottom:22px}
+.gnav a{color:var(--ws-accent);font-weight:700;text-decoration:none}
+.gkicker{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ws-accent);margin:18px 0 6px}
+.gwrap h1{font-size:clamp(26px,4vw,38px);letter-spacing:-.02em;margin:0 0 14px;color:var(--ws-ink)}
+.gwrap h2{font-size:20px;margin:26px 0 8px;color:var(--ws-ink)}
+.gwrap h3{font-size:16px;margin:18px 0 6px;color:var(--ws-ink)}
+.gwrap p,.gwrap li{line-height:1.7;color:var(--ws-ink)}
+.gwrap .muted{color:var(--ws-muted)}
+.gcard{border:1px solid var(--ws-line);background:var(--ws-surface);border-radius:2px;padding:16px 18px;margin:16px 0}
+.cta,.gwrap .cta{display:inline-block;background:var(--ws-accent);color:#fff!important;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:2px;margin-top:10px}
+.glinks{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;padding-top:14px;border-top:1px solid var(--ws-line)}
+.glinks a{font-size:13px;color:var(--ws-accent);text-decoration:none;border:1px solid var(--ws-line);padding:7px 10px;border-radius:2px}
+.gfoot{margin-top:28px;font-size:12px;color:var(--ws-muted);border-top:1px solid var(--ws-line);padding-top:14px}
+.gcats{display:grid;gap:8px;margin:18px 0}
+
+/* ---- Generated data pages: tables, figures, multi-column link lists ---- */
+.gtable{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+.gtable th,.gtable td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--ws-line);vertical-align:top}
+.gtable thead th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ws-muted);border-bottom:2px solid var(--ws-line)}
+.gtable tbody th{font-weight:600;color:var(--ws-ink);width:58%}
+.gtable td{color:var(--ws-ink);font-variant-numeric:tabular-nums}
+.gtable tbody tr:last-child th,.gtable tbody tr:last-child td{border-bottom:0}
+.gwrap .gtable a{color:var(--ws-accent);text-decoration:none;font-weight:600}
+.gfig{margin:18px 0;padding:0}
+.gfig img{width:100%;height:auto;border-radius:2px;border:1px solid var(--ws-line);display:block}
+.gfig figcaption{font-size:11px;color:var(--ws-muted);margin-top:6px}
+.gcols{columns:2;column-gap:28px;margin:14px 0;padding-left:18px}
+.gcols li{break-inside:avoid;line-height:1.8}
+.gwrap .gcols a{color:var(--ws-accent);text-decoration:none}
+@media (max-width:620px){.gcols{columns:1}.gtable{font-size:13px}.gtable th,.gtable td{padding:8px}.gtable tbody th{width:50%}}

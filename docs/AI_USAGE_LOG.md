@@ -101,3 +101,16 @@ Useful sources:
 | 2026-10-06 04:27 EDT | OpenCode | `deepseek/deepseek-flash` | work | timed_out | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
 | 2026-10-06 04:46 EDT | `q-20261006-044301` | claude | `claude-opus-5` | reviewer | completed | 14678 | $4.640740500000001 |
 | 2026-10-06 04:48 EDT | `q-20261006-044301` | opencode | `opencode/deepseek-v4.1-flash` | reviewer | failed | 0 | subscription/unavailable |
+| 2026-10-06 10:52 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-06 11:01 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | timed_out | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-06 11:08 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-06 11:13 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-06 11:18 EDT | `q-20261006-111646` | claude | `claude-opus-5` | reviewer | completed | 5587 | $0.9205819999999999 |
+| 2026-10-06 11:19 EDT | `q-20261006-111646` | opencode | `opencode/deepseek-v4.1-flash` | reviewer | failed | 0 | subscription/unavailable |
+| 2026-10-06 11:25 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-06 11:30 EDT | OpenCode | `deepseek/deepseek-flash` | work | timed_out | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-06 11:39 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-06 11:50 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-06 11:52 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-06 12:08 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-06 12:35 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |

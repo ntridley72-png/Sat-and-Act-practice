@@ -1,0 +1,6 @@
+{
+  "_comment": "Single source of truth for the public origin. Change `origin` here (and the `routes` pattern in wrangler.toml) to move the site to a new domain; every generated page, canonical, sitemap entry and schema URL follows automatically.",
+  "origin": "https://funsat.bid",
+  "name": "FunSAT",
+  "previousOrigins": []
+}

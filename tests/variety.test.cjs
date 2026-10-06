@@ -1,6 +1,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const html=fs.readFileSync('SAT & ACT Practice.html','utf8');
-const source=[...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]).find(s=>s.includes('function sample('));
+const inline=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)].filter(m=>!/src=|ld\+json|application\//.test(m[1])).map(m=>m[2]).find(s=>s.includes('function sample('));
+const source=(fs.existsSync('app.js')&&fs.readFileSync('app.js','utf8').includes('function sample('))?fs.readFileSync('app.js','utf8'):inline;
 const c=vm.createContext({console,profile:{seen:{},served:{},lastServed:{},recentQuestions:[]},saveProfile(){}});
 vm.runInContext(source.slice(source.indexOf('/*__DATA_START__*/'),source.indexOf('const STORAGE_KEY')),c);
 vm.runInContext(source.slice(source.indexOf('function shuffle('),source.indexOf('function defByKey')),c);

@@ -43,3 +43,39 @@ Until the key is added, "Forgot password?" tells people that reset by email isn'
 - Reset links work once and expire after 60 minutes. Resetting signs the account out on every other device. At most 3 reset emails per account per hour.
 - If the database is ever deleted, recreate the tables with:
   `npx wrangler d1 execute sat-act-practice-db --remote --file=worker/schema.sql`
+
+## Moving to a new domain
+
+Every canonical URL, sitemap entry and schema URL is generated from one value.
+
+1. Edit `origin` in `scripts/site.json`.
+2. Update the `routes` patterns in `wrangler.toml` (keep both apex and `www`).
+3. Add the new domain in Cloudflare (Websites → Add a domain), then `npx wrangler deploy`.
+4. Keep the old domain pointed at the same Worker and add the old hostname to
+   `routes`. `canonicalRedirect()` in `worker/index.js` only rewrites `www` →
+   apex, so add a host rule there to 301 the old domain to the new one, and
+   leave it running for at least a year so link equity transfers.
+5. In Google Search Console: verify the new property, then use the Change of
+   Address tool on the old one. Resubmit `/sitemap.xml`.
+
+`SITE_ORIGIN=https://example.com python3 scripts/build-seo-pages.py --out public`
+overrides the origin for a one-off build without editing the file.
+
+## Generated SEO pages
+
+`scripts/build-seo-pages.py` runs as part of the wrangler build step and emits
+565 static pages into `public/`:
+
+| Section | Pages | Source |
+| --- | --- | --- |
+| `/colleges/` | 354 profiles + 50 state hubs + 1 hub | `college-data.js` |
+| `/scholarships/` | 51 profiles + 1 hub | `scholarships-data.js` |
+| `/sat-scores/`, `/act-scores/` | 86 score lookups + 2 hubs | both, plus the concordance |
+| `/guides/` | 19, rewritten to extensionless URLs | `guides/*.html` |
+
+Guides are authored as `guides/<slug>.html` and published at `/guides/<slug>/`.
+The generator rewrites canonicals and internal links and injects
+`BreadcrumbList`; the Worker 301s the legacy `.html` paths. Never link to a
+`.html` URL internally — it costs a redirect hop.
+
+Regenerate locally with `python3 scripts/build-seo-pages.py --out public`.

@@ -68,7 +68,25 @@
     });
   }
 
-  window.FunSatAds = { mount };
+  function setPracticeMode(active) {
+    document.documentElement.classList.toggle("practice-test-active", !!active);
+    document.querySelectorAll("[data-ad-slot], ins.adsbygoogle, .google-auto-placed, #google_vignette").forEach((node) => {
+      if (active) {
+        if (!node.hasAttribute("data-practice-ad-hidden")) node.dataset.practiceAdDisplay = node.style.display || "";
+        node.setAttribute("data-practice-ad-hidden", "true");
+        node.style.setProperty("display", "none", "important");
+      } else if (node.hasAttribute("data-practice-ad-hidden")) {
+        node.removeAttribute("data-practice-ad-hidden");
+        node.style.display = node.dataset.practiceAdDisplay || "";
+        delete node.dataset.practiceAdDisplay;
+      }
+    });
+  }
+
+  window.FunSatAds = { mount, setPracticeMode };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount);
   else mount();
+  new MutationObserver(() => {
+    if (document.body && document.body.classList.contains("practice-test-active")) setPracticeMode(true);
+  }).observe(document.documentElement, { childList: true, subtree: true });
 })();

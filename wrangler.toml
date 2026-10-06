@@ -7,19 +7,27 @@ compatibility_date = "2026-09-01"
 # Serve the app at funsat.bid. The domain must be added to this same Cloudflare account
 # (Websites → Add a domain) before deploying; Cloudflare then creates the DNS record itself.
 workers_dev = true  # backup address: sat-act-practice.<your-subdomain>.workers.dev
-routes = [{ pattern = "funsat.bid", custom_domain = true }]
+# Both hostnames are routed to the Worker; worker/index.js 301s www -> apex so
+# there is exactly one canonical host. Cloudflare creates the DNS records for
+# each custom domain on deploy. If a deploy errors on the www entry, add
+# www.funsat.bid as a custom domain in the dashboard once, then redeploy.
+routes = [
+  { pattern = "funsat.bid", custom_domain = true },
+  { pattern = "www.funsat.bid", custom_domain = true },
+]
 
 # After verifying funsat.bid in Resend, uncomment this so reset emails can reach anyone:
 # [vars]
 # MAIL_FROM = "FunSAT <no-reply@funsat.bid>"
 
 [build]
-command = "mkdir -p public && cp \"SAT & ACT Practice.html\" public/index.html && cp workspace.css workspace.js college-data.js college.js redesign.css redesign.js subjects.css subjects.js scholarships-data.js scholarships.js dirtbike.js ads.js ads.txt robots.txt sitemap.xml public/"
+command = "mkdir -p public && cp \"SAT & ACT Practice.html\" public/index.html && cp app.js workspace.css workspace.js college-data.js college.js redesign.css redesign.js subjects.css subjects.js scholarships-data.js scholarships.js dirtbike.js ads.js ads.txt robots.txt social-card.png apple-touch-icon.png favicon.png favicon.ico public/ && rm -rf public/guides public/colleges public/scholarships public/sat-scores public/act-scores && python3 scripts/build-seo-pages.py --out public && python3 scripts/build-landing-pages.py --out public"
 
 [assets]
 directory = "./public"
 binding = "ASSETS"
 run_worker_first = true
+html_handling = "none"
 
 # Cloudflare Workers AI for the tutor (free daily allowance, no API key).
 [ai]

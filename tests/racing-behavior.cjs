@@ -34,7 +34,7 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   });
   if (!(racing.afterThrottle.speed > racing.start.speed)) throw new Error("racing did not accelerate: " + JSON.stringify(racing));
   if (!(racing.afterThrottle.distance > racing.start.distance)) throw new Error("racing did not advance distance");
-  if (!(racing.x1 > racing.x0 + 0.05)) throw new Error("racing steering did not move laterally: " + JSON.stringify(racing));
+  if (!(racing.x1 < racing.x0 - 0.05)) throw new Error("screen-right racing steering is reversed: " + JSON.stringify(racing));
 
   // ---- 2. Braking reduces speed ----
   const braking = await page.evaluate(() => {
@@ -75,6 +75,34 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   });
   if (!(crowdedSpawn.after > crowdedSpawn.before)) throw new Error("crowded traffic spawn did not advance: " + JSON.stringify(crowdedSpawn));
 
+  const smoothTraffic = await page.evaluate(() => {
+    const g = arcade.game; g.reset(); g.started = true; g.playerZ = 5000; g.spawnZ = 7000;
+    g.spawnTraffic(g.car());
+    const car = g.traffic[0];
+    car.x = 0.65; car.z += 600;
+    const before = { x: car.renderX, z: car.renderZ };
+    g.update(0.016);
+    return { before, physics: { x: car.x, z: car.z }, render: { x: car.renderX, z: car.renderZ }, trim: [car.carKey, car.wheelColor, car.wing, car.decal], steer: g.steerSmoothed };
+  });
+  if (!(smoothTraffic.render.x > smoothTraffic.before.x && smoothTraffic.render.x < smoothTraffic.physics.x && smoothTraffic.render.z > smoothTraffic.before.z && smoothTraffic.render.z < smoothTraffic.physics.z)) throw new Error("traffic render interpolation failed: " + JSON.stringify(smoothTraffic));
+  if (smoothTraffic.trim.some((value) => value == null || value === "")) throw new Error("opponent car detail profile is incomplete: " + JSON.stringify(smoothTraffic));
+
+  // In the WebGL renderer traffic must stay in the depth-tested pass; only the player uses
+  // the post-render rear sprite. Otherwise cars hidden by hills are painted over the sky.
+  const depthTraffic = await page.evaluate(() => {
+    const g = arcade.game; g.reset(); g.started = true; g.playerZ = 18000;
+    g.traffic = [{ x: 0, z: 19800, speed: 1800, paint: "blue", carKey: "sport" }];
+    const original = g.drawCarRear.bind(g); let rearSprites = 0;
+    g.drawCarRear = function () { rearSprites++; return original(...arguments); };
+    const gl = RacingGL.available(); g.draw(arcade.ctx); g.drawCarRear = original;
+    return { gl, rearSprites };
+  });
+  if (depthTraffic.gl && depthTraffic.rearSprites !== 1) throw new Error("traffic escaped the depth-tested render pass: " + JSON.stringify(depthTraffic));
+
+  // The highway keeps all physics segments but builds a lighter first-frame visual mesh.
+  const meshDensity = await page.evaluate(() => ({ physics: arcade.game.segmentCount, visual: arcade.game.track3d.pts.length, step: arcade.game.track3d.step }));
+  if (meshDensity.physics !== 1200 || meshDensity.visual > 450 || meshDensity.step < 2) throw new Error("racing visual mesh was not optimized: " + JSON.stringify(meshDensity));
+
   // ---- 4. Drift starts and moves under throttle ----
   const driftMove = await page.evaluate(() => {
     arcade.select("drift");
@@ -86,6 +114,8 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
     return { moved: Math.hypot(g.x - p0.x, g.y - p0.y), speed: g.speedNow };
   });
   if (!(driftMove.moved > 10 && driftMove.speed > 30)) throw new Error("drift did not move under throttle: " + JSON.stringify(driftMove));
+  const circuitSize = await page.evaluate(() => ({ length: arcade.game.pathLength, width: arcade.game.halfWidth, samples: arcade.game.path.length }));
+  if (!(circuitSize.length > 2000 && circuitSize.width >= 40 && circuitSize.samples >= 100)) throw new Error("drift circuit was not enlarged: " + JSON.stringify(circuitSize));
 
   // ---- 5. Steering changes heading ----
   const heading = await page.evaluate(() => {

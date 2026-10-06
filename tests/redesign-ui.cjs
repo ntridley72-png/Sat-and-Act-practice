@@ -23,6 +23,32 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   if (!(await page.locator("#btnArcade svg").count())) throw new Error("Arcade should use an SVG icon");
   if (!(await page.locator("#tokenBadge .coin").count())) throw new Error("wallet should use the gold coin");
   if (!/FunSAT/.test(await page.textContent(".brand"))) throw new Error("brand text missing");
+  const toolbarSizing = await page.evaluate(() => ({
+    tabs: Array.from(document.querySelectorAll(".arcade-btn, .icon-btn, .sound-btn")).filter((el) => el.offsetParent).map((el) => Math.round(el.getBoundingClientRect().height)),
+    icons: Array.from(document.querySelectorAll(".arcade-btn svg, .icon-btn svg")).filter((el) => el.offsetParent).map((el) => ({ w: Math.round(el.getBoundingClientRect().width), h: Math.round(el.getBoundingClientRect().height) })),
+  }));
+  if (new Set(toolbarSizing.tabs).size !== 1 || toolbarSizing.tabs[0] !== 54) throw new Error("top tabs should share a 54px height: " + JSON.stringify(toolbarSizing));
+  if (toolbarSizing.icons.some((icon) => icon.w !== 18 || icon.h !== 18)) throw new Error("top tab icons should share an 18px box: " + JSON.stringify(toolbarSizing));
+  const pageWidth = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, document: document.documentElement.scrollWidth }));
+  if (pageWidth.document > pageWidth.viewport) throw new Error("page must not scroll horizontally: " + JSON.stringify(pageWidth));
+  for (const width of [1920, 1440, 1024, 768, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.waitForTimeout(60);
+    const responsiveHeader = await page.evaluate(() => {
+      const visible = Array.from(document.querySelectorAll(".topbar button, .topbar .workspace-theme-label, .topbar .brand")).filter((el) => el.offsetParent);
+      const rects = visible.map((el) => ({ id: el.id || el.className, left: el.getBoundingClientRect().left, right: el.getBoundingClientRect().right, top: el.getBoundingClientRect().top, bottom: el.getBoundingClientRect().bottom, width: el.getBoundingClientRect().width }));
+      const overlaps = [];
+      for (let i = 0; i < rects.length; i++) for (let j = i + 1; j < rects.length; j++) {
+        const a = rects[i], b = rects[j], sameRow = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 8;
+        if (sameRow && Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1) overlaps.push([a.id, b.id]);
+      }
+      return { page: document.documentElement.scrollWidth, viewport: document.documentElement.clientWidth, overlaps, controls: rects.filter((r) => !String(r.id).includes("brand")).map((r) => r.width) };
+    });
+    if (responsiveHeader.page > responsiveHeader.viewport) throw new Error("responsive header caused page overflow at " + width + "px: " + JSON.stringify(responsiveHeader));
+    if (responsiveHeader.overlaps.length) throw new Error("responsive header controls overlap at " + width + "px: " + JSON.stringify(responsiveHeader));
+    if (responsiveHeader.controls.some((controlWidth) => controlWidth < 40)) throw new Error("responsive header control is too narrow at " + width + "px: " + JSON.stringify(responsiveHeader));
+  }
+  await page.setViewportSize({ width: 1360, height: 980 });
 
   // Seed an average + a saved college, then re-render home.
   await page.evaluate(() => {
@@ -66,6 +92,12 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   await page.dispatchEvent("#customLen", "change");
   await page.click("#btnStart");
   await page.waitForSelector("#screen-test", { state: "visible" });
+  const adsDuringPractice = await page.evaluate(() => {
+    const ad = document.createElement("ins"); ad.className = "adsbygoogle"; document.body.appendChild(ad);
+    window.FunSatAds.setPracticeMode(true);
+    return { active: document.body.classList.contains("practice-test-active"), display: getComputedStyle(ad).display, slotVisible: Array.from(document.querySelectorAll("[data-ad-slot]")).some((el) => getComputedStyle(el).display !== "none") };
+  });
+  if (!adsDuringPractice.active || adsDuringPractice.display !== "none" || adsDuringPractice.slotVisible) throw new Error("ads must be hidden throughout practice tests: " + JSON.stringify(adsDuringPractice));
   await page.locator("#questionCard .choice").first().click();
   // Full screen practice mode: only the test, with Esc to exit.
   await page.click("#btnZen");
@@ -103,7 +135,12 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   const reset = await page.evaluate(() => window.FunSATRedesign.resetCurrentGame());
   if (!reset || await page.evaluate(() => arcade.game.over)) throw new Error("restart did not reset the game");
 
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(100);
+  const mobileWidth = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, document: document.documentElement.scrollWidth }));
+  if (mobileWidth.document > mobileWidth.viewport) throw new Error("mobile page must not scroll horizontally: " + JSON.stringify(mobileWidth));
+
   await browser.close();
   if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
-  console.log("PASS: new top bar, home ring + college comparison, profile hero ring, Enter navigation, arcade intro, and HUD restart all work.");
+  console.log("PASS: normalized top tabs/icons, ad-free practice, home ring + college comparison, profile hero, Enter navigation, arcade intro, and HUD restart all work.");
 })().catch((error) => { console.error(error); process.exit(1); });

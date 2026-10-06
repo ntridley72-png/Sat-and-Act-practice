@@ -119,7 +119,8 @@ body[data-workspace] #screen-start .st-side .card { background: var(--panel) !im
 body[data-workspace] #screen-start h1, body[data-workspace] #screen-start h3, body[data-workspace] #screen-start .st-step, body[data-workspace] #screen-college h1, body[data-workspace] #screen-college h3 { color: var(--text); }
 .home-score-card { background: linear-gradient(180deg, #1b2431, #151c26); border: 1px solid var(--line); border-radius: 20px; padding: 20px; margin-bottom: 16px; cursor: pointer; transition: border-color .15s, transform .15s; }
 .home-score-card:hover { border-color: rgba(94, 240, 176, .5); transform: translateY(-1px); }
-.home-score-card .hsc-top { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.home-score-card .hsc-top { display: flex; align-items: center; justify-content: center; gap: 28px; flex-wrap: nowrap; max-width: 920px; margin-inline: auto; }
+.home-score-card .hsc-top > div:last-child { min-width: 0; max-width: 680px; }
 .home-score-card .hsc-title { font-weight: 800; font-size: 19px; color: var(--text); }
 .home-score-card .hsc-sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
 .ring { position: relative; flex: none; }
@@ -176,7 +177,7 @@ body[data-workspace] .arcade-hud .chip, body[data-workspace] .cab-top { color: v
   body[data-workspace] .brand { font-size: 19px; }
   body[data-workspace] .badges { gap: 6px; width: 100%; justify-content: flex-start; }
   body[data-workspace] .badge, body[data-workspace] .hud-streak, body[data-workspace] #autosave { display: none; }
-  .home-score-card .hsc-top { justify-content: center; text-align: center; }
+  .home-score-card .hsc-top { flex-wrap: wrap; justify-content: center; text-align: center; gap: 12px; }
   .ring { transform: scale(.88); transform-origin: center; }
   .hsc-tiles { grid-template-columns: 1fr 1fr; }
   .cab3d { transform: scale(.9); }
@@ -206,9 +207,9 @@ body[data-workspace="exam"] #screen-college,body[data-workspace="exam"] #college
 body[data-workspace="notebook"] #screen-college,body[data-workspace="notebook"] #collegeDetailHost{--ws-bg:#f6f3eb;--ws-surface:#fcfaf5;--ws-soft:#eeeae1;--ws-ink:#232c25;--ws-muted:#646a60;--ws-line:#d6d6cb;--ws-tint:#e9eee7;--ws-accent:#235d44;--text:#232c25;--muted:#646a60;--line:#d6d6cb}
 
 /* Concept C: an editorial toolbar with dividers and underlined active sections. */
-body[data-workspace] .topbar{padding:0!important;gap:0!important;min-height:58px;flex-wrap:nowrap!important}
-body[data-workspace] .brand{padding:0 18px;font-size:25px;letter-spacing:-.7px}
-body[data-workspace] .badges{align-self:stretch;gap:0!important;flex-wrap:nowrap!important;border-left:1px solid var(--ws-line)}
+body[data-workspace] .topbar{padding:0!important;gap:0!important;min-height:58px;flex-wrap:nowrap!important;justify-content:flex-start;max-width:100%}
+body[data-workspace] .brand{padding:0 clamp(12px,1.2vw,18px);font-size:clamp(21px,1.5vw,25px);letter-spacing:0;flex:0 0 auto;white-space:nowrap}
+body[data-workspace] .badges{align-self:stretch;gap:0!important;flex:1 1 auto;min-width:0;max-width:100%;flex-wrap:nowrap!important;border-left:1px solid var(--ws-line);overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;scrollbar-width:thin}
 body[data-workspace] .badge,body[data-workspace] .hud-streak,body[data-workspace] .token-badge,body[data-workspace] .autosave{height:100%;display:inline-flex;align-items:center;padding:0 12px;border-right:1px solid var(--ws-line)!important;font-size:12px}
 body[data-workspace] #badgeTimer,body[data-workspace] #badgeAcc,body[data-workspace] .token-badge.wallet{border-radius:0!important;border-top:0!important;border-bottom:0!important;border-left:0!important;background:transparent!important;color:var(--ws-ink)!important;box-shadow:none!important}
 body[data-workspace] .token-badge.wallet{gap:5px;padding:0 10px!important}
@@ -216,6 +217,7 @@ body[data-workspace] .token-badge.wallet .coin{width:17px;height:17px;box-shadow
 body[data-workspace] .token-badge.wallet .coin::after{font-size:9px}
 body[data-workspace] #autosave{display:none}
 body[data-workspace] .arcade-btn,body[data-workspace] .acct-btn,body[data-workspace] .icon-btn,body[data-workspace] .sound-btn,body[data-workspace] .workspace-theme-label{position:relative;height:100%;min-height:58px;border:0!important;border-right:1px solid var(--ws-line)!important;border-radius:0!important;background:transparent!important;color:var(--ws-ink)!important;box-shadow:none!important;transform:none!important;padding:0 14px}
+body[data-workspace] .badges>*{flex:0 0 auto;min-width:max-content}
 body[data-workspace] .arcade-btn:hover,body[data-workspace] .acct-btn:hover,body[data-workspace] .icon-btn:hover,body[data-workspace] .sound-btn:hover{background:var(--ws-tint)!important;box-shadow:none!important;transform:none!important}
 body[data-workspace] .arcade-btn.active::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:3px;background:var(--ws-accent)}
 body[data-workspace] .arcade-btn.active{color:var(--ws-accent)!important;font-weight:800}
@@ -226,8 +228,24 @@ body[data-workspace] .workspace-theme-label{display:flex;align-items:center;gap:
 body[data-workspace] .theme-label-text{font-weight:700}
 body[data-workspace] #workspaceTheme{height:30px!important;border:0!important;border-left:1px solid var(--ws-line)!important;border-radius:0!important;background:transparent!important;padding:0 22px 0 8px!important;font-size:12px}
 body[data-workspace] #btnHome{border-left:1px solid var(--ws-line)!important}
-@media(max-width:1100px){body[data-workspace] .badge,body[data-workspace] .token-badge,body[data-workspace] #autosave{display:none}body[data-workspace] .arcade-btn,body[data-workspace] .acct-btn,body[data-workspace] .workspace-theme-label{padding:0 10px}.theme-label-text{display:none}}
+@media(max-width:1540px){body[data-workspace] .badge,body[data-workspace] .hud-streak,body[data-workspace] .token-badge,body[data-workspace] #autosave{display:none}body[data-workspace] .arcade-btn,body[data-workspace] .acct-btn,body[data-workspace] .workspace-theme-label{padding-inline:clamp(9px,1vw,13px)}.theme-label-text{display:none}}
+@media(max-width:1120px){body[data-workspace] .arcade-btn>span{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}body[data-workspace] .arcade-btn{width:50px;padding:0!important}body[data-workspace] .arcade-btn.active::after{left:9px;right:9px}body[data-workspace] .workspace-theme-label{padding-inline:7px}body[data-workspace] #workspaceTheme{max-width:94px}}
 @media(max-width:760px){body[data-workspace] .topbar{flex-wrap:wrap!important;padding:6px!important}body[data-workspace] .badges{width:100%;overflow-x:auto;border:1px solid var(--ws-line)}body[data-workspace] .arcade-btn,body[data-workspace] .acct-btn,body[data-workspace] .icon-btn,body[data-workspace] .sound-btn,body[data-workspace] .workspace-theme-label{min-height:44px}.hud-streak{display:inline-flex!important}}
+
+/* Claude-reviewed toolbar sizing: one rail height and one icon box across every tab. */
+body[data-workspace]{--ws-tab-h:54px;--ws-tab-icon:18px}
+body[data-workspace] .topbar{min-height:var(--ws-tab-h)}
+body[data-workspace] .arcade-btn,body[data-workspace] .acct-btn,body[data-workspace] .icon-btn,body[data-workspace] .sound-btn,body[data-workspace] .workspace-theme-label{height:var(--ws-tab-h);min-height:var(--ws-tab-h);display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 14px;line-height:1}
+body[data-workspace] .icon-btn,body[data-workspace] .sound-btn{width:var(--ws-tab-h);min-width:var(--ws-tab-h);padding:0}
+body[data-workspace] .badge,body[data-workspace] .hud-streak,body[data-workspace] .token-badge,body[data-workspace] .autosave{height:var(--ws-tab-h);min-height:var(--ws-tab-h);line-height:1}
+body[data-workspace] .arcade-btn>svg,body[data-workspace] .icon-btn>svg{display:block;width:var(--ws-tab-icon);height:var(--ws-tab-icon);flex:0 0 var(--ws-tab-icon)}
+body[data-workspace] .sound-btn::before{width:var(--ws-tab-icon);height:var(--ws-tab-icon)}
+body[data-workspace] #btnPause{font-size:var(--ws-tab-icon)}
+body[data-workspace] .acct-btn .av{display:inline-flex;align-items:center;flex:0 0 var(--ws-tab-icon)}
+body[data-workspace] .acct-btn .av::before{box-sizing:border-box;width:var(--ws-tab-icon);height:var(--ws-tab-icon)}
+body[data-workspace] .arcade-btn>span,body[data-workspace] .acct-btn>span:not(.av){display:inline-block;line-height:1.15;white-space:nowrap}
+body[data-workspace] .arcade-btn.active::after{left:14px;right:14px}
+@media(max-width:760px){body[data-workspace] .topbar{min-height:0}body[data-workspace] .brand{min-height:44px;display:flex;align-items:center}body[data-workspace] .arcade-btn,body[data-workspace] .acct-btn,body[data-workspace] .icon-btn,body[data-workspace] .sound-btn,body[data-workspace] .workspace-theme-label,body[data-workspace] .hud-streak{height:44px;min-height:44px}body[data-workspace] .icon-btn,body[data-workspace] .sound-btn{width:44px;min-width:44px}body[data-workspace] .acct-btn #acctLabel{display:none}}
 
 .score-improvement>p{margin:7px 0 10px}
 .score-improvement ul{display:grid;gap:9px;margin:10px 0 0;padding:0;list-style:none}
@@ -510,3 +528,52 @@ body.cpop-open{overflow:hidden}
 .dg-slider input{width:100%}
 .dg-slider b{color:var(--text,#e8edf4);text-align:right}
 .dg-note{font-size:11px;color:var(--muted,#93a0b2);margin-top:6px}
+
+/* ---- Top rail sizing: measure the rail, not the viewport ----------------
+   The toolbar used to collapse on viewport media queries (1540px/1120px)
+   while its real constraint is the 1140px `.wrap` cap, which never changes.
+   On a wide monitor the viewport test passed, nothing collapsed, and the rail
+   overflowed its container by ~450px — putting the theme picker and account
+   button in a clipped scroll region. Two fixes: let the rail use the full
+   window, and collapse on the rail's own width with container queries. */
+@media (min-width:1200px){
+  body[data-workspace] .topbar{
+    margin-inline:calc(-1 * (50vw - 50%));
+    max-width:none;   /* line 210 caps this at 100% of the 1140px wrap */
+    padding-inline:clamp(16px,2.5vw,40px)!important;
+  }
+  /* The calculator panel shifts the page; full-bleed would overflow it. */
+  body[data-workspace].calc-open .topbar{margin-inline:0;padding-inline:0!important}
+}
+
+body[data-workspace] .badges{
+  container-type:inline-size;
+  container-name:toolrail;
+  flex:1 1 0%;          /* size from free space, not content, so the query is stable */
+  overflow-x:hidden;    /* nothing should land in a scroll region at desktop widths */
+}
+
+/* Drop the ambient read-outs first — they are glanceable, not navigation. */
+@container toolrail (max-width:1380px){
+  body[data-workspace] .badge,
+  body[data-workspace] .hud-streak,
+  body[data-workspace] .token-badge,
+  body[data-workspace] #autosave{display:none}
+  body[data-workspace] .theme-label-text{display:none}
+}
+
+/* Then collapse the nav labels to icons, keeping tap targets square. */
+@container toolrail (max-width:1060px){
+  body[data-workspace] .arcade-btn>span{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+  }
+  body[data-workspace] .arcade-btn{width:var(--ws-tab-h);padding:0!important}
+  body[data-workspace] .arcade-btn.active::after{left:9px;right:9px}
+  body[data-workspace] .acct-btn #acctLabel{display:none}
+}
+
+/* Below the wrap's own breakpoint the rail may still scroll, as before. */
+@media (max-width:760px){
+  body[data-workspace] .badges{overflow-x:auto}
+}

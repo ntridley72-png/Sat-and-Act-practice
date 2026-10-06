@@ -27,13 +27,29 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (!url.pathname.startsWith("/api/")) {
-      const asset = await env.ASSETS.fetch(request);
+      const canonical = canonicalRedirect(url);
+      if (canonical) return Response.redirect(canonical, 301);
+      // Serve directory indexes explicitly (assets use html_handling = "none").
+      let assetUrl = request.url;
+      if (url.pathname === "/") assetUrl = url.origin + "/index.html";
+      else if (url.pathname.endsWith("/")) assetUrl = url.origin + url.pathname + "index.html";
+      const asset = await env.ASSETS.fetch(new Request(assetUrl, request));
       const headers = new Headers(asset.headers);
-      // The app is updated in place; force browsers and Cloudflare edges to
-      // revalidate so a deploy is visible on the next refresh.
-      headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
-      headers.set("Pragma", "no-cache");
-      headers.set("Expires", "0");
+      const isDocument = request.headers.get("Accept")?.includes("text/html") || url.pathname === "/" || url.pathname.endsWith("/");
+      if (isDocument) {
+        // The app shell carries live state, so it always revalidates. The
+        // generated content pages (guides, colleges, scholarships, score
+        // lookups) only change on deploy, so they can be served from cache
+        // and revalidated in the background.
+        headers.set("Cache-Control", url.pathname === "/"
+          ? "no-cache, must-revalidate"
+          : "public, max-age=3600, stale-while-revalidate=86400");
+      } else {
+        // Static assets are deploy-versioned by Cloudflare and can be reused across visits.
+        headers.set("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800");
+      }
+      headers.delete("Pragma");
+      headers.delete("Expires");
       return new Response(asset.body, { status: asset.status, statusText: asset.statusText, headers });
     }
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(request) });
@@ -46,6 +62,35 @@ export default {
     }
   }
 };
+
+// One canonical URL per page: apex host (no www), no .html suffix, trailing
+// slash on every document path. Returns the URL to 301 to, or null if the
+// request is already canonical. All rules are applied in a single hop so a
+// request like https://www.example.com/guides/psat-vs-sat.html redirects once.
+function canonicalRedirect(url) {
+  const target = new URL(url.toString());
+  let changed = false;
+
+  if (target.hostname.startsWith("www.")) {
+    target.hostname = target.hostname.slice(4);
+    changed = true;
+  }
+
+  const path = target.pathname;
+  if (path.endsWith("/index.html")) {
+    target.pathname = path.slice(0, -"index.html".length);
+    changed = true;
+  } else if (path.endsWith(".html")) {
+    target.pathname = path.slice(0, -".html".length) + "/";
+    changed = true;
+  } else if (!path.endsWith("/") && !path.slice(path.lastIndexOf("/") + 1).includes(".")) {
+    // Extensionless document path without its trailing slash.
+    target.pathname = path + "/";
+    changed = true;
+  }
+
+  return changed ? target.toString() : null;
+}
 
 async function route(req, env, path) {
   if (path === "signup" && req.method === "POST") return signup(req, env);

@@ -4,7 +4,11 @@ const assert = require('node:assert/strict');
 const html = fs.readFileSync('SAT & ACT Practice.html', 'utf8');
 const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)].filter(m => !/src=|ld\+json|application\//.test(m[1])).map(m => m[2]);
 scripts.forEach((s, i) => new vm.Script(s, { filename: `inline-${i}.js` }));
-const source = scripts.find(s => s.includes('function sample('));
+// The app logic moved to an external bundle (app.js) during the file split; prefer it when present.
+const appSrc = fs.existsSync('app.js') ? fs.readFileSync('app.js', 'utf8') : null;
+if (appSrc) new vm.Script(appSrc, { filename: 'app.js' });
+const source = (appSrc && appSrc.includes('function sample(')) ? appSrc : scripts.find(s => s.includes('function sample('));
+assert(source, 'app source with function sample() not found');
 const extract = (from, to) => source.slice(source.indexOf(from), source.indexOf(to, source.indexOf(from)));
 const context = vm.createContext({ console, profile: {seen:{},served:{},lastServed:{},recentQuestions:[],selectionSequence:0}, saveProfile(){}, escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');} });
 vm.runInContext(extract('function shuffle(', 'function defByKey'), context);

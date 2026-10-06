@@ -720,11 +720,22 @@
       '<div class="cf-line"><span>First-year retention</span><b>' + (college.ret != null ? college.ret + "%" : "—") + "</b></div>" +
       '<div class="cf-line"><span>Median earnings (10 yrs)</span><b>' + (college.ern != null ? "$" + Number(college.ern).toLocaleString() : "—") + "</b></div>" +
       '<div class="cf-line"><span>Student-faculty ratio</span><b>' + (college.sfr != null ? college.sfr + ":1" : "—") + "</b></div>" +
+      '<div class="cf-line"><span>Test scores</span><b>' + (college.test || "Not reported") + "</b></div>" +
+      '<div class="cf-line"><span>SAT average (enrolled)</span><b>' + (college.satAvg != null ? college.satAvg : "—") + "</b></div>" +
       '<div class="cf-line"><span>Undergraduates</span><b>' + (college.enr ? college.enr.toLocaleString() : "—") + "</b></div>" +
       '<div class="cf-line"><span>First-generation share</span><b>' + (college.fg != null ? college.fg + "%" : "—") + "</b></div>" +
       '<div class="cf-line"><span>Pell Grant share</span><b>' + (college.pell != null ? college.pell + "%" : "—") + "</b></div>" +
       '<div class="cf-line"><span>Diversity index</span><b>' + (college.div != null ? college.div + "/100" : "—") + "</b></div>" +
       raceBar + "</section>" +
+      '<section class="cf-card"><h4>Class profile & money</h4>' +
+      '<div class="cf-line"><span>Median family income</span><b>' + money(college.fam) + "</b></div>" +
+      '<div class="cf-line"><span>Students with federal loans</span><b>' + (college.loan != null ? college.loan + "%" : "—") + "</b></div>" +
+      '<div class="cf-line"><span>Median debt at graduation</span><b>' + money(college.debt) + "</b></div>" +
+      '<div class="cf-line"><span>Pell-student graduation rate</span><b>' + (college.gpell != null ? college.gpell + "%" : "—") + "</b></div>" +
+      '<div class="cf-line"><span>Cohort default rate</span><b>' + (college.cdr != null ? college.cdr + "%" : "—") + "</b></div>" +
+      '<div class="cf-line"><span>Students age 25+</span><b>' + (college.age25 != null ? college.age25 + "%" : "—") + "</b></div>" +
+      '<div class="cf-line"><span>Average faculty salary</span><b>' + money(college.fsal) + "</b></div>" +
+      '<div class="cf-note">Median family income, federal loan share, median debt at graduation, cohort default rate, age mix, and average faculty salary are the college’s most recent federal reporting (College Scorecard). The Pell graduation rate compares completion for Pell Grant recipients.</div></section>' +
       '<section class="cf-card"><h4>Student experience</h4>' +
       '<div class="cf-social"><span class="cf-grade">' + escapeHtml(college.sg || "—") + '</span><span class="cf-note">App estimate (A–D) from size, retention, diversity, and location — not a student survey.</span></div>' +
       '<div class="cf-line"><span>Students returning after year one</span><b>' + (college.ret != null ? college.ret + "%" : "—") + '</b></div>' +
@@ -827,6 +838,7 @@
       '<div id="collegeResults">' + resultsHtml() + "</div></section>" +
       '<div id="collegeDetailHost"' + (selectedCollege() ? ' class="as-popup" role="dialog" aria-modal="true" aria-label="' + escapeHtml(selectedCollege().n) + '"><div class="cpop-box"><button type="button" class="cpop-close" data-close-detail aria-label="Close">✕</button>' + detailHtml() + "</div>" : ">") + "</div>" +
       "</div>" + compareHtml() +
+      '<p class="small muted college-foot">Fun fact: Curtis Institute of Music admits roughly 3–4% of applicants in a typical year — about the same as (or lower than) Harvard’s, in a class of fewer than 200 students.</p>' +
       '<p class="small muted college-foot">College data: <a href="' + escapeHtml(CD.meta.sourceUrl || "https://collegescorecard.ed.gov/data/") + '" target="_blank" rel="noopener">College Scorecard</a>, ' + escapeHtml(CD.meta.release || "") + ". " + escapeHtml(CD.meta.note || "") + ' The admissions estimate is an original app model and is not affiliated with any college. <a href="https://www.act.org/content/act/en/products-and-services/the-act/scores/act-sat-concordance.html" target="_blank" rel="noopener">Official ACT/SAT concordance</a>.</p>';
     wireCollege();
     applyPanelSize();

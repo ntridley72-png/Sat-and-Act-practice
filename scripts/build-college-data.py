@@ -189,6 +189,20 @@ def enrich_scorecard(colleges):
         e["sfr"] = round(num(r.get("STUFACR")), 1) if num(r.get("STUFACR")) else None
         e["pell"] = pct("PCTPELL")
         e["fg"] = pct("PAR_ED_PCT_1STGEN")
+        e["satAvg"] = int(num(r.get("SAT_AVG"))) if num(r.get("SAT_AVG")) else None
+        fsal = num(r.get("AVGFACSAL"))
+        e["fsal"] = int(fsal * 10) if fsal else None  # AVGFACSAL is reported in tens of dollars
+        e["loan"] = pct("PCTFLOAN")
+        debt = num(r.get("DEBT_MDN"))
+        e["debt"] = int(debt) if debt else None
+        fam = num(r.get("MD_FAMINC"))
+        e["fam"] = int(fam) if fam else None
+        cdr = num(r.get("CDR3"))
+        e["cdr"] = round(cdr * 100, 1) if cdr is not None else None
+        e["age25"] = pct("UG25ABV")
+        e["gpell"] = pct("C150_4_PELL")
+        test = num(r.get("ADMCON7"))
+        e["test"] = {1: "Required", 2: "Recommended", 3: "Considered", 4: "Not considered"}.get(int(test)) if test else None
         loc = num(r.get("LOCALE"))
         e["loc"] = LOCALE_TYPE.get(int(loc)) if loc else None
         groups = {"w": "UGDS_WHITE", "b": "UGDS_BLACK", "h": "UGDS_HISP", "a": "UGDS_ASIAN", "n": "UGDS_NRA", "m": "UGDS_2MOR"}
@@ -281,10 +295,10 @@ def fetch_photos(colleges):
     for index, e in enumerate(colleges):
         key = str(e["id"])
         cached = cache.get(key, {})
-        photos = list(cached.get("imgs") or [])
-        if not photos and cached.get("img"):
+        photos = list(cached.get("imgs") or []) if cached.get("v") == 2 else []
+        if not photos and cached.get("img") and cached.get("v") == 2:
             photos.append({"u": cached["img"], "a": cached.get("imgA", "Wikimedia Commons"), "l": cached.get("imgL", "")})
-        if len(photos) >= 3:
+        if len(photos) >= 3 and cached.get("v") == 2:
             e.update(cached)
             continue
         try:
@@ -308,24 +322,49 @@ def fetch_photos(colleges):
                 url = ii.get("thumburl") or ii.get("url")
                 if not url:
                     continue
+                w = num(ii.get("width")) or 0
+                h = num(ii.get("height")) or 0
+                if w and w < 800:
+                    continue  # small/thumbnail-quality only
                 artist = re.sub(r"<[^>]+>", "", (meta.get("Artist", {}) or {}).get("value", "") or "").strip()[:120]
-                score = sum(2 if good in low else 0 for good in ("campus", "hall", "library", "quad", "building", "aerial"))
-                score += sum(1 for token in re.findall(r"[a-z0-9]+", e["n"].lower()) if len(token) > 3 and token in low)
-                candidates.append((score, {
+                bucket = "other"
+                if any(k in low for k in ("aerial", "skyline", "panorama", "downtown", "overview", "bird")):
+                    bucket = "aerial"
+                elif any(k in low for k in ("hall", "library", "chapel", "center", "building", "museum", "tower", "house", "laboratory", "institute")):
+                    bucket = "building"
+                elif any(k in low for k in ("campus", "quad", "lawn", "mall", "gate", "entrance", "field", "green", "students")):
+                    bucket = "campus"
+                score = 3 * sum(2 if good in low else 0 for good in ("campus", "hall", "library", "quad", "building", "aerial"))
+                score += 2 * sum(1 for token in re.findall(r"[a-z0-9]+", e["n"].lower()) if len(token) > 3 and token in low)
+                if w and h:
+                    score += min(w * h, 4_000_000) / 4_000_000 * 3  # larger originals look better
+                    if w / h >= 1.25:
+                        score += 1.2  # landscape reads better in the gallery
+                    elif w / h < 0.75:
+                        score -= 1.5
+                if "logo" in low or "map" in low or "flag" in low:
+                    score -= 6
+                candidates.append((score, bucket, {
                     "u": url,
                     "a": ((artist + " · ") if artist else "") + (license_name or "Wikimedia Commons"),
                     "l": "https://commons.wikimedia.org/wiki/" + urllib.parse.quote(title.replace(" ", "_")),
                 }))
             known = {p.get("u") for p in photos}
-            for _, photo in sorted(candidates, key=lambda item: -item[0]):
-                if photo["u"] not in known:
-                    photos.append(photo)
-                    known.add(photo["u"])
-                if len(photos) == 3:
-                    break
+            ranked = sorted(candidates, key=lambda item: -item[0])
+            # one from each subject bucket first (aerial / building / campus), then fill by score
+            chosen = set()
+            for want in ("aerial", "building", "campus"):
+                for score, bucket, photo in ranked:
+                    if bucket == want and photo["u"] not in known and photo["u"] not in chosen:
+                        photos.append(photo); known.add(photo["u"]); chosen.add(photo["u"]); break
+                if len(photos) >= 3: break
+            for score, bucket, photo in ranked:
+                if len(photos) >= 3: break
+                if photo["u"] in known: continue
+                photos.append(photo); known.add(photo["u"])
         except Exception:
             pass
-        info = {"imgs": photos[:3]}
+        info = {"imgs": photos[:3], "v": 2}
         if photos:
             info.update({"img": photos[0]["u"], "imgA": photos[0]["a"], "imgL": photos[0]["l"]})
             cache[key] = info

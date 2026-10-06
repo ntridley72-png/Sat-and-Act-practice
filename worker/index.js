@@ -44,8 +44,14 @@ export default {
         headers.set("Cache-Control", url.pathname === "/"
           ? "no-cache, must-revalidate"
           : "public, max-age=3600, stale-while-revalidate=86400");
+      } else if (/\.(?:css|js|json|xml|txt)$/i.test(url.pathname)) {
+        // Code and data are referenced WITHOUT a version string (/app.js, not
+        // /app.js?v=3), so a long max-age pins returning visitors to whatever
+        // they cached before the last deploy. Revalidate instead: Cloudflare
+        // serves these with ETags, so an unchanged file costs a 304.
+        headers.set("Cache-Control", "no-cache, must-revalidate");
       } else {
-        // Static assets are deploy-versioned by Cloudflare and can be reused across visits.
+        // Images, fonts and other immutable media can be reused across visits.
         headers.set("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800");
       }
       headers.delete("Pragma");

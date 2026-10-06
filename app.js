@@ -7828,9 +7828,9 @@ const RacingGL = (function () {
     W: 1, H: 1, scale: 1, theme: null, ndc: false,
   };
   const TIERS = [
-    { scale: 0.72, distance: 150, propEvery: 3, shadows: false, cars: 6 },
-    { scale: 0.92, distance: 240, propEvery: 2, shadows: true, cars: 10 },
-    { scale: 1.0, distance: 360, propEvery: 1, shadows: true, cars: 16 },
+    { scale: 0.72, distance: 240, propEvery: 3, shadows: false, cars: 6 },
+    { scale: 0.92, distance: 320, propEvery: 2, shadows: true, cars: 10 },
+    { scale: 1.0, distance: 420, propEvery: 1, shadows: true, cars: 16 },
   ];
   function tierDef() { return TIERS[state.tier]; }
 
@@ -8467,7 +8467,7 @@ class NeonRacing {
     }
     const R = NeonRacing.ROAD, tier = RacingGL.tierDef(), S = 0.006, half = R.roadW / 2 * S;
     const p3 = this.worldAt(this.playerZ, this.renderPlayerX * half);
-    if (!RacingGL.begin(W, H, theme, { near: tier.distance * R.segLen * S * .45, far: tier.distance * R.segLen * S })) return false;
+    if (!RacingGL.begin(W, H, theme, { near: tier.distance * R.segLen * S * .78, far: tier.distance * R.segLen * S })) return false;
     const chase = g.cam !== 'far';
     const eye = [p3.x - p3.tx * (chase ? 8.4 : 14), p3.y + (chase ? 3.3 : 5.8), p3.z - p3.tz * (chase ? 8.4 : 14)];
     const at = [p3.x + p3.tx * 9, p3.y + 0.9, p3.z + p3.tz * 9];

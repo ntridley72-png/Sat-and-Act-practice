@@ -8103,8 +8103,27 @@ const RacingGL = (function () {
     hub(-W2 * .99, L * .32); hub(W2 * .99, L * .32); hub(-W2 * .99, -L * .32); hub(W2 * .99, -L * .32);
     drawMesh(state.meshes.box, mPart(pose, { y: .5, z: L * .5, x: W2 * .45, sz: .05, sx: .22, sy: .07 }), [1, .96, .8], { emissive: .9, alpha: 1 });
     drawMesh(state.meshes.box, mPart(pose, { y: .5, z: L * .5, x: -W2 * .45, sz: .05, sx: .22, sy: .07 }), [1, .96, .8], { emissive: .9 });
-    if (lightBar) drawMesh(state.meshes.box, mPart(pose, { y: .5, z: -L * .5, sz: .05, sx: W2 * 1.9, sy: .07 }), [.95, .15, .12], { emissive: .85 });
-    else { drawMesh(state.meshes.box, mPart(pose, { y: .5, z: -L * .5, x: W2 * .4, sz: .05, sx: .28, sy: .1 }), [.95, .08, .06], { emissive: 1 }); drawMesh(state.meshes.box, mPart(pose, { y: .5, z: -L * .5, x: -W2 * .4, sz: .05, sx: .28, sy: .1 }), [.95, .08, .06], { emissive: 1 }); }
+    // ---- rear light signature (matches the top-down sprite) ----------------
+    // Emissive boxes only: each signature costs 1-6 small draws and is what
+    // makes one car distinguishable from another at the back of the pack.
+    const RED = [.95, .1, .08], HOT = [1, .72, .78];
+    const lamp = (x, w, h, y) => drawMesh(state.meshes.box, mPart(pose, { y: y == null ? .5 : y, z: -L * .5, x, sz: .05, sx: w, sy: h }), RED, { emissive: 1 });
+    const sig = shape.rear || (lightBar ? 'bar' : 'dual');
+    if (sig === 'bar') {
+      lamp(0, W2 * 1.9, .07);
+      drawMesh(state.meshes.box, mPart(pose, { y: .53, z: -L * .505, sz: .04, sx: W2 * 1.9, sy: .02 }), HOT, { emissive: 1 });
+    } else if (sig === 'racetrack') {
+      lamp(0, W2 * 1.86, .035, .58); lamp(0, W2 * 1.86, .035, .42);
+      lamp(-W2 * .92, .035, .085); lamp(W2 * .92, .035, .085);
+    } else if (sig === 'quad') {
+      [-.92, -.42, .42, .92].forEach((f) => drawMesh(state.meshes.cyl, mPart(pose, { x: W2 * f, y: .5, z: -L * .5, rx: Math.PI / 2, sx: .09, sy: .05, sz: .09 }), RED, { emissive: 1 }));
+    } else if (sig === 'tribar') {
+      [-1, 1].forEach((sd) => { for (let i = 0; i < 3; i++) lamp(sd * (W2 * .34 + i * W2 * .25), W2 * .09, .09); });
+    } else if (sig === 'ylamp') {
+      [-1, 1].forEach((sd) => { lamp(sd * W2 * .72, W2 * .4, .035, .55); lamp(sd * W2 * .5, W2 * .12, .07, .44); });
+    } else {
+      lamp(W2 * .4, .28, .1); lamp(-W2 * .4, .28, .1);
+    }
     drawMesh(state.meshes.box, mPart(pose, { y: .32, z: -L * .51, sz: .035, sx: W2 * .9, sy: .08 }), [.035, .045, .065]);
     drawMesh(state.meshes.box, mPart(pose, { y: .4, z: -L * .52, sz: .03, sx: .22, sy: .1 }), [.82, .86, .9], { emissive: .18 });
     drawMesh(state.meshes.box, mPart(pose, { y: .24, z: -L * .53, x: -W2 * .4, sz: .035, sx: .13, sy: .07 }), [.12, .13, .15]);
@@ -8418,7 +8437,14 @@ class NeonRacing {
     const lane = lanes[Math.floor(Math.random() * lanes.length)];
     const x = lane / 1.5 - 1;
     const base = R.maxSpeed * (0.34 + Math.random() * 0.34);
-    const trafficCars = ['sport', 'hatch', 'square', 'coupe90', 'rally'];
+    // Every model in the garage shows up on the road, weighted so ordinary cars
+    // dominate and the exotics stay a treat. Each key carries its own silhouette
+    // and rear-light signature, so the pack ahead is actually readable.
+    const trafficCars = [
+      'hatch', 'hatch', 'square', 'square', 'panda', 'rally', 'rally', 'gti',
+      'sport', 'sport', 'coupe90', 'rotary', 'straight', 'popup', 'ev',
+      'muscle', 'wedge', 'track', 'hyper'
+    ];
     const carKey = trafficCars[Math.floor(Math.random() * trafficCars.length)];
     const trims = [
       { wheelColor: 'silver', wing: 'none', decal: 'none' },
@@ -8499,13 +8525,61 @@ class NeonRacing {
     ctx.strokeStyle = 'rgba(226,232,240,.72)'; ctx.lineWidth = Math.max(1, 1.2 * scale); ctx.stroke();
     ctx.fillStyle = 'rgba(15,23,42,.35)'; ctx.fillRect(-1 * scale, -40 * scale, 2 * scale, 12 * scale);
     ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillRect(-Wd * .44, -27 * scale, 8 * scale, 3 * scale); ctx.fillRect(Wd * .31, -24 * scale, 5 * scale, 3 * scale);
-    if (sh.lightBar || sh.style === 'ev') { ctx.fillStyle = '#ef4444'; rrPath(ctx, -Wd * .44, -16 * scale, Wd * .88, 2.5 * scale, scale); ctx.fill(); }
     if (o.spoiler && o.spoiler !== 'none') { ctx.fillStyle = gameShade(base, -38); ctx.fillRect(-Wd * .58, -30 * scale, Wd * 1.16, 2.7 * scale); ctx.fillRect(-Wd * .4, -30 * scale, 2 * scale, 6 * scale); ctx.fillRect(Wd * .38, -30 * scale, 2 * scale, 6 * scale); }
     if (o.decal === 'stripes') { ctx.fillStyle = 'rgba(255,255,255,.72)'; ctx.fillRect(-1.6 * scale, -42 * scale, 3.2 * scale, 38 * scale); }
     // Lamps, plate, bumper, and exhaust provide recognizable rear detail.
+    // ---- rear light signature (same vocabulary as the sprite and the 3D car) --
+    // This is the view the player stares at for a whole run, so the signature
+    // is what makes "my car" feel like a specific car rather than a red wedge.
+    const sig = sh.rear || (sh.lightBar || sh.style === 'ev' ? 'bar' : 'dual');
+    const lampY = -18 * scale, lampH = 5 * scale, hot = o.brake ? '#ff5a4f' : '#ef4444';
+    const halo = (hx, hw, hh, hy) => { ctx.save(); ctx.globalAlpha = o.brake ? .42 : .26; ctx.fillStyle = '#ff2d55'; rrPath(ctx, hx, hy == null ? lampY - 1.5 * scale : hy, hw, hh, 2 * scale); ctx.fill(); ctx.restore(); };
     ctx.fillStyle = o.brake ? '#ff3b30' : '#b91c1c';
-    rrPath(ctx, -Wd * .45, -18 * scale, Wd * .27, 5 * scale, 1.5 * scale); ctx.fill(); rrPath(ctx, Wd * .18, -18 * scale, Wd * .27, 5 * scale, 1.5 * scale); ctx.fill();
-    if (o.brake) { ctx.globalAlpha = .28; ctx.fillStyle = '#ff6b5f'; ctx.fillRect(-Wd * .48, -20 * scale, Wd * .34, 8 * scale); ctx.fillRect(Wd * .14, -20 * scale, Wd * .34, 8 * scale); ctx.globalAlpha = 1; }
+    if (sig === 'bar') {
+      halo(-Wd * .47, Wd * .94, lampH + 3 * scale);
+      rrPath(ctx, -Wd * .45, lampY, Wd * .9, lampH, 1.6 * scale); ctx.fill();
+      ctx.fillStyle = hot; rrPath(ctx, -Wd * .45, lampY, Wd * .9, 1.4 * scale, .7 * scale); ctx.fill();
+    } else if (sig === 'racetrack') {
+      halo(-Wd * .47, Wd * .94, lampH + 4 * scale);
+      ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 1.8 * scale;
+      rrPath(ctx, -Wd * .45, lampY - scale, Wd * .9, lampH + 2 * scale, 3 * scale); ctx.stroke();
+    } else if (sig === 'quad') {
+      [-.37, -.15, .15, .37].forEach((f) => {
+        const cx = Wd * f, r = 2.6 * scale;
+        halo(cx - r - 1.4 * scale, (r + 1.4 * scale) * 2, (r + 1.4 * scale) * 2, lampY - r - 1.4 * scale + r);
+        ctx.fillStyle = o.brake ? '#ff3b30' : '#b91c1c';
+        ctx.beginPath(); ctx.arc(cx, lampY + r, r, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = hot; ctx.beginPath(); ctx.arc(cx, lampY + r * .7, r * .42, 0, Math.PI * 2); ctx.fill();
+      });
+    } else if (sig === 'tribar') {
+      for (const sd of [-1, 1]) {
+        halo(sd > 0 ? Wd * .12 : -Wd * .46, Wd * .34, lampH + 3 * scale);
+        for (let i = 0; i < 3; i++) {
+          const bx = sd > 0 ? Wd * (.14 + i * .11) : -Wd * (.44 - i * .11);
+          ctx.fillStyle = o.brake ? '#ff3b30' : '#b91c1c';
+          rrPath(ctx, bx, lampY, Wd * .085, lampH, .8 * scale); ctx.fill();
+          ctx.fillStyle = hot; rrPath(ctx, bx, lampY, Wd * .085, 1.3 * scale, .6 * scale); ctx.fill();
+        }
+      }
+    } else if (sig === 'ylamp') {
+      for (const sd of [-1, 1]) {
+        const ox = sd * Wd * .45;
+        halo(sd > 0 ? Wd * .18 : -Wd * .46, Wd * .28, lampH + 3 * scale);
+        ctx.fillStyle = o.brake ? '#ff3b30' : '#b91c1c';
+        ctx.beginPath();
+        ctx.moveTo(ox, lampY); ctx.lineTo(ox - sd * Wd * .26, lampY);
+        ctx.lineTo(ox - sd * Wd * .15, lampY + 2.4 * scale);
+        ctx.lineTo(ox - sd * Wd * .15, lampY + lampH);
+        ctx.lineTo(ox - sd * Wd * .04, lampY + lampH);
+        ctx.lineTo(ox, lampY + 2 * scale);
+        ctx.closePath(); ctx.fill();
+      }
+    } else {
+      halo(-Wd * .48, Wd * .33, lampH + 3 * scale); halo(Wd * .15, Wd * .33, lampH + 3 * scale);
+      ctx.fillStyle = o.brake ? '#ff3b30' : '#b91c1c';
+      rrPath(ctx, -Wd * .45, lampY, Wd * .27, lampH, 1.5 * scale); ctx.fill();
+      rrPath(ctx, Wd * .18, lampY, Wd * .27, lampH, 1.5 * scale); ctx.fill();
+    }
     ctx.fillStyle = '#e2e8f0'; rrPath(ctx, -7 * scale, -11 * scale, 14 * scale, 6 * scale, scale); ctx.fill();
     ctx.fillStyle = '#1e293b'; ctx.font = '700 ' + Math.max(5, Math.round(5 * scale)) + 'px ui-monospace, monospace'; ctx.textAlign = 'center'; ctx.fillText(o.number ? String(o.number) : 'FUN', 0, -7.5 * scale); ctx.textAlign = 'start';
     ctx.fillStyle = '#0f172a'; ctx.fillRect(-Wd * .5, -5 * scale, Wd, 3 * scale);
@@ -9133,7 +9207,11 @@ class DriftCircuit {
     const fwd = [Math.cos(cam.yaw) * cp, -sp, Math.sin(cam.yaw) * cp];
     const up = [Math.cos(cam.yaw) * sp, cp, Math.sin(cam.yaw) * sp];
     const fov = 2 * Math.atan(H / (2 * cam.focal));
-    if (!RacingGL.begin(W, H, theme, { near: 360 * S, far: 1250 * S })) return false;
+    // The clip/fog planes are in world units, so they have to grow with the
+    // circuit. Without this the 2.5x world ran straight past the far plane and
+    // the track vanished, leaving a flat field of ground colour.
+    const K = DriftCircuit.WORLD_SCALE;
+    if (!RacingGL.begin(W, H, theme, { near: 360 * S * K, far: 1250 * S * K })) return false;
     RacingGL.setCamera(eye, [eye[0] + fwd[0] * 10, eye[1] + fwd[1] * 10, eye[2] + fwd[2] * 10], up, fov, 12 * S, 1100 * S, .56);
     const I = RacingGL.matrices.mIdent();
     const groundC = RacingGL.hexRgb(theme.ground).map((c) => c * .8);

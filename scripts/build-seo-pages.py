@@ -1,3 +1,4 @@
+VERSION = None
 #!/usr/bin/env python3
 """Generate the static, indexable college and scholarship pages, rewrite the
 guides to extensionless URLs, and regenerate sitemap.xml.
@@ -487,11 +488,51 @@ def sitemap(entries):
 
 # -------------------------------------------------------------------- main
 
+# Local css/js refs, relative or root-absolute; never protocol-relative or remote.
+ASSET_RE = re.compile(r'(href|src)="(?!https?:|//)([^":?#]+\.(?:css|js))"')
+
+
+def asset_version():
+    """Short content hash over the files that actually change, so a deploy
+    invalidates every cached copy without waiting for max-age to expire."""
+    import hashlib
+    h = hashlib.sha1()
+    for name in ("app.js", "redesign.css", "workspace.css", "ads.js",
+                 "guides/guide.css", "subjects.css", "college.js"):
+        f = ROOT / name
+        if f.exists():
+            h.update(f.read_bytes())
+    return h.hexdigest()[:8]
+
+
+def stamp_assets(html, version):
+    """Append ?v=<hash> to local css/js references."""
+    return ASSET_RE.sub(lambda m: f'{m.group(1)}="{m.group(2)}?v={version}"', html)
+
+
+def stamp_tree(out, version):
+    """Stamp every emitted document in one pass, so nothing depends on which
+    code path wrote it. A cached copy of app.js or redesign.css can no longer
+    outlive a deploy, regardless of the Cache-Control it was stored under."""
+    n = 0
+    for f in out.rglob("*.html"):
+        text = f.read_text(encoding="utf8")
+        stamped = stamp_assets(text, version)
+        if stamped != text:
+            f.write_text(stamped, encoding="utf8")
+            n += 1
+    return n
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="public")
     args = ap.parse_args()
     out = (ROOT / args.out).resolve()
+    global VERSION
+    VERSION = asset_version()
+    print(f"asset version {VERSION}")
+
 
     data, colleges = load_colleges()
     by_state = {}
@@ -548,7 +589,9 @@ def main():
     write(out / "sitemap.xml", sitemap(entries))
     write(ROOT / "sitemap.xml", sitemap(entries))
 
+    stamped = stamp_tree(out, VERSION)
     print(f"Generated {len(entries)} URLs into {out}")
+    print(f"  asset version {VERSION} stamped into {stamped} documents")
     print(f"  colleges: {len(colleges)} profiles + {len(by_state)} state hubs + 1 hub")
     print(f"  scholarships: {len(items)} profiles + 1 hub")
     print(f"  guides: {len(GUIDE_TITLES)}")

@@ -7680,6 +7680,38 @@ class PressureWasher {
 }
 
 const CAR_PAINTS = { red:'#ef4444', blue:'#3b82f6', green:'#22c55e', purple:'#a855f7', orange:'#f97316', silver:'#cbd5e1' };
+
+// Top-down body outlines. Every car used to be a rounded rectangle whose only
+// per-style difference was the corner radius, so a kei car and a hypercar had
+// the same silhouette at different sizes. Each style now has its own half-width
+// profile sampled nose -> tail, which is what actually makes them recognisable
+// from above. Values are fractions of the car's half-width.
+const CAR_PROFILES = {
+  boxy:   [.80, .97, 1.00, 1.00, 1.00, .98, .88],
+  hatch:  [.76, .95, 1.00, 1.00, 1.00, .98, .92],
+  sedan:  [.74, .93, 1.00, 1.00, .99, .93, .80],
+  curve:  [.60, .87, .99, 1.00, .97, .87, .68],
+  coupe:  [.58, .85, .98, 1.00, .98, .88, .66],
+  wedge:  [.40, .72, .93, 1.00, 1.00, .97, .84],
+  muscle: [.68, .89, .97, 1.00, 1.05, 1.05, .86],
+  super:  [.36, .68, .91, 1.00, 1.07, 1.05, .82],
+  ev:     [.64, .89, 1.00, 1.00, 1.00, .92, .72]
+};
+
+function carBodyPath(ctx, halfW, half, style) {
+  const prof = CAR_PROFILES[style] || CAR_PROFILES.curve;
+  const n = prof.length, L = half * 2;
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const y = -half + (i / (n - 1)) * L, w = halfW * prof[i];
+    i ? ctx.lineTo(w, y) : ctx.moveTo(w, y);
+  }
+  for (let i = n - 1; i >= 0; i--) {
+    ctx.lineTo(-halfW * prof[i], -half + (i / (n - 1)) * L);
+  }
+  ctx.closePath();
+}
+
 function drawCustomCar(ctx, x, y, angle, scale, paint, wheels, opts) {
   const o = opts || {};
   const shape = o.shape || { len: 40, wid: 20, nose: 8 };
@@ -7700,7 +7732,7 @@ function drawCustomCar(ctx, x, y, angle, scale, paint, wheels, opts) {
   else if (finish === 'chrome') { grad.addColorStop(0, '#f8fafc'); grad.addColorStop(.4, '#94a3b8'); grad.addColorStop(.6, '#e2e8f0'); grad.addColorStop(1, '#475569'); }
   else { grad.addColorStop(0, gameShade(baseCol, 35)); grad.addColorStop(.5, baseCol); grad.addColorStop(1, gameShade(baseCol, -45)); }
   // shadow + neon underglow
-  ctx.fillStyle = 'rgba(0,0,0,.35)'; rrPath(ctx, -halfW - 1, -half + 1, Wd * kitW + 2, L - 2, 6); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.save(); ctx.translate(0, 1); carBodyPath(ctx, halfW + 1, half, shape.style); ctx.fill(); ctx.restore();
   if (o.neon && o.neon !== 'none') { const pulse = o.neonMode === 'pulse' ? .18 + .22 * Math.abs(Math.sin((o.t || 0) * 4)) : .3; ctx.fillStyle = o.neon; ctx.globalAlpha = pulse; ctx.beginPath(); ctx.ellipse(0, 2, halfW + 10, half + 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
   // wheels first (behind body)
   const ws = o.wheelSize || 1, wcol = DriftCircuit.WHEEL_COLORS[o.wheelColor] || '#cbd5e1';
@@ -7717,7 +7749,7 @@ function drawCustomCar(ctx, x, y, angle, scale, paint, wheels, opts) {
   // wheel-arch flares (widebody kit or era fenders)
   if (o.kit === 'wide' || fenderW > 0) { ctx.fillStyle = gameShade(baseCol, -25); rrPath(ctx, -halfW - 2, -half + 4, 4, 12, 2); ctx.fill(); rrPath(ctx, halfW - 2, -half + 4, 4, 12, 2); ctx.fill(); rrPath(ctx, -halfW - 2, half - 16, 4, 12, 2); ctx.fill(); rrPath(ctx, halfW - 2, half - 16, 4, 12, 2); ctx.fill(); }
   // body
-  ctx.fillStyle = grad; rrPath(ctx, -halfW, -half, Wd * kitW, L, bodyR); ctx.fill();
+  ctx.fillStyle = grad; carBodyPath(ctx, halfW, half, shape.style); ctx.fill();
   if (fenderW > 0) { ctx.fillStyle = gameShade(baseCol, -18); rrPath(ctx, -halfW - fenderW * 4, -half + 6, 3, 10, 2); ctx.fill(); rrPath(ctx, halfW + fenderW * 4 - 3, -half + 6, 3, 10, 2); ctx.fill(); rrPath(ctx, -halfW - fenderW * 4, half - 18, 3, 10, 2); ctx.fill(); rrPath(ctx, halfW + fenderW * 4 - 3, half - 18, 3, 10, 2); ctx.fill(); }
   // hood vents / carbon hood
   if (o.hood === 'vented') { ctx.fillStyle = 'rgba(15,23,42,.55)'; for (let i = 0; i < 3; i++) ctx.fillRect(-2.5, -half + 4 + i * 3, 5, 1.6); }
@@ -7736,8 +7768,55 @@ function drawCustomCar(ctx, x, y, angle, scale, paint, wheels, opts) {
   if (o.number) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 2, 7, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#0f172a'; ctx.font = '800 9px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(o.number), 0, 3); ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic'; }
   // lights
   ctx.fillStyle = '#fef08a'; ctx.fillRect(-halfW + 3, -half - 1, 4, 2); ctx.fillRect(halfW - 7, -half - 1, 4, 2);
-  if (lightBar) { ctx.fillStyle = '#ef4444'; rrPath(ctx, -halfW + 3, half - 3, Wd * kitW - 6, 3, 1.5); ctx.fill(); ctx.globalAlpha = .35; ctx.fillRect(-halfW + 1, half - 2, Wd * kitW - 2, 2); ctx.globalAlpha = 1; }
-  else { ctx.fillStyle = '#ef4444'; ctx.fillRect(-halfW + 3, half - 1, 4, 2); ctx.fillRect(halfW - 7, half - 1, 4, 2); }
+  // ---- rear light signature -------------------------------------------
+  // The silhouette tells you the class of car; the tail lights tell you WHICH
+  // car. Each signature below is rectangles, circles or straight-edged paths
+  // plus one translucent halo, so they cost the same as the two dots they
+  // replace but are distinguishable from a long way back.
+  const sig = shape.rear || (lightBar ? 'bar' : 'dual');
+  const bw = Wd * kitW - 6, bx = -halfW + 3, by = half - 3;
+  const glow = (gx, gy, gw, gh, r) => { ctx.save(); ctx.globalAlpha = .3; ctx.fillStyle = '#ff2d55'; rrPath(ctx, gx, gy, gw, gh, r); ctx.fill(); ctx.restore(); };
+  ctx.fillStyle = '#ef4444';
+  if (sig === 'bar') {
+    glow(bx - 2, by - 1, bw + 4, 5, 2);
+    rrPath(ctx, bx, by, bw, 3, 1.5); ctx.fill();
+    ctx.fillStyle = '#ffd1dc'; rrPath(ctx, bx, by, bw, 1.2, .6); ctx.fill();
+  } else if (sig === 'racetrack') {
+    glow(bx - 2, by - 2, bw + 4, 7, 3);
+    ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1.6;
+    rrPath(ctx, bx, by - 1, bw, 5, 2.4); ctx.stroke();
+  } else if (sig === 'quad') {
+    const r = 1.9, ys = half - 1.6;
+    [-1, -1, 1, 1].forEach((sd, i) => {
+      const off = (i % 2 ? 4.6 : 1.6) * sd;
+      glow(off - r - 1.2, ys - r - 1.2, (r + 1.2) * 2, (r + 1.2) * 2, r + 1.2);
+      ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(off, ys, r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffd1dc'; ctx.beginPath(); ctx.arc(off, ys - .5, r * .42, 0, Math.PI * 2); ctx.fill();
+    });
+  } else if (sig === 'tribar') {
+    for (const sd of [-1, 1]) {
+      glow(sd > 0 ? 1.4 : -bw / 2 - 1.4, by - 1, bw / 2, 5, 1.5);
+      for (let i = 0; i < 3; i++) {
+        const sx = sd > 0 ? 2 + i * 2.4 : -4.4 - i * 2.4;
+        ctx.fillStyle = '#ef4444'; rrPath(ctx, sx, by, 1.8, 3.2, .6); ctx.fill();
+        ctx.fillStyle = '#ffd1dc'; rrPath(ctx, sx, by, 1.8, 1, .4); ctx.fill();
+      }
+    }
+  } else if (sig === 'ylamp') {
+    for (const sd of [-1, 1]) {
+      const ox = sd > 0 ? halfW - 3 : -halfW + 3;
+      glow(sd > 0 ? ox - 7 : ox - 1, by - 1, 8, 6, 2);
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath();
+      ctx.moveTo(ox, by); ctx.lineTo(ox - sd * 6, by); ctx.lineTo(ox - sd * 3.4, by + 1.8);
+      ctx.lineTo(ox - sd * 3.4, by + 3.4); ctx.lineTo(ox - sd * .8, by + 3.4); ctx.lineTo(ox, by + 1.6);
+      ctx.closePath(); ctx.fill();
+    }
+  } else {
+    glow(bx - 1, by, 6, 4, 1.5); glow(halfW - 8, by, 6, 4, 1.5);
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(bx, half - 1, 4, 2); ctx.fillRect(halfW - 7, half - 1, 4, 2);
+  }
   // wing
   const wing = o.wing || (o.spoiler === false ? 'none' : o.spoiler === true ? 'lip' : o.spoiler) || 'none';
   if (wing === 'gt') { ctx.fillStyle = '#0f172a'; ctx.fillRect(-halfW - 3, half - 3, Wd * kitW + 6, 3); ctx.fillRect(-halfW + 3, half - 8, 2, 6); ctx.fillRect(halfW - 5, half - 8, 2, 6); }
@@ -8687,25 +8766,25 @@ class NeonRacing {
 class DriftCircuit {
   static CARS = {
     // Pre-90s
-    square:  { name: "Square Sedan",      price: 900,  power: 0.90, grip: 0.94, weight: 1.04, hb: 0.96, audio: "six",    era: "Pre-90s", shape: { len: 42, wid: 19, nose: 8, roofH: 1.05, roofLen: .95, cabinX: .04, hoodH: .06, tailH: .05, fender: 0, style: "boxy" } },
-    muscle:  { name: "Muscle V8",         price: 1500, power: 1.28, grip: 0.90, weight: 1.16, hb: 1.05, audio: "v8",     era: "Pre-90s", shape: { len: 46, wid: 22, nose: 10, roofH: .86, roofLen: .78, cabinX: .08, hoodH: .09, tailH: .08, fender: .18, style: "muscle" } },
-    wedge:   { name: "Wedge GT",          price: 2600, power: 1.06, grip: 1.02, weight: .92, hb: 1.02, audio: "six",    era: "Pre-90s", shape: { len: 44, wid: 20, nose: 12, roofH: .72, roofLen: .66, cabinX: .12, hoodH: .04, tailH: .03, fender: .1, style: "wedge" } },
-    panda:   { name: "Panda Hatch",       price: 3000, power: 0.98, grip: 1.00, weight: 0.84, hb: 1.18, audio: "tiny",   era: "Pre-90s", shape: { len: 33, wid: 17, nose: 6, roofH: 1.06, roofLen: .96, cabinX: .02, hoodH: .04, tailH: .06, fender: 0, style: "boxy" } },
+    square:  { name: "Square Sedan",      price: 900,  power: 0.90, grip: 0.94, weight: 1.04, hb: 0.96, audio: "six",    era: "Pre-90s", shape: { len: 42, wid: 20, nose: 8, roofH: 1.08, roofLen: .95, cabinX: .04, hoodH: .06, tailH: .05, fender: 0, style: "boxy", rear: "dual"} },
+    muscle:  { name: "Muscle V8",         price: 1500, power: 1.28, grip: 0.90, weight: 1.16, hb: 1.05, audio: "v8",     era: "Pre-90s", shape: { len: 46, wid: 24, nose: 10, roofH: .86, roofLen: .78, cabinX: .08, hoodH: .09, tailH: .08, fender: .16, style: "muscle", rear: "tribar"} },
+    wedge:   { name: "Wedge GT",          price: 2600, power: 1.06, grip: 1.02, weight: .92, hb: 1.02, audio: "six",    era: "Pre-90s", shape: { len: 45, wid: 20, nose: 12, roofH: .68, roofLen: .66, cabinX: .12, hoodH: .04, tailH: .03, fender: .1, style: "wedge", rear: "bar"} },
+    panda:   { name: "Panda Hatch",       price: 3000, power: 0.98, grip: 1.00, weight: 0.84, hb: 1.18, audio: "tiny",   era: "Pre-90s", shape: { len: 31, wid: 16, nose: 6, roofH: 1.10, roofLen: .96, cabinX: .02, hoodH: .04, tailH: .06, fender: 0, style: "boxy", rear: "dual"} },
     // 90s
-    hatch:   { name: "90s Hatch",         price: 800,  power: 0.92, grip: 1.02, weight: 0.86, hb: 1.05, audio: "tiny",   era: "90s", shape: { len: 34, wid: 18, nose: 6, roofH: 1.02, roofLen: .92, cabinX: .06, hoodH: .05, tailH: .05, fender: .04, style: "hatch" } },
-    gti:     { name: "Hot Hatch GTI",     price: 1800, power: 1.04, grip: 1.06, weight: 0.88, hb: 1.10, audio: "tiny",   era: "90s", shape: { len: 35, wid: 18, nose: 7, roofH: .98, roofLen: .9, cabinX: .05, hoodH: .06, tailH: .05, fender: .08, style: "hatch" } },
-    coupe90: { name: "90s Straight-Six",  price: 2200, power: 1.16, grip: 0.96, weight: 1.02, hb: 1.12, audio: "six",    era: "90s", shape: { len: 42, wid: 20, nose: 8, roofH: .88, roofLen: .8, cabinX: .08, hoodH: .07, tailH: .05, fender: .06, style: "curve" } },
-    popup:   { name: "Pop-Up Coupe",      price: 3600, power: 1.10, grip: 0.94, weight: 0.96, hb: 1.25, audio: "turbo4", era: "90s", shape: { len: 40, wid: 19, nose: 9, roofH: .8, roofLen: .72, cabinX: .1, hoodH: .03, tailH: .04, fender: .12, style: "wedge", popups: true } },
+    hatch:   { name: "90s Hatch",         price: 800,  power: 0.92, grip: 1.02, weight: 0.86, hb: 1.05, audio: "tiny",   era: "90s", shape: { len: 33, wid: 18, nose: 6, roofH: 1.05, roofLen: .92, cabinX: .06, hoodH: .05, tailH: .05, fender: .04, style: "hatch", rear: "dual"} },
+    gti:     { name: "Hot Hatch GTI",     price: 1800, power: 1.04, grip: 1.06, weight: 0.88, hb: 1.10, audio: "tiny",   era: "90s", shape: { len: 35, wid: 18, nose: 7, roofH: .98, roofLen: .9, cabinX: .05, hoodH: .06, tailH: .05, fender: .08, style: "hatch", rear: "tribar"} },
+    coupe90: { name: "90s Straight-Six",  price: 2200, power: 1.16, grip: 0.96, weight: 1.02, hb: 1.12, audio: "six",    era: "90s", shape: { len: 42, wid: 20, nose: 8, roofH: .88, roofLen: .8, cabinX: .08, hoodH: .07, tailH: .05, fender: .06, style: "curve", rear: "quad"} },
+    popup:   { name: "Pop-Up Coupe",      price: 3600, power: 1.10, grip: 0.94, weight: 0.96, hb: 1.25, audio: "turbo4", era: "90s", shape: { len: 40, wid: 19, nose: 9, roofH: .8, roofLen: .72, cabinX: .1, hoodH: .03, tailH: .04, fender: .12, style: "wedge", popups: true, rear: "bar"} },
     // 2000s
-    rotary:  { name: "Rotary Coupe",      price: 5200, power: 1.22, grip: 1.06, weight: 0.92, hb: 1.14, audio: "rotary", era: "2000s", shape: { len: 41, wid: 20, nose: 8, roofH: .9, roofLen: .84, cabinX: .06, hoodH: .06, tailH: .05, fender: .14, style: "curve" } },
-    rally:   { name: "Rally Sedan AWD",   price: 4200, power: 1.24, grip: 1.14, weight: 1.08, hb: 1.08, audio: "turbo4", era: "2000s", shape: { len: 43, wid: 21, nose: 8, roofH: .96, roofLen: .9, cabinX: .04, hoodH: .08, tailH: .06, fender: .2, style: "sedan" } },
+    rotary:  { name: "Rotary Coupe",      price: 5200, power: 1.22, grip: 1.06, weight: 0.92, hb: 1.14, audio: "rotary", era: "2000s", shape: { len: 41, wid: 20, nose: 8, roofH: .9, roofLen: .84, cabinX: .06, hoodH: .06, tailH: .05, fender: .14, style: "curve", rear: "quad"} },
+    rally:   { name: "Rally Sedan AWD",   price: 4200, power: 1.24, grip: 1.14, weight: 1.08, hb: 1.08, audio: "turbo4", era: "2000s", shape: { len: 43, wid: 21, nose: 8, roofH: .96, roofLen: .9, cabinX: .04, hoodH: .08, tailH: .06, fender: .2, style: "sedan", rear: "dual"} },
     // 2010s
-    sport:   { name: "Sport Coupe",       price: 0,    power: 1.00, grip: 1.00, weight: 1.00, hb: 1.00, audio: "six",    era: "2010s", shape: { len: 40, wid: 20, nose: 8, roofH: .9, roofLen: .82, cabinX: .06, hoodH: .06, tailH: .05, fender: .08, style: "curve" } },
-    track:   { name: "Track Coupe RS",    price: 6200, power: 1.36, grip: 1.18, weight: 0.94, hb: 1.12, audio: "exotic", era: "2010s", shape: { len: 43, wid: 21, nose: 9, roofH: .84, roofLen: .74, cabinX: .08, hoodH: .05, tailH: .04, fender: .16, style: "super" } },
-    straight:{ name: "Turbo Straight-Six",price: 7200, power: 1.40, grip: 1.08, weight: 1.06, hb: 1.08, audio: "turbo4", era: "2010s", shape: { len: 43, wid: 21, nose: 9, roofH: .88, roofLen: .8, cabinX: .07, hoodH: .06, tailH: .05, fender: .1, style: "coupe" } },
+    sport:   { name: "Sport Coupe",       price: 0,    power: 1.00, grip: 1.00, weight: 1.00, hb: 1.00, audio: "six",    era: "2010s", shape: { len: 40, wid: 20, nose: 8, roofH: .9, roofLen: .82, cabinX: .06, hoodH: .06, tailH: .05, fender: .08, style: "curve", rear: "bar"} },
+    track:   { name: "Track Coupe RS",    price: 6200, power: 1.36, grip: 1.18, weight: 0.94, hb: 1.12, audio: "exotic", era: "2010s", shape: { len: 43, wid: 23, nose: 9, roofH: .84, roofLen: .74, cabinX: .08, hoodH: .05, tailH: .04, fender: .14, style: "super", rear: "racetrack"} },
+    straight:{ name: "Turbo Straight-Six",price: 7200, power: 1.40, grip: 1.08, weight: 1.06, hb: 1.08, audio: "turbo4", era: "2010s", shape: { len: 43, wid: 21, nose: 9, roofH: .88, roofLen: .8, cabinX: .07, hoodH: .06, tailH: .05, fender: .1, style: "coupe", rear: "quad"} },
     // Modern / EV
-    hyper:   { name: "Hypercar",          price: 9000, power: 1.50, grip: 1.22, weight: 0.88, hb: 1.12, audio: "exotic", era: "Modern / EV", shape: { len: 44, wid: 22, nose: 10, roofH: .76, roofLen: .68, cabinX: .1, hoodH: .04, tailH: .04, fender: .18, style: "super" } },
-    ev:      { name: "Volt Sedan EV",     price: 8000, power: 1.44, grip: 1.16, weight: 1.12, hb: 0.94, audio: "exotic", era: "Modern / EV", shape: { len: 44, wid: 21, nose: 6, roofH: .92, roofLen: .88, cabinX: .02, hoodH: .04, tailH: .04, fender: .06, style: "ev", lightBar: true } }
+    hyper:   { name: "Hypercar",          price: 9000, power: 1.50, grip: 1.22, weight: 0.88, hb: 1.12, audio: "exotic", era: "Modern / EV", shape: { len: 47, wid: 24, nose: 10, roofH: .70, roofLen: .68, cabinX: .1, hoodH: .04, tailH: .04, fender: .18, style: "super", rear: "ylamp"} },
+    ev:      { name: "Volt Sedan EV",     price: 8000, power: 1.44, grip: 1.16, weight: 1.12, hb: 0.94, audio: "exotic", era: "Modern / EV", shape: { len: 45, wid: 21, nose: 6, roofH: .94, roofLen: .88, cabinX: .02, hoodH: .04, tailH: .04, fender: .06, style: "ev", lightBar: true, rear: "racetrack"} }
   };
   static BODY_KITS = { stock: { name: "Stock", price: 0 }, street: { name: "Street bumpers", price: 400 }, wide: { name: "Widebody", price: 1500 } };
   static WINGS = { none: { name: "No wing", price: 0 }, lip: { name: "Lip", price: 150 }, duck: { name: "Ducktail", price: 300 }, gt: { name: "GT wing", price: 600 } };
@@ -9513,3 +9592,4 @@ addEventListener("keydown", (e) => {
 });
 document.getElementById("btnPause").addEventListener("click", () => setPaused(!testPaused));
 document.getElementById("btnUnpause").addEventListener("click", () => setPaused(false));
+try { window.drawCustomCar = drawCustomCar; } catch (e) {}

@@ -8160,7 +8160,13 @@ class NeonRacing {
     camDepth: 1 / Math.tan((100 / 2) * Math.PI / 180),
     maxSpeed: 12400, accel: 5200, braking: -11000, coast: -1400,
     offRoadDecel: -7200, offRoadLimit: 3400, centrifugal: 0.32,
-    steerRate: 2.4, trafficMax: 10, minSpawnGap: 11, hitCooldown: 1.2
+    steerRate: 2.4, trafficMax: 6, minSpawnGap: 20, hitCooldown: 1.2,
+    // Progressive-hold steering: the wheel winds on while a key is held and
+    // unwinds faster on release, giving analogue-feeling control from keys.
+    steerAttack: 12.0, steerRelease: 13.0, steerAuthority: 2.6,
+    // How quickly lateral velocity catches up to where the wheel is pointing.
+    // Lower = the back end takes longer to follow = more slide.
+    gripRate: 6.2, driftSlip: 0.55
   };
   constructor(canvas, arcade) { this.canvas = canvas; this.arcade = arcade; this.ctx = canvas.getContext('2d'); this.name = 'Neon Racing'; this.key = 'racing'; this.W = 760; this.H = 460; this.smooth = true; this.reset(); }
   car() { return DriftCircuit.carFor('racing'); }
@@ -8171,7 +8177,7 @@ class NeonRacing {
     const g = DriftCircuit.garage();
     this.paint = g.paint; this.wheels = g.wheels;
     this.buildTrack();
-    this.playerX = 0; this.playerZ = 0; this.speed = NeonRacing.ROAD.maxSpeed * 0.14;
+    this.playerX = 0; this.playerZ = 0; this.steerAngle = 0; this.lateralVel = 0; this.slip = 0; this.drifting = false; this.speed = NeonRacing.ROAD.maxSpeed * 0.14;
     this.score = 0; this.distance = 0; this.lives = 3; this.overtakes = 0; this.combo = 1;
     this.traffic = []; this.spawnZ = 0; this.started = false; this.over = false; this.banked = false; this.earned = 0;
     this.flash = 0; this.shake = 0; this.hitCooldown = 0; this.wallPush = 0; this.touch = {}; this.smoke = []; this.sparks = []; this.now = 0;
@@ -8270,9 +8276,29 @@ class NeonRacing {
     this.speed = clamp(this.speed, R.maxSpeed * 0.06, R.maxSpeed * power);
     const curSegment = this.segmentAt(this.playerZ + R.segLen * 2);
     const speedRatio = this.speed / R.maxSpeed;
-    // Flat authority curve: precise at top speed, responsive at low speed; softer curve pull for line-holding.
-    this.playerX += steerInput * dt * R.steerRate * (0.60 + Math.min(speedRatio, 1) * 0.45) / (car.grip || 1);
-    this.playerX -= dt * speedRatio * curSegment.curve * R.centrifugal * 0.72;
+
+    // 1. The wheel winds on while a key is held and unwinds faster on release.
+    const steerRamp = steerInput ? R.steerAttack : R.steerRelease;
+    this.steerAngle += (steerInput - this.steerAngle) * (1 - Math.exp(-dt * steerRamp));
+
+    // 2. Where the wheel is pointing is a TARGET lateral velocity, not a
+    //    position. The car has mass, so lateral velocity chases that target
+    //    rather than snapping to it - which is what makes the back end step
+    //    out on turn-in and lets countersteer gather it back up.
+    const grip = (car.grip || 1);
+    const wanted = this.steerAngle * R.steerAuthority * (0.55 + Math.min(speedRatio, 1) * 0.45);
+    this.lateralVel += (wanted - this.lateralVel) * (1 - Math.exp(-dt * R.gripRate * grip));
+    this.lateralVel -= dt * speedRatio * curSegment.curve * R.centrifugal * 0.72;
+    this.playerX += this.lateralVel * dt;
+
+    // 3. Slip is how far the car is from going where it is pointed. It drives
+    //    the smoke and tells the HUD when a slide is actually happening.
+    this.slip = wanted - this.lateralVel;
+    this.drifting = Math.abs(this.slip) > R.driftSlip && speedRatio > 0.25;
+    if (this.drifting && Math.random() < dt * 34) {
+      this.smoke.push({ x: this.playerX, z: this.playerZ - 40, life: .55, max: .55, size: 1.3, kind: 'drift' });
+    }
+
     this.offRoad = Math.abs(this.playerX) > 1;
     if (this.offRoad) {
       if (this.speed > R.offRoadLimit) this.speed += R.offRoadDecel * dt;
@@ -8283,6 +8309,7 @@ class NeonRacing {
       const sign = this.playerX > 0 ? 1 : -1;
       this.playerX = sign * 1.22;
       this.wallPush = -sign * (1.1 + Math.abs(this.speed / R.maxSpeed) * 1.7);
+      this.lateralVel = 0; this.steerAngle *= 0.3;
       if (this.hitCooldown <= 0) { this.speed *= .72; this.flash = .35; this.shake = 6; this.hitCooldown = .5; try { sndWrong(); } catch (e) {} }
     }
     this.playerX = clamp(this.playerX, -1.6, 1.6);
@@ -8322,13 +8349,13 @@ class NeonRacing {
     ];
     const trim = trims[Math.floor(Math.random() * trims.length)];
     this.traffic.push({ x, z, renderX: x, renderZ: z, speed: base, carKey, paint: ['blue', 'green', 'orange', 'purple', 'silver'][Math.floor(Math.random() * 5)], wheelColor: trim.wheelColor, wing: trim.wing, decal: trim.decal, passed: false });
-    this.spawnZ += R.segLen * (R.minSpawnGap + Math.random() * 5);
+    this.spawnZ += R.segLen * (R.minSpawnGap + Math.random() * 14);
   }
   updateTraffic(dt, car, g) {
     const R = NeonRacing.ROAD;
-    const target = clamp(3 + Math.floor(this.distance / 14000), 3, 7);
+    const target = clamp(2 + Math.floor(this.distance / 26000), 2, 4);
     this.spawnZ = Math.max(this.spawnZ, this.playerZ + R.segLen * 6);
-    while (this.traffic.length < target && this.spawnZ < this.playerZ + R.segLen * 90) this.spawnTraffic(car);
+    while (this.traffic.length < target && this.spawnZ < this.playerZ + R.segLen * 200) this.spawnTraffic(car);
     this.traffic.forEach((t) => {
       t.z += t.speed * dt;
       if (!t.passed && t.z < this.playerZ && t.z > this.playerZ - R.segLen * 3) { t.passed = true; this.overtakes++; this.combo = Math.min(9, this.combo + .25); }
@@ -8583,6 +8610,7 @@ class NeonRacing {
     const mph = Math.round(this.speed / 60 * 0.6214);
     drawGameHud(ctx, W, 'NEON RACING · ' + (this.mode() === 'circuit' ? 'CIRCUIT LAP ' + Math.min(3, this.laps + 1) + '/3 POS ' + this.position : 'HIGHWAY'), 'SCORE ' + this.score + ' · OVERTAKES ' + this.overtakes + ' · ' + this.lives + ' ❤ · $' + this.earned);
     this.drawSpeedDial(ctx, 96, H - 54, mph);
+    this.drawSteerWheel(ctx, W - 62, 74);
     if (!this.started) drawGameCard(ctx, W, H, 'NEON RACING', ['↑/W accelerate · ↓/S brake · ← → or A/D steer.', this.mode() === 'circuit' ? 'Three laps against AI racers. Brake into corners and pass cleanly.' : 'Weave through traffic; overtakes and distance build your score.', 'Off-road slows you down. Three collisions end the run. C cycles camera.'], 'Press SPACE or tap to start');
     if (this.over) { ctx.fillStyle = 'rgba(2,6,23,.62)'; ctx.fillRect(0, 0, W, H); ctx.textAlign = 'center'; ctx.fillStyle = this.finished ? '#6ee7b7' : '#fca5a5'; ctx.font = '800 30px Inter, system-ui, sans-serif'; ctx.fillText(this.finished ? 'FINISHED P' + this.position : 'WRECKED', W / 2, H / 2 - 6); ctx.fillStyle = '#e2e8f0'; ctx.font = '700 16px ui-monospace, monospace'; ctx.fillText('Score ' + this.score + ' · Overtakes ' + this.overtakes + ' · $' + this.earned, W / 2, H / 2 + 24); ctx.textAlign = 'start'; }
   }
@@ -8612,6 +8640,35 @@ class NeonRacing {
     // start/finish checker every full lap of segments
     if (seg.index % 120 === 0) { ctx.fillStyle = '#f8fafc'; for (let k = -3; k <= 3; k++) { ctx.fillRect(p1.x + p1.w * k / 4 - p1.w / 8, p1.y - 3, p1.w / 4, 4); } }
   }
+  // Small steering indicator: the rim rotates with the wheel the player is
+  // actually holding, and tints when the car is sliding, so turn-in and
+  // countersteer are both readable at a glance.
+  drawSteerWheel(ctx, cx, cy) {
+    const angle = (this.steerAngle || 0) * 0.85; // ~49 degrees at full lock
+    const r = 26;
+    ctx.save();
+    ctx.globalAlpha = .9;
+    ctx.beginPath(); ctx.arc(cx, cy, r + 7, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(8,12,22,.55)'; ctx.fill();
+    ctx.translate(cx, cy); ctx.rotate(angle);
+    const live = this.drifting ? '#fbbf24' : '#e2e8f0';
+    ctx.strokeStyle = live; ctx.lineWidth = 4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
+    // spokes: two side bars and one down bar, like a real wheel
+    ctx.beginPath();
+    ctx.moveTo(-r, 0); ctx.lineTo(-7, 0);
+    ctx.moveTo(r, 0); ctx.lineTo(7, 0);
+    ctx.moveTo(0, r); ctx.lineTo(0, 7);
+    ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2); ctx.fillStyle = live; ctx.fill();
+    ctx.restore();
+    // fixed top marker so rotation is obvious even at small angles
+    ctx.save();
+    ctx.globalAlpha = .75; ctx.fillStyle = '#94a3b8';
+    ctx.beginPath(); ctx.moveTo(cx, cy - r - 10); ctx.lineTo(cx - 4, cy - r - 3); ctx.lineTo(cx + 4, cy - r - 3);
+    ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+
   drawSpeedDial(ctx, cx, cy, mph) {
     const maxK = 160, ratio = clamp(mph / maxK, 0, 1);
     ctx.save(); ctx.lineWidth = 7; ctx.strokeStyle = 'rgba(15,23,42,.85)'; ctx.beginPath(); ctx.arc(cx, cy, 38, Math.PI * .75, Math.PI * 2.25); ctx.stroke();

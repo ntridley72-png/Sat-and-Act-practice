@@ -273,6 +273,78 @@ body[data-workspace] .college-row-main:hover:not(:disabled){background:var(--ws-
 .unanswered-note{border-left:3px solid var(--ws-warn);background:var(--ws-warn-bg);padding:8px 10px;margin:10px 0 0}
 @media(max-width:1000px){.college-layout{grid-template-columns:1fr}.college-detail{max-height:none;padding-bottom:10px}.college-resize{display:none}.college-activity-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-auto-rows:auto}.college-activity-row .college-check{grid-column:1/-1}.college-activity-row [data-act="remove"]{grid-column:2;justify-self:end}}
 @media(max-width:620px){.college-screen{padding-top:14px}.college-profile-grid{grid-template-columns:1fr}.college-estimate{gap:10px}.college-estimate-value{font-size:32px}.college-groq-row{flex-wrap:wrap}.college-groq-row button{width:100%}}
+/* College detail content: photo, fact cards, majors, diversity bar, links */
+.college-bar{margin:12px 0}
+.college-target{margin-top:14px;padding-top:12px;border-top:1px solid var(--ws-line)}
+.college-foot{margin-top:14px}
+.college-photo{margin:0 0 14px;border:1px solid var(--ws-line);background:var(--ws-soft);border-radius:2px;overflow:hidden}
+.college-photo img{display:block;width:100%;aspect-ratio:16/9;max-height:320px;object-fit:cover;background:var(--ws-soft)}
+.college-photo figcaption{padding:8px 11px;font-size:11px;color:var(--ws-muted);border-top:1px solid var(--ws-line);line-height:1.5;overflow-wrap:anywhere}
+.college-photo figcaption a{color:var(--ws-accent)}
+.college-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 14px}
+.college-gallery .college-photo{margin:0;min-width:0}
+.college-gallery .college-photo img{height:auto;aspect-ratio:16/9}
+.college-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:14px}
+.cf-card{border:1px solid var(--ws-line);background:var(--ws-surface);border-radius:2px;padding:13px 14px;min-width:0}
+.cf-card h4{margin:0 0 9px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ws-muted);font-weight:700}
+.cf-line{display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--ws-soft);font-size:13px;line-height:1.45}
+.cf-line:last-child{border-bottom:0}
+.cf-line b{text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.cf-line.total{border-top:1px solid var(--ws-line);border-bottom:0;margin-top:4px;padding-top:8px;font-weight:700}
+.cf-note{margin-top:8px;font-size:11px;color:var(--ws-muted);line-height:1.55}
+.cf-links{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.cf-link{display:inline-block;border:1px solid var(--ws-line);background:var(--ws-surface);color:var(--ws-ink)!important;padding:7px 10px;font-size:12px;text-decoration:none;border-radius:2px}
+.cf-link:hover,.cf-link:focus-visible{border-color:var(--ws-accent);color:var(--ws-accent)!important}
+.cf-social{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.cf-grade{display:grid;place-items:center;min-width:34px;height:34px;background:var(--ws-tint);color:var(--ws-accent);font-weight:800;font-size:17px;border:1px solid var(--ws-line)}
+.maj-list{display:flex;flex-direction:column;gap:7px}
+.maj-row{display:grid;grid-template-columns:minmax(80px,1.5fr) minmax(30px,1fr) 34px;align-items:center;gap:8px;font-size:12px}
+.maj-row span{overflow-wrap:anywhere}
+.maj-row i{display:block;height:7px;background:var(--ws-accent);opacity:.7;min-width:2px}
+.maj-row b{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.div-bar{display:flex;height:10px;overflow:hidden;border:1px solid var(--ws-line);background:var(--ws-soft);margin:4px 0 8px}
+.div-bar span{display:block;height:100%}
+.chance-add-row{display:flex;gap:6px}
+.chance-add-row input{flex:1;min-width:0}
+@media(max-width:760px){.college-gallery{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px}.college-gallery .college-photo{flex:0 0:min(82vw,360px);scroll-snap-align:start}.college-gallery .college-photo img{height:auto;aspect-ratio:3/2}}
+@media(max-width:620px){.college-photo img{aspect-ratio:3/2}.cf-line{font-size:12px}}
+
+.sponsor-slot{min-height:92px;border:1px solid var(--ws-line,#d7dce2);background:var(--ws-surface,#fff);padding:10px;overflow:hidden}
+.sponsor-slot[hidden]{display:none!important}
+.sponsor-label{display:block;margin-bottom:7px;color:var(--ws-muted,#64748b);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.sponsor-creative{display:flex;align-items:center;gap:10px;color:var(--ws-ink,#111827);text-decoration:none;font-size:13px;line-height:1.4}
+.sponsor-creative img{width:72px;height:52px;object-fit:cover;flex:none}
+.sponsor-creative:focus-visible{outline:3px solid var(--ws-focus,#2563eb);outline-offset:3px}
+.arcade-sponsor{width:min(728px,100%);min-height:90px;margin:12px auto;background:#090f1d;border-color:#334155;color:#cbd5e1}
+/* Scholarship searcher */
+.scholar-toolbar{display:grid;grid-template-columns:minmax(240px,2fr) repeat(2,minmax(140px,1fr));gap:10px;margin:14px 0 4px}
+.scholar-search,.scholar-select{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ws-muted);min-width:0}
+.scholar-search input,.scholar-select select{font:inherit;font-size:15px;padding:10px 11px;width:100%}
+.scholar-chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.scholar-chip{padding:6px 10px;font-size:12px}
+.scholar-chip.on{background:var(--ws-accent);color:var(--ws-on-accent);border-color:var(--ws-accent)}
+.scholar-count{margin:4px 0 10px}
+.scholar-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px}
+.scholar-card{border:1px solid var(--ws-line);background:var(--ws-surface);border-radius:2px;padding:15px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.scholar-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.scholar-name{margin:0;font-size:16px;line-height:1.35;overflow-wrap:anywhere}
+.scholar-org{margin:2px 0 0;font-size:12px;color:var(--ws-muted)}
+.scholar-save{flex:none;padding:7px 10px;font-size:12px;white-space:nowrap}
+.scholar-save[aria-pressed="true"]{color:var(--ws-accent);border-color:var(--ws-accent)}
+.scholar-meta{display:flex;flex-wrap:wrap;gap:4px 12px;margin:0;font-size:13px}
+.scholar-meta span{color:var(--ws-muted)}
+.scholar-tags{display:flex;flex-wrap:wrap;gap:4px}
+.scholar-tag{font-size:11px;border:1px solid var(--ws-line);background:var(--ws-soft);color:var(--ws-muted);padding:2px 7px;border-radius:2px}
+.scholar-elig{margin:0;font-size:13px;line-height:1.5}
+.scholar-details summary{cursor:pointer;font-weight:600;font-size:13px}
+.scholar-details p{margin:8px 0 0;font-size:13px;line-height:1.55}
+.scholar-link{display:inline-block;margin-top:8px;border:1px solid var(--ws-accent);color:var(--ws-accent)!important;padding:8px 11px;font-size:12px;text-decoration:none;border-radius:2px;overflow-wrap:anywhere}
+.scholar-link:hover,.scholar-link:focus-visible{background:var(--ws-tint)}
+.scholar-empty{grid-column:1/-1;border:1px dashed var(--ws-line);background:var(--ws-soft);padding:26px 20px;text-align:center}
+.scholar-empty h3{margin:0 0 6px;font-size:16px}
+.scholar-empty p{margin:0 0 12px}
+@media(max-width:1000px){.scholar-list{grid-template-columns:1fr}}
+@media(max-width:700px){.scholar-toolbar{grid-template-columns:1fr}.scholar-head{flex-wrap:wrap}}
 /* AI reply polish */
 .ai-line{margin:5px 0;line-height:1.65;overflow-wrap:anywhere}
 .ai-bullet{margin-left:14px}

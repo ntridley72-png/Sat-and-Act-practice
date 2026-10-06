@@ -50,26 +50,29 @@ const SHOTS = path.join(__dirname, "screenshots");
     await page.waitForTimeout(160);
     const info = await page.evaluate(() => {
       const g = arcade.game, c = arcade.canvas;
-      return { key: g.key, W: g.W, H: g.H, backing: [c.width, c.height], css: c.style.width, smooth: c.style.imageRendering, wantsSmooth: !!g.smooth };
+      return { key: g.key, W: g.W, H: g.H, backing: [c.width, c.height], css: c.style.width, logical: arcade.logicalW, smooth: c.style.imageRendering, wantsSmooth: !!g.smooth };
     });
     const dpr = 2;
-    const logical = parseFloat(info.css) || 420;
+    const logical = info.logical || Math.round(parseFloat(info.css)) || 420;
     if (info.backing[0] !== Math.round(logical * dpr)) throw new Error(key + " backing store not DPR scaled: " + info.backing + " for " + logical);
     if (info.wantsSmooth && info.smooth !== "auto") throw new Error(key + " should render smooth: " + info.smooth);
     if (!info.wantsSmooth && info.smooth !== "pixelated") throw new Error(key + " should keep retro pixels: " + info.smooth);
     // Start and interact.
     await page.evaluate(() => { arcade.play(); arcade.game.started = true; }, key);
     if (key === "racing" || key === "drift") {
-      const before = await page.evaluate(() => ({ x: arcade.game.x, y: arcade.game.y, distance: arcade.game.distance || 0, speed: arcade.game.speed || 0 }));
+      const before = await page.evaluate(() => ({ x: arcade.game.x, y: arcade.game.y, distance: arcade.game.distance || 0, speed: arcade.game.speed || 0, score: arcade.game.score || 0 }));
       await page.keyboard.down("ArrowUp");
       await page.keyboard.down("ArrowLeft");
-      await page.waitForTimeout(700);
+      if (key === "drift") await page.keyboard.down("Space");
+      await page.waitForTimeout(key === "drift" ? 1200 : 700);
+      if (key === "drift") await page.keyboard.up("Space");
       await page.keyboard.up("ArrowLeft");
       await page.keyboard.up("ArrowUp");
-      const after = await page.evaluate(() => ({ x: arcade.game.x, y: arcade.game.y, distance: arcade.game.distance || 0, speed: arcade.game.speed || Math.hypot(arcade.game.vx || 0, arcade.game.vy || 0) }));
+      const after = await page.evaluate(() => ({ x: arcade.game.x, y: arcade.game.y, distance: arcade.game.distance || 0, speed: arcade.game.speed || Math.hypot(arcade.game.vx || 0, arcade.game.vy || 0), score: arcade.game.score || 0 }));
       if (!(after.speed > 3)) throw new Error(key + " did not accelerate: " + JSON.stringify({ before, after }));
       if (key === "racing" && !(after.distance > before.distance)) throw new Error("racing did not advance");
       if (key === "drift" && !(Math.hypot(after.x - before.x, after.y - before.y) > 3)) throw new Error("drift car did not move");
+      if (key === "drift" && !(after.score > before.score)) throw new Error("space did not start a scored drift");
     }
     if (interaction[key]) await page.evaluate(() => {
       const actions = {

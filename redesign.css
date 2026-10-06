@@ -229,6 +229,12 @@ body[data-workspace] #btnHome{border-left:1px solid var(--ws-line)!important}
 @media(max-width:1100px){body[data-workspace] .badge,body[data-workspace] .token-badge,body[data-workspace] #autosave{display:none}body[data-workspace] .arcade-btn,body[data-workspace] .acct-btn,body[data-workspace] .workspace-theme-label{padding:0 10px}.theme-label-text{display:none}}
 @media(max-width:760px){body[data-workspace] .topbar{flex-wrap:wrap!important;padding:6px!important}body[data-workspace] .badges{width:100%;overflow-x:auto;border:1px solid var(--ws-line)}body[data-workspace] .arcade-btn,body[data-workspace] .acct-btn,body[data-workspace] .icon-btn,body[data-workspace] .sound-btn,body[data-workspace] .workspace-theme-label{min-height:44px}.hud-streak{display:inline-flex!important}}
 
+.score-improvement>p{margin:7px 0 10px}
+.score-improvement ul{display:grid;gap:9px;margin:10px 0 0;padding:0;list-style:none}
+.score-improvement li{display:grid;grid-template-columns:1fr;align-items:start;gap:8px;padding:10px 0;border-top:1px solid var(--ws-line,var(--line))}
+.score-improvement li>div{min-width:0;overflow-wrap:anywhere}
+.score-improvement .subject-practice-link{border:1px solid var(--ws-accent,var(--blue));border-radius:3px;background:transparent;color:var(--ws-accent,var(--blue));padding:8px 11px;font-size:12px;white-space:normal;text-align:left;justify-self:start;max-width:100%;line-height:1.35}
+
 /* Saved colleges beside the profile + acceptance pie */
 .college-profile-wrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;margin-top:16px;align-items:start}
 .college-saved-panel{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px;position:sticky;top:80px}
@@ -476,3 +482,31 @@ body.cpop-open{overflow:hidden}
 .chance-factors li{display:flex;justify-content:space-between;gap:10px;font-size:15px;padding:4px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
 .chance-factors li b{font-variant-numeric:tabular-nums;white-space:nowrap}
 .chance-factors .f-up{color:#86efac}.chance-factors .f-down{color:#fca5a5}
+
+/* Drift garage overlay */
+.drift-garage{position:fixed;inset:0;z-index:1280;display:none;align-items:center;justify-content:center;background:rgba(4,7,12,.82)}
+.drift-garage.show{display:flex}
+.dg-card{width:min(760px,94vw);max-height:88vh;display:flex;flex-direction:column;background:var(--panel,#18202b);border:1px solid var(--line,#2a3442);border-radius:18px;color:var(--text,#e8edf4);box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.dg-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line,#2a3442)}
+.dg-head strong{font-size:17px}
+.dg-cash{margin-left:auto;color:var(--gold,#ffcc4d);font-weight:800}
+.dg-body{padding:16px 18px;overflow:auto}
+.dg-section{margin-bottom:18px}
+.dg-section h4{margin:0 0 8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mint,#5ef0b0)}
+.dg-cars{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.dg-car{border:1px solid var(--line,#2a3442);border-radius:12px;padding:10px;background:#121924;display:flex;flex-direction:column;gap:6px}
+.dg-car.active{border-color:var(--mint,#5ef0b0)}
+.dg-car.locked{opacity:.65}
+.dg-car b{font-size:14px}
+.dg-stat{display:flex;justify-content:space-between;font-size:11px;color:var(--muted,#93a0b2)}
+.dg-swatches{display:flex;gap:8px;flex-wrap:wrap}
+.dg-swatch{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer}
+.dg-swatch.on{border-color:#fff;box-shadow:0 0 0 2px var(--mint,#5ef0b0)}
+.dg-pill{height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--line,#2a3442);background:#121924;color:var(--text,#e8edf4);font-weight:700;font-size:12px}
+.dg-pill.on{background:var(--mint,#5ef0b0);color:#06281c;border-color:var(--mint,#5ef0b0)}
+.dg-pill:disabled{opacity:.5}
+.dg-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.dg-slider{display:grid;grid-template-columns:70px 1fr 44px;align-items:center;gap:10px;margin:6px 0;font-size:12px;color:var(--muted,#93a0b2)}
+.dg-slider input{width:100%}
+.dg-slider b{color:var(--text,#e8edf4);text-align:right}
+.dg-note{font-size:11px;color:var(--muted,#93a0b2);margin-top:6px}

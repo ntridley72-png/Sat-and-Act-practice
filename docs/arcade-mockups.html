@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Arcade organization mockups</title>
+<style>
+  :root{--ink:#152033;--muted:#5d6b80;--line:#d9e0e9;--soft:#f0f3f8;--accent:#195de6;--tint:#edf3ff;--bg:#f4f6f9;--surface:#fff;--mint:#18764a;--gold:#925a12}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  .mock{max-width:1180px;margin:0 auto 48px;padding:26px 28px;background:var(--surface);border:1px solid var(--line)}
+  .mock h1{font-size:22px;margin:0 0 2px;letter-spacing:-.01em}
+  .mock .sub{font-size:12px;color:var(--muted);margin:0 0 18px}
+  .kicker{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 6px}
+  .tile{display:grid;place-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:2px;padding:12px 8px;min-height:74px;font-size:12px;font-weight:700;text-align:center;cursor:pointer}
+  .tile:hover{background:var(--soft);border-color:var(--accent)}
+  .tile .art{width:100%;height:34px;border-radius:2px;background:linear-gradient(135deg,#c7d7f5,#8fb0ee)}
+  .tile .hi{font-size:10px;font-weight:600;color:var(--muted)}
+  .grid{display:grid;gap:10px}
+  .g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .row-title{display:flex;align-items:baseline;justify-content:space-between;margin:18px 0 8px}
+  .row-title h3{margin:0;font-size:14px}
+  .row-title span{font-size:11px;color:var(--muted)}
+  .shelf{display:grid;grid-auto-flow:column;grid-auto-columns:132px;gap:10px;overflow:hidden}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}
+  .chip{border:1px solid var(--line);background:var(--surface);border-radius:2px;padding:6px 11px;font-size:12px;color:var(--ink)}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .hero{display:grid;grid-template-columns:1.25fr 1fr;gap:12px}
+  .hero-main{border:1px solid var(--line);border-radius:2px;padding:16px;background:linear-gradient(160deg,#101b34,#1d3a6b);color:#fff;min-height:190px;display:flex;flex-direction:column;justify-content:flex-end}
+  .hero-main b{font-size:20px}
+  .hero-main span{font-size:12px;opacity:.75}
+  .hero-main .play{margin-top:10px;align-self:flex-start;background:#5ef0b0;color:#06281b;border:0;border-radius:2px;padding:9px 14px;font-weight:800;font-size:12px}
+  .hero-side{display:grid;gap:10px}
+  .tabs{display:flex;border-bottom:1px solid var(--line);margin:0 0 14px}
+  .tab{padding:10px 14px;font-size:12px;font-weight:700;color:var(--muted);border-bottom:2px solid transparent}
+  .tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+  .launcher{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+  .rail{border:1px solid var(--line);border-radius:2px;padding:12px}
+  .rail h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .rail li{list-style:none;display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid var(--soft)}
+  .rail ul{margin:0;padding:0}
+  .search{display:flex;gap:6px;margin:0 0 12px}
+  .search input{flex:1;border:1px solid var(--line);border-radius:2px;padding:9px 10px;font:inherit;font-size:13px;background:var(--surface)}
+  .search button{border:1px solid var(--line);background:var(--surface);border-radius:2px;padding:9px 12px;font-size:12px}
+  .dense{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .dense .tile{min-height:58px;padding:9px 6px}
+  .film{height:44px;display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:4px;background:#0b1220;border-radius:2px}
+  .film i{display:block;border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- Concept A: category shelves -->
+<section class="mock" id="concept-a">
+  <p class="kicker">Concept A · Shelves by genre</p>
+  <h1>Arcade</h1>
+  <p class="sub">Horizontal shelves, one per genre. Everything visible in 2 swipes; high scores stay on the tile.</p>
+  <div class="row-title"><h3>Racing</h3><span>2 games · 1 token = full run</span></div>
+  <div class="shelf">
+    <div class="tile"><span class="art" style="background:linear-gradient(135deg,#0b1f3a,#22d3ee)"></span>NEON RACING<span class="hi">HI 12,400</span></div>
+    <div class="tile"><span class="art" style="background:linear-gradient(135deg,#2b1030,#f472b6)"></span>DRIFT CIRCUIT<span class="hi">HI 8,950</span></div>
+    <div class="tile" style="border-style:dashed;color:var(--muted)"><span class="art" style="background:var(--soft)"></span>COMING SOON</div>
+  </div>
+  <div class="row-title"><h3>Action</h3><span>5 games</span></div>
+  <div class="shelf">
+    <div class="tile"><span class="art" style="background:linear-gradient(135deg,#3a0d0d,#f97316)"></span>ARENA PROTOCOL<span class="hi">HI 3,200</span></div>
+    <div class="tile"><span class="art" style="background:linear-gradient(135deg,#101b34,#60a5fa)"></span>SPACE INVADERS<span class="hi">HI 4,880</span></div>
+    <div class="tile"><span class="art" style="background:linear-gradient(135deg,#132a1c,#34d399)"></span>CROSSY HOPPER<span class="hi">HI 1,120</span></div>
+    <div class="tile"><span class="art" style="background:linear-gradient(135deg,#241a0e,#fbbf24)"></span>DOODLE JUMP<span class="hi">HI 6,410</span></div>
+    <div class="tile"><span class="art" style="background:linear-gradient(135deg,#0f172a,#a855f7)"></span>BREAKOUT<span class="hi">HI 2,050</span></div>
+  </div>
+  <div class="row-title"><h3>Puzzle</h3><span>8 games</span></div>
+  <div class="shelf">
+    <div class="tile"><span class="art"></span>2048</div>
+    <div class="tile"><span class="art"></span>TETRIS</div>
+    <div class="tile"><span class="art"></span>WATER SORT</div>
+    <div class="tile"><span class="art"></span>MINESWEEPER</div>
+    <div class="tile"><span class="art"></span>SUDOKU</div>
+    <div class="tile"><span class="art"></span>BLOCK BLAST</div>
+  </div>
+  <div class="row-title"><h3>Word &amp; table</h3><span>6 games</span></div>
+  <div class="shelf">
+    <div class="tile"><span class="art"></span>VOCAB SPRINT</div>
+    <div class="tile"><span class="art"></span>WORD FINDER</div>
+    <div class="tile"><span class="art"></span>CONNECT 4</div>
+    <div class="tile"><span class="art"></span>TIC-TAC-TOE</div>
+    <div class="tile"><span class="art"></span>BLACKJACK</div>
+    <div class="tile"><span class="art"></span>SOLITAIRE</div>
+  </div>
+</section>
+
+<!-- Concept B: hero + filter grid -->
+<section class="mock" id="concept-b">
+  <p class="kicker">Concept B · Featured hero + filter grid</p>
+  <h1>Arcade</h1>
+  <p class="sub">One hero slot for the marquee game, genre chips to filter the full grid underneath.</p>
+  <div class="hero">
+    <div class="hero-main">
+      <b>Neon Racing</b>
+      <span>Highway traffic · circuit mode · full garage customization</span>
+      <button class="play">▶ PLAY · 1 TOKEN</button>
+    </div>
+    <div class="hero-side">
+      <div class="tile"><span class="art" style="background:linear-gradient(135deg,#2b1030,#f472b6)"></span>DRIFT CIRCUIT<span class="hi">BEST 8,950</span></div>
+      <div class="tile"><span class="art" style="background:linear-gradient(135deg,#3a0d0d,#f97316)"></span>ARENA PROTOCOL<span class="hi">WAVE 6</span></div>
+      <div class="tile"><span class="art" style="background:linear-gradient(135deg,#0f2d24,#5ef0b0)"></span>DETAILING BAY<span class="hi">$1,240 EARNED</span></div>
+    </div>
+  </div>
+  <div class="chips" style="margin-top:14px">
+    <span class="chip on">All 27</span><span class="chip">Racing</span><span class="chip">Action</span><span class="chip">Puzzle</span><span class="chip">Word</span><span class="chip">Table</span><span class="chip">Classics</span><span class="chip">★ Favorites</span>
+  </div>
+  <div class="grid g5">
+    <div class="tile"><span class="art"></span>2048</div>
+    <div class="tile"><span class="art"></span>BATTLESHIPS</div>
+    <div class="tile"><span class="art"></span>MINESWEEPER</div>
+    <div class="tile"><span class="art"></span>SUDOKU</div>
+    <div class="tile"><span class="art"></span>SOLITAIRE</div>
+    <div class="tile"><span class="art"></span>PAC-MAN</div>
+    <div class="tile"><span class="art"></span>SNAKE</div>
+    <div class="tile"><span class="art"></span>PONG</div>
+    <div class="tile"><span class="art"></span>TETRIS</div>
+    <div class="tile"><span class="art"></span>BLOCK BLAST</div>
+  </div>
+</section>
+
+<!-- Concept C: genre tabs -->
+<section class="mock" id="concept-c">
+  <p class="kicker">Concept C · Genre tabs</p>
+  <h1>Arcade</h1>
+  <p class="sub">One row of tabs, compact tiles with mini pixel art and high scores. Scales to 50+ games.</p>
+  <div class="tabs">
+    <span class="tab">All</span><span class="tab">Racing</span><span class="tab on">Action</span><span class="tab">Puzzle</span><span class="tab">Word</span><span class="tab">Table</span><span class="tab">Classics</span>
+  </div>
+  <div class="grid g4">
+    <div class="tile"><div class="film"><i style="background:#f97316"></i><i style="background:#7a2e10"></i><i style="background:#0b1220"></i><i style="background:#334155"></i><i style="background:#0b1220"></i><i style="background:#1e293b"></i><i style="background:#0b1220"></i></div>ARENA PROTOCOL<span class="hi">HI 3,200 · WAVE 6</span></div>
+    <div class="tile"><div class="film"><i style="background:#60a5fa"></i><i style="background:#0b1220"></i><i style="background:#60a5fa"></i><i style="background:#0b1220"></i><i style="background:#a855f7"></i><i style="background:#0b1220"></i><i style="background:#60a5fa"></i></div>SPACE INVADERS<span class="hi">HI 4,880</span></div>
+    <div class="tile"><div class="film"><i style="background:#1f2937"></i><i style="background:#374151"></i><i style="background:#34d399"></i><i style="background:#374151"></i><i style="background:#1f2937"></i><i style="background:#34d399"></i><i style="background:#1f2937"></i></div>CROSSY HOPPER<span class="hi">HI 1,120</span></div>
+    <div class="tile"><div class="film"><i style="background:#fbbf24"></i><i style="background:#0b1220"></i><i style="background:#fbbf24"></i><i style="background:#0b1220"></i><i style="background:#fbbf24"></i><i style="background:#0b1220"></i><i style="background:#fbbf24"></i></div>DOODLE JUMP<span class="hi">HI 6,410</span></div>
+    <div class="tile"><div class="film"><i style="background:#a855f7"></i><i style="background:#ef4444"></i><i style="background:#f97316"></i><i style="background:#facc15"></i><i style="background:#22c55e"></i><i style="background:#3b82f6"></i><i style="background:#0b1220"></i></div>BREAKOUT<span class="hi">HI 2,050</span></div>
+    <div class="tile"><div class="film"><i style="background:#38bdf8"></i><i style="background:#0b1220"></i><i style="background:#38bdf8"></i><i style="background:#0b1220"></i><i style="background:#38bdf8"></i><i style="background:#0b1220"></i><i style="background:#38bdf8"></i></div>SKY RUNNER<span class="hi">HI 990</span></div>
+    <div class="tile"><div class="film"><i style="background:#facc15"></i><i style="background:#111827"></i><i style="background:#facc15"></i><i style="background:#111827"></i><i style="background:#facc15"></i><i style="background:#111827"></i><i style="background:#facc15"></i></div>PAC-MAN<span class="hi">HI 15,600</span></div>
+    <div class="tile"><div class="film"><i style="background:#22c55e"></i><i style="background:#166534"></i><i style="background:#22c55e"></i><i style="background:#166534"></i><i style="background:#22c55e"></i><i style="background:#166534"></i><i style="background:#22c55e"></i></div>SNAKE<span class="hi">HI 2,730</span></div>
+  </div>
+</section>
+
+<!-- Concept D: launcher with continue/rails/search -->
+<section class="mock" id="concept-d">
+  <p class="kicker">Concept D · Launcher dashboard</p>
+  <h1>Arcade</h1>
+  <p class="sub">Prioritizes resuming and scores. Search plus a dense all-games grid for power users.</p>
+  <div class="row-title"><h3>Continue playing</h3><span>2 unfinished runs</span></div>
+  <div class="shelf" style="grid-auto-columns:200px">
+    <div class="tile" style="min-height:64px;justify-items:start;text-align:left"><b>DRIFT CIRCUIT</b><span class="hi">Lap 1 · score 162 · 40s left</span></div>
+    <div class="tile" style="min-height:64px;justify-items:start;text-align:left"><b>DETAILING BAY</b><span class="hi">72% clean · $430 so far</span></div>
+  </div>
+  <div class="launcher" style="margin-top:16px">
+    <div>
+      <div class="search"><input value="" placeholder="Search games, e.g. racing, puzzle, solitaire"><button>Search</button></div>
+      <div class="row-title"><h3>All games</h3><span>27</span></div>
+      <div class="grid dense">
+        <div class="tile">2048</div><div class="tile">BREAKOUT</div><div class="tile">FLAPPY</div><div class="tile">MINESWEEPER</div><div class="tile">BATTLESHIPS</div><div class="tile">CONNECT 4</div>
+        <div class="tile">VOCAB</div><div class="tile">SUDOKU</div><div class="tile">SOLITAIRE</div><div class="tile">HOPPER</div><div class="tile">STACK</div><div class="tile">DOODLE</div>
+        <div class="tile">WORDFIND</div><div class="tile">BLACKJACK</div><div class="tile">TIC-TAC-TOE</div><div class="tile">BLOCK BLAST</div><div class="tile">BUBBLES</div><div class="tile">INVADERS</div>
+      </div>
+    </div>
+    <div>
+      <div class="rail"><h4>Top scores</h4><ul>
+        <li><span>PAC-MAN</span><b>15,600</b></li><li><span>DOODLE JUMP</span><b>6,410</b></li><li><span>SPACE INVADERS</span><b>4,880</b></li><li><span>ARENA PROTOCOL</span><b>3,200</b></li><li><span>SNAKE</span><b>2,730</b></li>
+      </ul></div>
+      <div class="rail" style="margin-top:12px"><h4>Recently played</h4><ul>
+        <li><span>NEON RACING</span><b>2h ago</b></li><li><span>DETAILING BAY</span><b>yesterday</b></li><li><span>MINESWEEPER</span><b>2d ago</b></li>
+      </ul></div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

@@ -117,6 +117,95 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
     g = pick("invaders"); g.fire();
     out.invaders = g.bullets.length === 1;
 
+    // Minesweeper upgrades: hint, difficulty, keyboard cursor, restart.
+    g = pick("minesweeper");
+    g.tap(g.boardGeo().pad + 5, g.boardGeo().top + 5); // first click places and is safe
+    const hintBefore = g.hintLeft;
+    g.useHint();
+    const hintRevealedMore = g.revealed > 1 && g.hintLeft === hintBefore - 1;
+    const hintExhausted = (g.useHint(), g.hintLeft === 0);
+    g.diffIndex = 2; g.reset(1, 2);
+    const largeBoard = g.size === 16 && g.mineCount === 40;
+    g.keyDown("ArrowRight"); g.keyDown("ArrowDown");
+    const cursorMoved = g.cursor.c === 9 && g.cursor.r === 9 && g.keyboardUsed === true;
+    g.keyDown("Enter");
+    const enterOpened = g.grid[9][9].open === true;
+    g.score = 500; g.keyDown("r");
+    const restarted = g.size === 16 && g.score === 0 && g.grid.every((row) => row.every((c) => !c.open));
+    out.minesUpgrades = hintRevealedMore && hintExhausted && largeBoard && cursorMoved && enterOpened && restarted;
+
+    // Battleships: rotation, auto-place validity, firing, and a full round win.
+    g = pick("battleships");
+    g.keyDown("r");
+    const rotated = g.horiz === false;
+    g.keyDown("r");
+    g.autoPlace();
+    const fleetOk = g.phase === "battle" && g.playerShips.length === 5 && g.playerShips.reduce((n, sh) => n + sh.len, 0) === 17;
+    let overlap = false, consistent = true;
+    g.playerGrid.forEach((row, r) => row.forEach((idx, c) => {
+      if (idx === null) return;
+      const ship = g.playerShips[idx];
+      if (!ship || !ship.cells.some(([sr, sc]) => sr === r && sc === c)) consistent = false;
+    }));
+    const cellsSeen = new Set();
+    g.playerShips.forEach((sh) => sh.cells.forEach(([r, c]) => { const k = r + ":" + c; if (cellsSeen.has(k)) overlap = true; cellsSeen.add(k); }));
+    out.battleshipsPlace = rotated && fleetOk && !overlap && consistent;
+    const enemyCells = [];
+    g.cpuGrid.forEach((row, r) => row.forEach((idx, c) => { if (idx !== null) enemyCells.push([r, c]); }));
+    const [hr, hc] = enemyCells[0];
+    g.fireAt(hr, hc);
+    const hitWorks = g.playerShots[hr][hc] === "hit" && g.score > 0;
+    const cpuFires = (g.update(2), g.cpuShots.flat().some((v) => v !== null));
+    out.battleshipsFire = hitWorks && cpuFires;
+    g.score = 0; g.turn = "player";
+    enemyCells.forEach(([r, c]) => { g.turn = "player"; g.fireAt(r, c); });
+    const roundWon = g.round === 2 && g.phase === "place" && g.score >= 650 && g.winBanner > 0;
+    const autoTapped = (g.tap(g.buttons().find((b) => b.id === "auto").x + 10, g.buttons().find((b) => b.id === "auto").y + 10), g.phase === "battle");
+    out.battleshipsWin = roundWon && autoTapped;
+
+    // Minesweeper: a hint before the first move must never reveal a mine, on any difficulty.
+    let hintPrepSafe = true;
+    for (let i = 0; i < 30; i++) {
+      g = pick("minesweeper");
+      g.reset(1, i % 3);
+      g.started = true;
+      g.useHint();
+      if (g.over || g.hintLeft !== 0) { hintPrepSafe = false; break; }
+    }
+    out.minesHintPrep = hintPrepSafe;
+
+    // Detailing Bay: score is a number for the arcade high-score flow and the completion bonus persists.
+    g = pick("pressurewash"); g.started = true;
+    g.sections.forEach((sec) => { sec.dirt = 0; });
+    g.update(0.016);
+    g.update(0.016);
+    out.washScore = typeof g.score === "number" && g.score > 0 && g.bonusBank > 0 && g.earned > 0;
+
+    // Arena Protocol: the d-pad turns the player (touch input is read by controlMap).
+    g = pick("doom"); g.started = true; g.input("left");
+    out.doomTouchTurn = g.controlMap({}).turn === -1;
+
+    // Leaving a driving game stops its engine audio.
+    arcade.select("racing");
+    const racer = arcade.game;
+    racer.audio = { eg: { gain: { value: 1 } }, ng: { gain: { value: 1 } }, ctx: { close() { racer._closed = true; } } };
+    arcade.select("drift");
+    out.audioStops = racer.audio === null && racer._closed === true;
+
+    // Every game tile renders a distinct, non-blank sprite (guards renamed/new games).
+    out.sprites = (() => {
+      const bad = [];
+      GAME_LIST.forEach((g) => {
+        const cv = document.createElement("canvas"); cv.width = 32; cv.height = 32;
+        drawArcadeSprite(cv, g.key, 0);
+        const d = cv.getContext("2d").getImageData(0, 0, 32, 32).data;
+        let lit = 0; const colors = new Set();
+        for (let i = 0; i < d.length; i += 4) { if (d[i] + d[i + 1] + d[i + 2] > 24) lit++; colors.add(d[i] + "," + d[i + 1] + "," + d[i + 2]); }
+        if (lit < 60 || colors.size < 4) bad.push(g.key + "(" + lit + "px/" + colors.size + "c)");
+      });
+      return bad.length ? bad.join(", ") : true;
+    })();
+
     // Every game has a rules entry.
     out.rules = GAME_LIST.every((x) => typeof GAME_RULES[x.key] === "string" && GAME_RULES[x.key].length > 20);
     return out;
@@ -125,5 +214,5 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   await browser.close();
   const failed = Object.entries(results).filter(([, v]) => !v).map(([k]) => k);
   if (errors.length || failed.length) { console.error(errors.join("\n")); throw new Error("failed checks: " + failed.join(", ")); }
-  console.log("PASS: 2048 merges, Breakout launches, Flappy flaps, Minesweeper first-click is safe, Connect 4 wins, Vocab stats persist, Sudoku completes, Solitaire deals and draws, and every game has rules.");
+  console.log("PASS: 2048 merges, Breakout launches, Flappy flaps, Minesweeper first-click/hint/difficulty/keyboard/restart/hint-prep, every tile sprite renders, Detailing Bay score/payout, Arena Protocol touch turn, engine-audio stop, Battleships placement/fire/round win, Connect 4 wins, Vocab stats persist, Sudoku completes, Solitaire deals and draws, and every game has rules.");
 })().catch((error) => { console.error(error); process.exit(1); });

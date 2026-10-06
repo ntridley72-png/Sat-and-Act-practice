@@ -1,3 +1,8 @@
 public/
 node_modules/
 .wrangler/
+.ai-reviews/
+logs/*.tmp
+scripts/.cache/
+scripts/__pycache__/
+logs/

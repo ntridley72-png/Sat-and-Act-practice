@@ -14,7 +14,7 @@ routes = [{ pattern = "funsat.bid", custom_domain = true }]
 # MAIL_FROM = "FunSAT <no-reply@funsat.bid>"
 
 [build]
-command = "mkdir -p public && cp \"SAT & ACT Practice.html\" public/index.html && cp workspace.css workspace.js college-data.js college.js redesign.css redesign.js public/"
+command = "mkdir -p public && cp \"SAT & ACT Practice.html\" public/index.html && cp workspace.css workspace.js college-data.js college.js redesign.css redesign.js subjects.css subjects.js scholarships-data.js scholarships.js dirtbike.js ads.js ads.txt robots.txt sitemap.xml public/"
 
 [assets]
 directory = "./public"

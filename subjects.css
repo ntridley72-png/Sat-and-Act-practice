@@ -1,0 +1,30 @@
+/* Subject practice screen */
+body[data-workspace] #screen-subjects{background:var(--bg)!important;color:var(--text)}
+.subjects-screen{padding:26px 0 60px}
+.subjects-head h1{margin:10px 0 8px;font-size:clamp(24px,3.2vw,36px)}
+.subjects-head p{max-width:820px}
+.subject-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
+body[data-workspace] .subject-tab{height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:#1a222e;color:var(--text);font-weight:700;font-size:14px}
+body[data-workspace] .subject-tab.active{background:rgba(94,240,176,.16);border-color:var(--mint);color:var(--mint)}
+.subject-length{display:flex;align-items:center;gap:12px;margin:16px 0;flex-wrap:wrap;color:var(--muted);font-size:13px}
+.subject-seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+body[data-workspace] .subject-len{height:36px;padding:0 16px;border:0;border-right:1px solid var(--line);background:#1a222e;color:var(--text);font-weight:700}
+body[data-workspace] .subject-len:last-child{border-right:0}
+body[data-workspace] .subject-len.active{background:var(--mint);color:#06281c}
+.subject-weak{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:8px 0 18px}
+.subject-weak-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+body[data-workspace] .subject-chip{border:1px solid var(--line);border-radius:999px;background:#121924;color:var(--text);padding:7px 12px;font-size:12px}
+body[data-workspace] .subject-chip:hover{border-color:var(--mint)}
+.subject-domain{margin:0 0 20px}
+.subject-domain h3{margin:0 0 10px;font-size:15px;color:var(--text)}
+.subject-skill-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+body[data-workspace] .subject-skill{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;color:var(--text);min-height:64px;font-weight:400}
+body[data-workspace] .subject-skill:hover{border-color:var(--mint)}
+body[data-workspace] .subject-skill.selected{border-color:var(--mint);background:rgba(94,240,176,.1)}
+.ss-name{font-weight:700;font-size:14px}
+.ss-meta{font-size:12px;color:var(--muted)}
+.subject-start{position:sticky;bottom:0;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;background:rgba(15,20,28,.97);border:1px solid var(--line);border-radius:16px;margin-top:10px}
+body[data-workspace] #subjectStartBtn{min-height:48px;border-radius:12px;background:linear-gradient(180deg,var(--mint),var(--mint2));color:#06281c;font-weight:800;font-size:16px;padding:0 22px;border:0}
+body[data-workspace] #subjectStartBtn:disabled{opacity:.5}
+.subject-result{margin-bottom:12px}
+@media(max-width:560px){.subject-start{flex-direction:column;align-items:stretch}.subject-skill-grid{grid-template-columns:1fr}.subjects-screen{padding-top:14px}}

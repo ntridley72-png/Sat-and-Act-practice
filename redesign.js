@@ -365,15 +365,56 @@
     });
     if (typeof arcade !== "undefined" && arcade) {
       arcade.enter = function (key) { playArcadeIntro(key); };
+      // Tokens spent per run: entering a game resets the count.
+      const origSelect = arcade.select.bind(arcade);
+      arcade.select = function (key) {
+        const before = profile.tokens;
+        const result = origSelect.apply(null, arguments);
+        arcade.runTokens = Math.max(0, before - profile.tokens);
+        return result;
+      };
       ["addTime", "autoRefill", "playAgain"].forEach((name) => {
         if (typeof arcade[name] !== "function") return;
         const orig = arcade[name].bind(arcade);
         arcade[name] = function () {
           const before = profile.tokens;
           const result = orig.apply(arcade, arguments);
-          if (profile.tokens < before) setTimeout(() => playCoinFx(), 40);
+          const spent = before - profile.tokens;
+          if (spent > 0) {
+            arcade.runTokens = (arcade.runTokens || 0) + spent;
+            // Mid-run spends stay silent; the death screen reports the total.
+            if (name === "playAgain") setTimeout(() => playCoinFx(), 40);
+          }
           return result;
         };
+      });
+      const deathExtras = () => {
+        try {
+          if (!arcade.msg || arcade.msg.style.display === "none") return;
+          const box = arcade.msg.querySelector(".msg-box");
+          if (!box || box.dataset.enhanced) return;
+          box.dataset.enhanced = "1";
+          const used = arcade.runTokens || 0;
+          const cash = (arcade.game && arcade.game.earned) || 0;
+          const line = (used ? "Tokens used: " + used + " (left: " + profile.tokens + ")" : "") + (cash ? (used ? " · " : "") + "Garage cash earned: $" + cash : "");
+          if (line) box.insertAdjacentHTML("beforeend", '<p class="small" style="margin:8px 0 0">' + line + "</p>");
+          if (profile.tokens >= 1 && arcade.game) {
+            box.insertAdjacentHTML("beforeend", '<button id="continueRun" style="margin:6px">Continue (1 🪙)</button>');
+            const cont = document.getElementById("continueRun");
+            if (cont) cont.addEventListener("click", () => {
+              if (profile.tokens < 1) return;
+              profile.tokens -= 1; arcade.runTokens = (arcade.runTokens || 0) + 1;
+              try { saveProfile(); updateHUD(); } catch (e) {}
+              arcade.game.reset(); arcade.game.over = false; arcade.showMsg(false);
+              arcade.mode = "playing"; arcade.restartLoop();
+            });
+          }
+        } catch (e) {}
+      };
+      ["gameOver", "timeUp", "creditTimeUp"].forEach((name) => {
+        if (typeof arcade[name] !== "function") return;
+        const orig = arcade[name].bind(arcade);
+        arcade[name] = function () { const r = orig.apply(arcade, arguments); deathExtras(); return r; };
       });
     }
     const baseRenderStart = renderStart;

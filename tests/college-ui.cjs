@@ -72,6 +72,31 @@ const SHOTS = path.join(ROOT, "tests", "screenshots");
   // Start screen entry card exists.
   const startCard = await page.locator("#collegeStart").count();
   if (!startCard) throw new Error("missing college card on the start screen");
+  const scholarCard = await page.locator("#scholarshipStart").count();
+  if (!scholarCard) throw new Error("missing scholarship card on the start screen");
+
+  // College photos: a data-backed college renders a styled, lazy campus photo with attribution, and broken images hide themselves.
+  await page.click("#btnCollege");
+  await page.waitForSelector("#screen-college", { state: "visible" });
+  await page.fill("#collegeQuery", "Auburn");
+  await page.waitForTimeout(250);
+  await page.locator('.college-row:has(.college-name:text-is("Auburn University")) .college-row-main').click();
+  await page.waitForSelector("#collegeDetail");
+  const photo = await page.evaluate(() => {
+    const fig = document.querySelector("#collegeDetail .college-photo");
+    if (!fig) return null;
+    const img = fig.querySelector("img");
+    const css = getComputedStyle(img);
+    return { alt: img.getAttribute("alt"), loading: img.getAttribute("loading"), aspect: css.aspectRatio, fit: css.objectFit, caption: (fig.querySelector("figcaption") || {}).textContent || "", onerror: img.getAttribute("onerror") || "" };
+  });
+  if (!photo) throw new Error("Auburn University should render a campus photo from Wikimedia data");
+  if (!/Campus photo(?: 1)? of Auburn/.test(photo.alt)) throw new Error("photo alt text is wrong: " + photo.alt);
+  if (photo.loading !== "lazy") throw new Error("photo should lazy-load");
+  if (!/16\s*\/\s*9/.test(photo.aspect)) throw new Error("photo aspect ratio CSS not applied: " + photo.aspect);
+  if (photo.fit !== "cover") throw new Error("photo object-fit CSS not applied: " + photo.fit);
+  if (!/Wikimedia|Public domain|CC/.test(photo.caption)) throw new Error("photo attribution missing: " + photo.caption);
+  if (!photo.onerror) throw new Error("photo has no broken-image fallback");
+  await page.click("[data-close-detail]");
 
   // AI reply polish: greetings removed, LaTeX converted, doubled parentheses collapsed, math typeset.
   const aiFormat = await page.evaluate(() => {

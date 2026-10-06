@@ -685,6 +685,57 @@
     }).join("") + "</div>" + (list.length > 40 ? '<p class="small muted">Showing the first 40 matches. Narrow your search to see more.</p>' : "");
   }
 
+
+  function detailExtrasHtml(college) {
+    const money = (n) => n == null ? "—" : "$" + Number(n).toLocaleString();
+    const race = college.race || {};
+    const raceOrder = [["w", "White"], ["h", "Hispanic"], ["a", "Asian"], ["b", "Black"], ["n", "International"], ["m", "Two or more"]];
+    const raceColors = { w: "#93c5fd", h: "#fbbf24", a: "#f472b6", b: "#a78bfa", n: "#34d399", m: "#94a3b8" };
+    const raceBar = Object.keys(race).length ? '<div class="div-bar">' + raceOrder.filter(([k]) => race[k] != null).map(([k, label]) =>
+      '<span style="width:' + race[k] + '%;background:' + raceColors[k] + '" title="' + label + " " + race[k] + '%"></span>').join("") + '</div><div class="cf-note">' +
+      raceOrder.filter(([k]) => race[k] != null).map(([k, label]) => label + " " + race[k] + "%").join(" · ") + "</div>" : '<div class="cf-note">Not reported</div>';
+    const majors = (college.maj || []).length ? '<div class="maj-list">' + college.maj.map(([label, pct]) =>
+      '<div class="maj-row"><span>' + escapeHtml(label) + '</span><i style="width:' + pct + '%"></i><b>' + pct + "%</b></div>").join("") + '</div><div class="cf-note">Share of bachelor\'s degrees conferred, IPEDS 2024.</div>' : '<div class="cf-note">Not reported</div>';
+    const rpp = college.rpph, adj = rpp && college.rb != null ? Math.round((college.rb * rpp / 100) / 100) * 100 : college.rb;
+    const totalIn = college.ti != null && adj != null ? college.ti + adj : null;
+    const totalOut = college.to != null && adj != null ? college.to + adj : null;
+    const photos = Array.isArray(college.imgs) && college.imgs.length ? college.imgs : (college.img ? [{ u: college.img, a: college.imgA, l: college.imgL }] : []);
+    const photo = photos.length ? '<section class="college-gallery" aria-label="Campus photos of ' + escapeHtml(college.n) + '">' + photos.slice(0, 3).map((img, index) =>
+      '<figure class="college-photo"><img src="' + escapeHtml(img.u || "") + '" alt="Campus photo ' + (index + 1) + ' of ' + escapeHtml(college.n) + '" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.closest(\'figure\').hidden=true"><figcaption>Photo: ' + escapeHtml(img.a || "Wikimedia Commons") + (img.l ? ' · <a href="' + escapeHtml(img.l) + '" target="_blank" rel="noopener">source</a>' : "") + "</figcaption></figure>").join("") + "</section>" : "";
+    const forum = (label, href) => '<a class="cf-link" href="' + href + '" target="_blank" rel="noopener">' + label + "</a>";
+    return photo +
+      '<div class="college-facts">' +
+      '<section class="cf-card"><h4>What they specialize in</h4>' + majors + "</section>" +
+      '<section class="cf-card"><h4>Costs (first-year, official)</h4>' +
+      '<div class="cf-line"><span>In-state tuition</span><b>' + money(college.ti) + "</b></div>" +
+      '<div class="cf-line"><span>Out-of-state tuition</span><b>' + money(college.to) + "</b></div>" +
+      '<div class="cf-line"><span>Room & board (reported)</span><b>' + money(college.rb) + "</b></div>" +
+      '<div class="cf-line"><span>Net price after aid (avg)</span><b>' + money(college.np) + "</b></div>" +
+      '<div class="cf-line"><span>State-adjusted room & board' + (rpp ? " (BEA " + rpp + ")" : "") + "</span><b>" + money(adj) + "</b></div>" +
+      '<div class="cf-line total"><span>Est. total, in-state</span><b>' + money(totalIn) + "</b></div>" +
+      '<div class="cf-line total"><span>Est. total, out-of-state</span><b>' + money(totalOut) + "</b></div>" +
+      '<div class="cf-note">Tuition, room and board, and net price are the college\'s most recent federal reporting. The state-adjusted row scales reported room and board by the state housing price parity (BEA 2024, U.S. = 100). Actual costs depend on aid and housing choices — verify with the college.</div></section>' +
+      '<section class="cf-card"><h4>Outcomes & academics</h4>' +
+      '<div class="cf-line"><span>Graduation rate</span><b>' + (college.gr != null ? college.gr + "%" : "—") + "</b></div>" +
+      '<div class="cf-line"><span>First-year retention</span><b>' + (college.ret != null ? college.ret + "%" : "—") + "</b></div>" +
+      '<div class="cf-line"><span>Median earnings (10 yrs)</span><b>' + (college.ern != null ? "$" + Number(college.ern).toLocaleString() : "—") + "</b></div>" +
+      '<div class="cf-line"><span>Student-faculty ratio</span><b>' + (college.sfr != null ? college.sfr + ":1" : "—") + "</b></div>" +
+      '<div class="cf-line"><span>Undergraduates</span><b>' + (college.enr ? college.enr.toLocaleString() : "—") + "</b></div>" +
+      '<div class="cf-line"><span>First-generation share</span><b>' + (college.fg != null ? college.fg + "%" : "—") + "</b></div>" +
+      '<div class="cf-line"><span>Pell Grant share</span><b>' + (college.pell != null ? college.pell + "%" : "—") + "</b></div>" +
+      '<div class="cf-line"><span>Diversity index</span><b>' + (college.div != null ? college.div + "/100" : "—") + "</b></div>" +
+      raceBar + "</section>" +
+      '<section class="cf-card"><h4>Student experience</h4>' +
+      '<div class="cf-social"><span class="cf-grade">' + escapeHtml(college.sg || "—") + '</span><span class="cf-note">App estimate (A–D) from size, retention, diversity, and location — not a student survey.</span></div>' +
+      '<div class="cf-line"><span>Students returning after year one</span><b>' + (college.ret != null ? college.ret + "%" : "—") + '</b></div>' +
+      '<div class="cf-line"><span>Setting</span><b>' + ({ city: "City", suburb: "Suburban", town: "Small town", rural: "Rural" }[college.loc] || "—") + " · " + escapeHtml(college.city) + ", " + college.st + "</b></div>" +
+      '<div class="cf-line"><span>Students living on campus</span><b>Not reported</b></div>' +
+      '<div class="cf-line"><span>Athletics division</span><b>Not reported</b></div>' +
+      '<div class="cf-note">Retention is official College Scorecard data, not a satisfaction rating. Professor and student-review sites change frequently, so open the current source before deciding.</div>' +
+      '<div class="cf-links">' + forum("Professor ratings on Rate My Professors", "https://www.ratemyprofessors.com/search/professors?q=" + encodeURIComponent(college.n)) + forum("Student reviews on Niche", "https://www.niche.com/search/?q=" + encodeURIComponent(college.n)) + forum("Student opinions on Reddit", "https://www.reddit.com/search/?q=" + encodeURIComponent(college.n + " student experience")) + "</div></section>" +
+      "</div>";
+  }
+
   function detailHtml() {
     const college = selectedCollege();
     if (!college) return '<div class="college-card college-detail"><h3>Pick a college</h3><p class="small muted">Search on the left, then choose a college to see score ranges, a target, and an unofficial estimate.</p></div>';
@@ -720,7 +771,7 @@
       '<div><span class="college-stat-num">' + actText(college) + '</span><span class="small muted">ACT composite, enrolled</span></div>' +
       '<div><span class="college-stat-num">' + (range && range.mid != null ? range.mid : "—") + '</span><span class="small muted">reported median (' + est.testType.toUpperCase() + ')</span></div>' +
       '<div><span class="college-stat-num">' + money(college.net) + '</span><span class="small muted">average annual net price</span></div>' +
-      '<div><span class="college-stat-num">' + money(college.tuIn) + (college.ctrl === "public" && college.tuOut != null ? ' / ' + money(college.tuOut) : '') + '</span><span class="small muted">annual tuition' + (college.ctrl === "public" ? ' (in / out of state)' : '') + '</span></div></div>' +
+      '<div><span class="college-stat-num">' + money(college.tuIn) + (college.ctrl === "public" && college.tuOut != null ? ' / ' + money(college.tuOut) : '') + '</span><span class="small muted">annual tuition' + (college.ctrl === "public" ? ' (in / out of state)' : '') + '</span></div></div>' + detailExtrasHtml(college) +
       '<div class="college-target"><div class="college-target-head"><strong>Score goal</strong><span class="small muted">Default: 75th percentile (adjustable)</span></div>' +
       '<div class="college-target-btns" role="group" aria-label="Target score">' +
       '<button type="button" class="secondary' + (c.targetMode === "p75" ? " on" : "") + '" data-target="p75">75th percentile</button>' +
@@ -733,7 +784,7 @@
       '<p class="small muted">Accept, waitlist, and deny shares come from an app model using the factors below. The accept range is ' + pct(est.lo) + ' – ' + pct(est.hi) + '. Waitlist placement is an estimate: it is more common at selective colleges and for borderline applicants, but rarely converts to admission, and some colleges admit none off the waitlist. This is not an admission decision or a guarantee.</p>' +
       (est.confNotes.length ? '<p class="small muted">Improve accuracy: ' + escapeHtml(est.confNotes.join('; ')) + '.</p>' : '') + '</div></div>' +
       '<div class="college-equation-row"><code>estimate = sigmoid(' + "selectivity log-odds" + ' + score + GPA + rigor + activities + context)</code></div>' +
-      '<p class="small muted">Sources: ' + escapeHtml(CD.meta.source || "College Scorecard") + " (" + escapeHtml(CD.meta.release || "") + "). Admit rate and ranges describe enrolled students and are the most recent figures the college reported to the U.S. Department of Education. Verify current test policies with the college.</p></details>" +
+      '<p class="small muted">Sources: ' + escapeHtml(CD.meta.source || "College Scorecard") + " (" + escapeHtml(CD.meta.release || "") + "); IPEDS Completions 2024 (majors); BEA Regional Price Parities 2024 (living costs); Wikimedia Commons (photos). Admit rate and ranges describe enrolled students and are the most recent figures the college reported to the U.S. Department of Education. Verify current test policies, costs, and campus life with the college.</p></details>" +
       '<div class="college-groq"><label for="collegeAsk">Ask the Groq tutor about this college plan</label>' +
       '<div class="college-groq-row"><input type="text" id="collegeAsk" maxlength="300" placeholder="e.g., What should I do this semester to improve?"><button type="button" id="collegeAskBtn">Ask</button></div>' +
       '<p class="small muted" id="collegeAskStatus"></p><div class="college-ask-reply" id="collegeAskReply" aria-live="polite"></div></div>' +

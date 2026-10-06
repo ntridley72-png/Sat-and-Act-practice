@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const html = fs.readFileSync('SAT & ACT Practice.html', 'utf8');
-const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1]);
+const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)].filter(m => !/src=|ld\+json|application\//.test(m[1])).map(m => m[2]);
 scripts.forEach((s, i) => new vm.Script(s, { filename: `inline-${i}.js` }));
 const source = scripts.find(s => s.includes('function sample('));
 const extract = (from, to) => source.slice(source.indexOf(from), source.indexOf(to, source.indexOf(from)));
@@ -69,5 +69,8 @@ context.profile.history.push({id:'topic',testType:'sat',done:true,scoreEligible:
 assert.equal(JSON.stringify(vm.runInContext('predictScores()',context)),prediction,'Topic drill changed score');
 assert(!source.includes('pollinations.ai'));
 assert(!source.includes('Be a word detective'));
+assert(source.includes('data-subject-practice='),'weak SAT subjects should link to personalized practice');
+assert(source.includes("(DOMAINS.math || []).includes(domain) ? 'math' : 'rw'"),'subject links should route to the correct SAT section');
+assert(source.includes('profile.fullPracticeDraft = JSON.parse(JSON.stringify(state))'),'subject drills should preserve an in-progress full practice');
 console.log('PASS: real bank validation, SAT difficulty pools exceed 50 questions, topic drills leave estimates unchanged, Groq-only AI.');
 console.log('Question totals:',Object.fromEntries(Object.entries(actual).map(([k,v])=>[k,v.length])));

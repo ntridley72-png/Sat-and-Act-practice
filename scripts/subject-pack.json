@@ -1,0 +1,1269 @@
+[
+ {
+  "id": "m2000",
+  "bank": "math",
+  "domain": "Problem-Solving & Data Analysis",
+  "skill": "Statistical inference",
+  "diff": "medium",
+  "q": "A random sample of 250 residents found that 46% support a new library levy, with a margin of error of 4 percentage points. Which conclusion is best supported?",
+  "choices": [
+   "Exactly 46% of all residents support the levy.",
+   "The true support is plausibly between 42% and 50%.",
+   "Fewer than half of the sample support the levy.",
+   "The sample is too small to support any conclusion."
+  ],
+  "ans": 1,
+  "exp": "The margin of error gives the range 46% \u00b1 4%, or 42% to 50%. Because the range includes values on both sides of 50%, we cannot claim a majority either way."
+ },
+ {
+  "id": "m2001",
+  "bank": "math",
+  "domain": "Problem-Solving & Data Analysis",
+  "skill": "Statistical inference",
+  "diff": "medium",
+  "q": "A study reports that students who ate breakfast scored higher on average than students who did not. The study was an observational survey, not a controlled experiment. Which statement is most appropriate?",
+  "choices": [
+   "Eating breakfast definitely causes higher scores.",
+   "The result proves breakfast is unnecessary.",
+   "The association may be explained by other differences between the groups.",
+   "The study should be ignored because it used a survey."
+  ],
+  "ans": 2,
+  "exp": "Observational studies show association, not causation. Students who eat breakfast may differ in other ways that affect scores, so other explanations are possible."
+ },
+ {
+  "id": "m2002",
+  "bank": "math",
+  "domain": "Problem-Solving & Data Analysis",
+  "skill": "Statistical inference",
+  "diff": "hard",
+  "q": "A researcher wants to estimate the proportion of a city's 80,000 voters who support a bond measure. Which sampling method best supports a valid inference about all city voters?",
+  "choices": [
+   "Surveying 500 voters chosen at random from the full voter list.",
+   "Surveying 500 people at a downtown transit stop in the morning.",
+   "Surveying 500 volunteers who respond to an online advertisement.",
+   "Surveying 500 voters who attend a single neighborhood meeting."
+  ],
+  "ans": 0,
+  "exp": "A simple random sample from the full voter list gives every voter a known chance of selection, which supports inference. The other options introduce selection bias by favoring particular groups."
+ },
+ {
+  "id": "m2003",
+  "bank": "math",
+  "domain": "Problem-Solving & Data Analysis",
+  "skill": "Statistical inference",
+  "diff": "medium",
+  "q": "Two surveys use random samples from the same population. Survey A has 100 respondents and Survey B has 900. Assuming similar methods, which statement about the margin of error is correct?",
+  "choices": [
+   "Survey B will have a smaller margin of error.",
+   "Survey A will have a smaller margin of error.",
+   "Both surveys must have identical margins of error.",
+   "The margin of error depends only on the population size."
+  ],
+  "ans": 0,
+  "exp": "For random samples, the margin of error shrinks as sample size grows. A larger sample gives a more precise estimate, so Survey B's margin of error is smaller."
+ },
+ {
+  "id": "m2004",
+  "bank": "math",
+  "domain": "Problem-Solving & Data Analysis",
+  "skill": "Statistical inference",
+  "diff": "hard",
+  "q": "A poll's 95% confidence interval for a candidate's support is 48% to 54%. Which interpretation of the interval is most appropriate?",
+  "choices": [
+   "The candidate will certainly receive between 48% and 54% of the vote.",
+   "The method produces intervals that capture the true value about 95% of the time.",
+   "Exactly 95% of voters support the candidate.",
+   "The poll has a 5% chance of being completely wrong."
+  ],
+  "ans": 1,
+  "exp": "A confidence level describes the long-run success rate of the method used to build the interval. It does not guarantee a particular interval contains the true value or predict an election result."
+ },
+ {
+  "id": "m2005",
+  "bank": "math",
+  "domain": "Advanced Math",
+  "skill": "Nonlinear equations",
+  "diff": "medium",
+  "q": "The equation x^2 - 3x - 10 = 0 has two solutions. What is the positive solution?",
+  "choices": [
+   "2",
+   "5",
+   "10",
+   "7"
+  ],
+  "ans": 1,
+  "exp": "Factor: x^2 - 3x - 10 = (x - 5)(x + 2). The solutions are x = 5 and x = -2, so the positive solution is 5."
+ },
+ {
+  "id": "m2006",
+  "bank": "math",
+  "domain": "Advanced Math",
+  "skill": "Nonlinear equations",
+  "diff": "medium",
+  "q": "The system y = x^2 and y = 2x + 3 has two solutions. What is the smaller x-value?",
+  "choices": [
+   "-1",
+   "1",
+   "3",
+   "0"
+  ],
+  "ans": 0,
+  "exp": "Set x^2 = 2x + 3, so x^2 - 2x - 3 = 0. Factor as (x - 3)(x + 1) = 0, giving x = 3 and x = -1. The smaller x-value is -1."
+ },
+ {
+  "id": "m2007",
+  "bank": "math",
+  "domain": "Advanced Math",
+  "skill": "Nonlinear equations",
+  "diff": "hard",
+  "q": "The function f(x) = x^2 - 6x + 5 crosses the x-axis at two points. What is the sum of those x-values?",
+  "choices": [
+   "6",
+   "5",
+   "11",
+   "-6"
+  ],
+  "ans": 0,
+  "exp": "Solve x^2 - 6x + 5 = 0 by factoring: (x - 1)(x - 5) = 0, so the roots are 1 and 5. Their sum is 6, which also equals -b/a for ax^2 + bx + c."
+ },
+ {
+  "id": "m2008",
+  "bank": "math",
+  "domain": "Advanced Math",
+  "skill": "Nonlinear equations",
+  "diff": "medium",
+  "q": "A rectangle's length is 3 units greater than its width, and its area is 40 square units. What is the width?",
+  "choices": [
+   "5",
+   "8",
+   "4",
+   "10"
+  ],
+  "ans": 0,
+  "exp": "Let the width be w; then w(w + 3) = 40, so w^2 + 3w - 40 = 0. Factor as (w + 8)(w - 5) = 0. Width must be positive, so w = 5."
+ },
+ {
+  "id": "m2009",
+  "bank": "math",
+  "domain": "Advanced Math",
+  "skill": "Nonlinear equations",
+  "diff": "hard",
+  "q": "The equation x^2 + y^2 = 25 and the line y = 4 intersect at two points. What is the positive x-value of either intersection?",
+  "choices": [
+   "3",
+   "4",
+   "5",
+   "9"
+  ],
+  "ans": 0,
+  "exp": "Substitute y = 4: x^2 + 16 = 25, so x^2 = 9 and x = \u00b13. The positive x-value is 3."
+ },
+ {
+  "id": "m2010",
+  "bank": "math",
+  "domain": "Problem-Solving & Data Analysis",
+  "skill": "Scatterplots",
+  "diff": "easy",
+  "q": "A scatterplot shows a strong positive linear association between hours studied and test score. Which value of the correlation coefficient r is most consistent with the plot?",
+  "choices": [
+   "0.92",
+   "-0.92",
+   "0.05",
+   "-0.05"
+  ],
+  "ans": 0,
+  "exp": "A strong positive linear pattern corresponds to an r value near +1. Of the choices, 0.92 is the only strong positive value."
+ },
+ {
+  "id": "m2011",
+  "bank": "math",
+  "domain": "Problem-Solving & Data Analysis",
+  "skill": "Scatterplots",
+  "diff": "medium",
+  "q": "A scatterplot of plant height versus days shows points that rise quickly at first and then level off. Which description best matches the association?",
+  "choices": [
+   "A positive association that is not linear",
+   "A negative linear association",
+   "No association",
+   "A strong negative nonlinear association"
+  ],
+  "ans": 0,
+  "exp": "The points increase overall, so the association is positive, but the curve flattens, so it is not a straight-line relationship."
+ },
+ {
+  "id": "m2012",
+  "bank": "math",
+  "domain": "Problem-Solving & Data Analysis",
+  "skill": "Scatterplots",
+  "diff": "medium",
+  "q": "A line of best fit for a scatterplot is y = 2.5x + 30, where x is practice hours and y is a score. Which statement interprets the slope?",
+  "choices": [
+   "Each additional practice hour is associated with about 2.5 more points.",
+   "The score is 2.5 when practice hours are zero.",
+   "Practice causes exactly a 30-point gain.",
+   "Each additional point requires 2.5 practice hours."
+  ],
+  "ans": 0,
+  "exp": "The slope 2.5 means the predicted score rises 2.5 for each one-hour increase in practice. The 30 is the predicted score at zero hours, not the slope."
+ },
+ {
+  "id": "m2013",
+  "bank": "math",
+  "domain": "Problem-Solving & Data Analysis",
+  "skill": "Scatterplots",
+  "diff": "hard",
+  "q": "A scatterplot shows a negative linear association with r = -0.85. Which conclusion is best supported?",
+  "choices": [
+   "As one variable increases, the other tends to decrease.",
+   "As one variable increases, the other also tends to increase.",
+   "The two variables are unrelated.",
+   "The association is strong and nonlinear."
+  ],
+  "ans": 0,
+  "exp": "A negative r indicates an inverse linear relationship: higher values of one variable tend to pair with lower values of the other. The magnitude 0.85 indicates a fairly strong linear fit."
+ },
+ {
+  "id": "m2014",
+  "bank": "math",
+  "domain": "Problem-Solving & Data Analysis",
+  "skill": "Scatterplots",
+  "diff": "medium",
+  "q": "A data set's line of best fit predicts 72, but the actual value is 60. What is the residual for this point?",
+  "choices": [
+   "-12",
+   "12",
+   "132",
+   "-132"
+  ],
+  "ans": 0,
+  "exp": "A residual is actual minus predicted: 60 - 72 = -12. The negative sign means the actual value is below the prediction."
+ },
+ {
+  "id": "m2015",
+  "bank": "math",
+  "domain": "Geometry & Trigonometry",
+  "skill": "Similar triangles",
+  "diff": "medium",
+  "q": "Triangle ABC is similar to triangle DEF. AB = 6, DE = 9, and BC = 8. What is the length of EF?",
+  "choices": [
+   "12",
+   "10",
+   "14",
+   "6"
+  ],
+  "ans": 0,
+  "exp": "The similarity ratio is DE/AB = 9/6 = 1.5. Multiply BC by the same ratio: 8 \u00d7 1.5 = 12."
+ },
+ {
+  "id": "m2016",
+  "bank": "math",
+  "domain": "Geometry & Trigonometry",
+  "skill": "Similar triangles",
+  "diff": "medium",
+  "q": "A 5-foot-tall person casts a 4-foot shadow at the same time a nearby tree casts a 24-foot shadow. How tall is the tree, in feet?",
+  "choices": [
+   "30",
+   "20",
+   "24",
+   "25"
+  ],
+  "ans": 0,
+  "exp": "Similar triangles give height/shadow = 5/4. Set 5/4 = h/24, so h = 24 \u00d7 5 / 4 = 30 feet."
+ },
+ {
+  "id": "m2017",
+  "bank": "math",
+  "domain": "Geometry & Trigonometry",
+  "skill": "Similar triangles",
+  "diff": "hard",
+  "q": "Two similar triangles have areas in the ratio 9 to 25. What is the ratio of a pair of corresponding side lengths?",
+  "choices": [
+   "3 to 5",
+   "9 to 25",
+   "81 to 625",
+   "5 to 3"
+  ],
+  "ans": 0,
+  "exp": "For similar figures, the ratio of areas is the square of the side ratio. Since sqrt(9/25) = 3/5, the side ratio is 3 to 5."
+ },
+ {
+  "id": "m2018",
+  "bank": "math",
+  "domain": "Geometry & Trigonometry",
+  "skill": "Similar triangles",
+  "diff": "medium",
+  "q": "A model car is built at a scale where 1 inch represents 18 inches. If the model is 7 inches long, how long is the actual car, in inches?",
+  "choices": [
+   "126",
+   "25",
+   "11",
+   "162"
+  ],
+  "ans": 0,
+  "exp": "Multiply the model length by the scale factor: 7 \u00d7 18 = 126 inches. Adding 18 or dividing by 7 does not preserve the scale."
+ },
+ {
+  "id": "m2019",
+  "bank": "math",
+  "domain": "Geometry & Trigonometry",
+  "skill": "Angles",
+  "diff": "easy",
+  "q": "Two angles are complementary. One angle measures 37 degrees. What is the measure of the other angle, in degrees?",
+  "choices": [
+   "53",
+   "143",
+   "37",
+   "90"
+  ],
+  "ans": 0,
+  "exp": "Complementary angles sum to 90 degrees, so the other angle is 90 - 37 = 53 degrees. Supplementary angles would sum to 180."
+ },
+ {
+  "id": "m2020",
+  "bank": "math",
+  "domain": "Geometry & Trigonometry",
+  "skill": "Angles",
+  "diff": "medium",
+  "q": "Two parallel lines are cut by a transversal. One angle measures 115 degrees. What is the measure of its same-side interior angle, in degrees?",
+  "choices": [
+   "65",
+   "115",
+   "25",
+   "180"
+  ],
+  "ans": 0,
+  "exp": "Same-side interior angles are supplementary, so they sum to 180 degrees. The other angle is 180 - 115 = 65 degrees."
+ },
+ {
+  "id": "m2021",
+  "bank": "math",
+  "domain": "Geometry & Trigonometry",
+  "skill": "Angles",
+  "diff": "medium",
+  "q": "In a triangle, two angles measure 48 degrees and 67 degrees. What is the measure of the third angle, in degrees?",
+  "choices": [
+   "65",
+   "75",
+   "55",
+   "115"
+  ],
+  "ans": 0,
+  "exp": "The angles of a triangle sum to 180 degrees. The third angle is 180 - 48 - 67 = 65 degrees."
+ },
+ {
+  "id": "m2022",
+  "bank": "math",
+  "domain": "Geometry & Trigonometry",
+  "skill": "Angles",
+  "diff": "hard",
+  "q": "An angle measures 5x degrees, and its supplement measures 4x degrees. What is the value of x?",
+  "choices": [
+   "20",
+   "10",
+   "25",
+   "30"
+  ],
+  "ans": 0,
+  "exp": "Supplementary angles sum to 180: 5x + 4x = 180, so 9x = 180 and x = 20."
+ },
+ {
+  "id": "m2023",
+  "bank": "math",
+  "domain": "Geometry & Trigonometry",
+  "skill": "Right triangle trigonometry",
+  "diff": "medium",
+  "q": "In a right triangle, the side opposite angle A is 8 and the hypotenuse is 17. What is sin(A)?",
+  "choices": [
+   "8/17",
+   "17/8",
+   "15/17",
+   "8/15"
+  ],
+  "ans": 0,
+  "exp": "Sine is opposite over hypotenuse, so sin(A) = 8/17. The ratio 15/17 would be cos(A) if the adjacent side is 15."
+ },
+ {
+  "id": "m2024",
+  "bank": "math",
+  "domain": "Geometry & Trigonometry",
+  "skill": "Right triangle trigonometry",
+  "diff": "medium",
+  "q": "A right triangle has an angle of 40 degrees and a hypotenuse of 20. Which expression gives the length of the side adjacent to the 40-degree angle?",
+  "choices": [
+   "20 cos(40\u00b0)",
+   "20 sin(40\u00b0)",
+   "20 tan(40\u00b0)",
+   "20 / cos(40\u00b0)"
+  ],
+  "ans": 0,
+  "exp": "Cosine is adjacent over hypotenuse, so adjacent = hypotenuse \u00d7 cos(40\u00b0) = 20 cos(40\u00b0). Sine would give the opposite side."
+ },
+ {
+  "id": "m2025",
+  "bank": "math",
+  "domain": "Geometry & Trigonometry",
+  "skill": "Right triangle trigonometry",
+  "diff": "hard",
+  "q": "In a right triangle, tan(B) = 3/4. What is the length of the hypotenuse if the side opposite B is 9?",
+  "choices": [
+   "15",
+   "12",
+   "7",
+   "20"
+  ],
+  "ans": 0,
+  "exp": "Tangent is opposite/adjacent, so 9/adjacent = 3/4, giving adjacent = 12. The hypotenuse is sqrt(9^2 + 12^2) = sqrt(225) = 15."
+ },
+ {
+  "id": "m2026",
+  "bank": "math",
+  "domain": "Geometry & Trigonometry",
+  "skill": "Right triangle trigonometry",
+  "diff": "medium",
+  "q": "A ramp rises 5 feet over a horizontal run of 12 feet. What is the tangent of the ramp's angle of elevation?",
+  "choices": [
+   "5/12",
+   "12/5",
+   "5/13",
+   "12/13"
+  ],
+  "ans": 0,
+  "exp": "Tangent is opposite over adjacent: the rise is 5 and the run is 12, so tan(theta) = 5/12. The ratios with 13 would use the hypotenuse."
+ },
+ {
+  "id": "s2000",
+  "bank": "science",
+  "domain": "Data Representation",
+  "skill": "Interpolation",
+  "diff": "medium",
+  "q": "A table shows a spring's stretch at loads of 100 g and 200 g: 4 cm and 9 cm. The relationship is linear. What stretch should be expected at 150 g?",
+  "choices": [
+   "6.5 cm",
+   "6.0 cm",
+   "7.5 cm",
+   "5.0 cm"
+  ],
+  "ans": 0,
+  "exp": "The stretch increases by 5 cm over 100 g, so each 50 g adds 2.5 cm. Halfway between 4 cm and 9 cm is 6.5 cm."
+ },
+ {
+  "id": "s2001",
+  "bank": "science",
+  "domain": "Data Representation",
+  "skill": "Interpolation",
+  "diff": "medium",
+  "q": "A graph shows a population of 120 at year 2 and 180 at year 6, following a straight line. What is the best estimate for year 4?",
+  "choices": [
+   "150",
+   "160",
+   "140",
+   "130"
+  ],
+  "ans": 0,
+  "exp": "The population rises 60 over 4 years, or 15 per year. Year 4 is 2 years after year 2: 120 + 2(15) = 150, also the midpoint of 120 and 180."
+ },
+ {
+  "id": "s2002",
+  "bank": "science",
+  "domain": "Data Representation",
+  "skill": "Interpolation",
+  "diff": "hard",
+  "q": "A data table lists enzyme activity at 10\u00b0C, 20\u00b0C, 30\u00b0C, and 40\u00b0C as 12, 24, 33, and 39 units. Between which two temperatures does the activity increase fastest?",
+  "choices": [
+   "10\u00b0C and 20\u00b0C",
+   "20\u00b0C and 30\u00b0C",
+   "30\u00b0C and 40\u00b0C",
+   "Activity increases equally throughout"
+  ],
+  "ans": 0,
+  "exp": "The increases are 12, 9, and 6 units across equal 10\u00b0C intervals. The largest gain occurs between 10\u00b0C and 20\u00b0C."
+ },
+ {
+  "id": "s2003",
+  "bank": "science",
+  "domain": "Data Representation",
+  "skill": "Interpolation",
+  "diff": "easy",
+  "q": "A graph records a cart's position as 15 m at 3 s and 35 m at 8 s, moving at a constant speed. What position should the line predict at 5 s?",
+  "choices": [
+   "23 m",
+   "25 m",
+   "20 m",
+   "27 m"
+  ],
+  "ans": 0,
+  "exp": "The cart moves 20 m in 5 s, or 4 m/s. From 3 s to 5 s is 2 s, so add 8 m: 15 + 8 = 23 m."
+ },
+ {
+  "id": "s2004",
+  "bank": "science",
+  "domain": "Research Summaries",
+  "skill": "Interpreting experiments",
+  "diff": "medium",
+  "q": "Experiment 1 grew plants with 0, 10, and 20 mL of fertilizer and measured growth of 5, 12, and 14 cm. Which statement is best supported?",
+  "choices": [
+   "Increasing fertilizer from 0 to 10 mL helped more than increasing it from 10 to 20 mL.",
+   "Fertilizer had no effect on growth.",
+   "The plants grew best with 0 mL.",
+   "Growth doubled between 10 mL and 20 mL."
+  ],
+  "ans": 0,
+  "exp": "The gain from 0 to 10 mL was 7 cm, while the gain from 10 to 20 mL was only 2 cm, so the first increase helped more."
+ },
+ {
+  "id": "s2005",
+  "bank": "science",
+  "domain": "Research Summaries",
+  "skill": "Interpreting experiments",
+  "diff": "medium",
+  "q": "A student tests how light color affects algae growth, keeping water, temperature, and time constant. Growth under red, blue, and green light is 8, 14, and 3 units. What is the independent variable?",
+  "choices": [
+   "Light color",
+   "Water volume",
+   "Growth amount",
+   "Temperature"
+  ],
+  "ans": 0,
+  "exp": "The independent variable is what the researcher deliberately changes: the color of light. Water, temperature, and time are held constant, and growth is the measured result."
+ },
+ {
+  "id": "s2006",
+  "bank": "science",
+  "domain": "Research Summaries",
+  "skill": "Interpreting experiments",
+  "diff": "hard",
+  "q": "Two groups of mice receive either a new drug or an inactive substance, and neither the mice nor the handlers know which group received which. Why does this design reduce bias?",
+  "choices": [
+   "It prevents expectations from influencing observations and results.",
+   "It guarantees the drug will work.",
+   "It removes the need for a control group.",
+   "It makes the sample size larger."
+  ],
+  "ans": 0,
+  "exp": "When participants and handlers do not know group assignments, expectations cannot consciously or unconsciously influence measurements. This is a double-blind design, but it does not guarantee a result."
+ },
+ {
+  "id": "s2007",
+  "bank": "science",
+  "domain": "Research Summaries",
+  "skill": "Interpreting experiments",
+  "diff": "medium",
+  "q": "A study measures the same water samples three times and reports nearly identical values each time. Which property of the measurements does this best illustrate?",
+  "choices": [
+   "Precision",
+   "Validity",
+   "Causation",
+   "Correlation"
+  ],
+  "ans": 0,
+  "exp": "Repeated measurements that agree closely show precision, or consistency. Precision does not by itself show that the measurements are accurate or valid."
+ },
+ {
+  "id": "s2008",
+  "bank": "science",
+  "domain": "Conflicting Viewpoints",
+  "skill": "Comparing predictions",
+  "diff": "hard",
+  "q": "Scientist 1 argues a crater formed from a volcanic eruption; Scientist 2 argues it formed from a meteorite impact. Which finding would most support Scientist 2?",
+  "choices": [
+   "Shocked quartz and metal fragments found in the crater",
+   "Layered lava flows near the crater",
+   "Gas vents inside the crater",
+   "Rounded pebbles at the crater rim"
+  ],
+  "ans": 0,
+  "exp": "Shocked quartz and metal fragments are impact signatures. Lava flows and gas vents support volcanic activity, and rounded pebbles suggest water action."
+ },
+ {
+  "id": "s2009",
+  "bank": "science",
+  "domain": "Conflicting Viewpoints",
+  "skill": "Comparing predictions",
+  "diff": "medium",
+  "q": "Student 1 says a population declined because of a new predator; Student 2 says the decline was caused by a drought. Which observation would most weaken Student 1's explanation?",
+  "choices": [
+   "The population also declined in areas with no predators during the same drought.",
+   "The predator was seen near the population.",
+   "The population had declined before.",
+   "The drought ended the following year."
+  ],
+  "ans": 0,
+  "exp": "If declines occurred where the predator was absent but drought conditions were present, the predator cannot be the main cause, which weakens Student 1's explanation."
+ },
+ {
+  "id": "s2010",
+  "bank": "science",
+  "domain": "Conflicting Viewpoints",
+  "skill": "Comparing predictions",
+  "diff": "hard",
+  "q": "Theory A predicts a substance will dissolve faster as temperature rises; Theory B predicts the rate will not change with temperature. In an experiment, the substance dissolves much faster in hot water than in cold water. Which conclusion is best supported?",
+  "choices": [
+   "The results support Theory A and contradict Theory B.",
+   "The results support both theories equally.",
+   "The results support Theory B and contradict Theory A.",
+   "The results are unrelated to either theory."
+  ],
+  "ans": 0,
+  "exp": "The observed temperature effect matches Theory A's prediction and contradicts Theory B's prediction that temperature has no effect."
+ },
+ {
+  "id": "s2011",
+  "bank": "science",
+  "domain": "Data Representation",
+  "skill": "Rates of change",
+  "diff": "medium",
+  "q": "A graph shows a car's distance rising from 0 km to 120 km over 2 hours at a constant rate. What is the car's speed?",
+  "choices": [
+   "60 km/h",
+   "120 km/h",
+   "240 km/h",
+   "30 km/h"
+  ],
+  "ans": 0,
+  "exp": "Speed is distance divided by time: 120 km \u00f7 2 h = 60 km/h. Multiplying the values would give the wrong units and meaning."
+ },
+ {
+  "id": "s2012",
+  "bank": "science",
+  "domain": "Data Representation",
+  "skill": "Rates of change",
+  "diff": "hard",
+  "q": "A reaction produces 40 g of product in the first 5 minutes and 55 g by 10 minutes. What is the average rate of production between 5 and 10 minutes?",
+  "choices": [
+   "3 g/min",
+   "8 g/min",
+   "5.5 g/min",
+   "11 g/min"
+  ],
+  "ans": 0,
+  "exp": "Between 5 and 10 minutes, the increase is 55 - 40 = 15 g over 5 minutes, so the average rate is 15 \u00f7 5 = 3 g/min."
+ },
+ {
+  "id": "s2013",
+  "bank": "science",
+  "domain": "Data Representation",
+  "skill": "Rates of change",
+  "diff": "medium",
+  "q": "A cooling curve drops steeply at first and then becomes nearly flat. What does the flattening indicate about the rate of cooling?",
+  "choices": [
+   "The rate of cooling decreases over time.",
+   "The rate of cooling increases over time.",
+   "The temperature begins to rise.",
+   "The temperature is not changing at any point."
+  ],
+  "ans": 0,
+  "exp": "A flatter slope means a smaller change per unit time, so the object cools more slowly as it approaches the surrounding temperature."
+ },
+ {
+  "id": "s2014",
+  "bank": "science",
+  "domain": "Data Representation",
+  "skill": "Rates of change",
+  "diff": "easy",
+  "q": "A plant grows 2 cm in week 1 and 8 cm by week 4. What is its average growth per week over those weeks?",
+  "choices": [
+   "2 cm/week",
+   "8 cm/week",
+   "1 cm/week",
+   "4 cm/week"
+  ],
+  "ans": 0,
+  "exp": "Growth from week 1 to week 4 is 8 - 2 = 6 cm over 3 weeks, so the average is 6 \u00f7 3 = 2 cm/week."
+ },
+ {
+  "id": "s2015",
+  "bank": "science",
+  "domain": "Research Summaries",
+  "skill": "Study design",
+  "diff": "medium",
+  "q": "A researcher wants to test whether a fertilizer increases tomato yield. Which design best isolates the fertilizer's effect?",
+  "choices": [
+   "Grow two groups of the same plants under identical conditions, adding fertilizer to only one group.",
+   "Add fertilizer to every plant and record yields.",
+   "Compare plants grown in different seasons.",
+   "Ask gardeners whether they think fertilizer helps."
+  ],
+  "ans": 0,
+  "exp": "A controlled comparison changes only the fertilizer while holding other factors constant. Adding fertilizer to all plants, changing seasons, or relying on opinions does not isolate its effect."
+ },
+ {
+  "id": "s2016",
+  "bank": "science",
+  "domain": "Research Summaries",
+  "skill": "Study design",
+  "diff": "hard",
+  "q": "In an experiment testing a new antibiotic, one group receives the antibiotic and another receives a sugar pill. What is the main purpose of the sugar-pill group?",
+  "choices": [
+   "To provide a control for comparison",
+   "To increase the total sample size",
+   "To test a second antibiotic",
+   "To reduce the cost of the study"
+  ],
+  "ans": 0,
+  "exp": "The sugar-pill group is the control. Comparing it with the treatment group helps show whether the antibiotic itself caused any observed change."
+ },
+ {
+  "id": "s2017",
+  "bank": "science",
+  "domain": "Research Summaries",
+  "skill": "Study design",
+  "diff": "medium",
+  "q": "A scientist repeats an experiment several times and obtains similar results each time. Why is repetition most useful?",
+  "choices": [
+   "It increases confidence that the results are consistent.",
+   "It proves the hypothesis is a law.",
+   "It removes every source of error.",
+   "It makes the sample unnecessary."
+  ],
+  "ans": 0,
+  "exp": "Repeating an experiment shows whether results are reproducible. Consistent results raise confidence but do not prove certainty or eliminate all error."
+ },
+ {
+  "id": "s2018",
+  "bank": "science",
+  "domain": "Research Summaries",
+  "skill": "Study design",
+  "diff": "hard",
+  "q": "A study finds that towns with more ice-cream sales have more drowning incidents. Which conclusion is most appropriate?",
+  "choices": [
+   "The two events are correlated, but a third factor such as warm weather may explain both.",
+   "Ice cream causes drowning.",
+   "Drowning causes ice-cream sales.",
+   "The correlation proves there is no relationship."
+  ],
+  "ans": 0,
+  "exp": "Correlation alone does not show causation. Warm summer weather plausibly increases both ice-cream sales and swimming, producing the observed association."
+ },
+ {
+  "id": "s2019",
+  "bank": "science",
+  "domain": "Research Summaries",
+  "skill": "Study design",
+  "diff": "medium",
+  "q": "A biologist marks and recaptures beetles to estimate population size. Which condition is most necessary for the estimate to be valid?",
+  "choices": [
+   "Marked and unmarked beetles must mix randomly in the population.",
+   "All beetles must be the same size.",
+   "The study must last more than a year.",
+   "Only males should be marked."
+  ],
+  "ans": 0,
+  "exp": "Mark-recapture assumes marked individuals redistribute randomly and are as likely to be caught again as unmarked ones. If marked beetles stay together or avoid traps, the estimate is biased."
+ },
+ {
+  "id": "w2000",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Modifiers",
+  "diff": "medium",
+  "q": "The research team spent the spring analyzing data from the field station.\nAfter completing the final experiment of the semester, the lab notebook was reviewed carefully by the research team.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "the lab notebook was reviewed carefully by the research team.",
+   "careful review of the lab notebook was done by the team.",
+   "the research team carefully reviewed the lab notebook.",
+   "there was a careful review of the lab notebook."
+  ],
+  "ans": 2,
+  "exp": "The opening phrase describes the people who completed the experiment, so the research team must immediately follow it. Only the team can logically complete the experiment, so the other choices create dangling modifiers."
+ },
+ {
+  "id": "w2001",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Modifiers",
+  "diff": "medium",
+  "q": "The park covers more than a thousand square miles of protected land.\nKnown for its unusually deep canyon and rugged trails, visitors from around the world travel each year to explore the national park.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "visitors from around the world travel each year to explore the national park.",
+   "the national park attracts visitors from around the world each year.",
+   "traveling to the national park attracts visitors each year.",
+   "each year, visitors travel from around the world to the national park."
+  ],
+  "ans": 1,
+  "exp": "The opening phrase modifies the place known for its canyon: the national park. Placing the park right after the phrase removes the dangling modifier, while the other choices say that visitors are known for the canyon."
+ },
+ {
+  "id": "w2002",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Modifiers",
+  "diff": "hard",
+  "q": "Monarch butterflies travel thousands of miles between breeding grounds.\nHaving studied the migration patterns of monarch butterflies for nearly a decade, the findings were published by Dr. Alvarez in a respected journal.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "the findings were published by Dr. Alvarez in a respected journal.",
+   "publishing in a respected journal were the findings of Dr. Alvarez.",
+   "Dr. Alvarez published the findings in a respected journal.",
+   "there were findings published by Dr. Alvarez in a journal."
+  ],
+  "ans": 2,
+  "exp": "The opening phrase describes a person, so Dr. Alvarez must follow it directly. The other versions attach the phrase to findings or an impersonal construction, creating dangling modifiers."
+ },
+ {
+  "id": "w2003",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Modifiers",
+  "diff": "medium",
+  "q": "The old school building was built in 1922 and leaks heat.\nTo reduce energy costs during the winter months, the windows in the old school building were replaced with insulated glass.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "the windows in the old school building were replaced with insulated glass.",
+   "insulated glass replaced the windows in the old school building.",
+   "the district replaced the windows in the old school building with insulated glass.",
+   "there was a replacement of the windows with insulated glass."
+  ],
+  "ans": 2,
+  "exp": "The phrase to reduce energy costs describes an agent that can act: the district. Passive constructions with windows or impersonal there was leave the modifier without a logical subject."
+ },
+ {
+  "id": "w2004",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Possessives",
+  "diff": "medium",
+  "q": "The orchestra's season included works by several living composers.\nThe orchestra spent months preparing for the composers anniversary concert, which featured three newly discovered works.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "composers anniversary",
+   "composer's anniversary",
+   "composers' anniversary concert",
+   "composer anniversary"
+  ],
+  "ans": 1,
+  "exp": "The concert belongs to one composer, so the singular possessive composer's is required. The plural possessive composers' would refer to multiple composers, and the bare form lacks the possessive entirely."
+ },
+ {
+  "id": "w2005",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Possessives",
+  "diff": "hard",
+  "q": "The two scientists recorded every trial in careful detail.\nThe two scientists shared a laboratory, and each researchers notebook contained a detailed record of the trials.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "each researchers notebook",
+   "each researcher's notebook",
+   "each researchers' notebook",
+   "each researcher notebook"
+  ],
+  "ans": 1,
+  "exp": "The word each signals a singular owner, so the correct form is researcher's. The plural possessive researchers' conflicts with each, and dropping the apostrophe removes the possessive."
+ },
+ {
+  "id": "w2006",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Possessives",
+  "diff": "medium",
+  "q": "The design project took the students more than a year to complete.\nThe committee praised the students dedication to the project, noting that their weekly meetings had improved the design.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "students dedication",
+   "student's dedication",
+   "students' dedication",
+   "students dedication to"
+  ],
+  "ans": 2,
+  "exp": "The dedication belongs to multiple students, so the plural possessive students' is correct. The singular possessive student's would describe one student, which does not match the plural their later in the sentence."
+ },
+ {
+  "id": "w2007",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Possessives",
+  "diff": "medium",
+  "q": "The museum has been raising funds for a new wing since last year.\nIts unclear whether the museums new wing will open before the summer, according to the director.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "Its unclear whether the museums new wing",
+   "It's unclear whether the museum's new wing",
+   "Its unclear whether the museums' new wing",
+   "It's unclear whether the museums new wing"
+  ],
+  "ans": 1,
+  "exp": "It's is the contraction of it is, and museum's is the singular possessive needed before new wing. Its without the apostrophe is possessive, and museums would describe multiple museums."
+ },
+ {
+  "id": "w2008",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Pronouns",
+  "diff": "medium",
+  "q": "The debate team requires steady practice to stay competitive.\nWhen a student joins the debate team, they must attend at least one practice each week to remain eligible.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "they must attend at least one practice each week",
+   "it must attend at least one practice each week",
+   "he or she must attend at least one practice each week",
+   "them must attend at least one practice each week"
+  ],
+  "ans": 0,
+  "exp": "The singular they agrees with a student and is standard in modern usage. It cannot refer to a person, and them is an object pronoun that cannot serve as the subject of must attend."
+ },
+ {
+  "id": "w2009",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Pronouns",
+  "diff": "hard",
+  "q": "The company operates several manufacturing plants across the region.\nThe company revised its safety guidelines after an inspector found that their equipment had not been maintained properly.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "their equipment had not been maintained",
+   "its equipment had not been maintained",
+   "there equipment had not been maintained",
+   "they're equipment had not been maintained"
+  ],
+  "ans": 1,
+  "exp": "The company is singular, so the possessive pronoun must be its. Their is plural, there is a place word, and they're means they are."
+ },
+ {
+  "id": "w2010",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Pronouns",
+  "diff": "medium",
+  "q": "The new schedule takes effect at the start of next month.\nBetween you and I, the new schedule seems far more manageable than the previous one.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "Between you and I",
+   "Between you and me",
+   "Between yourself and I",
+   "Between we"
+  ],
+  "ans": 1,
+  "exp": "After the preposition between, object pronouns are required, so me is correct rather than I. Yourself is reflexive and cannot replace you in this phrase, and we is a subject pronoun."
+ },
+ {
+  "id": "w2011",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Pronouns",
+  "diff": "medium",
+  "q": "The team had finished second three years in a row.\nThe team celebrated because it had finally won a championship after many years of close losses.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "it had finally won a championship",
+   "they had finally won a championship",
+   "them had finally won a championship",
+   "its finally won a championship"
+  ],
+  "ans": 0,
+  "exp": "Team is a collective noun treated as singular here, so it agrees with the singular pronoun it. They would treat the group as individuals, and them and its cannot serve as the subject of had won."
+ },
+ {
+  "id": "w2012",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Parallel structure",
+  "diff": "medium",
+  "q": "The internship program pairs students with local nonprofits.\nThe internship teaches students how to analyze data, how to present findings clearly, and building professional relationships.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "building professional relationships",
+   "how to build professional relationships",
+   "to build professional relationships",
+   "they build professional relationships"
+  ],
+  "ans": 1,
+  "exp": "The list uses the parallel pattern how to + verb: how to analyze, how to present, and how to build. The other choices break the pattern and make the series unparallel."
+ },
+ {
+  "id": "w2013",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Parallel structure",
+  "diff": "hard",
+  "q": "The director began rehearsals for the spring play last week.\nThe director asked the cast to memorize their lines, to arrive on time, and that they should respect the stage crew.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "that they should respect the stage crew",
+   "respecting the stage crew",
+   "to respect the stage crew",
+   "they should respect the stage crew"
+  ],
+  "ans": 2,
+  "exp": "The sentence lists infinitive phrases: to memorize, to arrive, and to respect. The clause beginning with that breaks the parallel structure."
+ },
+ {
+  "id": "w2014",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Parallel structure",
+  "diff": "medium",
+  "q": "The city council debated the transportation plan for months.\nThe city council's plan aims to reduce traffic, improve safety, and it wants to expand public transit.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "it wants to expand public transit",
+   "expanding public transit",
+   "to expand public transit",
+   "expansion of public transit"
+  ],
+  "ans": 2,
+  "exp": "The plan already lists to reduce and improve, so the third item should be to expand. Mixing a full clause or a noun phrase breaks the parallel series."
+ },
+ {
+  "id": "w2015",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Parallel structure",
+  "diff": "medium",
+  "q": "The museum's new exhibit opened to the public on Saturday to mostly positive reviews.\nThe museum's new exhibit is both educational and it entertains visitors of all ages.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "it entertains visitors of all ages",
+   "entertaining visitors of all ages",
+   "entertains visitors of all ages",
+   "to entertain visitors of all ages"
+  ],
+  "ans": 1,
+  "exp": "The correlative both...and should join parallel adjectives, so the second item must be entertaining to match educational. The other choices pair an adjective with a clause or verb."
+ },
+ {
+  "id": "w2016",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Subject-Verb Agreement",
+  "diff": "medium",
+  "q": "The archive holds letters, maps, and diaries from the region.\nThe collection of rare manuscripts in the university's archive require careful handling by trained staff.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "require careful handling by trained staff",
+   "requires careful handling by trained staff",
+   "requiring careful handling by trained staff",
+   "have required careful handling by trained staff"
+  ],
+  "ans": 1,
+  "exp": "The subject is collection, a singular noun; the prepositional phrase of rare manuscripts does not change the verb. The singular verb requires is therefore correct."
+ },
+ {
+  "id": "w2017",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Subject-Verb Agreement",
+  "diff": "hard",
+  "q": "The studio reviewed the final scene several times before its release.\nNeither the director nor the actors were satisfied with the final scene, so the studio agreed to reshoot it.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "were satisfied with the final scene",
+   "was satisfied with the final scene",
+   "is satisfied with the final scene",
+   "satisfied with the final scene"
+  ],
+  "ans": 0,
+  "exp": "With neither...nor, the verb agrees with the nearer subject, actors, which is plural, so were is correct. Was and is are singular, and omitting the verb leaves the clause incomplete."
+ },
+ {
+  "id": "w2018",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Subject-Verb Agreement",
+  "diff": "medium",
+  "q": "The department reviews applications in the order they arrive.\nEach of the applicants submit a portfolio before the deadline, according to the department's official instructions.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "submit a portfolio before the deadline",
+   "submits a portfolio before the deadline",
+   "submitting a portfolio before the deadline",
+   "have submitted a portfolio before the deadline"
+  ],
+  "ans": 1,
+  "exp": "Each is singular, so the verb must be submits. The plural submit and have submitted disagree with the subject, and submitting cannot serve as the main verb."
+ },
+ {
+  "id": "w2019",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Verb tense",
+  "diff": "medium",
+  "q": "The instruments had been placed along the shoreline the day before.\nBy the time the research team arrived at the site, the storm already damaged several of the instruments.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "already damaged several of the instruments",
+   "had already damaged several of the instruments",
+   "has already damaged several of the instruments",
+   "was already damaging several of the instruments"
+  ],
+  "ans": 1,
+  "exp": "The past perfect had damaged shows that the damage occurred before another past event, the team's arrival. Simple past and present perfect do not establish that earlier time relationship."
+ },
+ {
+  "id": "w2020",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Verb tense",
+  "diff": "medium",
+  "q": "The biologist has worked at the marine station since 2011.\nThe biologist has studied coral reefs for many years and publish several papers on the subject.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "publish several papers on the subject",
+   "has published several papers on the subject",
+   "publishing several papers on the subject",
+   "will published several papers on the subject"
+  ],
+  "ans": 1,
+  "exp": "The present perfect has studied calls for the matching present perfect has published in the compound predicate. Publish does not agree with the singular subject, and the other forms are grammatically incomplete."
+ },
+ {
+  "id": "w2021",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Verb tense",
+  "diff": "hard",
+  "q": "The committee meets again on Thursday to discuss the budget.\nWhen the committee reviews the proposal next week, it will announce whether the funding is approved.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "it will announce whether the funding is approved",
+   "it announced whether the funding is approved",
+   "it announces whether the funding is approved",
+   "it would announce whether the funding is approved"
+  ],
+  "ans": 0,
+  "exp": "The future time is set by next week and the subordinate clause reviews, so the main clause takes will announce. The other tenses conflict with the future time frame."
+ },
+ {
+  "id": "w2022",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Boundaries",
+  "diff": "medium",
+  "q": "The trail climbs steadily for the first two miles.\nThe hiking trail winds through dense forest for several miles, hikers often stop at the ridge to photograph the valley below.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "miles, hikers often stop",
+   "miles; hikers often stop",
+   "miles hikers often stop",
+   "miles, and hikers stop often"
+  ],
+  "ans": 1,
+  "exp": "Both sides of the break are complete sentences, so a comma alone creates a comma splice. A semicolon correctly joins them. Removing punctuation or adding and changes meaning or creates other errors."
+ },
+ {
+  "id": "w2023",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Boundaries",
+  "diff": "medium",
+  "q": "The paintings arrived in early April after a long journey.\nThe museum acquired three new paintings last spring, however, the gallery has not yet had space to display them.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "last spring, however, the gallery",
+   "last spring; however, the gallery",
+   "last spring however the gallery",
+   "last spring, however the gallery"
+  ],
+  "ans": 1,
+  "exp": "However is a conjunctive adverb, so a semicolon must separate the two independent clauses. A comma alone creates a splice, and omitting punctuation joins the clauses incorrectly."
+ },
+ {
+  "id": "w2024",
+  "bank": "rw",
+  "kind": "writing",
+  "domain": "Standard English Conventions",
+  "skill": "Boundaries",
+  "diff": "hard",
+  "q": "The team planned a week of fieldwork in the mountains.\nThe researcher needed several supplies for the fieldwork a waterproof notebook, a reliable compass, and a portable shelter.\nWhich choice completes the text so that it conforms to Standard English?",
+  "choices": [
+   "fieldwork a waterproof notebook",
+   "fieldwork: a waterproof notebook",
+   "fieldwork, a waterproof notebook",
+   "fieldwork; a waterproof notebook"
+  ],
+  "ans": 1,
+  "exp": "A colon correctly introduces a list after an independent clause. A comma would blur the list, and a semicolon is used between independent clauses, not before a list."
+ },
+ {
+  "id": "r2200",
+  "bank": "rw",
+  "kind": "reading",
+  "domain": "Craft & Structure",
+  "skill": "Text Structure and Purpose",
+  "diff": "medium",
+  "passage": "Marine biologist Dr. Lena Ortiz began her career studying a single reef. Over time, she widened her focus to include currents, temperature, and fishing patterns. Her early papers described one site; her later work modeled entire regions. Ortiz now argues that no reef can be understood in isolation, because the forces that shape it rarely stop at the shoreline.",
+  "q": "Which choice best describes the overall structure of the text?",
+  "choices": [
+   "It traces how a scientist's research expanded from a narrow focus to a broader one.",
+   "It lists unrelated facts about ocean currents.",
+   "It argues that early research was completely mistaken.",
+   "It compares two scientists with opposing views."
+  ],
+  "ans": 0,
+  "exp": "The text moves from Ortiz's early single-reef studies to her later regional models and her current view, so it traces an expansion of research scope. The other choices misstate the content."
+ },
+ {
+  "id": "r2201",
+  "bank": "rw",
+  "kind": "reading",
+  "domain": "Craft & Structure",
+  "skill": "Text Structure and Purpose",
+  "diff": "hard",
+  "passage": "City planners often present new transit lines as simple solutions to congestion. A closer look at ridership data suggests a more complicated picture. New lines can reduce traffic on some corridors while increasing it near stations, where development concentrates. The planners' claim is therefore best understood as a starting point for analysis rather than a conclusion.",
+  "q": "Which choice best describes the function of the last sentence?",
+  "choices": [
+   "It qualifies the planners' claim by recasting it as a starting point rather than an answer.",
+   "It provides statistical evidence for the planners' claim.",
+   "It introduces a new solution to congestion.",
+   "It rejects all transit planning as useless."
+  ],
+  "ans": 0,
+  "exp": "After noting complications, the author reframes the planners' claim as a beginning for analysis, which qualifies rather than endorses it. The sentence offers no new statistics or solutions and does not dismiss planning entirely."
+ },
+ {
+  "id": "r2202",
+  "bank": "rw",
+  "kind": "reading",
+  "domain": "Craft & Structure",
+  "skill": "Text Structure and Purpose",
+  "diff": "medium",
+  "passage": "The first section of the report summarizes past failures. The second section identifies three causes that earlier studies overlooked. The final section proposes a pilot program designed to test whether addressing those causes improves outcomes. Throughout, the author avoids broad claims and focuses on what the pilot can measure.",
+  "q": "Which choice best states the main purpose of the text?",
+  "choices": [
+   "To describe how a report builds from past failures to a testable proposal",
+   "To argue that earlier studies should be ignored",
+   "To summarize a pilot program's final results",
+   "To compare two competing reports"
+  ],
+  "ans": 0,
+  "exp": "The text describes the report's progression from summarizing failures to naming overlooked causes to proposing a measurable pilot. It does not dismiss earlier work or report final results."
+ },
+ {
+  "id": "r2203",
+  "bank": "rw",
+  "kind": "reading",
+  "domain": "Information & Ideas",
+  "skill": "Quantitative Evidence",
+  "diff": "medium",
+  "passage": "A nutrition study tracked two groups for six months. Group A received a short daily lesson about reading food labels; Group B received no lesson. At the end, 62% of Group A and 41% of Group B reported checking labels regularly. The researchers cautioned that the study did not measure whether participants changed what they purchased.",
+  "q": "Which statement is best supported by the data in the text?",
+  "choices": [
+   "A higher percentage of Group A than Group B reported checking labels regularly.",
+   "Group A purchased healthier food than Group B.",
+   "The lessons caused every participant to check labels.",
+   "Group B received more lessons than Group A."
+  ],
+  "ans": 0,
+  "exp": "The text gives 62% for Group A and 41% for Group B on reported label checking, so that comparison is directly supported. Purchases were not measured, and the other choices contradict the passage."
+ },
+ {
+  "id": "r2204",
+  "bank": "rw",
+  "kind": "reading",
+  "domain": "Information & Ideas",
+  "skill": "Quantitative Evidence",
+  "diff": "hard",
+  "passage": "A city measured weekday bike commuters before and after adding protected lanes on two streets. On Street A, commuters rose from 300 to 420; on Street B, they rose from 200 to 260. A third street with no new lanes showed no change. The report concluded that the lanes were associated with increased cycling on the two streets where they were added.",
+  "q": "Which choice best uses data from the text to support the report's conclusion?",
+  "choices": [
+   "Street A gained 120 commuters and Street B gained 60, while the unchanged street gained none.",
+   "Street A had more commuters than Street B before the lanes were added.",
+   "The third street had no new lanes.",
+   "Bike commuting is popular in many cities."
+  ],
+  "ans": 0,
+  "exp": "The conclusion concerns increases where lanes were added, so the supporting detail is the gains on Streets A and B alongside no change on the comparison street. The other choices do not directly support the association."
+ }
+]

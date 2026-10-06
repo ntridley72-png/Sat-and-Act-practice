@@ -1,0 +1,290 @@
+{
+ "Arizona State University Campus Immersion": [
+  "ASU",
+  "Arizona State"
+ ],
+ "Auburn University": [
+  "Auburn"
+ ],
+ "Baylor University": [
+  "Baylor"
+ ],
+ "Boston College": [
+  "BC"
+ ],
+ "Boston University": [
+  "BU"
+ ],
+ "Bucknell University": [
+  "Bucknell"
+ ],
+ "California Institute of Technology": [
+  "Caltech"
+ ],
+ "Carnegie Mellon University": [
+  "CMU"
+ ],
+ "Case Western Reserve University": [
+  "Case Western",
+  "CWRU"
+ ],
+ "Clemson University": [
+  "Clemson"
+ ],
+ "Colgate University": [
+  "Colgate"
+ ],
+ "Florida State University": [
+  "FSU"
+ ],
+ "George Washington University": [
+  "GWU",
+  "GW"
+ ],
+ "Georgetown University": [
+  "Georgetown"
+ ],
+ "Howard University": [
+  "Howard"
+ ],
+ "Indiana University-Bloomington": [
+  "Indiana",
+  "IU"
+ ],
+ "Iowa State University": [
+  "Iowa State"
+ ],
+ "Lehigh University": [
+  "Lehigh"
+ ],
+ "Louisiana State University and Agricultural & Mechanical College": [
+  "LSU"
+ ],
+ "Loyola Marymount University": [
+  "LMU"
+ ],
+ "Massachusetts Institute of Technology": [
+  "MIT"
+ ],
+ "Michigan State University": [
+  "MSU"
+ ],
+ "Montana State University": [
+  "Montana State",
+  "MSU"
+ ],
+ "New York University": [
+  "NYU"
+ ],
+ "Northeastern University": [
+  "Northeastern",
+  "NU"
+ ],
+ "Oregon State University": [
+  "Oregon State",
+  "OSU"
+ ],
+ "Rutgers University-New Brunswick": [
+  "Rutgers"
+ ],
+ "Santa Clara University": [
+  "Santa Clara",
+  "SCU"
+ ],
+ "Stevens Institute of Technology": [
+  "Stevens"
+ ],
+ "Syracuse University": [
+  "Syracuse",
+  "Cuse"
+ ],
+ "Texas A&M University-College Station": [
+  "Texas A&M",
+  "TAMU"
+ ],
+ "Texas Christian University": [
+  "TCU"
+ ],
+ "The University of Alabama": [
+  "Alabama",
+  "Bama"
+ ],
+ "The University of Tennessee-Knoxville": [
+  "Tennessee",
+  "UT Knoxville"
+ ],
+ "The University of Texas at Austin": [
+  "UT Austin",
+  "UT"
+ ],
+ "Tulane University of Louisiana": [
+  "Tulane"
+ ],
+ "University of Arizona": [
+  "Arizona",
+  "UArizona"
+ ],
+ "University of Arkansas": [
+  "Arkansas"
+ ],
+ "University of Arkansas at Pine Bluff": [
+  "Arkansas"
+ ],
+ "University of California-Berkeley": [
+  "UC Berkeley",
+  "Cal",
+  "UCB"
+ ],
+ "University of California-Davis": [
+  "UC Davis",
+  "UCD"
+ ],
+ "University of California-Irvine": [
+  "UCI"
+ ],
+ "University of California-Los Angeles": [
+  "UCLA"
+ ],
+ "University of California-Riverside": [
+  "UCR"
+ ],
+ "University of California-San Diego": [
+  "UCSD"
+ ],
+ "University of California-Santa Barbara": [
+  "UCSB"
+ ],
+ "University of California-Santa Cruz": [
+  "UCSC"
+ ],
+ "University of Colorado Boulder": [
+  "CU Boulder",
+  "Colorado"
+ ],
+ "University of Connecticut": [
+  "UConn"
+ ],
+ "University of Delaware": [
+  "Delaware",
+  "UD"
+ ],
+ "University of Florida": [
+  "UF"
+ ],
+ "University of Georgia": [
+  "UGA"
+ ],
+ "University of Illinois Chicago": [
+  "UIC"
+ ],
+ "University of Illinois Urbana-Champaign": [
+  "UIUC",
+  "Illinois"
+ ],
+ "University of Iowa": [
+  "Iowa"
+ ],
+ "University of Kansas": [
+  "Kansas",
+  "KU"
+ ],
+ "University of Kentucky": [
+  "Kentucky",
+  "UK"
+ ],
+ "University of Maryland-College Park": [
+  "UMD",
+  "Maryland"
+ ],
+ "University of Massachusetts-Amherst": [
+  "UMass",
+  "UMass Amherst"
+ ],
+ "University of Miami": [
+  "Miami",
+  "UMiami"
+ ],
+ "University of Michigan-Ann Arbor": [
+  "UMich",
+  "Michigan"
+ ],
+ "University of Minnesota-Twin Cities": [
+  "Minnesota",
+  "UMN"
+ ],
+ "University of Mississippi": [
+  "Ole Miss"
+ ],
+ "University of Missouri-Columbia": [
+  "Mizzou",
+  "Missouri"
+ ],
+ "University of Nebraska-Lincoln": [
+  "Nebraska",
+  "UNL"
+ ],
+ "University of Nevada-Reno": [
+  "Nevada",
+  "UNR"
+ ],
+ "University of North Carolina at Chapel Hill": [
+  "UNC",
+  "UNC Chapel Hill"
+ ],
+ "University of Notre Dame": [
+  "Notre Dame",
+  "ND"
+ ],
+ "University of Oklahoma-Norman Campus": [
+  "Oklahoma",
+  "OU"
+ ],
+ "University of Oregon": [
+  "Oregon",
+  "UO"
+ ],
+ "University of Pennsylvania": [
+  "UPenn",
+  "Penn"
+ ],
+ "University of Pittsburgh-Pittsburgh Campus": [
+  "Pitt"
+ ],
+ "University of San Diego": [
+  "USD"
+ ],
+ "University of South Carolina-Columbia": [
+  "South Carolina",
+  "USC Columbia"
+ ],
+ "University of Southern California": [
+  "USC"
+ ],
+ "University of Utah": [
+  "Utah",
+  "U of U"
+ ],
+ "University of Washington-Seattle Campus": [
+  "UW",
+  "UDub"
+ ],
+ "University of Wisconsin-Madison": [
+  "Wisconsin",
+  "UW-Madison"
+ ],
+ "Vanderbilt University": [
+  "Vanderbilt",
+  "Vandy"
+ ],
+ "Villanova University": [
+  "Villanova",
+  "Nova"
+ ],
+ "Washington State University": [
+  "WSU"
+ ],
+ "Washington University in St Louis": [
+  "WashU",
+  "Washington University"
+ ]
+}

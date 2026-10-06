@@ -9,6 +9,9 @@
 //   POST /api/ai       { messages }         -> { content, provider, model, usage }
 //   GET/POST/DELETE /api/help-history       -> account-owned tutor history
 //   POST /api/reset    { token, password }  -> { token, email }
+//   GET  /api/auth/providers                  -> { google: true|false }
+//   GET  /api/auth/google                     -> redirect to Google OAuth (needs GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET)
+//   GET  /api/auth/google/callback            -> creates a session and returns to /#google_token=...
 // Password reset needs a Resend API key: npx wrangler secret put RESEND_API_KEY
 // and optionally MAIL_FROM (a sender on a domain you verified in Resend).
 // Passwords are hashed with PBKDF2-SHA256 and a per-user salt. Session tokens are random and only
@@ -50,6 +53,9 @@ async function route(req, env, path) {
   if (path === "forgot" && req.method === "POST") return forgot(req, env);
   if (path === "reset" && req.method === "POST") return reset(req, env);
   if (path === "ai" && req.method === "POST") return aiTutor(req, env);
+  if (path === "auth/providers" && req.method === "GET") return json({ google: !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) }, 200, req);
+  if (path === "auth/google" && req.method === "GET") return googleStart(req, env);
+  if (path === "auth/google/callback" && req.method === "GET") return googleCallback(req, env);
   const user = await authed(req, env);
   if (!user) return json({ error: "Please sign in again." }, 401, req);
   if (path === "logout" && req.method === "POST") {
@@ -101,6 +107,17 @@ async function route(req, env, path) {
       const stale = previous && previous.updated_at > incomingAt && !(baseAt && baseAt >= previous.updated_at);
       const data = stale ? { ...old } : { ...body.data };
       data.history = mergeAttemptHistory(old && old.history, body.data.history);
+      const oldProf = (old && old.profile) || {};
+      const incomingProf = (body.data && body.data.profile) || {};
+      const mergedProf = Object.assign({}, data.profile || {});
+      mergedProf.tokens = Math.max(Number(oldProf.tokens) || 0, Number(incomingProf.tokens) || 0, Number(mergedProf.tokens) || 0);
+      const hs = Object.assign({}, oldProf.highScores || {}, mergedProf.highScores || {});
+      Object.keys(incomingProf.highScores || {}).forEach((k) => { hs[k] = Math.max(Number(hs[k]) || 0, Number(incomingProf.highScores[k]) || 0); });
+      if (Object.keys(hs).length) mergedProf.highScores = hs;
+      const favs = [...new Set([...(oldProf.favorites || []), ...(incomingProf.favorites || []), ...(mergedProf.favorites || [])])];
+      if (favs.length) mergedProf.favorites = favs;
+      mergedProf.skillStats = Object.assign({}, oldProf.skillStats || {}, incomingProf.skillStats || {}, mergedProf.skillStats || {});
+      data.profile = mergedProf;
       const updatedAt = Math.max(Date.now(), incomingAt, (previous && previous.updated_at || 0) + 1);
       const result = await env.DB.prepare("INSERT INTO progress (user_id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at WHERE progress.updated_at = ?")
         .bind(user.id, JSON.stringify(data), updatedAt, previous ? previous.updated_at : -1).run();
@@ -183,6 +200,60 @@ async function reset(req, env) {
     env.DB.prepare("DELETE FROM sessions WHERE user_id = ?").bind(row.user_id) // signs out every other device
   ]);
   return json({ token: await newSession(env, row.user_id), email: row.email }, 200, req);
+}
+
+function redirectTo(url, req) {
+  const headers = new Headers({ Location: url, "Cache-Control": "no-store" });
+  Object.entries(cors(req)).forEach(([k, v]) => headers.set(k, v));
+  return new Response(null, { status: 302, headers });
+}
+const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
+const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+async function googleState(env, ts) {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(env.GOOGLE_CLIENT_SECRET || ""), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = hex(new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(String(ts)))));
+  return ts + "." + sig;
+}
+async function googleStart(req, env) {
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return json({ error: "Google sign-in isn't set up yet." }, 501, req);
+  const origin = new URL(req.url).origin;
+  const u = new URL(GOOGLE_AUTH_URL);
+  u.searchParams.set("client_id", env.GOOGLE_CLIENT_ID);
+  u.searchParams.set("redirect_uri", origin + "/api/auth/google/callback");
+  u.searchParams.set("response_type", "code");
+  u.searchParams.set("scope", "openid email profile");
+  u.searchParams.set("state", await googleState(env, Date.now()));
+  u.searchParams.set("prompt", "select_account");
+  return redirectTo(u.toString(), req);
+}
+async function googleCallback(req, env) {
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return json({ error: "Google sign-in isn't set up yet." }, 501, req);
+  const url = new URL(req.url), origin = url.origin;
+  const fail = (msg) => redirectTo(origin + "/#google_error=" + encodeURIComponent(msg), req);
+  const code = url.searchParams.get("code") || "", state = url.searchParams.get("state") || "";
+  const [ts, sig] = state.split(".");
+  if (!code || !ts || !sig || Date.now() - Number(ts) > 10 * 60000) return fail("That sign-in link expired. Please try again.");
+  if (!timingSafeEqual(await googleState(env, ts), state)) return fail("Sign-in check failed. Please try again.");
+  const tokenRes = await fetch(GOOGLE_TOKEN_URL, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ code, client_id: env.GOOGLE_CLIENT_ID, client_secret: env.GOOGLE_CLIENT_SECRET, redirect_uri: origin + "/api/auth/google/callback", grant_type: "authorization_code" }) });
+  if (!tokenRes.ok) return fail("Google rejected the sign-in. Please try again.");
+  const tok = await tokenRes.json();
+  const claims = decodeJwt(tok.id_token || "");
+  const email = String(claims.email || "").trim().toLowerCase();
+  const verified = claims.email_verified === true || claims.email_verified === "true";
+  if (!email || !verified) return fail("Your Google email isn't verified.");
+  let user = await env.DB.prepare("SELECT id, email FROM users WHERE email = ?").bind(email).first();
+  if (!user) {
+    const salt = hex(crypto.getRandomValues(new Uint8Array(16)));
+    const id = crypto.randomUUID();
+    await env.DB.prepare("INSERT INTO users (id, email, pass_hash, salt, created_at) VALUES (?, ?, ?, ?, ?)")
+      .bind(id, email, await hashPassword(hex(crypto.getRandomValues(new Uint8Array(32))), salt), salt, Date.now()).run();
+    user = { id, email };
+  }
+  const token = await newSession(env, user.id);
+  return redirectTo(origin + "/#google_token=" + token + "&email=" + encodeURIComponent(email), req);
+}
+function decodeJwt(t) {
+  try { const p = t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"); return JSON.parse(atob(p)); } catch (e) { return {}; }
 }
 
 async function authed(req, env) {

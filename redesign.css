@@ -119,18 +119,32 @@ body[data-workspace] #screen-start .st-side .card { background: var(--panel) !im
 body[data-workspace] #screen-start h1, body[data-workspace] #screen-start h3, body[data-workspace] #screen-start .st-step, body[data-workspace] #screen-college h1, body[data-workspace] #screen-college h3 { color: var(--text); }
 .home-score-card { background: var(--panel); border: 1px solid var(--line); border-radius: 0; padding: 20px; margin-bottom: 16px; cursor: pointer; transition: border-color .15s, transform .15s; }
 .home-score-card:hover { border-color: rgba(255, 122, 61, .5); transform: translateY(-1px); }
-.home-score-card .hsc-top { display: flex; align-items: center; justify-content: center; gap: 28px; flex-wrap: nowrap; max-width: 920px; margin-inline: auto; }
-.home-score-card .hsc-top > div:last-child { min-width: 0; max-width: 680px; }
+.home-score-card .hsc-top { display: flex; align-items: center; justify-content: center; gap: 28px; flex-wrap: wrap; max-width: 1080px; margin-inline: auto; }
+.home-score-card .hsc-top .hsc-summary { flex: 1 1 240px; min-width: 0; max-width: 680px; }
 .home-score-card .hsc-title { font-weight: 800; font-size: 19px; color: var(--text); }
 .home-score-card .hsc-sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
 .ring { position: relative; flex: none; }
-.ring svg { display: block; }
+.ring svg { display: block; transform: rotate(-90deg); }
 .ring circle { fill: none; stroke-linecap: round; }
-.ring .ring-track { stroke: var(--line); }
-.ring .ring-progress { stroke: var(--blue); transition: stroke-dashoffset 1.2s ease; }
-.ring .ring-val { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.ring .ring-num { font-weight: 900; color: var(--blue); line-height: 1; }
-.ring .ring-lbl { color: var(--muted); font-size: 11px; margin-top: 3px; }
+.ring .ring-track { stroke: var(--line); opacity: .55; }
+.ring .ring-progress { transition: stroke-dashoffset 1.3s cubic-bezier(.22,.61,.36,1); }
+.ring .ring-stop-2 { stop-color: var(--blue, var(--mint)); }
+.ring .ring-val { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.ring .ring-num { font-weight: 800; color: var(--text, #1f2430); line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; display: inline-flex; align-items: baseline; }
+.ring .ring-pct { font-size: .48em; font-weight: 700; color: var(--mint); margin-left: 1px; }
+.ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 9px; flex: none; }
+.ring-caption { color: var(--muted); font-size: 12px; letter-spacing: 0; font-weight: 600; text-align: center; max-width: 170px; line-height: 1.3; }
+.hsc-compare { flex: 0 0 260px; box-sizing: border-box; padding-left: 20px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+.hsc-compare[hidden] { display: none; }
+.hsc-compare-head { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.hsc-compare-body { display: flex; flex-direction: column; gap: 9px; }
+.hsc-crow { display: flex; gap: 8px; align-items: flex-start; color: var(--text, #1f2430); font-size: 14px; line-height: 1.45; }
+.hsc-crow-ic { color: var(--mint); font-size: 9px; line-height: 1.9; flex: none; }
+.hsc-compare-prov { color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 2px; }
+.hsc-chk-row { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; margin-top: 10px; color: var(--muted); font-weight: 600; font-size: 13px; cursor: pointer; }
+.hsc-chk-row input { width: 18px; height: 18px; accent-color: var(--mint); margin: 0; }
+.hsc-chk-row:focus-within { outline: 2px solid var(--mint); outline-offset: 3px; border-radius: 6px; }
+@media (max-width: 760px) { .hsc-compare { flex: 1 0 100%; border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 16px; max-width: none; } }
 .hsc-average { font-weight: 800; font-size: 15px; color: var(--text); }
 .hsc-average small { display: block; color: var(--muted); font-weight: 600; font-size: 12px; margin-top: 2px; }
 body[data-workspace] .hsc-expand { display: none; margin-top: 18px; border-top: 1px solid var(--line); padding-top: 16px; }

@@ -61,14 +61,65 @@
   }
 
   // ---- Ring ----
+  function ordinal(n) {
+    const m100 = n % 100;
+    if (m100 >= 11 && m100 <= 13) return n + "th";
+    return n + (n % 10 === 1 ? "st" : n % 10 === 2 ? "nd" : n % 10 === 3 ? "rd" : "th");
+  }
+  const COMPARE_MILESTONES = [50, 75, 90, 99];
+  function scoreForPercentile(target) {
+    let lo = 400, hi = 1600;
+    for (let i = 0; i < 22; i++) {
+      const mid = (lo + hi) / 2;
+      if (satPercentile(mid) < target) lo = mid; else hi = mid;
+    }
+    return Math.round(hi / 10) * 10;
+  }
+  function compareRows(pct, score) {
+    const rows = [];
+    const bandLine = pct >= 99 ? "99th-percentile band: keep sharpening the skills behind your score."
+      : pct >= 90 ? "90th-percentile benchmark reached. Keep building consistency."
+      : pct >= 75 ? "75th-percentile benchmark reached. Keep strengthening your skills."
+      : pct >= 50 ? "50th-percentile benchmark reached. Choose one skill to strengthen next."
+      : "The 50th-percentile benchmark is ahead. Build toward it one skill at a time.";
+    rows.push('<div class="hsc-crow"><span class="hsc-crow-ic" aria-hidden="true">\u25c6</span><span>' + bandLine + "</span></div>");
+    const next = COMPARE_MILESTONES.find((m) => m > pct);
+    if (next) {
+      const need = scoreForPercentile(next) - score;
+      rows.push('<div class="hsc-crow"><span class="hsc-crow-ic" aria-hidden="true">\u25c6</span><span>About ' + Math.max(10, Math.round(need / 10) * 10) + " points from the " + ordinal(next) + " percentile.</span></div>");
+    }
+    try {
+      const savedC = (ensureCollege().saved || []).map((id) => COLLEGE_BY_ID.get(Number(id))).filter((c) => c && c.satAvg && Math.abs(c.satAvg - score) <= 40);
+      const near = savedC.slice().sort((a, b) => Math.abs(a.satAvg - score) - Math.abs(b.satAvg - score)).slice(0, 3);
+      if (near.length) rows.push('<div class="hsc-crow"><span class="hsc-crow-ic" aria-hidden="true">\u25c6</span><span>Closest admit averages to your score: ' + near.map((c) => esc(c.n) + " (~" + c.satAvg + ")").join(", ") + "</span></div>");
+    } catch (e) {}
+    return rows;
+  }
+  function compareHtml(pct, avg, enabled) {
+    if (avg == null || avg.score == null) return "";
+    return '<section class="hsc-compare" id="hscComparison" aria-labelledby="hscCompareHead"' + (enabled ? "" : " hidden") + ">" +
+      '<div class="hsc-compare-head" id="hscCompareHead">Estimated comparison</div>' +
+      '<div class="hsc-compare-body">' + compareRows(pct, avg.score).join("") + "</div>" +
+      '<div class="hsc-compare-prov">Estimated from your practice results \u00b7 not official scores</div></section>';
+  }
+  function compareToggleHtml(enabled) {
+    return '<label class="hsc-chk-row" for="hscCompareChk"><input type="checkbox" id="hscCompareChk" aria-controls="hscComparison"' + (enabled ? " checked" : "") + '><span>Show score comparisons</span></label>';
+  }
+  let ringGradSeq = 0;
   function ringHtml(percent, label, size) {
     size = size || 150;
-    const stroke = 12, r = (size - stroke) / 2, c = 2 * Math.PI * r;
+    const stroke = Math.max(7, Math.round(size * 0.052)), r = (size - stroke * 1.6) / 2, c = 2 * Math.PI * r;
     const pct = percent == null ? null : Math.max(0, Math.min(100, Math.round(percent)));
-    return '<div class="ring" style="width:' + size + "px;height:" + size + 'px"><svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + " " + size + '" role="img" aria-label="' + (pct == null ? "No score yet" : pct + " percent") + '">' +
-      '<circle class="ring-track" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" stroke-width="' + stroke + '"></circle>' +
-      '<circle class="ring-progress" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" stroke-width="' + stroke + '" stroke-dasharray="' + c.toFixed(1) + '" stroke-dashoffset="' + c.toFixed(1) + '" data-ring-offset="' + (c * (1 - (pct == null ? 0 : pct) / 100)).toFixed(1) + '"></circle></svg>' +
-      '<div class="ring-val"><span class="ring-num" style="font-size:' + Math.round(size * 0.25) + 'px">' + (pct == null ? "—" : pct + "%") + '</span><span class="ring-lbl">' + esc(label) + "</span></div></div>";
+    const gid = "ringGrad" + (++ringGradSeq);
+    const off = c * (1 - (pct == null ? 0 : pct) / 100);
+    return '<div class="ring-wrap"><div class="ring" style="width:' + size + "px;height:" + size + 'px"><svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + " " + size + '" role="img" aria-label="' + (pct == null ? "No score yet" : pct + "th percentile") + '">' +
+      '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--mint)"/><stop offset="1" class="ring-stop-2"/></linearGradient>' +
+      '<stop offset="1" class="ring-stop-2"/></linearGradient>' +
+      '<filter id="' + gid + 'Glow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="0" stdDeviation="' + Math.round(stroke * .55) + '" flood-color="var(--mint)" flood-opacity=".38"/></filter></defs>' +
+      '<circle class="ring-track" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" stroke-width="1.5"></circle>' +
+      '<circle class="ring-progress" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" stroke-width="' + stroke + '" stroke="url(#' + gid + ')" filter="url(#' + gid + 'Glow)" stroke-dasharray="' + c.toFixed(1) + '" stroke-dashoffset="' + c.toFixed(1) + '" data-ring-offset="' + off.toFixed(1) + '"></circle></svg>' +
+      '<div class="ring-val"><span class="ring-num" style="font-size:' + Math.round(size * (pct != null && pct >= 10 ? 0.24 : 0.3)) + 'px">' + (pct == null ? "—" : ordinal(pct)) + "</span></div></div>" +
+      '<div class="ring-caption">' + esc(label) + "</div></div>";
   }
   function paintRings(scope) {
     (scope || document).querySelectorAll(".ring-progress").forEach((el) => {
@@ -149,12 +200,13 @@
     host.style.display = "block";
     host.classList.toggle("open", hsc.open);
     host.innerHTML =
-      '<div class="hsc-top">' + ringHtml(pct, "average percentile") +
-      '<div><div class="hsc-title">Your average score</div>' +
+      '<div class="hsc-top">' + ringHtml(pct, "Estimated percentile") +
+      '<div class="hsc-summary"><div class="hsc-title">Your average score</div>' +
       (avg.score
         ? '<div class="hsc-average">' + avg.score + (avg.source === "act" ? " SAT-equivalent (ACT " + avg.act + ")" : "") + "<small>About the " + pct + "th percentile nationally · based on your last " + avg.count + " test" + (avg.count === 1 ? "" : "s") + (hsc.open ? "" : " · tap for college comparison") + "</small></div>"
         : '<div class="hsc-sub">Finish a practice test to unlock your average, percentile, and college comparison.</div>') +
-      "</div></div>" + expand;
+      (avg.score ? compareToggleHtml(profile.scoreComparisonEnabled === true) : "") +
+      "</div>" + compareHtml(pct, avg, profile.scoreComparisonEnabled === true) + "</div>" + expand;
     paintRings(host);
     if (hsc.open && avg.score && grade && !hsc.loading && hsc.statsKey !== grade + ":" + avg.score) {
       hsc.loading = true;
@@ -179,9 +231,17 @@
         if (window.collegeFeature && collegeFeature.openDetail) collegeFeature.openDetail(hsc.selected);
         return;
       }
+      if (e.target.closest("#hscCompareChk") || e.target.closest(".hsc-chk-row")) {
+        profile.scoreComparisonEnabled = !(profile.scoreComparisonEnabled === true);
+        try { saveProfile(); } catch (err) {}
+        renderHomeScoreCard();
+        const chk = document.getElementById("hscCompareChk");
+        if (chk) chk.focus();
+        return;
+      }
       if (e.target.closest("#hscOpenCollege")) { if (window.collegeFeature && collegeFeature.open) collegeFeature.open(); return; }
       if (e.target.closest("#hscStartPractice")) { document.getElementById("btnStart").click(); return; }
-      if (e.target.closest(".hsc-tab") || e.target.closest(".hsc-tiles") || e.target.closest(".hsc-scale")) return;
+      if (e.target.closest(".hsc-tab") || e.target.closest(".hsc-tiles") || e.target.closest(".hsc-scale") || e.target.closest(".hsc-compare")) return;
       hsc.open = !hsc.open;
       renderHomeScoreCard();
     });

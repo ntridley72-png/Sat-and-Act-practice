@@ -58,7 +58,9 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   });
   await page.waitForSelector("#homeScoreCard .ring-num", { state: "visible" });
   const pctText = await page.textContent("#homeScoreCard .ring-num");
-  if (!/^\d+%$/.test(pctText.trim())) throw new Error("home ring percentile missing: " + pctText);
+  if (!/^\d+(st|nd|rd|th)$/.test(pctText.trim())) throw new Error("home ring percentile missing: " + pctText);
+  if (!(await page.locator("#homeScoreCard .ring-caption").count())) throw new Error("ring caption missing");
+  if (!(await page.locator("#hscCompareChk").count())) throw new Error("comparison toggle missing");
   const avgText = await page.textContent("#homeScoreCard .hsc-average");
   if (!/1340/.test(avgText)) throw new Error("home average should be 1340, got: " + avgText);
 

@@ -1,0 +1,17 @@
+== baseline build 2026-10-07T07:28:11Z ==
+zsh:1: no matches found: social-icon*.png
+asset version 05595d02
+Generated 646 URLs into /Users/noahridley/Sat-and-Act-practice/public
+  asset version 05595d02 stamped into 650 documents
+  colleges: 354 profiles + 50 state hubs + 1 hub
+  scholarships: 51 profiles + 1 hub
+  guides: 19
+  score lookups: 66 SAT + 20 ACT + 2 hubs
+  unblocked games: 28 + 1 hub
+  college costs: 50 states + 1 hub
+landing: act-practice-test
+landing: games
+landing: sat-practice-test
+landing: score-calculator
+sitemap extended with 4 landing urls
+build exit: 0

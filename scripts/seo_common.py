@@ -261,6 +261,9 @@ def page(*, path, title, description, body, schema, extra_head=""):
 {midroll_body}
 <div class="sponsor-slot" data-ad-slot="article-bottom" hidden></div>
 <p class="gfoot">{SITE_NAME} is a free browser-based SAT and ACT prep app: digital SAT and ACT practice tests, unofficial score calculators, a built-in graphing calculator, college admissions chances from official U.S. Department of Education data, and a scholarship search. <a href="/">Start free practice &rarr;</a></p>
+<nav class="gfootnav" aria-label="Site sections">
+<a href="/free-test-prep/">Free test prep</a><a href="/sat-practice/">SAT practice</a><a href="/act-practice/">ACT practice</a><a href="/score-calculators/">Score calculators</a><a href="/sat-scores/">SAT scores</a><a href="/act-scores/">ACT scores</a><a href="/college-admissions/">College admissions</a><a href="/colleges-by-state/">Colleges by state</a><a href="/college-costs/">College costs</a><a href="/college-comparisons/">Compare colleges</a><a href="/scholarships/">Scholarships</a><a href="/application-planning/">Application planning</a><a href="/unblocked-games/">Study-break games</a><a href="/about/">About</a><a href="/methodology/">Methodology</a><a href="/privacy/">Privacy</a><a href="/contact/">Contact</a><a href="/corrections/">Corrections</a>
+</nav>
 {AD_ANCHOR}
 </div></body></html>
 """

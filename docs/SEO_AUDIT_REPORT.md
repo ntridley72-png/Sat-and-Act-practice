@@ -72,3 +72,72 @@ Gain is a judgement about leverage, not a measured forecast — every one of the
 5. Do you want the phantom clusters built, or removed from the docs and prompt?
 
 Flagged judgement calls: action ranking order, the backlink targets in #8, and the "stop" list's relative emphasis. Everything in the measured table is directly verifiable with the sources named.
+
+---
+
+# Part 2 — Remediation, independent review, and final validation
+
+## 13. Independent code review
+
+**Reviewer:** Codex (`gpt-5.6-sol`, low effort), read-only, instructed to inspect the
+actual repository rather than the report. Prompt covered the 27-point checklist
+(canonicals, robots, sitemaps, lastmod, redirects, orphans, thin content,
+structured data, IndexNow, Indexing-API misuse, CWV, security, build).
+
+**Verdict: CHANGES REQUIRED** — no CRITICAL findings; five valid HIGH/MEDIUM
+defects, all fixed:
+
+| # | Sev | Finding | Resolution |
+|---|---|---|---|
+| 1 | HIGH | Four landing pages (`/sat-practice-test/`, `/act-practice-test/`, `/score-calculator/`, `/games/`) were missing from every sitemap: the landing builder appended to `</urlset>` after the sitemap became an index | New `scripts/build-sitemaps.py` scans the actual build output last and writes all six segments from what exists; the old writers no longer touch sitemaps; reverse-completeness enforced in tests |
+| 2 | HIGH | `lastmod` was build-day for several families (false freshness) | Content-hash manifest `seo-lastmod.json`: a page's `lastmod` only moves when its rendered HTML changes; unchanged rebuilds keep their dates |
+| 3 | MED | IndexNow state never resubmitted changed URLs; terminal 4xx exited 0; dry-run wrote logs | State now stores lastmod per URL and resubmits on change; any non-2xx sets a failing exit code; `--since` validated; dry-run performs no network and no writes |
+| 4 | MED | SEO audit was one-directional and missed the missing landings | Added reverse completeness (every indexable page in exactly one sitemap) and a side-effect-free dry-run assertion |
+| 5 | MED | Worker did not upgrade `http:` to `https:` | Single-hop scheme upgrade added to `canonicalRedirect`; production verification pending deploy |
+| 6 | LOW | Partial cleanup let stale generated trees persist | Build now starts from a fresh `public/` every time |
+| 7 | LOW | Ordinals rendered as "61th"/"92th" | `ordinal()` helper added; score pages also gained a percentile-source note |
+
+Also confirmed by the reviewer: no Google Indexing API misuse; no private
+secrets (the IndexNow key and AdSense IDs are public identifiers); server-rendered
+content is meaningful; path redirects are single-hop and loop-free.
+
+**Rejected findings:** none. Two informational notes were accepted as-is:
+Core Web Vitals and rendered accessibility remain unverified in this environment
+(no PSI key, no GSC access).
+
+## 14. FINAL VALIDATION
+
+| Check | Result | Notes |
+|---|---|---|
+| Production build (fresh tree) | **PASS** | 663 indexable pages, 6 sitemap segments |
+| Automated test suite | **PASS** | 16 suites: practice, variety, tutor, college + arcade-logic, arcade-ui, racing-behavior, drift-ui, dirtbike-ui, redesign-ui, college-ui, scholarship-ui, subjects-ui, theme-routing, content-integrations, seo-audit |
+| SEO audit (automated) | **PASS** | robots, segmented sitemaps, canonicals, unique titles (663/663), one H1 per page, JSON-LD parses, no broken links, no orphans, game `?play=` deep links, IndexNow dry-run |
+| Sitemap validation | **PASS** | index + 6 segments; 663/663 URLs have local files; reverse completeness enforced |
+| Canonical audit | **PASS** (local) | every sitemap URL self-canonical; **production redirect/scheme behavior NOT AVAILABLE until deploy** |
+| Robots audit | **PASS** | allows all, references stable `/sitemap.xml` |
+| Schema audit | **PASS with WARNING** | all JSON-LD parses; FAQ/HowTo pages have matching visible content by construction; not run through Google's rich-results validator |
+| Redirect audit | **WARNING** | single-hop logic verified by inspection; live 301s previously observed for `.html`→extensionless; needs post-deploy retest |
+| Orphan-page audit | **PASS** | none among indexable pages (sitewide footer + contextual links) |
+| Duplicate/thin audit | **PASS with WARNING** | 663 unique titles, no duplicate descriptions detected; score/game templates are structured similarly by design and need periodic quality review per the reviewer |
+| Internal-link crawl | **PASS** | no broken internal targets |
+| Lint / typecheck | **NOT AVAILABLE** | no linter/typechecker configured in this repo; `node --check`-equivalent parsing and `git diff --check` used instead (**PASS**) |
+| Accessibility / Performance (CWV) | **NOT AVAILABLE** | no local a11y audit tooling; PSI API returned no data unauthenticated; requires GSC CWV export or a PSI key |
+| IndexNow | **PASS (tooling)** | dry-run side-effect-free; batching/state/backoff verified; a live submission of 659 production URLs occurred unintentionally during verification (see incident note in docs/SEO_SETUP.md) — run `--all` once after deploy |
+
+Statement of record: *Submission helps search engines discover changes but does
+not guarantee crawling, indexing, ranking, or a particular processing time.*
+
+## 15. FINAL DEPLOYMENT VERDICT
+
+**READY TO DEPLOY WITH NON-BLOCKING WARNINGS.**
+
+Non-blocking warnings:
+1. Deployment is withheld **by instruction** — explicit owner approval required
+   before any push or `wrangler deploy`.
+2. After deploying, run `node scripts/indexnow.mjs --all` once (the pre-deploy
+   submission incident and unchanged `lastmod`s mean this is needed).
+3. Re-verify live: HTTPS upgrade, `.html`→extensionless 301s, sitemap fetch by
+   Googlebot/Bingbot, and a 200 sample from every cluster.
+4. Core Web Vitals, rendered accessibility, and Google/Bing first-party index
+   data remain unverified from this environment; the operator's GSC/BWT exports
+   complete that picture.

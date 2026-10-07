@@ -9565,6 +9565,15 @@ class DriftCircuit {
   });
 })();
 arcade.init();
+// Deep link: /?play=<game-key> opens the arcade straight into a game (used by the
+// /unblocked-games/ pages' launch buttons).
+try {
+  const playKey = new URLSearchParams(location.search).get("play");
+  if (playKey && GAME_LIST.some((g) => g.key === playKey)) {
+    arcade.open();
+    arcade.select(playKey);
+  }
+} catch (e) {}
 addEventListener('pointerdown', (e) => {
   const wasReadyToStart = arcade.mode === 'ready' && arcade.game && !arcade.game.started && !e.target.closest('button');
   if (wasReadyToStart) {

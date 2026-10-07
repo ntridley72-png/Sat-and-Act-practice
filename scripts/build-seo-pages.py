@@ -571,7 +571,7 @@ def game_page(g, others):
             f'<div class="gcard"><h2>Play {e(name)} now</h2>'
             f'<p>Open the arcade, pick {e(name)} from the cabinet, and earn credits by answering '
             f'practice questions between runs.</p>'
-            f'<a class="cta" href="/">Open the arcade &rarr;</a></div>'
+            f'<a class="cta" href="/?play={g["key"]}">Play {name} now &rarr;</a></div>'
             + (f'<h2>More {e(g["genre"].lower())} games</h2><ul>{sib_html}</ul>' if sib_html else "")
             + '<h2>Frequently asked questions</h2>'
             + "".join(f"<h3>{e(q)}</h3><p>{e(a)}</p>" for q, a in faqs)
@@ -834,20 +834,6 @@ def costs_hub(by_state, colleges):
                       schema=[breadcrumbs([HOME, ("College costs", path)]), faq_schema(faqs)]), national
 
 
-# ----------------------------------------------------------------- sitemap
-
-def sitemap(entries):
-    parts = ['<?xml version="1.0" encoding="UTF-8"?>',
-             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
-    for path, priority, freq in entries:
-        parts.append(f"  <url>\n    <loc>{ORIGIN}{path}</loc>\n"
-                     f"    <lastmod>{TODAY}</lastmod>\n"
-                     f"    <changefreq>{freq}</changefreq>\n"
-                     f"    <priority>{priority}</priority>\n  </url>")
-    parts.append("</urlset>")
-    return "\n".join(parts) + "\n"
-
-
 # -------------------------------------------------------------------- main
 
 # Local css/js refs, relative or root-absolute; never protocol-relative or remote.
@@ -969,8 +955,6 @@ def main():
         entries.append((p, "0.8" if p == "/guides/" else "0.7",
                         "weekly" if p == "/guides/" else "monthly"))
 
-    write(out / "sitemap.xml", sitemap(entries))
-    write(ROOT / "sitemap.xml", sitemap(entries))
 
     stamped = stamp_tree(out, VERSION)
     print(f"Generated {len(entries)} URLs into {out}")
@@ -993,6 +977,12 @@ def main():
 # estimate on every page because the official table shifts each cohort.
 SAT_PCTL = [(400, 1), (600, 3), (800, 9), (900, 19), (1000, 33), (1050, 41),
             (1100, 51), (1200, 68), (1300, 84), (1400, 93), (1500, 98), (1600, 99)]
+
+
+def ordinal(n):
+    if 10 <= n % 100 <= 20:
+        return f"{n}th"
+    return f"{n}" + {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
 
 
 def percentile_for(score):
@@ -1067,7 +1057,7 @@ def score_page(colleges, concordance, score, test):
             f'scored at or above roughly {p}% of students. It converts to {equiv} on the '
             f'<a href="/sat-act-conversion/">official concordance</a>.</p>'
             f'<h2>What a {score} means for your college list</h2>'
-            f'{table([("Approximate national percentile", f"{p}th"),
+            f'{table([("Approximate national percentile", ordinal(p)),
                       (f"Equivalent {'ACT' if test == 'sat' else 'SAT'} score",
                        str(act_eq) if test == "sat" else str(sat_eq)),
                       ("Colleges where this is at or above the 75th percentile", str(len(above))),
@@ -1104,10 +1094,12 @@ def score_page(colleges, concordance, score, test):
               'cohort; college ranges come from the U.S. Department of Education College '
               'Scorecard and can lag the current cycle.</small></p>'
             + f'<div class="glinks">'
-            + (f'<a href="{crumb_path}{score - 10 if test == "sat" else score - 1}/">'
-               f'{score - 10 if test == "sat" else score - 1} {label}</a>')
-            + (f'<a href="{crumb_path}{score + 10 if test == "sat" else score + 1}/">'
-               f'{score + 10 if test == "sat" else score + 1} {label}</a>')
+            + (f'<a href="{crumb_path}{score - 10}/">{score - 10} {label}</a>' if test == "sat" and score - 10 >= 900
+               else f'<a href="{crumb_path}{score - 1}/">{score - 1} {label}</a>' if test == "act" and score - 1 >= 17
+               else "")
+            + (f'<a href="{crumb_path}{score + 10}/">{score + 10} {label}</a>' if test == "sat" and score + 10 <= 1550
+               else f'<a href="{crumb_path}{score + 1}/">{score + 1} {label}</a>' if test == "act" and score + 1 <= 36
+               else "")
             + '<a href="/sat-act-conversion/">SAT to ACT conversion</a>'
               '<a href="/guides/what-is-a-good-sat-score/">What is a good SAT score?</a>'
               '<a href="/guides/how-to-improve-your-sat-score/">How to improve your score</a>'

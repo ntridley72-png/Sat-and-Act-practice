@@ -25,19 +25,5 @@ def main():
             for page in Path(d).rglob("*.html"):
                 page.write_text(inject_fonts(inject_ads(page.read_text(encoding="utf8"))), encoding="utf8")
             print("landing:", name)
-    sm = os.path.join(out, "sitemap.xml")
-    if os.path.exists(sm):
-        xml = open(sm).read()
-        base = "https://funsat.bid"
-        add = ""
-        for name in sorted(os.listdir(src)):
-            loc = base + "/" + name + "/"
-            if loc not in xml:
-                add += f"  <url>\n    <loc>{loc}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>\n"
-        if add:
-            xml = xml.replace("</urlset>", add + "</urlset>")
-            open(sm, "w").write(xml)
-            print("sitemap extended with", add.count("<url>"), "landing urls")
-
 if __name__ == "__main__":
     main()

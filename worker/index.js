@@ -77,6 +77,12 @@ function canonicalRedirect(url) {
   const target = new URL(url.toString());
   let changed = false;
 
+  if (target.protocol === "http:") {
+    // The canonical host is HTTPS; upgrade in the same single hop.
+    target.protocol = "https:";
+    changed = true;
+  }
+
   if (target.hostname.startsWith("www.")) {
     target.hostname = target.hostname.slice(4);
     changed = true;

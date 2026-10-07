@@ -141,3 +141,23 @@ Non-blocking warnings:
 4. Core Web Vitals, rendered accessibility, and Google/Bing first-party index
    data remain unverified from this environment; the operator's GSC/BWT exports
    complete that picture.
+
+---
+
+## Post-deploy verification (2026-10-07)
+
+Deployed: version `0e6dfad7-5df6-41c4-9c69-405c5037b815` (funsat.bid + www + workers.dev).
+
+| Check | Result |
+|---|---|
+| Sitemap index + segments | PASS — core 14 · sat-act 92 · colleges 456 · scholarships 52 · guides 19 · games 30 (663 URLs) |
+| Cluster samples (15 URLs incl. previously-404 `/unblocked-games/`, `/college-costs/texas/`, `/sat-act-conversion/`, hubs, trust, college profile, score, scholarship, guide) | PASS — all HTTP 200 |
+| `http://funsat.bid/` | PASS — 301 → `https://funsat.bid/` (single hop) |
+| `/about.html` | PASS — 301 → `/about/` |
+| `app.js` | PASS — 200 |
+| Game deep link `/?play=2048` | PASS — arcade opens with 2048 selected, no page errors |
+| IndexNow resubmission | PASS — `--all`, 663 URLs, 7 batches, all HTTP 200 |
+
+Watchers for the next 30 days: GSC Pages report (indexed vs discovered), BWT
+URL report, sitemap fetch status, and Core Web Vitals once Search Console data
+accumulates.

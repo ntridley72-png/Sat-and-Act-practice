@@ -57,12 +57,18 @@ FONT_PRELOAD = (
 # article-top/mid/bottom all point at the same unit instead of stacking three.
 AD_UNITS = (
     '{native:{script:"https://bauval.org/21/ba6d22b48d5d42c6cd1add3ad5e6c681",'
-    'container:"container-ba6d22b48d5d42c6cd1add3ad5e6c681"}}'
+    'container:"container-ba6d22b48d5d42c6cd1add3ad5e6c681"},'
+    'sky:{key:"4e48d9998406ce142c41865c66a4325",'
+    'script:"https://bauval.org/22/4e48d9998406ce142c41865c66a4325",'
+    'width:160,height:600},squares:[]}'
 )
 AD_SLOTS = {
     "article-top": '{kind:"native"}',
     "article-mid": '{kind:"native"}',
     "article-bottom": '{kind:"native"}',
+    "article-grid": '{kind:"grid"}',
+    "rail-left": '{unit:"sky"}',
+    "rail-right": '{unit:"sky"}',
 }
 AD_CONFIG = (
     '<script>window.FUNSAT_ADS={provider:"adsterra",units:' + AD_UNITS + ',slots:{'
@@ -90,6 +96,14 @@ def inject_ads(html_text):
     if "FUNSAT_ADS" in html_text:
         return html_text
     html_text = html_text.replace("</head>", AD_CONFIG + "\n</head>", 1)
+    # Side rails flank the content on wide screens (hidden below 1420px by CSS).
+    _body = re.search(r"<body[^>]*>", html_text)
+    if _body:
+        _rails = (_body.group(0) + '\n<aside class="sponsor-slot ad-rail ad-rail--left" data-ad-slot="rail-left" aria-label="Sponsored content" hidden></aside>'
+                  '\n<aside class="sponsor-slot ad-rail ad-rail--right" data-ad-slot="rail-right" aria-label="Sponsored content" hidden></aside>')
+        html_text = html_text[:_body.start()] + _rails + html_text[_body.end():]
+    # Grid sits above the bottom unit: grid, then article-bottom, then gfoot.
+    html_text = html_text.replace('<p class="gfoot">', ad_slot("article-grid") + '\n<p class="gfoot">', 1)
     # Bottom unit above the footer line, anchor last so it closes over the page.
     html_text = html_text.replace('<p class="gfoot">',
                                   ad_slot("article-bottom") + '\n<p class="gfoot">', 1)

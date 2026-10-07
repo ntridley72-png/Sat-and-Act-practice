@@ -549,6 +549,8 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 <link rel="stylesheet" href="subjects.css">
 </head>
 <body>
+<aside class="sponsor-slot ad-rail ad-rail--left" data-ad-slot="rail-left" aria-label="Sponsored content" hidden></aside>
+<aside class="sponsor-slot ad-rail ad-rail--right" data-ad-slot="rail-right" aria-label="Sponsored content" hidden></aside>
 <noscript>
   <main class="noscript-summary">
     <h2>FunSAT SAT and ACT Practice</h2>
@@ -739,6 +741,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
       <div id="resultsRouting"></div>
       <div id="resultsDomains"></div>
       <aside class="sponsor-slot" data-ad-slot="results-top" aria-label="Sponsored content" hidden></aside>
+      <aside class="sponsor-slot" data-ad-slot="results-grid" aria-label="Sponsored content" hidden></aside>
       <div style="margin:18px 0 6px;display:flex;gap:10px;flex-wrap:wrap">
         <button id="btnNewTest">Start a new session</button>
         <button id="btnReview" class="secondary">Review answers</button>
@@ -746,9 +749,9 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
       <div id="reviewArea" style="display:none"></div>
     </section>
 
-    <section id="screen-college" class="college-screen" style="display:none" aria-label="College score goals"><div id="collegeBody"></div><aside class="sponsor-slot" data-ad-slot="college-list" aria-label="Sponsored content" hidden></aside></section>
-    <section id="screen-scholarships" class="college-screen" style="display:none" aria-label="Scholarship searcher"><div id="scholarshipBody"></div><aside class="sponsor-slot" data-ad-slot="scholarships-list" aria-label="Sponsored content" hidden></aside></section>
-    <section id="screen-subjects" class="subjects-screen" style="display:none" aria-label="Subject practice"><div id="subjectsBody"></div><aside class="sponsor-slot" data-ad-slot="subjects-list" aria-label="Sponsored content" hidden></aside></section>
+    <section id="screen-college" class="college-screen" style="display:none" aria-label="College score goals"><div id="collegeBody"></div><aside class="sponsor-slot" data-ad-slot="college-list" aria-label="Sponsored content" hidden></aside><aside class="sponsor-slot" data-ad-slot="college-grid" aria-label="Sponsored content" hidden></aside></section>
+    <section id="screen-scholarships" class="college-screen" style="display:none" aria-label="Scholarship searcher"><div id="scholarshipBody"></div><aside class="sponsor-slot" data-ad-slot="scholarships-list" aria-label="Sponsored content" hidden></aside><aside class="sponsor-slot" data-ad-slot="scholarships-grid" aria-label="Sponsored content" hidden></aside></section>
+    <section id="screen-subjects" class="subjects-screen" style="display:none" aria-label="Subject practice"><div id="subjectsBody"></div><aside class="sponsor-slot" data-ad-slot="subjects-list" aria-label="Sponsored content" hidden></aside><aside class="sponsor-slot" data-ad-slot="subjects-grid" aria-label="Sponsored content" hidden></aside></section>
   </main>
 
   <div class="foot">Practice estimates, not official scores. SAT uses the College Board raw-score curve from Practice Test 4 (2023), adjustable on the start screen. ACT sections use the chart from ACT's free practice test; the Composite follows ACT's current rule (average of English, Math, and Reading — Science is optional). Questions are original practice items modeled on published SAT/ACT skills, not official released questions. <a href="https://satsuite.collegeboard.org/practice/student-question-bank" target="_blank" rel="noopener">Official SAT question bank</a> · <a href="https://www.act.org/content/act/en/products-and-services/the-act/scores/understanding-your-scores.html" target="_blank" rel="noopener">Official ACT scoring</a> · College data: <a href="https://collegescorecard.ed.gov/data/" target="_blank" rel="noopener">U.S. Dept. of Education College Scorecard</a></div>
@@ -882,7 +885,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 
 <noscript><div style="max-width:900px;margin:0 auto;padding:16px"><h2>SAT &amp; ACT practice, college tools, and study games</h2><p>FunSAT needs JavaScript for interactive practice. It offers free digital SAT and ACT practice questions, unofficial SAT/ACT score estimates, college admissions comparison from federal College Scorecard data, a scholarship search, and study-break games.</p></div></noscript>
 
-<script>window.FUNSAT_ADS={provider:"adsterra",units:{native:{script:"https://bauval.org/21/ba6d22b48d5d42c6cd1add3ad5e6c681",container:"container-ba6d22b48d5d42c6cd1add3ad5e6c681"}},slots:{"home-sidebar":{kind:"iframe",key:"4e48d9998406ce142c41865c66a4325",script:"https://bauval.org/22/4e48d9998406ce142c41865c66a4325",width:160,height:600},"arcade-menu":{kind:"native"},"results-top":{kind:"native"},"college-list":{kind:"native"},"scholarships-list":{kind:"native"},"subjects-list":{kind:"native"}}};</script>
+<script>window.FUNSAT_ADS={provider:"adsterra",units:{native:{script:"https://bauval.org/21/ba6d22b48d5d42c6cd1add3ad5e6c681",container:"container-ba6d22b48d5d42c6cd1add3ad5e6c681"},sky:{key:"4e48d9998406ce142c41865c66a4325",script:"https://bauval.org/22/4e48d9998406ce142c41865c66a4325",width:160,height:600},squares:[]},slots:{"rail-left":{unit:"sky"},"rail-right":{unit:"sky"},"home-sidebar":{kind:"native"},"results-top":{kind:"native"},"arcade-menu":{kind:"native"},"college-list":{kind:"native"},"scholarships-list":{kind:"native"},"subjects-list":{kind:"native"},"results-grid":{kind:"grid"},"college-grid":{kind:"grid"},"scholarships-grid":{kind:"grid"},"subjects-grid":{kind:"grid"}}};</script>
 <script defer src="dirtbike.js"></script>
 <script defer src="ads.js"></script>
 <script defer src="workspace.js"></script>

@@ -67,17 +67,42 @@
   // iframe because Adsterra's atOptions snippet writes its container with
   // document.write.
   const ADSTERRA = config.units || {};
-
+  let rotateIndex = 0;
   let nativeHost = null, nativeOwner = null;
   function slotOnScreen(hostEl) {
     const box = hostEl && hostEl.parentElement;
     return !!(hostEl && hostEl.isConnected && box && (box.offsetWidth || box.getClientRects().length));
   }
-  function renderAdsterra(host, spec) {
-    spec = spec || {};
-    // In-page units are production-only for the same reason as the sitewide
-    // ones: local pages, previews, and headless tests must never request live
-    // ad traffic or execute third-party ad scripts.
+
+  function resolveSpec(spec) {
+    if (Array.isArray(spec)) { spec = spec[rotateIndex++ % spec.length]; return resolveSpec(spec); }
+    if (spec && spec.unit && ADSTERRA[spec.unit]) return Object.assign({ kind: "iframe" }, ADSTERRA[spec.unit], spec);
+    return spec || {};
+  }
+
+  function adFrame(unit) {
+    const width = unit.width || 300;
+    const height = unit.height || 250;
+    const frame = document.createElement("iframe");
+    frame.title = "Sponsored";
+    frame.setAttribute("scrolling", "no");
+    // srcdoc inherits the page origin, so the frame is sandboxed without
+    // allow-same-origin: the ad script runs, the parent page stays opaque.
+    frame.setAttribute("sandbox", "allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox");
+    frame.style.cssText = "display:block;border:0;width:" + width + "px;height:" + height + "px;max-width:100%;margin:0 auto;background:#0b0e14";
+    const atOptions = JSON.stringify({ key: String(unit.key || ""), format: "iframe", height: height, width: width, params: {} }).replace(/</g, "\\u003c");
+    const src = String(unit.script).replace(/"/g, "%22");
+    frame.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;overflow:hidden;background:#0b0e14}</style></head><body>' +
+      "<script>atOptions=" + atOptions + ";<\/script>" +
+      '<script src="' + src + '"><\/script></body></html>';
+    return frame;
+  }
+
+  function renderAdsterra(host, rawSpec) {
+    const spec = resolveSpec(rawSpec);
+    // In-page units are production-only for the same reason as the AdSense
+    // loader this replaced: local pages, previews, and headless tests must
+    // never request live ad traffic or execute third-party ad scripts.
     if (location.hostname !== "funsat.bid") return false;
     if (spec.kind === "native" && ADSTERRA.native && ADSTERRA.native.script && ADSTERRA.native.container) {
       // Only one native container may exist per page, and it belongs to the
@@ -105,22 +130,23 @@
       nativeOwner = host;
       return true;
     }
+    if (spec.kind === "grid") {
+      // 2x2 grid of square units. Needs at least two configured keys; a single
+      // key would repeat one creative and read as broken, so the slot stays
+      // hidden until the account has enough distinct units to rotate.
+      const units = (ADSTERRA[spec.unitsFrom || "squares"] || []).filter((u) => u && u.script && u.key);
+      if (units.length < 2) return false;
+      host.classList.add("sponsor-grid");
+      units.slice(0, 4).forEach((u) => {
+        const cell = document.createElement("div");
+        cell.className = "sponsor-grid-cell";
+        cell.appendChild(adFrame(u));
+        host.appendChild(cell);
+      });
+      return true;
+    }
     if (spec.kind === "iframe" && spec.script) {
-      const width = spec.width || 300;
-      const height = spec.height || 250;
-      const frame = document.createElement("iframe");
-      frame.title = "Sponsored";
-      frame.setAttribute("scrolling", "no");
-      // srcdoc inherits the page origin, so the frame is sandboxed without
-      // allow-same-origin: the ad script runs, the parent page stays opaque.
-      frame.setAttribute("sandbox", "allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox");
-      frame.style.cssText = "display:block;border:0;width:" + width + "px;height:" + height + "px;max-width:100%;margin:0 auto";
-      const atOptions = JSON.stringify({ key: String(spec.key || ""), format: "iframe", height: height, width: width, params: {} }).replace(/</g, "\\u003c");
-      const src = String(spec.script).replace(/"/g, "%22");
-      frame.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;overflow:hidden}</style></head><body>' +
-        "<script>atOptions=" + atOptions + ";<\/script>" +
-        '<script src="' + src + '"><\/script></body></html>';
-      host.appendChild(frame);
+      host.appendChild(adFrame(spec));
       return true;
     }
     return false;
@@ -141,7 +167,14 @@
     "college-list": [728, 250, "In-feed (fluid)"],
     "scholarships-list": [728, 250, "In-feed (fluid)"],
     "subjects-list": [728, 250, "In-feed (fluid)"],
-    "arcade-menu": [300, 250, "Arcade menu 300x250"]
+    "arcade-menu": [300, 250, "Arcade menu 300x250"],
+    "rail-left": [160, 600, "Left rail 160x600"],
+    "rail-right": [160, 600, "Right rail 160x600"],
+    "results-grid": [300, 250, "Grid square 300x250"],
+    "college-grid": [300, 250, "Grid square 300x250"],
+    "scholarships-grid": [300, 250, "Grid square 300x250"],
+    "subjects-grid": [300, 250, "Grid square 300x250"],
+    "article-grid": [300, 250, "Grid square 300x250"]
   };
 
   function renderPlaceholder(host, name) {

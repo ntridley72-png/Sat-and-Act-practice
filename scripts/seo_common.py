@@ -52,24 +52,23 @@ FONT_PRELOAD = (
 )
 
 
-AD_CLIENT = "ca-pub-7330416749956065"
+# Adsterra units shared by every generated page. The native widget mounts into
+# one container that migrates to the visible in-content slot (see ads.js), so
+# article-top/mid/bottom all point at the same unit instead of stacking three.
+AD_UNITS = (
+    '{native:{script:"https://bauval.org/21/ba6d22b48d5d42c6cd1add3ad5e6c681",'
+    'container:"container-ba6d22b48d5d42c6cd1add3ad5e6c681"}}'
+)
 AD_SLOTS = {
-    "article-top": '{id:"4774752824",format:"fluid",layout:"in-article"}',
-    "article-mid": '{id:"4774752824",format:"fluid",layout:"in-article"}',
-    "article-bottom": '"2337300905"',
-    # Web anchor units are an Auto ads format, not something you can create by
-    # hand, so the sticky slot runs a responsive display unit instead.
-    "anchor": '"8000691126"',
+    "article-top": '{kind:"native"}',
+    "article-mid": '{kind:"native"}',
+    "article-bottom": '{kind:"native"}',
 }
 AD_CONFIG = (
-    '<script>window.FUNSAT_ADS={provider:"adsense",client:"' + AD_CLIENT + '",'
-    'childDirected:true,slots:{'
+    '<script>window.FUNSAT_ADS={provider:"adsterra",units:' + AD_UNITS + ',slots:{'
     + ",".join(f'"{k}":{v}' for k, v in AD_SLOTS.items())
     + '}};</script>\n<script defer src="/ads.js"></script>'
 )
-# The anchor is the only unit that follows the reader, so it carries its own
-# dismiss button (added by ads.js) and is confined to content pages.
-AD_ANCHOR = '<div class="sponsor-slot sponsor-anchor" data-ad-slot="anchor" hidden></div>'
 
 
 def ad_slot(name):
@@ -94,7 +93,8 @@ def inject_ads(html_text):
     # Bottom unit above the footer line, anchor last so it closes over the page.
     html_text = html_text.replace('<p class="gfoot">',
                                   ad_slot("article-bottom") + '\n<p class="gfoot">', 1)
-    html_text = html_text.replace("</body>", AD_ANCHOR + "</body>", 1)
+    # No anchor unit ships with the current network config; the old sticky
+    # slot markup is gone rather than left permanently unfilled.
     # In-content units go after the headline, never before it: a unit above the <h1>
     # pushes the content the reader came for below the fold and reads as an
     # interstitial. Everything is measured from the end of the <h1>.

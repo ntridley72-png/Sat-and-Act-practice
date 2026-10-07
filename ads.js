@@ -57,6 +57,75 @@
     return true;
   }
 
+  // Adsterra in-page units only (sidebar skyscraper + native banner). No
+  // popunder or social bar: this site is student-facing, so nothing may open
+  // unvetted third-party pages without a deliberate click. Units are
+  // production-only, exactly like the AdSense loader this replaced, so local
+  // previews and test runs never fire real ad traffic. The native widget uses
+  // one container that migrates to whichever ad slot is on screen (only one
+  // instance may exist per page), and display units run inside a sandboxed
+  // iframe because Adsterra's atOptions snippet writes its container with
+  // document.write.
+  const ADSTERRA = config.units || {};
+
+  let nativeHost = null, nativeOwner = null;
+  function slotOnScreen(hostEl) {
+    const box = hostEl && hostEl.parentElement;
+    return !!(hostEl && hostEl.isConnected && box && (box.offsetWidth || box.getClientRects().length));
+  }
+  function renderAdsterra(host, spec) {
+    spec = spec || {};
+    // In-page units are production-only for the same reason as the sitewide
+    // ones: local pages, previews, and headless tests must never request live
+    // ad traffic or execute third-party ad scripts.
+    if (location.hostname !== "funsat.bid") return false;
+    if (spec.kind === "native" && ADSTERRA.native && ADSTERRA.native.script && ADSTERRA.native.container) {
+      // Only one native container may exist per page, and it belongs to the
+      // slot that is actually on screen. If another screen already owns it,
+      // leave this slot hidden and let a later mount retry once that owner
+      // goes off screen (showScreen remounts on every switch).
+      if (nativeOwner && nativeOwner !== host && slotOnScreen(nativeOwner)) { delete host.dataset.adMounted; return false; }
+      if (!nativeHost) {
+        nativeHost = document.createElement("div");
+        nativeHost.id = ADSTERRA.native.container;
+        nativeHost.style.cssText = "display:block;margin:0 auto;width:100%";
+        const script = document.createElement("script");
+        script.async = true;
+        script.dataset.funsatAds = "native";
+        script.src = ADSTERRA.native.script;
+        document.body.appendChild(script);
+      }
+      if (nativeOwner && nativeOwner !== host) {
+        nativeOwner.hidden = true;
+        delete nativeOwner.dataset.adMounted;
+        delete nativeOwner.dataset.adsterraNative;
+      }
+      host.appendChild(nativeHost);
+      host.dataset.adsterraNative = "true";
+      nativeOwner = host;
+      return true;
+    }
+    if (spec.kind === "iframe" && spec.script) {
+      const width = spec.width || 300;
+      const height = spec.height || 250;
+      const frame = document.createElement("iframe");
+      frame.title = "Sponsored";
+      frame.setAttribute("scrolling", "no");
+      // srcdoc inherits the page origin, so the frame is sandboxed without
+      // allow-same-origin: the ad script runs, the parent page stays opaque.
+      frame.setAttribute("sandbox", "allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox");
+      frame.style.cssText = "display:block;border:0;width:" + width + "px;height:" + height + "px;max-width:100%;margin:0 auto";
+      const atOptions = JSON.stringify({ key: String(spec.key || ""), format: "iframe", height: height, width: width, params: {} }).replace(/</g, "\\u003c");
+      const src = String(spec.script).replace(/"/g, "%22");
+      frame.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;overflow:hidden}</style></head><body>' +
+        "<script>atOptions=" + atOptions + ";<\/script>" +
+        '<script src="' + src + '"><\/script></body></html>';
+      host.appendChild(frame);
+      return true;
+    }
+    return false;
+  }
+
   // Preview-only placeholders. Opt in with ?adpreview=1 so real visitors never
   // see a mock ad: an empty-looking box reads as broken, and anything that
   // imitates an ad sitting beside live AdSense code is not worth the risk.
@@ -137,9 +206,11 @@
         ? renderPlaceholder(host, name)
         : config.provider === "direct"
           ? renderDirect(host, (config.slots || {})[name])
-          : config.provider === "adsense"
-            ? renderAdSense(host, (config.slots || {})[name])
-            : false;
+          : config.provider === "adsterra"
+            ? renderAdsterra(host, (config.slots || {})[name])
+            : config.provider === "adsense"
+              ? renderAdSense(host, (config.slots || {})[name])
+              : false;
       if (rendered && isAnchor) addAnchorDismiss(host);
       host.hidden = !rendered;
       // An unfilled anchor would otherwise hold a fixed strip of empty page.

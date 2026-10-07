@@ -57,7 +57,7 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
     convert: document.querySelectorAll("#dgBody #dgConvert, #dgBody #dgConvertAll").length,
     raceCarBtns: document.querySelectorAll("#dgBody [data-racecar]").length,
   }));
-  if (g.cars < 8 || g.tuning !== 4 || g.tracks < 6 || g.themes !== 5 || g.modes !== 2 || g.cams !== 2) throw new Error("garage sections missing: " + JSON.stringify(g));
+  if (g.cars < 8 || g.tuning !== 4 || g.tracks < 6 || g.themes !== 5 || g.modes !== 2 || g.cams !== 3) throw new Error("garage sections missing: " + JSON.stringify(g));
   if (g.finishes !== 5 || g.kits !== 3 || g.wings !== 4 || g.decals !== 5 || g.wheelColors !== 5 || g.convert !== 2 || g.raceCarBtns < 1) throw new Error("customization controls missing: " + JSON.stringify(g));
 
   // Customize: paint, finish, wheels, kit, decal, number, handling, theme, race mode.

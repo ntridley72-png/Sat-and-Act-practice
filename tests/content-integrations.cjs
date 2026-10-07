@@ -14,10 +14,17 @@ for (const expected of [
   'class="noscript-summary"',
   'id="how-it-works"',
   'defer src="app.js"',
-  'ca-pub-7330416749956065',
+  'provider:"adsterra"',
   'data-ad-slot="home-sidebar"',
 ]) {
   if (!html.includes(expected)) throw new Error("missing integration marker: " + expected);
+}
+const seoCommon = fs.readFileSync("scripts/seo_common.py", "utf8");
+for (const expected of [
+  'bauval.org/21/ba6d22b48d5d42c6cd1add3ad5e6c681',
+  'container-ba6d22b48d5d42c6cd1add3ad5e6c681',
+]) {
+  if (!seoCommon.includes(expected)) throw new Error("generated-page ad config drifted: " + expected);
 }
 for (const expected of ['data-ad-slot="arcade-menu"', 'key: "dirtbike"']) {
   if (!(html + appJs).includes(expected)) throw new Error("missing app integration marker: " + expected);
@@ -36,4 +43,4 @@ vm.runInContext(fs.readFileSync("college-data.js", "utf8"), sandbox);
 const colleges = sandbox.window.COLLEGE_DATA.colleges;
 const attributed = colleges.filter((college) => Array.isArray(college.imgs) && college.imgs.every((photo) => photo.u && photo.a && photo.l));
 if (attributed.length && attributed.some((college) => college.imgs.length > 3)) throw new Error("gallery exceeds three images");
-console.log("PASS: SEO, AdSense publisher, controlled slots, dirt-bike registration, and attributed college galleries are present (" + attributed.length + "/" + colleges.length + " galleries cached)." );
+console.log("PASS: SEO, Adsterra units, controlled slots, dirt-bike registration, and attributed college galleries are present (" + attributed.length + "/" + colleges.length + " galleries cached)." );

@@ -8,3 +8,5 @@ scripts/__pycache__/
 logs/
 .claude/
 .DS_Store
+temporal/node_modules/
+.refs/

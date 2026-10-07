@@ -118,3 +118,16 @@ Useful sources:
 | 2026-10-06 16:44 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
 | 2026-10-06 17:06 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
 | 2026-10-06 17:16 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-07 04:54 EDT | OpenCode | `deepseek/deepseek-flash` | work | timed_out | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-07 05:53 EDT | OpenCode | `deepseek/deepseek-flash` | work | timed_out | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-07 05:56 EDT | `q-20261007-055615` | codex | `gpt-5.6-sol` | reviewer | completed | 22244 | subscription/unavailable |
+| 2026-10-07 05:57 EDT | `q-20261007-055615` | claude | `claude-opus-5` | reviewer | completed | 3987 | $0.387088 |
+| 2026-10-07 06:00 EDT | `q-20261007-045404` | codex | `gpt-5.6-sol` | reviewer | completed | 121569 | subscription/unavailable |
+| 2026-10-07 06:00 EDT | `q-20261007-053406` | codex | `gpt-5.6-sol` | designer | completed | 193425 | subscription/unavailable |
+| 2026-10-07 06:00 EDT | `q-20261007-055225` | codex | `gpt-5.6-sol` | reviewer | completed | 253047 | subscription/unavailable |
+| 2026-10-07 06:00 EDT | `q-20261007-045500` | claude | `claude-opus-5` | designer | completed | 11786 | subscription/unavailable |
+| 2026-10-07 06:00 EDT | `q-20261007-051300` | claude | `claude-opus-5` | designer | completed | 50767 | subscription/unavailable |
+| 2026-10-07 06:00 EDT | `q-20261007-053700` | claude | `claude-opus-5` | designer | failed | 2534 | subscription/unavailable |
+| 2026-10-07 06:00 EDT | `q-20261007-054000` | claude | `claude-opus-5` | designer | completed | 30531 | subscription/unavailable |
+| 2026-10-07 06:00 EDT | `q-20261007-042600` | codex | `gpt-5.6-sol` | designer | completed | 0 | subscription/unavailable |
+| 2026-10-07 06:00 EDT | `q-20261007-042700` | claude | `claude-opus-5` | designer | completed | 0 | subscription/unavailable |

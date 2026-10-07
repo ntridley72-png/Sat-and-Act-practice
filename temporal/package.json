@@ -1,0 +1,16 @@
+{
+  "name": "funsat-temporal",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Temporal workflows for FunSAT operations (SEO indexing checks and IndexNow submission).",
+  "scripts": {
+    "worker": "node worker.js",
+    "run": "node client.js run",
+    "schedule": "node client.js schedule",
+    "schedules": "node client.js schedules"
+  },
+  "dependencies": {
+    "@temporalio/client": "^1.24.0",
+    "@temporalio/worker": "^1.24.0"
+  }
+}

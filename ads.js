@@ -5,6 +5,7 @@
 
   function renderDirect(host, creative) {
     if (!creative || !creative.href || !creative.label) return false;
+    if (creativeIsUnsafe(creative)) return false;
     const link = document.createElement("a");
     link.className = "sponsor-creative";
     link.href = creative.href;
@@ -216,6 +217,74 @@
     host.appendChild(close);
   }
 
+  // Family-safe filter. The ad network's own category blocks (Dating, Adult)
+  // are the primary defense and are configured in the Adsterra dashboard; this
+  // scanner is the second line for anything injected into our own DOM (native
+  // widget, direct creatives) and for link/image targets we can still read.
+  // Sandboxed iframes are cross-origin by design, so their inner text cannot be
+  // inspected — that is why the dashboard block matters.
+  const FLIRTY = /\b(dating|flirt[a-z]*|hookup|hook-up|singles|milf|horny|webcam[s]?|camgirl[s]?|escort[a-z]*|sugar\s?bab[a-z]*|naughty|xxx+|porn[a-z]*|sexy|adult\s?dating|meet\s?(women|girls|singles)|local\s?(women|singles)|hot\s?(girls|singles|women))\b/i;
+  // URL-safe: matches the term only between non-letters, so "updating" and
+  // "validating" are not blocked as "dating".
+  const BLOCKED_HOSTS = /(^|[^a-z])(dating|flirt[a-z]*|hookup|escort[a-z]*|milf|xxx+|porn[a-z]*|camgirl[s]?|webcam[s]?)([^a-z]|$)/i;
+
+  function urlIsUnsafe(url) { return BLOCKED_HOSTS.test(String(url || "")); }
+
+  function elementIsUnsafe(el) {
+    const tag = el.tagName;
+    if (tag === "IMG") return FLIRTY.test(el.alt || "") || urlIsUnsafe(el.src);
+    if (tag === "A") return FLIRTY.test((el.textContent || "").slice(0, 240)) || urlIsUnsafe(el.href);
+    if (tag === "IFRAME") return urlIsUnsafe(el.src);
+    return false;
+  }
+
+  function violateAd(container, host) {
+    try { console.info("[funsat ads] hid a listing that failed the family-safe filter"); } catch (error) {}
+    // Clear the whole creative, not just the offending line: partial ads look
+    // broken, and the widget can refill on the next mount.
+    container.textContent = "";
+    if (host) host.hidden = true;
+    return true;
+  }
+
+  function sweepContainer(container, host) {
+    if (!container || !container.isConnected) return false;
+    // Text is scanned as leaf text nodes only: reading textContent on a wrapper
+    // would include every descendant and let one stray word nuke a whole unit.
+    if (typeof document.createTreeWalker === "function" && typeof NodeFilter !== "undefined") {
+      const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+      let node = walker.nextNode();
+      while (node) {
+        if (FLIRTY.test((node.textContent || "").slice(0, 240))) return violateAd(container, host);
+        node = walker.nextNode();
+      }
+    }
+    const els = container.querySelectorAll("img, a, iframe");
+    for (const el of els) if (elementIsUnsafe(el)) return violateAd(container, host);
+    return false;
+  }
+
+  function watchForUnsafeListings(host) {
+    const container = host.querySelector('[id^="container-"]') || host.querySelector("div");
+    if (!container) return;
+    let stopped = false;
+    const check = () => { if (!stopped && sweepContainer(container, host)) stopped = true; };
+    check();
+    // Ad widgets fill asynchronously, so keep checking after each fill wave.
+    setTimeout(check, 1600);
+    setTimeout(check, 4500);
+    if (typeof MutationObserver === "function") {
+      const mo = new MutationObserver(() => check());
+      mo.observe(container, { childList: true, subtree: true });
+      setTimeout(() => mo.disconnect(), 20000);
+    }
+  }
+
+  function creativeIsUnsafe(creative) {
+    if (!creative) return false;
+    return FLIRTY.test(String(creative.label || "")) || FLIRTY.test(String(creative.alt || "")) || urlIsUnsafe(creative.href) || urlIsUnsafe(creative.image);
+  }
+
   function mount() {
     document.querySelectorAll("[data-ad-slot]").forEach((host) => {
       if (host.dataset.adMounted) return;
@@ -246,6 +315,9 @@
               : false;
       if (rendered && isAnchor) addAnchorDismiss(host);
       host.hidden = !rendered;
+      // After the hidden state is final, or a synchronous block would be
+      // overwritten by the show above.
+      if (rendered && !PREVIEW) watchForUnsafeListings(host);
       // An unfilled anchor would otherwise hold a fixed strip of empty page.
       if (!rendered && isAnchor) host.remove();
     });
@@ -267,6 +339,9 @@
   }
 
   window.FunSatAds = { mount, setPracticeMode };
+  if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+    window.FunSatAds.__test = { elementIsUnsafe, creativeIsUnsafe, sweepContainer, watchForUnsafeListings, urlIsUnsafe };
+  }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount);
   else mount();
   new MutationObserver(() => {

@@ -3,6 +3,7 @@ const vm = require("node:vm");
 
 const html = fs.readFileSync("SAT & ACT Practice.html", "utf8");
 const appJs = fs.readFileSync("app.js", "utf8");
+const adsJs = fs.readFileSync("ads.js", "utf8");
 for (const expected of [
   'rel="canonical" href="https://funsat.bid/"',
   'name="google-site-verification" content="QoHkKWsV4WZOxC4SV3R6w-XlKf_X5HWzQuABaDQNgVI"',
@@ -29,6 +30,9 @@ for (const expected of [
   '4e48d9998406ce142c41865c66a4325',
 ]) {
   if (!seoCommon.includes(expected)) throw new Error("generated-page ad config drifted: " + expected);
+}
+for (const expected of ["FLIRTY", "watchForUnsafeListings", "family-safe filter"]) {
+  if (!adsJs.includes(expected)) throw new Error("family-safe ad filter missing: " + expected);
 }
 for (const expected of ['data-ad-slot="arcade-menu"', 'key: "dirtbike"']) {
   if (!(html + appJs).includes(expected)) throw new Error("missing app integration marker: " + expected);

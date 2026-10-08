@@ -223,7 +223,7 @@
   // widget, direct creatives) and for link/image targets we can still read.
   // Sandboxed iframes are cross-origin by design, so their inner text cannot be
   // inspected — that is why the dashboard block matters.
-  const FLIRTY = /\b(dating|flirt[a-z]*|hookup|hook-up|singles|milf|horny|webcam[s]?|camgirl[s]?|escort[a-z]*|sugar\s?bab[a-z]*|naughty|xxx+|porn[a-z]*|sexy|adult\s?dating|meet\s?(women|girls|singles)|local\s?(women|singles)|hot\s?(girls|singles|women))\b/i;
+  const FLIRTY = /\b(dating|flirt[a-z]*|hookup|hook-up|singles|milf|horny|webcam[s]?|camgirl[s]?|escort[a-z]*|sugar\s?(bab[a-z]*|daddy|mama)|naughty|xxx+|porn[a-z]*|sexy|lonely|she\s+is\s+waiting|waiting\s+for\s+you|wants?\s+to\s+meet|meet\s+(me|you|tonight|women|girls|singles|local)|near\s+you|no\s+strings|casual\s+(fun|dating|encounter)|come\s+(over|see\s+me)|bad\s+girl[s]?|onlyfans|nsfw|lingerie|fetish|booty|bdsm|adult\s?dating|local\s?(women|singles|girls)|hot\s?(girls|singles|women)|single\s?(girls|women|ladies|moms))\b/i;
   // URL-safe: matches the term only between non-letters, so "updating" and
   // "validating" are not blocked as "dating".
   const BLOCKED_HOSTS = /(^|[^a-z])(dating|flirt[a-z]*|hookup|escort[a-z]*|milf|xxx+|porn[a-z]*|camgirl[s]?|webcam[s]?)([^a-z]|$)/i;

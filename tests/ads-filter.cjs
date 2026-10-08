@@ -24,6 +24,10 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
     const img = (alt, src) => { const i = document.createElement("img"); i.alt = alt; i.src = src; return i; };
     return {
       flirtyText: t.elementIsUnsafe(anchor("Meet local singles tonight", "https://example.com")),
+      lonelyTonight: t.elementIsUnsafe(anchor("She is lonely tonight", "https://example.com")),
+      waitingForYou: t.elementIsUnsafe(anchor("Someone is waiting for you", "https://example.com")),
+      nearYou: t.elementIsUnsafe(anchor("Singles near you", "https://example.com")),
+      enrollTonight: t.elementIsUnsafe(anchor("Enroll tonight for fall classes", "https://example.com")),
       flirtyHref: t.elementIsUnsafe(anchor("Learn more", "https://hookup.example.com/x")),
       updatingHref: t.elementIsUnsafe(anchor("Learn more", "https://cdn.example.com/assets/updating/banner.png")),
       validatingHref: t.elementIsUnsafe(anchor("Learn more", "https://cdn.example.com/validating/")),
@@ -38,6 +42,10 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
 
   const expect = (name, got, want) => { if (got !== want) throw new Error(name + " expected " + want + " got " + got); };
   expect("flirtyText", pred.flirtyText, true);
+  expect("lonelyTonight", pred.lonelyTonight, true);
+  expect("waitingForYou", pred.waitingForYou, true);
+  expect("nearYou", pred.nearYou, true);
+  expect("enrollTonight (no false positive on plain 'tonight')", pred.enrollTonight, false);
   expect("flirtyHref", pred.flirtyHref, true);
   expect("updatingHref (no false positive)", pred.updatingHref, false);
   expect("validatingHref (no false positive)", pred.validatingHref, false);

@@ -13,7 +13,7 @@
     rigor: { ap: 0, ib: 0, honors: 0, dual: 0 }, major: "", activities: [],
     firstGen: false, hardship: false, working: false, caregiving: false, circumstanceOther: "",
     applyPlan: "regular", appStrength: "average",
-    saved: [], targetMode: "p75", customTarget: null, panelHeight: 470, query: "", filter: "all",
+    saved: [], targetMode: "p75", customTarget: null, panelHeight: 470, query: "", filter: "all", homeState: "",
   };
   function cp() {
     if (!profile.college || typeof profile.college !== "object" || Array.isArray(profile.college)) profile.college = {};
@@ -821,25 +821,143 @@
       '<button type="button" class="secondary" id="collegeClearSaved">Clear saved colleges</button></div>';
   }
 
+  // ---- Comparison screen (Oct 2026 mockup): score rail + card list ---- //
+  const ccState = { fit: "all", inState: false, publicOnly: false, testOpt: false, sort: "fit", drawerOpen: false };
+  const SLUGS = (() => {
+    const slugifyClient = (t) => String(t).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase().replace(/-{2,}/g, "-");
+    const counts = {};
+    COLLEGES.forEach((c) => { const b = slugifyClient(c.n); counts[b] = (counts[b] || 0) + 1; });
+    const seen = new Set(), map = new Map();
+    COLLEGES.forEach((c) => {
+      const base = slugifyClient(c.n);
+      let slug = counts[base] === 1 ? base : base + "-" + String(c.st || "").toLowerCase();
+      while (seen.has(slug)) slug = slug + "-" + c.id;
+      seen.add(slug);
+      map.set(c.id, slug);
+    });
+    return map;
+  })();
+  function ccYou() { const c = cp(); const we = window.FunSATRedesign; const sat = c.sat != null && c.sat >= 400 ? c.sat : c.act != null ? satFromAct(c.act) : null; return sat; }
+  function ccVerdict(est) {
+    const fit = fitOf(est.estimate);
+    const label = fit.key === "safety" ? "Likely" : fit.label;
+    return { key: fit.key === "safety" ? "likely" : fit.key, label };
+  }
+  function ccBarHtml(lo, hi, you, label) {
+    if (lo == null || hi == null) return "";
+    const pad = Math.max(40, (hi - lo) * 0.9), min = Math.min(lo - pad, you != null ? you - 20 : lo - pad), max = Math.max(hi + pad, you != null ? you + 20 : hi + pad);
+    const at = (v) => Math.max(0, Math.min(100, ((v - min) / (max - min)) * 100));
+    return '<div class="cc-bar" role="img" aria-label="' + escapeHtml(label || (lo + " to " + hi)) + '">' +
+      '<div class="cc-track"><span class="cc-band" style="left:' + at(lo).toFixed(1) + '%;width:' + Math.max(2, at(hi) - at(lo)).toFixed(1) + '%"></span>' +
+      (you != null ? '<span class="cc-marker" style="left:' + at(you).toFixed(1) + '%"></span>' : "") + "</div>" +
+      '<div class="cc-scale"><span>' + lo + "</span><span>" + hi + "</span></div></div>";
+  }
+  function ccWhere(est, you) {
+    if (isTestBlind(est.college || {})) return "Test-blind: scores aren't considered";
+    if (you == null || !est.range) return "";
+    if (you >= est.range.hi) return "Above their typical range";
+    if (you <= est.range.lo) return "Below their typical range";
+    return "Right in their range";
+  }
+  function ccCardHtml(college) {
+    let est; try { est = estimateCollege(college); } catch (e) { est = { estimate: 0.3, range: null, testType: "sat" }; }
+    const v = ccVerdict(est), you = ccYou();
+    const r = est.range;
+    const gap = (v.key === "reach" && r && you != null && you < r.lo) ? Math.max(10, Math.round((r.lo - you) / 10) * 10) : null;
+    const where = ccWhere(est, you);
+    const sub = [college.st, college.ctrl === "public" ? "public" : "private", college.adm != null ? Math.round(college.adm) + "% admit rate" : null].filter(Boolean).join(" · ");
+    return '<div class="cc-card" data-cc-id="' + college.id + '">' +
+      '<a class="cc-link" href="/colleges/' + SLUGS.get(college.id) + '/" aria-label="' + escapeHtml(college.n) + ' info page">' +
+      '<div class="cc-card-head"><h3>' + escapeHtml(college.n) + '</h3><span class="cc-verdict v-' + v.key + '">' + v.label + "</span></div>" +
+      '<p class="cc-sub">' + escapeHtml(sub) + "</p>" +
+      ccBarHtml(r ? r.lo : null, r ? r.hi : null, you, college.n + " " + (est.testType === "act" ? "ACT" : "SAT") + " range " + (r ? r.lo + " to " + r.hi : "not reported") + (you != null ? ", you " + you : "")) +
+      '<div class="cc-where"><span>' + (r ? "middle 50%: " + r.lo + "–" + r.hi : "range not reported") + (you != null ? " · you: " + you : "") + '</span><span>' + escapeHtml(where) + (gap != null ? " · " + gap + " points (~" + Math.max(2, Math.round(gap / 20) * 10) + " per section)" : "") + "</span></div></a>" +
+      '<button type="button" class="cc-remove" data-cc-remove="' + college.id + '" aria-label="Remove ' + escapeHtml(college.n) + ' from your list">✕</button></div>';
+  }
+  function ccSummaryHtml(rows, you) {
+    if (!rows.length) return "";
+    const los = rows.map((c) => { try { return estimateCollege(c).range ? estimateCollege(c).range.lo : null; } catch (e) { return null; } }).filter((v) => v != null);
+    const his = rows.map((c) => { try { return estimateCollege(c).range ? estimateCollege(c).range.hi : null; } catch (e) { return null; } }).filter((v) => v != null);
+    if (!los.length || !his.length) return "";
+    const lo = Math.min.apply(null, los), hi = Math.max.apply(null, his);
+    const pad = Math.max(60, (hi - lo) * .35), min = Math.min(lo - pad, you != null ? you - 30 : lo - pad), max = Math.max(hi + pad, you != null ? you + 30 : hi + pad);
+    const at = (v) => Math.max(0, Math.min(100, ((v - min) / (max - min)) * 100));
+    return '<div class="cc-summary"><p class="cc-summary-label">' + (you != null ? "Where " + you + " lands across your list" : "Where your list's ranges sit") + "</p>" +
+      '<div class="cc-track big" role="img" aria-label="' + (you != null ? "Your score " + you + " across " + rows.length + " colleges, ranges from " + lo + " to " + hi : "Ranges across " + rows.length + " colleges, " + lo + " to " + hi) + '">' +
+      '<span class="cc-band" style="left:' + at(lo).toFixed(1) + '%;width:' + Math.max(2, at(hi) - at(lo)).toFixed(1) + '%"></span>' +
+      (you != null ? '<span class="cc-marker" style="left:' + at(you).toFixed(1) + '%"><b>you: ' + you + "</b></span>" : "") + "</div>" +
+      '<div class="cc-scale"><span>' + min + "</span><span>" + max + "</span></div></div>";
+  }
+  function ccRailHtml() {
+    const c = cp();
+    const you = ccYou();
+    const pct = you != null && window.FunSATRedesign ? FunSATRedesign.satPercentile(you) : null;
+    const pred = (() => { try { const pr = predictScores(); return pr.sat && pr.sat.total ? pr.sat.total.point : null; } catch (e) { return null; } })();
+    const ring = (() => {
+      const size = 96, stroke = 7, r = (size - stroke * 1.6) / 2, circ = 2 * Math.PI * r;
+      const off = circ * (1 - (pct == null ? 0 : pct) / 100);
+      return '<div class="cc-ring"><svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + " " + size + '" role="img" aria-label="' + (pct == null ? "No score yet" : "estimated " + pct + "th percentile") + '"><circle class="cc-ring-track" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" stroke-width="1.6"/><circle class="cc-ring-prog" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" stroke-width="' + stroke + '" stroke-dasharray="' + circ.toFixed(1) + '" stroke-dashoffset="' + circ.toFixed(1) + '" data-cc-off="' + off.toFixed(1) + '"/></svg>' +
+        '<span class="cc-ring-lbl"><b>' + (pct == null ? "—" : pct) + "</b><i>pctl</i></span></div>";
+    })();
+    const states = ["", "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
+    return '<aside class="cc-rail">' +
+      '<div class="cc-score-card"><div class="cc-score-top">' + ring +
+      '<div class="cc-score-num"><b>' + (you != null ? you : "—") + '</b><span>' + (pct != null ? "SAT total · ahead of " + pct + "%" : "Add an SAT or ACT score") + "</span></div></div>" +
+      '<label class="cc-field">SAT total (400–1600)<input type="number" id="ccSat" min="400" max="1600" step="10" value="' + (c.sat != null ? c.sat : "") + '" placeholder="e.g., 1350"></label>' +
+      '<div class="cc-field-row"><label class="cc-field">GPA<input type="number" id="ccGpa" min="0" max="5" step="0.01" value="' + (c.gpa != null ? c.gpa : "") + '" placeholder="3.8"></label>' +
+      '<label class="cc-field">Grade<select id="ccGrade">' + ["9","10","11","12"].map((g) => '<option value="' + g + '"' + (String(c.grade) === g ? " selected" : "") + ">" + g + "</option>").join("") + "</select></label></div>" +
+      (pred != null ? '<button type="button" class="cc-pred" id="ccUsePredicted">Use my predicted score (' + pred + ")</button>" : "") +
+      "</div>" +
+      '<div class="cc-narrow"><h3>Narrow the list</h3>' +
+      '<p class="cc-narrow-lbl">Fit</p><div class="cc-fit-chips" role="group" aria-label="Filter by fit">' +
+      ["all", "reach", "target", "likely"].map((k) => '<button type="button" class="cc-fitb' + (ccState.fit === k ? " on" : "") + '" data-cc-fit="' + k + '" aria-pressed="' + (ccState.fit === k) + '">' + (k === "all" ? "All" : k.charAt(0).toUpperCase() + k.slice(1)) + "</button>").join("") + "</div>" +
+      '<p class="cc-narrow-lbl">State</p>' +
+      '<label class="cc-check"><input type="checkbox" data-cc-state="inState"' + (ccState.inState ? " checked" : "") + "><span>In-state only</span></label>" +
+      '<label class="cc-field cc-home"><span class="visually-hidden">Your state</span><select id="ccHomeState" aria-label="Your home state">' + states.map((st) => '<option value="' + st + '"' + (c.homeState === st ? " selected" : "") + ">" + (st || "Choose state") + "</option>").join("") + "</select></label>" +
+      '<label class="cc-check"><input type="checkbox" data-cc-state="publicOnly"' + (ccState.publicOnly ? " checked" : "") + "><span>Public</span></label>" +
+      '<label class="cc-check"><input type="checkbox" data-cc-state="testOpt"' + (ccState.testOpt ? " checked" : "") + "><span>Test-optional</span></label>" +
+      "</div></aside>";
+  }
+  function ccRows() {
+    const c = cp();
+    let rows = c.saved.map((id) => BY_ID.get(Number(id))).filter(Boolean);
+    if (ccState.inState && c.homeState) rows = rows.filter((x) => x.st === c.homeState);
+    if (ccState.publicOnly) rows = rows.filter((x) => x.ctrl === "public");
+    if (ccState.testOpt) rows = rows.filter((x) => String(x.test || "").toLowerCase().indexOf("optional") >= 0 || String(x.test || "").toLowerCase() === "not considered");
+    if (ccState.fit !== "all") rows = rows.filter((x) => { try { const est = estimateCollege(x); const v = ccVerdict(est).key; return v === ccState.fit || (ccState.fit === "likely" && v === "safety"); } catch (e) { return true; } });
+    if (ccState.sort === "name") rows = rows.slice().sort((a, b) => a.n.localeCompare(b.n));
+    else if (ccState.sort === "admit") rows = rows.slice().sort((a, b) => (a.adm == null ? 100 : a.adm) - (b.adm == null ? 100 : b.adm));
+    else rows = rows.slice().sort((a, b) => { try { return estimateCollege(b).estimate - estimateCollege(a).estimate; } catch (e) { return 0; } });
+    return rows;
+  }
+
   function renderCollegeScreen() {
     const host = $("collegeBody") || $("screen-college");
     if (!host) return;
     const c = cp();
+    const you = ccYou();
+    const rows = ccRows();
     host.innerHTML =
-      '<header class="st-head college-head"><div class="st-kicker">College score goals · data from the U.S. Department of Education</div>' +
-      '<h1>How do your scores compare?</h1>' +
-      '<p class="small muted">Search 300+ popular four-year colleges, set a score goal, and keep your profile in your account. Ranges describe enrolled students. The percentage is an unofficial planning estimate, not an admission prediction.</p>' +
+      '<header class="st-head college-head"><div class="st-kicker">College comparison · data from the U.S. Department of Education</div>' +
+      '<h1>How your scores compare</h1>' +
+      '<p class="small muted">Ranges describe enrolled students, not admitted applicants. Percentages are fit estimates, never admission predictions.</p>' +
       '<div class="college-top-actions"><button type="button" class="secondary" id="collegeBack">← Back</button><span class="small muted">' + escapeHtml(CD.meta.source || "") + " · release " + escapeHtml(CD.meta.release || "") + "</span></div></header>" +
-      profileHtml() +
-      '<div class="college-layout">' +
+      '<div class="cc-body">' + ccRailHtml() +
+      '<section class="cc-main" aria-label="Your college list">' +
+      '<div class="cc-list-head"><span class="cc-count">Your list · ' + rows.length + " college" + (rows.length === 1 ? "" : "s") + "</span>" +
+      '<label class="cc-sort">Sort<select id="ccSort"><option value="fit"' + (ccState.sort === "fit" ? " selected" : "") + '>best fit</option><option value="name"' + (ccState.sort === "name" ? " selected" : "") + '>name</option><option value="admit"' + (ccState.sort === "admit" ? " selected" : "") + '>admit rate</option></select></label>' +
+      '<button type="button" class="cc-add" id="ccAdd">Add a college</button></div>' +
+      (rows.length
+        ? ccSummaryHtml(rows, you) + '<div class="cc-cards">' + rows.map(ccCardHtml).join("") + "</div>"
+        : '<div class="schl-empty"><h3>Your list is empty</h3><p class="small muted">Add colleges to compare their reported ranges with your score.</p><button type="button" class="secondary" id="ccAddEmpty">Add a college</button></div>') +
+      "</section></div>" +
+      '<div class="cc-drawer" id="ccSearchDrawer"' + (ccState.drawerOpen ? "" : " hidden") + '>' +
       '<section class="college-find"><h3>Find colleges</h3>' +
       '<div class="college-search"><label for="collegeQuery">Search by name, abbreviation, or state</label><input type="search" id="collegeQuery" value="' + escapeHtml(c.query || "") + '" placeholder="e.g., UCLA, engineering, or Ohio" autocomplete="off"></div>' +
-      '<div class="college-filters" role="group" aria-label="College filters"><button type="button" class="secondary' + (c.filter === "all" ? " on" : "") + '" data-filter="all">All</button><button type="button" class="secondary' + (c.filter === "public" ? " on" : "") + '" data-filter="public">Public</button><button type="button" class="secondary' + (c.filter === "private" ? " on" : "") + '" data-filter="private">Private</button><button type="button" class="secondary' + (c.filter === "saved" ? " on" : "") + '" data-filter="saved">Saved (' + c.saved.length + ")</button></div>" +
-      '<div id="collegeResults">' + resultsHtml() + "</div></section>" +
+      '<div id="collegeResults">' + resultsHtml() + "</div></section></div>" +
       '<div id="collegeDetailHost"' + (selectedCollege() ? ' class="as-popup" role="dialog" aria-modal="true" aria-label="' + escapeHtml(selectedCollege().n) + '"><div class="cpop-box"><button type="button" class="cpop-close" data-close-detail aria-label="Close">✕</button>' + detailHtml() + "</div>" : ">") + "</div>" +
-      "</div>" + compareHtml() +
-      '<p class="small muted college-foot">Fun fact: Curtis Institute of Music admits roughly 3–4% of applicants in a typical year — about the same as (or lower than) Harvard’s, in a class of fewer than 200 students.</p>' +
-      '<p class="small muted college-foot">College data: <a href="' + escapeHtml(CD.meta.sourceUrl || "https://collegescorecard.ed.gov/data/") + '" target="_blank" rel="noopener">College Scorecard</a>, ' + escapeHtml(CD.meta.release || "") + ". " + escapeHtml(CD.meta.note || "") + ' The admissions estimate is an original app model and is not affiliated with any college. <a href="https://www.act.org/content/act/en/products-and-services/the-act/scores/act-sat-concordance.html" target="_blank" rel="noopener">Official ACT/SAT concordance</a>.</p>';
+      '<div class="cc-profilewrap">' + profileHtml() + "</div>" +
+      '<p class="small muted college-foot">Source: <a href="' + escapeHtml(CD.meta.sourceUrl || "https://collegescorecard.ed.gov/data/") + '" target="_blank" rel="noopener">U.S. Department of Education, College Scorecard</a> · ' + escapeHtml(CD.meta.release || "") + ". " + escapeHtml(CD.meta.note || "") + " Verify current figures with each college before relying on them. Fit labels are an original app estimate, not admission predictions, and are not affiliated with any college. <a href=\"https://www.act.org/content/act/en/products-and-services/the-act/scores/act-sat-concordance.html\" target=\"_blank\" rel=\"noopener\">Official ACT/SAT concordance</a>.</p>";
     wireCollege();
     applyPanelSize();
     if (window.FunSatAds) window.FunSatAds.mount();
@@ -990,6 +1108,30 @@
   }
 
   // Expose a few helpers for tests and other screens.
+  // Comparison-screen controls: rail inputs, fit/state filters, remove, add-drawer.
+  document.addEventListener("change", (e) => {
+    if (!e.target || !e.target.closest || !e.target.closest("#screen-college")) return;
+    if (e.target.id === "ccSat") { const v = Number(e.target.value); cp().sat = (v >= 400 && v <= 1600 && e.target.value !== "") ? v : null; saveCollege(); renderCollegeScreen(); return; }
+    if (e.target.id === "ccGpa") { const v = Number(e.target.value); cp().gpa = (e.target.value !== "" && v >= 0 && v <= 5) ? v : null; cp().gpaScale = "4uw"; saveCollege(); renderCollegeScreen(); return; }
+    if (e.target.id === "ccGrade") { cp().grade = e.target.value; saveCollege(); renderCollegeScreen(); return; }
+    if (e.target.id === "ccHomeState") { cp().homeState = e.target.value; saveCollege(); renderCollegeScreen(); return; }
+    if (e.target.id === "ccSort") { ccState.sort = e.target.value; renderCollegeScreen(); return; }
+    const st = e.target.closest("[data-cc-state]");
+    if (st) { ccState[st.dataset.ccState] = !!st.checked; renderCollegeScreen(); return; }
+  });
+  document.addEventListener("click", (e) => {
+    if (!e.target || !e.target.closest || !e.target.closest("#screen-college")) return;
+    const rm = e.target.closest("[data-cc-remove]");
+    if (rm) { e.preventDefault(); e.stopPropagation(); const c2 = cp(); const i = c2.saved.map(Number).indexOf(Number(rm.dataset.ccRemove)); if (i >= 0) c2.saved.splice(i, 1); saveCollege(); renderCollegeScreen(); return; }
+    const fitb = e.target.closest("[data-cc-fit]");
+    if (fitb) { e.preventDefault(); ccState.fit = fitb.dataset.ccFit; renderCollegeScreen(); return; }
+    if (e.target.closest("#ccAdd") || e.target.closest("#ccAddEmpty")) { e.preventDefault(); ccState.drawerOpen = !ccState.drawerOpen; const d = $("ccSearchDrawer"); if (d) { d.hidden = !ccState.drawerOpen; const q = $("collegeQuery"); if (q && ccState.drawerOpen) q.focus(); } return; }
+    if (e.target.closest("#ccUsePredicted")) {
+      e.preventDefault();
+      try { const pr = predictScores(); const pt = pr.sat && pr.sat.total ? pr.sat.total.point : null; if (pt) { cp().sat = pt; saveCollege(); renderCollegeScreen(); } } catch (err) {}
+      return;
+    }
+  });
   window.collegeFeature = {
     estimateCollege, selectCollege, OUTCOME_COLORS, chanceAddResultsHtml, isTestBlind, NATIONAL_BY_GRADE, open: null, filteredColleges, concordance: { satFromAct, actFromSat },
     unansweredReminder, meta: CD.meta, count: COLLEGES.length,

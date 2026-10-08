@@ -23,6 +23,7 @@ const SHOTS = path.join(ROOT, "tests", "screenshots");
   // Open college feature from the top bar.
   await page.click("#btnCollege");
   await page.waitForSelector("#screen-college", { state: "visible" });
+  await page.click("#ccAdd");
   const rowCount = await page.locator(".college-row").count();
   if (rowCount < 20) throw new Error("expected 300+ college dataset results, saw " + rowCount + " rows rendered");
 
@@ -44,10 +45,32 @@ const SHOTS = path.join(ROOT, "tests", "screenshots");
   await page.click(".college-row-main");
   await page.waitForSelector(".college-detail .college-pie");
   await page.click(".college-detail [data-save]");
-  await page.waitForSelector(".college-compare table");
+  await page.waitForSelector(".cc-card");
+  if ((await page.locator(".cc-card").count()) < 2) throw new Error("saved colleges did not render as comparison cards");
+
+  await page.click("[data-close-detail]").catch(() => {});
+  await page.waitForTimeout(250);
+  // The X removes a card without navigating; the card link navigates to /colleges/<slug>/.
+  const before = await page.locator(".cc-card").count();
+  const urlBefore = page.url();
+  await page.locator(".cc-card .cc-remove").first().click();
+  await page.waitForTimeout(250);
+  const after = await page.locator(".cc-card").count();
+  if (after !== before - 1) throw new Error("X did not remove a card from the list");
+  if (page.url() !== urlBefore) throw new Error("X unexpectedly navigated away");
+  await page.route("**/colleges/**", (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<title>college stub</title>" }));
+  const href = await page.locator(".cc-card .cc-link").first().getAttribute("href");
+  if (!/^\/colleges\/[a-z0-9-]+\/$/.test(href)) throw new Error("card link is not a /colleges/<slug>/ URL: " + href);
+  await page.locator(".cc-card .cc-link").first().click();
+  await page.waitForTimeout(400);
+  if (!/\/colleges\//.test(page.url())) throw new Error("card click did not navigate to the college page: " + page.url());
+  await page.goto(BASE + PAGE_PATH, { waitUntil: "domcontentloaded" });
+  await page.waitForSelector("body[data-workspace]");
+  await page.click("#btnCollege");
+  await page.waitForSelector("#screen-college", { state: "visible" });
 
   // The current detail view is a responsive modal; close it before changing layouts.
-  await page.click("[data-close-detail]");
+  await page.click("[data-close-detail]").catch(() => {});
 
   // Themes: screenshot the college screen in each layout.
   fs.mkdirSync(SHOTS, { recursive: true });
@@ -78,6 +101,7 @@ const SHOTS = path.join(ROOT, "tests", "screenshots");
   // College photos: a data-backed college renders a styled, lazy campus photo with attribution, and broken images hide themselves.
   await page.click("#btnCollege");
   await page.waitForSelector("#screen-college", { state: "visible" });
+  await page.click("#ccAdd");
   await page.fill("#collegeQuery", "Auburn");
   await page.waitForTimeout(250);
   await page.locator('.college-row:has(.college-name:text-is("Auburn University")) .college-row-main').click();

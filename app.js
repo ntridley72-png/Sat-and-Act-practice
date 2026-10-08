@@ -1857,6 +1857,49 @@ function studyHelpHtml(q) {
     '<p class="small">Cover the explanation and describe why the correct answer works. Bookmark this question with ☆ to revisit it later.</p><button type="button" class="secondary" id="btnStudyDrill">Practice this topic</button></div>';
 }
 
+const qSelect = {};
+const stuckCache = {};
+function stuckOut(msg) { const el = document.getElementById("qfxStuckOut"); if (el) el.textContent = msg; }
+async function askStuck(q, mode) {
+  const key = q.id + ":" + mode;
+  if (stuckCache[key]) return stuckOut(stuckCache[key]);
+  const prompt = mode === "nudge"
+    ? "Give ONE short conceptual nudge (max 30 words) that points at the right method for this question WITHOUT naming, implying, or eliminating any choice and without giving the final value. Plain sentences only."
+    : "In ONE plain sentence (max 30 words), restate what this question is asking the student to find or decide. Do not solve it, do not mention any choice, and do not give any answer.";
+  stuckOut("Thinking…");
+  try {
+    const raw = await aiChat([
+      { role: "system", content: "You are a careful SAT/ACT tutor. Never reveal, hint at, or rank the correct choice; never state the final answer. Return ONLY JSON: {\"shortAnswer\": string, \"detailedSteps\": [], \"simpleSteps\": [], \"memoryTip\": \"\", \"equations\": [], \"verification\": \"\", \"nextPractice\": \"\" }. Put the requested one-liner in shortAnswer." },
+      { role: "user", content: prompt + "\nQuestion: " + q.q + "\nChoices: " + q.choices.map((c, i) => String.fromCharCode(65 + i) + ") " + c).join("  ") }
+    ], { teaching: true, noAnswer: true, correctLetter: String.fromCharCode(65 + q.ans) });
+    let structured = null;
+    try { structured = parseTutorResponse(raw, { noAnswer: true }); } catch (e) { structured = null; }
+    const line = structured && structured.shortAnswer ? String(structured.shortAnswer).trim() : String(raw || "").trim().slice(0, 220);
+    const safe = line || "Take it one step at a time: define exactly what the question asks, then look for the relationship that connects the given values.";
+    stuckCache[key] = safe;
+    stuckOut(safe);
+  } catch (e) {
+    stuckOut(aiErrorText(e));
+  }
+}
+function stuckFormula(q) {
+  const text = ((q.skill || "") + " " + (q.domain || "")).toLowerCase();
+  const SHEET = [
+    [["linear", "slope", "equation"], "Line: y = mx + b. Slope m = (y2 \u2212 y1)/(x2 \u2212 x1). Parallel lines share m; perpendicular slopes multiply to \u22121."],
+    [["system"], "Solve by substitution or elimination, then substitute back to check both equations."],
+    [["quadratic", "parabola"], "Quadratic: x = (\u2212b \u00b1 \u221ab\u00b2\u22124ac) / 2a. Vertex x = \u2212b/2a. Discriminant b\u00b2\u22124ac: >0 two roots, =0 one, <0 none."],
+    [["exponential", "growth", "decay"], "Exponential: y = a\u00b7b\u02e3. Growth b>1, decay 0<b<1. Percent change per period = (b\u22121)\u00d7100%."],
+    [["circle"], "Circle: (x\u2212h)\u00b2 + (y\u2212k)\u00b2 = r\u00b2 with center (h,k); area = \u03c0r\u00b2, circumference = 2\u03c0r."],
+    [["triangle", "trig", "sine", "cosine", "tangent"], "Right triangle: sin = opp/hyp, cos = adj/hyp, tan = opp/adj. Pythagorean: a\u00b2 + b\u00b2 = c\u00b2. Angles sum to 180\u00b0."],
+    [["percent", "ratio", "proportion"], "Percent change = (new \u2212 old)/old \u00d7 100%. Set proportions equal and cross-multiply."],
+    [["mean", "median", "average", "statistic"], "Mean = sum/count; median = middle value in order. For an even count, average the two middle values."],
+    [["volume", "cylinder", "sphere", "cone"], "Cylinder V = \u03c0r\u00b2h; sphere V = 4/3\u03c0r\u00b3; cone V = 1/3\u03c0r\u00b2h."],
+    [["standard english", "convention", "grammar", "punctuation"], "Comma splice \u2192 use a period, semicolon, or comma + conjunction. Semicolons join complete sentences; colons introduce lists or explanations. Match the subject to its verb."],
+    [["transition", "rhetoric", "idea"], "Check the relationship between sentences: contrast (however, yet), cause (therefore, thus), addition (moreover). The transition must match the logic, not the topic."],
+  ];
+  const hit = SHEET.find((row) => row[0].some((k) => text.indexOf(k) >= 0));
+  stuckOut(hit ? hit[1] : "Identify what changes between the choices \u2014 the tested rule is almost always the difference. Write the given values down and name the unknown.");
+}
 function renderQuestion() {
   const sec = curSection();
   const def = defByKey(state.cfg.testType, sec);
@@ -1888,6 +1931,11 @@ function renderQuestion() {
   document.body.classList.toggle("wide-test", split);
   const elims = (state.elims && state.elims[q.id]) || [];
   const flagged = !!(state.flags && state.flags[q.id]);
+  const picked = chosen == null ? qSelect[q.id] : null;
+  if (chosen != null && qSelect[q.id] != null) delete qSelect[q.id];
+  const coinLeftQ = QUESTIONS_PER_TOKEN - (profile.qSinceToken || 0);
+  const streakEl = $("qfxStreak");
+  if (streakEl) streakEl.innerHTML = sessionStreak >= 1 && chosen == null ? '<span class="qfx-streak-pill" role="status">\u25b2 ' + sessionStreak + ' in a row</span><span class="qfx-streak-note">' + (coinLeftQ === 1 ? "one more for a bonus token" : coinLeftQ + " more for +1 credit") + "</span>" : (chosen == null ? '<span class="qfx-streak-note">Every question earns arcade credit \u2014 streak bonuses stack up.</span>' : "");
   let html = "";
   if (plan.moduleOnly === "drill") {
     const st = domainStatsAny(state.keys, state.plan, state.answers);
@@ -1907,17 +1955,16 @@ function renderQuestion() {
   }
   if (split) html += '<div class="split"><div class="split-l"><div class="passage">' + escapeHtml(q.passage) + '</div></div><div class="split-r">';
   html += '<div class="bb-qhead"><span class="bb-num">' + (qi + 1) + '</span>' +
-    '<button type="button" class="bb-flag' + (flagged ? " on" : "") + '" id="btnFlag">' + (flagged ? "🔖 Marked for Review" : "🏷 Mark for Review") + '</button>' +
-    '<button type="button" class="bb-star' + ((profile.bookmarks || []).indexOf(q.id) >= 0 ? " on" : "") + '" id="btnStar" title="Save this question to retry later">' + ((profile.bookmarks || []).indexOf(q.id) >= 0 ? "⭐ Bookmarked" : "☆ Bookmark") + '</button>' +
-    '<button type="button" class="bb-abc' + (elimMode ? " on" : "") + '" id="btnElim" title="Answer eliminator: cross out choices you have ruled out">ABC</button></div>';
+    '<button type="button" class="bb-star' + ((profile.bookmarks || []).indexOf(q.id) >= 0 ? " on" : "") + '" id="btnStar" title="Save this question to retry later">' + ((profile.bookmarks || []).indexOf(q.id) >= 0 ? "Starred" : "Star") + '</button></div>';
   html += '<div class="qtext">' + escapeHtml(q.q) + "</div>";
   html += '<div class="choices">';
   q.choices.forEach((c, i) => {
     let cls = "choice";
     if (chosen != null) { cls += " dim"; if (i === q.ans) cls += " correct"; else if (i === chosen) cls += " wrong"; }
+    if (picked === i) cls += " sel";
     const struck = chosen == null && elims.indexOf(i) >= 0;
-    html += '<div class="choice-row' + (struck ? " struck" : "") + '"><button class="' + cls + '" data-choice="' + i + '"' + (chosen != null ? " disabled" : "") + '><span class="key">' + String.fromCharCode(65 + i) + "</span><span>" + escapeHtml(c) + "</span></button>" +
-      (elimMode && chosen == null ? '<button type="button" class="elim-btn" data-elim="' + i + '" title="' + (struck ? "Undo" : "Cross out " + String.fromCharCode(65 + i)) + '">' + (struck ? "Undo" : String.fromCharCode(65 + i)) + "</button>" : "") + "</div>";
+    html += '<div class="choice-row' + (struck ? " struck" : "") + '"><button class="' + cls + '" data-choice="' + i + '"' + (chosen != null ? " disabled" : "") + ' aria-pressed="' + (picked === i) + '"><span class="key">' + String.fromCharCode(65 + i) + "</span><span>" + escapeHtml(c) + "</span></button>" +
+      (elimMode && chosen == null ? '<button type="button" class="elim-btn" data-elim="' + i + '" aria-label="' + (struck ? "Undo cross-out for " : "Cross out ") + String.fromCharCode(65 + i) + '">' + (struck ? "Undo" : String.fromCharCode(65 + i)) + "</button>" : "") + "</div>";
   });
   html += "</div>";
   if (chosen == null) html += '<button class="idk-btn" id="btnIdk" type="button">🤷 I don\'t know — show me</button>';
@@ -1939,23 +1986,53 @@ function renderQuestion() {
   }
 
   if (chosen == null) html += coachHtml(q, chosen);
+  if (chosen == null) html += '<div class="qfx-stuck" id="qfxStuck"><div class="qfx-stuck-head"><span class="qfx-stuck-title"><span class="q" aria-hidden="true">?</span>Stuck?</span><span class="qfx-stuck-note" id="qfxStuckNote">answers stay hidden</span></div>' +
+    '<div class="qfx-stuck-btns">' +
+    '<button type="button" class="primary" id="btnStuckNudge" aria-describedby="qfxStuckNote">Nudge me</button>' +
+    '<button type="button" id="btnStuckAsk" aria-describedby="qfxStuckNote">What\'s it asking?</button>' +
+    '<button type="button" id="btnStuckFormula" aria-describedby="qfxStuckNote">Formula</button>' +
+    '</div><div class="qfx-stuck-out" id="qfxStuckOut" role="status" aria-live="polite"></div></div>';
   const isLast = qi === qids.length - 1;
   const btnLabel = def.adaptive && !plan.moduleOnly && isLast ? "Next Module" : isLast ? "Finish" : "Next";
   if (split) html += "</div></div>";
   const flags = state.flags || {};
-  const coinLeft = QUESTIONS_PER_TOKEN - (profile.qSinceToken || 0);
-  html += '<div class="bb-foot">' +
-    '<div class="bb-coin" title="Every ' + QUESTIONS_PER_TOKEN + ' questions = 1 credit">🪙 <span class="meter"><i style="width:' + Math.round(((profile.qSinceToken || 0) / QUESTIONS_PER_TOKEN) * 100) + '%"></i></span><span>' + coinLeft + " more for +1 credit</span></div>" +
-    '<div class="bb-navwrap"><button type="button" class="bb-navbtn" id="btnNavOpen">Question ' + (qi + 1) + " of " + qids.length + " ▴</button>" +
+  const coinLeft = coinLeftQ;
+  const navPop = '<div class="bb-navwrap"><button type="button" class="bb-navbtn" id="btnNavOpen">Question ' + (qi + 1) + " of " + qids.length + " ▴</button>" +
     '<div class="bb-pop" id="navPop"><div class="bb-pop-h">' + escapeHtml(title) + '</div><div class="bb-legend"><span><i class="lg cur"></i>Current</span><span><i class="lg"></i>Unanswered</span><span><i class="lg fl"></i>For review</span></div>' +
-    '<div class="bb-grid">' + qids.map((id, i) => '<button type="button" class="qdot' + (state.answers[id] != null ? " answered" : "") + (i === qi ? " current" : "") + (flags[id] ? " flagged" : "") + '" data-goto="' + i + '">' + (i + 1) + "</button>").join("") + "</div></div></div>" +
-    '<div class="bb-btns"><button id="btnPrev" class="secondary"' + (qi === 0 ? " disabled" : "") + ">Back</button>" +
-    '<button id="btnNext"' + (chosen == null ? " disabled" : "") + ">" + btnLabel + "</button></div></div>";
+    '<div class="bb-grid">' + qids.map((id, i) => '<button type="button" class="qdot' + (state.answers[id] != null ? " answered" : "") + (i === qi ? " current" : "") + (flags[id] ? " flagged" : "") + '" data-goto="' + i + '">' + (i + 1) + "</button>").join("") + "</div></div></div>";
+  if (chosen == null) {
+    html += '<div class="bb-foot">' +
+      '<div class="qfx-bar">' +
+      '<button type="button" class="qfx-icon' + (elimMode ? " on" : "") + '" id="btnElim" aria-label="Cross-out mode: cross out choices you have ruled out" aria-pressed="' + elimMode + '">\u2298</button>' +
+      '<button type="button" class="qfx-icon' + (flagged ? " on" : "") + '" id="btnFlag" aria-label="Mark this question for review" aria-pressed="' + flagged + '">\u2691</button>' +
+      '<button type="button" class="qfx-check" id="btnCheck"' + (picked == null ? " disabled" : "") + ">Check answer</button></div>" +
+      '<div class="bb-coin" title="Every ' + QUESTIONS_PER_TOKEN + ' questions = 1 credit">\ud83e\ude99 <span class="meter"><i style="width:' + Math.round(((profile.qSinceToken || 0) / QUESTIONS_PER_TOKEN) * 100) + '%"></i></span><span>' + coinLeft + " more for +1 credit</span>" + navPop + "</div>";
+  } else {
+    html += '<div class="bb-foot">' +
+      '<div class="bb-coin" title="Every ' + QUESTIONS_PER_TOKEN + ' questions = 1 credit">\ud83e\ude99 <span class="meter"><i style="width:' + Math.round(((profile.qSinceToken || 0) / QUESTIONS_PER_TOKEN) * 100) + '%"></i></span><span>' + coinLeft + " more for +1 credit</span></div>" +
+      navPop +
+      '<div class="bb-btns"><button id="btnPrev" class="secondary"' + (qi === 0 ? " disabled" : "") + ">Back</button>" +
+      '<button id="btnNext" class="qfx-check next">' + btnLabel + "</button></div></div>";
+  }
 
   $("questionCard").innerHTML = html;
   $("questionCard").querySelectorAll(".choice").forEach((b) => {
-    b.addEventListener("click", () => { handleAnswer(parseInt(b.dataset.choice, 10), b); });
+    b.addEventListener("click", () => {
+      const i = parseInt(b.dataset.choice, 10);
+      if (state.answers[q.id] != null) return;
+      qSelect[q.id] = qSelect[q.id] === i ? null : i;
+      renderQuestion();
+    });
   });
+  const chk = $("btnCheck"); if (chk) chk.addEventListener("click", () => {
+    const sel = qSelect[q.id];
+    if (sel == null) return;
+    const el = $("questionCard").querySelector('.choice[data-choice="' + sel + '"]');
+    handleAnswer(sel, el);
+  });
+  const nudge = $("btnStuckNudge"); if (nudge) nudge.addEventListener("click", () => askStuck(q, "nudge"));
+  const askBtn = $("btnStuckAsk"); if (askBtn) askBtn.addEventListener("click", () => askStuck(q, "asking"));
+  const formulaBtn = $("btnStuckFormula"); if (formulaBtn) formulaBtn.addEventListener("click", () => stuckFormula(q));
   markShown(q);
   highlighter.restore(q.id);
   highlighter.syncColors();
@@ -1993,6 +2070,23 @@ function renderQuestion() {
     }
     state.qi++; if (state.qi >= qids.length) advanceAfterModule(); else render(); });
   $("questionCard").querySelectorAll(".qdot").forEach((b) => { b.addEventListener("click", () => { state.qi = parseInt(b.dataset.goto, 10); save(); render(); }); });
+  if (!window.__qEnterBound) {
+    window.__qEnterBound = true;
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || state.view !== "test") return;
+      if (e.target && e.target.closest && e.target.closest("input,textarea,select,button")) return;
+      const qids2 = currentQids();
+      if (!qids2.length || state.qi >= qids2.length) return;
+      const q2 = byId(qids2[state.qi]);
+      if (!q2) return;
+      if (state.answers[q2.id] == null) {
+        if (qSelect[q2.id] != null) { e.preventDefault(); const c = $("btnCheck"); if (c && !c.disabled) c.click(); }
+        return;
+      }
+      const nx = $("btnNext");
+      if (nx && !nx.disabled) { e.preventDefault(); nx.click(); }
+    });
+  }
 }
 
 function handleAnswer(choice, btnEl) {

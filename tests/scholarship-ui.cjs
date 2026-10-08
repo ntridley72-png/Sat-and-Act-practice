@@ -23,61 +23,68 @@ const SHOTS = path.join(ROOT, "tests", "screenshots");
   await page.click("#btnScholarships");
   await page.waitForSelector("#screen-scholarships", { state: "visible" });
   if (!(await page.isVisible("#screen-scholarships"))) throw new Error("scholarship screen did not open from the top tile");
-  const total = await page.locator(".scholar-card").count();
+  const total = await page.locator(".schl-card").count();
   if (total < 45) throw new Error("expected at least 45 scholarships, saw " + total);
 
   await page.fill("#scholarQuery", "Gates");
   await page.waitForTimeout(150);
-  const gates = await page.locator(".scholar-name", { hasText: "The Gates Scholarship" }).count();
+  const gates = await page.locator(".schl-name", { hasText: "The Gates Scholarship" }).count();
   if (!gates) throw new Error("search did not find the Gates Scholarship");
   const countText = await page.textContent("#scholarCount");
-  if (!/match your search/.test(countText)) throw new Error("result count did not update during search: " + countText);
+  if (!/programs/.test(countText)) throw new Error("result count did not update during search: " + countText);
 
   await page.fill("#scholarQuery", "");
   await page.waitForTimeout(150);
-  await page.click('[data-scholar-tag="stem"]');
+  await page.click('#schlFilters [data-schl-tag="stem"]');
   await page.waitForTimeout(150);
-  const stemCount = await page.locator(".scholar-card").count();
-  if (stemCount < 3) throw new Error("STEM filter returned too few scholarships: " + stemCount);
-  const stemTags = await page.locator(".scholar-card .scholar-tag", { hasText: "STEM" }).count();
-  if (stemTags !== stemCount) throw new Error("a card under the STEM filter is missing its STEM tag");
+  const stemCount = await page.locator(".schl-card").count();
+  if (stemCount < 3 || stemCount >= total) throw new Error("STEM filter returned a suspicious count: " + stemCount);
 
-  const firstName = (await page.textContent(".scholar-card .scholar-name")).trim();
-  await page.click(".scholar-card [data-scholar-save]");
+  const firstName = (await page.textContent(".schl-card .schl-name")).trim();
+  await page.locator(".schl-card").first().click();
+  await page.waitForSelector("#schlDetail.open, .schl-detail .schl-name, #schlDetail", { timeout: 4000 }).catch(() => {});
+  await page.click("#schlDetail [data-scholar-save]");
   await page.waitForTimeout(120);
   const savedState = await page.evaluate(() => ({
     saved: (profile.scholarships && profile.scholarships.saved) || [],
-    label: document.querySelector(".scholar-card [data-scholar-save]").textContent,
+    pressed: document.querySelector("#schlDetail [data-scholar-save]").getAttribute("aria-pressed"),
   }));
-  if (savedState.saved.length !== 1 || !/Saved/.test(savedState.label)) throw new Error("saving a scholarship did not persist");
+  if (savedState.saved.length !== 1 || savedState.pressed !== "true") throw new Error("saving a scholarship did not persist");
 
-  await page.click("[data-scholar-reset]");
+  // A filter change must update the list without clearing the open detail pane.
+  await page.fill("#scholarQuery", "scholarship");
+  await page.waitForTimeout(200);
+  const detailStill = await page.textContent("#schlDetail");
+  if (!detailStill || detailStill.indexOf(firstName) < 0) throw new Error("detail pane lost its selection after a filter change");
+  await page.fill("#scholarQuery", "");
+
+  await page.click("#scholarReset");
   await page.waitForTimeout(150);
-  await page.click("[data-scholar-saved]");
+  await page.click("#schlMyList");
   await page.waitForTimeout(150);
-  const savedCards = await page.locator(".scholar-card").count();
+  const savedCards = await page.locator(".schl-card").count();
   if (savedCards !== 1) throw new Error("My list filter should show exactly 1 saved scholarship, saw " + savedCards);
-  const savedName = (await page.textContent(".scholar-card .scholar-name")).trim();
+  const savedName = (await page.textContent(".schl-card .schl-name")).trim();
   if (savedName !== firstName) throw new Error("My list showed the wrong scholarship: " + savedName);
 
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForSelector("body[data-workspace]");
   await page.click("#btnScholarships");
   await page.waitForSelector("#screen-scholarships", { state: "visible" });
-  const chipLabel = await page.textContent("[data-scholar-saved]");
+  const chipLabel = await page.textContent("#schlMyList");
   if (!/My list \(1\)/.test(chipLabel)) throw new Error("saved scholarship did not survive a reload: " + chipLabel);
 
   await page.fill("#scholarQuery", "zzzzzz-no-match");
   await page.waitForTimeout(150);
-  if (!(await page.isVisible(".scholar-empty"))) throw new Error("empty state did not render for a no-match search");
+  if (!(await page.isVisible(".schl-empty"))) throw new Error("empty state did not render for a no-match search");
   await page.click("#scholarResetEmpty");
   await page.waitForTimeout(150);
-  const resetCount = await page.locator(".scholar-card").count();
+  const resetCount = await page.locator(".schl-card").count();
   if (resetCount !== total) throw new Error("reset from the empty state did not restore the full list");
 
   await page.fill("#scholarQuery", "first-generation");
   await page.waitForTimeout(150);
-  const firstGen = await page.locator(".scholar-card").count();
+  const firstGen = await page.locator(".schl-card").count();
   if (firstGen < 3) throw new Error("keyword search for first-generation returned too few scholarships");
 
   fs.mkdirSync(SHOTS, { recursive: true });

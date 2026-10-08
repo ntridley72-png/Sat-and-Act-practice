@@ -28,7 +28,7 @@ function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); re
   for (let i = 0; i < 12 && !reached; i++) {
     if (await page.locator("#routingCard").isVisible().catch(() => false)) { reached = true; break; }
     const choice = page.locator("#questionCard .choice").first();
-    if (await choice.count()) { await choice.click(); await page.waitForTimeout(120); }
+    if (await choice.count()) { await choice.click(); await page.waitForTimeout(80); const chk = page.locator('#btnCheck'); if (await chk.count() && await chk.isEnabled().catch(() => false)) { await chk.click(); await page.waitForTimeout(120); } }
     const next = page.locator("#btnNext");
     if (await next.count() && await next.isEnabled().catch(() => false)) { await next.click(); await page.waitForTimeout(160); }
   }

@@ -101,6 +101,7 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   });
   if (!adsDuringPractice.active || adsDuringPractice.display !== "none" || adsDuringPractice.slotVisible) throw new Error("ads must be hidden throughout practice tests: " + JSON.stringify(adsDuringPractice));
   await page.locator("#questionCard .choice").first().click();
+  if (await page.locator("#btnCheck").count()) { await page.click("#btnCheck"); await page.waitForTimeout(150); }
   // Full screen practice mode: only the test, with Esc to exit.
   await page.click("#btnZen");
   await page.waitForTimeout(200);

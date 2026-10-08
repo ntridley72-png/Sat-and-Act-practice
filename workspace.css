@@ -709,4 +709,51 @@ body[data-workspace] .bb-foot{flex-wrap:wrap}
 body[data-workspace] .cc-link{padding-right:56px}
 body[data-workspace] .cc-verdict{max-width:130px;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:560px){body[data-workspace] #screen-test #questionCard{padding-bottom:12px}body[data-workspace] .qfx-check{min-width:140px}}
-@media (max-width:380px){body[data-workspace] .topbar{flex-wrap:wrap;overflow-x:auto}}
+
+/* The action bar is sticky, so the scroller has to reserve its height or the
+   last answer choice sits underneath it on a short viewport. */
+body[data-workspace] #screen-test #questionCard{scroll-padding-bottom:96px}
+@media (max-height:760px){
+  body[data-workspace] #screen-test #questionCard{padding-bottom:96px}
+  body[data-workspace] #screen-test .qfx-stuck{margin-bottom:4px}
+}
+@media (max-width:560px) and (max-height:760px){
+  body[data-workspace] #screen-test #questionCard{padding-bottom:92px}
+}
+
+/* 320px: let the top bar fit instead of scrolling sideways. */
+@media (max-width:380px){
+  body[data-workspace] .topbar{flex-wrap:wrap;overflow-x:visible;row-gap:8px}
+  body[data-workspace] .topbar>*{min-width:0}
+  body[data-workspace] .brand{font-size:19px}
+  body[data-workspace] .workspace-theme-label{width:100%}
+  body[data-workspace] #workspaceTheme{width:100%;max-width:none}
+  body[data-workspace] .acct-btn{font-size:10px;padding:5px 6px}
+}
+
+/* ---------- Personalized block on the generated college profile pages ---------- */
+.fxcp{background:var(--fx-surface,#141418);border:1px solid var(--fx-border,#22222A);border-radius:var(--fx-r-md,14px);padding:16px 18px;margin:18px 0;color:var(--fx-text,#F4F3F0)}
+.fxcp[hidden]{display:none}
+.fxcp-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.fxcp-kicker{margin:0;font-family:var(--fx-mono,ui-monospace,monospace);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--fx-muted,#8C8A85)}
+.fxcp-score{margin:4px 0 0;font-size:15px;color:var(--fx-muted,#8C8A85)}
+.fxcp-score b{font-size:32px;letter-spacing:-.03em;color:var(--fx-text,#F4F3F0);margin-right:6px}
+.fxcp-verdict{flex:none;border-radius:9px;padding:6px 12px;font-size:13px;font-weight:700}
+.fxcp-verdict.good{background:#1F2A1F;color:#8FE0A8}
+.fxcp-verdict.mid{background:#2A2418;color:#E5C46B}
+.fxcp-verdict.warn{background:#2A1D18;color:#F09A6B}
+.fxcp-bar{position:relative;height:14px;margin-top:16px;border-radius:999px;background:#22222A}
+.fxcp-range{position:absolute;top:0;height:14px;border-radius:999px;background:#3A4A66;min-width:6px}
+.fxcp-mark{position:absolute;top:-4px;width:4px;height:22px;border-radius:999px;background:var(--fx-accent,#F2743B);box-shadow:0 0 0 3px var(--fx-surface,#141418)}
+.fxcp-scale{display:flex;justify-content:space-between;gap:10px;margin:8px 0 0;font-size:11px;color:var(--fx-muted,#8C8A85)}
+.fxcp-note{margin:10px 0 0;font-size:14px;line-height:1.45}
+.fxcp-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--fx-border,#22222A)}
+.fxcp-save{min-height:44px;padding:0 16px;border-radius:var(--fx-r-sm,11px);background:var(--fx-surface-2,#17171C);border:1px solid var(--fx-border-2,#26262D);color:var(--fx-text,#F4F3F0);font-weight:600;cursor:pointer}
+.fxcp-save.on{background:var(--fx-accent-bg,#1C1310);border-color:rgba(242,116,59,.45);color:var(--fx-accent,#F2743B)}
+.fxcp-back{font-size:13px;color:var(--fx-accent,#F2743B)}
+@media (max-width:420px){
+  .fxcp{padding:14px}
+  .fxcp-score b{font-size:28px}
+  .fxcp-scale span:nth-child(1),.fxcp-scale span:nth-child(3){display:none}
+  .fxcp-scale{justify-content:flex-start}
+}

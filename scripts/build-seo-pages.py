@@ -174,6 +174,19 @@ def college_page(c, data):
                   f"<p>Shares are of bachelor's degrees awarded, so a concentrated list usually "
                   f"signals a college known for those programs.</p>")
 
+    # --- personalized block (filled client-side from the visitor's saved profile;
+    #     stays hidden when there is no score on file or no reported range here)
+    personal = ""
+    if has_sat or has_act:
+        payload = {"id": c["id"], "name": name}
+        for k in ("sr25", "sr75", "ar25", "ar75"):
+            if c.get(k):
+                payload[k] = c[k]
+        personal = (
+            f'<section class="fxcp" id="fxCollegeProfile" hidden></section>'
+            f'<script type="application/json" id="fxCollegeData">'
+            f'{json.dumps(payload, separators=(",", ":"), ensure_ascii=False)}</script>')
+
     # --- how to get in with FunSAT
     cta = (f'<div class="gcard"><h2>How your score compares</h2>'
            f'<p>Take a free adaptive practice test on {SITE_NAME}, get an unofficial score '
@@ -237,7 +250,7 @@ def college_page(c, data):
             f'<a href="/colleges/">All colleges</a></nav>'
             f'<p class="gkicker">{e(state)} &middot; College profile</p>'
             f'<h1>{e(name)}: SAT &amp; ACT Scores, Acceptance Rate and Costs</h1>'
-            f'{intro}{img}{scores}{sel}{cost}{out}{majors}{cta}{faq_html}{src}{links}')
+            f'{intro}{personal}{img}{scores}{sel}{cost}{out}{majors}{cta}{faq_html}{src}{links}')
 
     schema = [
         {"@type": "CollegeOrUniversity", "name": name,
@@ -251,7 +264,9 @@ def college_page(c, data):
     if faqs:
         schema.append(faq_schema(faqs))
 
-    return path, page(path=path, title=title, description=description, body=body, schema=schema)
+    extra = '<script src="/college-profile.js" defer></script>' if personal else ""
+    return path, page(path=path, title=title, description=description, body=body,
+                      schema=schema, extra_head=extra)
 
 
 def state_hub(state, cols):

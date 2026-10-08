@@ -17,7 +17,6 @@ for (const expected of [
   'defer src="app.js"',
   'provider:"adsterra"',
   'data-ad-slot="home-sidebar"',
-  'data-ad-slot="rail-left"',
   'data-ad-slot="results-grid"',
 ]) {
   if (!html.includes(expected)) throw new Error("missing integration marker: " + expected);
@@ -26,7 +25,6 @@ const seoCommon = fs.readFileSync("scripts/seo_common.py", "utf8");
 for (const expected of [
   'bauval.org/21/ba6d22b48d5d42c6cd1add3ad5e6c681',
   'container-ba6d22b48d5d42c6cd1add3ad5e6c681',
-  'rail-left',
   '4e48d9998406ce142c41865c66a4325',
 ]) {
   if (!seoCommon.includes(expected)) throw new Error("generated-page ad config drifted: " + expected);

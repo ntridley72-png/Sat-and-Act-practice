@@ -690,8 +690,9 @@ body[data-workspace] :where(.cc-score-card,.cc-narrow,.cc-summary,.cc-card,.cc-d
 body[data-workspace] .cc-fitb,body[data-workspace] .schl-gchip{background:var(--fx-surface-2)!important;border:1px solid var(--fx-border-2)!important;color:var(--fx-text)!important;box-shadow:none!important}
 body[data-workspace] .cc-fitb.on{background:var(--fx-accent)!important;border-color:var(--fx-accent)!important;color:#1A0E08!important}
 body[data-workspace] .schl-gchip.on{background:var(--fx-accent)!important;border-color:var(--fx-accent)!important;color:#1A0E08!important}
-body[data-workspace] .cc-remove{background:var(--fx-surface-2)!important;border:1px solid var(--fx-border-2)!important;color:var(--fx-muted)!important;box-shadow:none!important}
-body[data-workspace] .cc-remove:hover{border-color:var(--fx-accent)!important;color:var(--fx-accent)!important}
+body[data-workspace] .cc-remove{background:transparent!important;border:0!important;color:var(--fx-muted)!important;box-shadow:none!important;top:8px;right:8px;font-size:15px;line-height:1;border-radius:999px}
+body[data-workspace] .cc-remove:hover,body[data-workspace] .cc-remove:focus-visible{background:var(--fx-surface-2)!important;color:var(--fx-accent)!important}
+body[data-workspace] .cc-card-head{padding-right:34px}
 body[data-workspace] .cc-add{background:var(--fx-accent)!important;border:1px solid var(--fx-accent)!important;color:#1A0E08!important;box-shadow:none!important}
 body[data-workspace] .cc-pred{background:var(--fx-accent-bg)!important;border:1px solid rgba(242,116,59,.45)!important;color:var(--fx-accent)!important;box-shadow:none!important}
 body[data-workspace] .schl-mylist,body[data-workspace] .schl-filterbtn,body[data-workspace] .schl-close,body[data-workspace] .schl-star,body[data-workspace] .schl-clear{background:var(--fx-surface)!important;border:1px solid var(--fx-border-2)!important;color:var(--fx-text)!important;box-shadow:none!important}

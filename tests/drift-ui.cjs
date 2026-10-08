@@ -39,38 +39,59 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   if (!driftOpen.panelHidden) throw new Error("car paint/wheels panel must not cover games: " + JSON.stringify(driftOpen));
   if (!(driftOpen.width > driftOpen.logical * 1.2)) throw new Error("drift should scale up: " + JSON.stringify(driftOpen));
 
-  // Garage v2: all sections and controls.
+  // Workshop garage: the controls now live behind tabs, so each tab is visited.
   await page.click("#btnDriftGarage");
   await page.waitForSelector("#driftGarage.show");
-  const g = await page.evaluate(() => ({
-    cars: document.querySelectorAll("#dgBody .dg-car").length,
-    tuning: document.querySelectorAll("#dgBody [data-tune]").length,
-    tracks: document.querySelectorAll("#dgBody [data-track]").length,
-    themes: document.querySelectorAll("#dgBody [data-theme]").length,
-    modes: document.querySelectorAll("#dgBody [data-racemode]").length,
-    cams: document.querySelectorAll("#dgBody [data-cam]").length,
-    finishes: document.querySelectorAll("#dgBody [data-finish]").length,
-    kits: document.querySelectorAll("#dgBody [data-kit]").length,
-    wings: document.querySelectorAll("#dgBody [data-wing]").length,
-    decals: document.querySelectorAll("#dgBody [data-decal]").length,
-    wheelColors: document.querySelectorAll("#dgBody [data-wheelcolor]").length,
-    convert: document.querySelectorAll("#dgBody #dgConvert, #dgBody #dgConvertAll").length,
-    raceCarBtns: document.querySelectorAll("#dgBody [data-racecar]").length,
-  }));
+  const tabCount = (tab, sel) => page.evaluate(([t, q]) => {
+    document.querySelector('#dgBody .workshop-panel [data-tab="' + t + '"]').click();
+    return document.querySelectorAll("#dgBody " + q).length;
+  }, [tab, sel]);
+  const g = {
+    cars: await tabCount("cars", ".dg-car"),
+    convert: await tabCount("cars", "#dgConvert, #dgConvertAll"),
+    raceCarBtns: await tabCount("cars", "[data-racecar]"),
+    tuning: await tabCount("tune", "[data-tune]"),
+    handling: await tabCount("tune", "[data-handling]"),
+    volume: await tabCount("tune", "[data-volume]"),
+    finishes: await tabCount("custom", "[data-finish]"),
+    kits: await tabCount("custom", "[data-kit]"),
+    wings: await tabCount("custom", "[data-wing]"),
+    decals: await tabCount("custom", "[data-decal]"),
+    wheelColors: await tabCount("custom", "[data-wheelcolor]"),
+    tracks: await tabCount("tracks", "[data-track]"),
+    themes: await tabCount("tracks", "[data-theme]"),
+    modes: await tabCount("tracks", "[data-racemode]"),
+    cams: await tabCount("tracks", "[data-cam]"),
+  };
   if (g.cars < 8 || g.tuning !== 4 || g.tracks < 6 || g.themes !== 5 || g.modes !== 2 || g.cams !== 3) throw new Error("garage sections missing: " + JSON.stringify(g));
   if (g.finishes !== 5 || g.kits !== 3 || g.wings !== 4 || g.decals !== 5 || g.wheelColors !== 5 || g.convert !== 2 || g.raceCarBtns < 1) throw new Error("customization controls missing: " + JSON.stringify(g));
+  if (g.handling !== 1 || g.volume !== 1) throw new Error("handling/volume controls missing: " + JSON.stringify(g));
+
+  // The removed start/finish crossbar must not come back: a full-width slab over
+  // the road is what made the chase camera pass under an opaque plane.
+  const slab = await page.evaluate(() => /mPose\(line\.x, line\.y \+ 1\.5/.test(DriftCircuit.prototype.renderWorld3D.toString()));
+  if (slab) throw new Error("the solid overhead crossbar is back over the start/finish line");
 
   // Customize: paint, finish, wheels, kit, decal, number, handling, theme, race mode.
-  await page.evaluate(() => { DriftCircuit.garage().cash = 5000; saveProfile(); window.DriftGarage.render(); });
+  await page.evaluate(() => { DriftCircuit.garage().cash = 5000; saveProfile(); window.FunSATWorkshop.render(); });
+  await page.click('#dgBody .workshop-panel [data-tab="custom"]');
   await page.click('#dgBody [data-paint="blue"]');
+  await page.click('#dgBody .workshop-panel [data-tab="custom"]');
   await page.click('#dgBody [data-finish="chrome"]');
+  await page.click('#dgBody .workshop-panel [data-tab="custom"]');
   await page.click('#dgBody [data-wheels="mesh"]');
+  await page.click('#dgBody .workshop-panel [data-tab="custom"]');
   await page.click('#dgBody [data-wheelcolor="gold"]');
+  await page.click('#dgBody .workshop-panel [data-tab="custom"]');
   await page.click('#dgBody [data-kit="wide"]');
+  await page.click('#dgBody .workshop-panel [data-tab="custom"]');
   await page.click('#dgBody [data-decal="stripes"]');
+  await page.click('#dgBody .workshop-panel [data-tab="custom"]');
   await page.fill("#dgNumber", "27");
   await page.dispatchEvent("#dgNumber", "change");
+  await page.click('#dgBody .workshop-panel [data-tab="tune"]');
   await page.evaluate(() => { const el = document.querySelector('#dgBody [data-handling]'); el.value = "0.9"; el.dispatchEvent(new Event("input", { bubbles: true })); });
+  await page.click('#dgBody .workshop-panel [data-tab="tracks"]');
   await page.click('#dgBody [data-theme="desert"]');
   await page.click("#dgClose");
   const applied = await page.evaluate(() => ({ g: profile.garage, paint: arcade.game.paint, handling: DriftCircuit.garage().handling, theme: DriftCircuit.garage().theme, number: DriftCircuit.garage().number }));
@@ -168,7 +189,24 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   if (sandbox.bounced.x < 20 || sandbox.bounced.vx <= 0) throw new Error("lot boundary should bounce the car back: " + JSON.stringify(sandbox.bounced));
   if (!sandbox.backToTrack) throw new Error("switching back to a circuit track should re-enable laps: " + JSON.stringify(sandbox));
 
+  // Phone layout: the settings panel parks off-screen and must be reachable
+  // from the nav and dismissable again, or the whole right-hand side is lost.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.evaluate(() => window.FunSATWorkshop.open());
+  await page.waitForSelector("#driftGarage.show");
+  await page.waitForTimeout(250);
+  const panelX = async () => (await page.locator("#dgBody .workshop-panel").boundingBox()).x;
+  const parked = await panelX();
+  await page.click('#dgBody .workshop-nav [data-tab="custom"]');
+  await page.waitForTimeout(350);
+  const shown = await panelX();
+  if (!(shown < parked - 100)) throw new Error("phone settings panel never slides in: " + JSON.stringify({ parked, shown }));
+  await page.click("#dgBody [data-panel-close]");
+  await page.waitForTimeout(350);
+  if (await page.evaluate(() => document.querySelector("#dgBody .workshop").classList.contains("panel-open"))) throw new Error("phone settings panel will not close");
+  await page.evaluate(() => window.FunSATWorkshop.close());
+
   await browser.close();
   if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
-  console.log("PASS: 3D drift + racing, parking-lot sandbox (centre spawn, obstacles, boundary bounce, no laps/damage, still scores), garage v2 (finishes, kits, wheels, decals, themes, modes, handling, sounds), token conversion, silent mid-game spends, death summary, and continue all work.");
+  console.log("PASS: 3D drift + racing, parking-lot sandbox (centre spawn, obstacles, boundary bounce, no laps/damage, still scores), workshop garage (tabbed, phone panel, no overhead slab, finishes, kits, wheels, decals, themes, modes, handling, sounds), token conversion, silent mid-game spends, death summary, and continue all work.");
 })().catch((error) => { console.error(error); process.exit(1); });

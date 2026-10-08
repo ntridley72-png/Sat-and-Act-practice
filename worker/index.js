@@ -77,7 +77,7 @@ function canonicalRedirect(url) {
   const target = new URL(url.toString());
   let changed = false;
 
-  if (target.protocol === "http:") {
+  if (target.protocol === "http:" && target.hostname !== "localhost" && target.hostname !== "127.0.0.1") {
     // The canonical host is HTTPS; upgrade in the same single hop.
     target.protocol = "https:";
     changed = true;
@@ -174,6 +174,11 @@ async function route(req, env, path) {
       const favs = [...new Set([...(oldProf.favorites || []), ...(incomingProf.favorites || []), ...(mergedProf.favorites || [])])];
       if (favs.length) mergedProf.favorites = favs;
       mergedProf.skillStats = Object.assign({}, oldProf.skillStats || {}, incomingProf.skillStats || {}, mergedProf.skillStats || {});
+      // Garage progress is long-lived account data. A stale browser must not
+      // erase cars or parts unlocked on another device, nor roll earned cash
+      // backwards. The winning edit still controls the currently selected
+      // car, paint, track and tune values.
+      mergedProf.garage = mergeGarage(oldProf.garage, incomingProf.garage, mergedProf.garage);
       data.profile = mergedProf;
       const updatedAt = Math.max(Date.now(), incomingAt, (previous && previous.updated_at || 0) + 1);
       const result = await env.DB.prepare("INSERT INTO progress (user_id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at WHERE progress.updated_at = ?")
@@ -183,6 +188,22 @@ async function route(req, env, path) {
     return json({ error: "Progress changed on another device. Please retry." }, 409, req);
   }
   return json({ error: "Not found." }, 404, req);
+}
+
+function mergeGarage(oldGarage, incomingGarage, winnerGarage) {
+  const oldG = oldGarage && typeof oldGarage === "object" ? oldGarage : {};
+  const incomingG = incomingGarage && typeof incomingGarage === "object" ? incomingGarage : {};
+  const winnerG = winnerGarage && typeof winnerGarage === "object" ? winnerGarage : {};
+  const merged = { ...oldG, ...incomingG, ...winnerG };
+  ["unlocked", "ownedKits", "ownedWings"].forEach((key) => {
+    const values = [...(oldG[key] || []), ...(incomingG[key] || []), ...(winnerG[key] || [])]
+      .filter((value) => typeof value === "string" && value.length < 80);
+    if (values.length) merged[key] = [...new Set(values)];
+  });
+  merged.cash = Math.max(Number(oldG.cash) || 0, Number(incomingG.cash) || 0, Number(winnerG.cash) || 0);
+  merged.tune = { ...(oldG.tune || {}), ...(incomingG.tune || {}), ...(winnerG.tune || {}) };
+  merged.v = Math.max(Number(oldG.v) || 0, Number(incomingG.v) || 0, Number(winnerG.v) || 0);
+  return merged;
 }
 
 async function signup(req, env) {

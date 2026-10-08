@@ -233,22 +233,30 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   });
   if (all.length) throw new Error("arcade games failed to open: " + all.join(", "));
 
-  // ---- 14. Racing earnings bank into garage cash exactly once, and both cars expose stopAudio ----
+  // ---- 14. Scored-run earnings bank into garage cash exactly once, free practice
+  //          banks nothing, and both cars expose stopAudio ----
   const banking = await page.evaluate(() => {
+    profile.tokens = 10;
     const before = DriftCircuit.garage().cash;
-    arcade.select("racing");
+    RacingSession.request("scored"); arcade.select("racing");
     const r = arcade.game; r.started = true; r.earned = 123; r.banked = false;
     const racingHasStop = typeof r.stopAudio === "function";
     arcade.timeUp();
     const afterRacing = DriftCircuit.garage().cash;
-    arcade.select("drift");
+    RacingSession.request("scored"); arcade.select("drift");
     const d = arcade.game; d.started = true; d.earned = 77; d.banked = false;
     const driftHasStop = typeof d.stopAudio === "function";
     arcade.timeUp();
     const afterDrift = DriftCircuit.garage().cash;
     arcade.timeUp();
-    return { before, afterRacing, afterDrift, final: DriftCircuit.garage().cash, racingHasStop, driftHasStop };
+    const final = DriftCircuit.garage().cash;
+    // Open Practice is free in both directions: it costs no token and pays no cash.
+    RacingSession.request("practice"); arcade.select("drift");
+    const p = arcade.game; p.started = true; p.earned = 500; p.banked = false;
+    arcade.timeUp();
+    return { before, afterRacing, afterDrift, final, afterPractice: DriftCircuit.garage().cash, racingHasStop, driftHasStop };
   });
+  if (banking.afterPractice !== banking.final) throw new Error("free practice must not bank garage cash: " + JSON.stringify(banking));
   if (banking.afterRacing !== banking.before + 123) throw new Error("racing earnings were not banked: " + JSON.stringify(banking));
   if (banking.afterDrift !== banking.afterRacing + 77) throw new Error("drift earnings were not banked: " + JSON.stringify(banking));
   if (banking.final !== banking.afterDrift) throw new Error("earnings banked twice: " + JSON.stringify(banking));

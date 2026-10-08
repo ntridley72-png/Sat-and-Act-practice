@@ -2,8 +2,8 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const {webcrypto}=require('node:crypto');
 const source=fs.readFileSync('worker/index.js','utf8').replace('export default','const worker =');
 const secret='local-test-owner-token-with-more-than-thirty-two-characters';
-let records=[],queries=[],providerCalls=[];
-const db={prepare(sql){return{bind(...args){return{sql,args,async run(){return{meta:{changes:0}}},async all(){queries.push({sql,args});return{results:[]}},async first(){queries.push({sql,args});return{events:0,sessions:0}}}}}},async batch(statements){return statements.map(({args})=>{const key=args[0]+':'+args[1];if(records.includes(key))return{meta:{changes:0}};records.push(key);return{meta:{changes:1}}})}};
+let records=[],queries=[],providerCalls=[];const connectionRows=new Map();
+const db={prepare(sql){return{bind(...args){return{sql,args,async run(){if(sql.startsWith('INSERT INTO analytics_connections'))connectionRows.set(args[0],{ciphertext:args[1],iv:args[2]});if(sql.startsWith('DELETE FROM analytics_connections'))connectionRows.delete(args[0]);return{meta:{changes:1}}},async all(){queries.push({sql,args});return{results:[]}},async first(){queries.push({sql,args});if(sql.includes('FROM analytics_connections'))return connectionRows.get(args[0])||null;return{events:0,sessions:0}}}}}},async batch(statements){return statements.map(({args})=>{const key=args[0]+':'+args[1];if(records.includes(key))return{meta:{changes:0}};records.push(key);return{meta:{changes:1}}})}};
 const context=vm.createContext({URL,Request,Response,Headers,TextEncoder,TextDecoder,Uint8Array,AbortSignal,crypto:webcrypto,console,
 fetch:async(url,options)=>{providerCalls.push({url,...options});const body=JSON.parse(options.body);const data=body.query.includes('WorkerMetrics')?{viewer:{accounts:[{workersInvocationsAdaptive:[{sum:{requests:20,errors:1,subrequests:8,secret:'DO_NOT_RETURN'},quantiles:{cpuTimeP50:120,cpuTimeP99:500}}]}]}}:{viewer:{zones:[{httpRequests1dGroups:[{dimensions:{date:new Date().toISOString().slice(0,10)},sum:{requests:100,bytes:200,cachedRequests:30,cachedBytes:100,threats:0},uniq:{uniques:15}}]}]}};return new Response(JSON.stringify({data}))}});
 vm.runInContext(source,context);
@@ -34,6 +34,32 @@ const batch={consent:true,sessionId:session,events:[{id,name:'page_view',propert
  env.ANALYTICS_PROJECTS=JSON.stringify({funsat:{cloudflare:{accountId:'a'.repeat(32),zoneId:'b'.repeat(32),workerName:'sat-act-practice'}},pillcounted:{cloudflare:{accountId:'c'.repeat(32),workerName:'pillcounted-worker'}}});env.CLOUDFLARE_ANALYTICS_TOKENS=JSON.stringify({funsat:'funsat-provider-token',pillcounted:'pillcounted-provider-token'});
  result=await call('/api/analytics/cloudflare?project=funsat',{token:secret});assert.equal(result.data.status,'ok');assert.equal(result.data.workers.data[0].sum.requests,20);assert(!JSON.stringify(result.data).includes('DO_NOT_RETURN'));assert(!JSON.stringify(result.data).includes('provider-token'));
  await call('/api/analytics/cloudflare?project=pillcounted',{token:secret});assert.equal(providerCalls[2].headers.Authorization,'Bearer pillcounted-provider-token');assert.equal(JSON.parse(providerCalls[2].body).variables.accountTag,'c'.repeat(32));
+ const supplied={token:'phone-read-token-for-funsat',zoneId:'d'.repeat(32)};
+ const reportPath='/api/analytics/cloudflare-report?project=funsat';
+ result=await call(reportPath,{method:'POST',origin:'https://funsat.bid',token:secret,body:supplied});assert.equal(result.r.status,405,'phone credentials are unavailable on public host');
+ env.ANALYTICS_OWNER_APP='true';
+ result=await call(reportPath,{method:'POST',origin:'https://funsat.bid',body:supplied});assert.equal(result.r.status,401);
+ result=await call(reportPath,{method:'POST',origin:'https://evil.example',token:secret,body:supplied});assert.equal(result.r.status,403);
+ for(const invalid of [{...supplied,url:'https://evil.example'}, {...supplied,zoneId:'bad'}, {...supplied,token:'short'}, {token:supplied.token}]) {
+  result=await call(reportPath,{method:'POST',origin:'https://funsat.bid',token:secret,body:invalid});assert.equal(result.r.status,400);
+ }
+ const configured=env.CLOUDFLARE_ANALYTICS_TOKENS;
+ env.ANALYTICS_ENCRYPTION_KEY='1'.repeat(64);
+ const payload={token:'secret-phone-read-token-123456',zoneId:'d'.repeat(32)};
+ context.payload=payload;context.ownerEnv=env;
+ const sealed=await vm.runInContext("analyticsConnectionCrypt(ownerEnv,'funsat',payload,true)",context);
+ assert(!JSON.stringify(sealed).includes(payload.token));context.sealed=sealed;
+ const opened=await vm.runInContext("analyticsConnectionCrypt(ownerEnv,'funsat',sealed,false)",context);assert.equal(opened.token,payload.token);
+ await assert.rejects(()=>vm.runInContext("analyticsConnectionCrypt(ownerEnv,'pillcounted',sealed,false)",context),'project-bound ciphertext cannot be swapped');
+ result=await call('/api/analytics/connections?project=funsat',{method:'POST',origin:'https://funsat.bid',token:secret,body:payload});assert.equal(result.data.saved,true);assert(!JSON.stringify(result.data).includes(payload.token));
+ assert(!JSON.stringify(connectionRows.get('funsat')).includes(payload.token));
+ result=await call('/api/analytics/cloudflare?project=funsat',{token:secret});assert.equal(providerCalls.at(-1).headers.Authorization,'Bearer '+payload.token);assert.equal(JSON.parse(providerCalls.at(-1).body).variables.zoneTag,payload.zoneId);
+ result=await call('/api/analytics/connections?project=funsat',{method:'POST',origin:'https://funsat.bid',token:secret,body:{action:'delete'}});assert.equal(result.data.saved,false);assert.equal(connectionRows.size,0);
+ result=await call(reportPath,{method:'POST',origin:'https://funsat.bid',token:secret,body:supplied});assert.equal(result.r.status,200);
+ assert.equal(providerCalls.at(-1).headers.Authorization,'Bearer '+supplied.token);assert.equal(JSON.parse(providerCalls.at(-1).body).variables.zoneTag,supplied.zoneId);
+ assert(!JSON.stringify(result.data).includes(supplied.token));assert.equal(env.CLOUDFLARE_ANALYTICS_TOKENS,configured,'phone input cannot replace stored secrets');
+ assert.equal(result.r.headers.get('Cache-Control'),'no-store');
+ result=await call(reportPath,{method:'POST',origin:'https://funsat.bid',token:secret,raw:'x'.repeat(17000)});assert.equal(result.r.status,413);
  context.fetch=async()=>new Response(JSON.stringify({errors:[{message:'leaked upstream credential'}]}));result=await call('/api/analytics/cloudflare?project=funsat',{token:secret});assert.equal(result.data.workers.status,'query_unavailable');assert(!JSON.stringify(result.data).includes('leaked'));
  console.log('PASS: owner-only reads, strict CORS/consent/schema/size limits, deduplication, project isolation, bounded queries, private provider tokens and honest failure states.');
 })().catch(e=>{console.error(e);process.exitCode=1});

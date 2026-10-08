@@ -36,6 +36,7 @@ export default {
     const url = new URL(request.url);
     if (url.pathname.startsWith("/api/analytics/")) return analyticsApi(request, env);
     if (url.pathname === "/owner-analytics" || url.pathname.startsWith("/owner-analytics/")) {
+      if (env.ANALYTICS_OWNER_APP !== "true") return new Response("Use the private owner dashboard hostname.", {status:404,headers:{"Cache-Control":"no-store","X-Robots-Tag":"noindex"}});
       if (url.pathname === "/owner-analytics") return Response.redirect(url.origin + "/owner-analytics/", 302);
       const assetUrl = url.pathname === "/owner-analytics/" ? url.origin + "/owner-analytics/index.html" : request.url;
       const asset = await env.ASSETS.fetch(new Request(assetUrl, request));
@@ -682,9 +683,17 @@ async function analyticsSummary(env, project, range) {
     active_users:null,revenue:null,
     limitations:['Client events can be spoofed; consented traffic is incomplete.','Sessions are anonymous, tab-scoped, and expire after 30 minutes of inactivity; they are not unique people.','SAT submission events include early submissions; they are not a verified full-test completion rate.','No AdSense earnings or pageviews are inferred from these events.']};
 }
-async function analyticsCloudflare(env, project, range) {
+async function analyticsCloudflare(env, project, range, suppliedToken) {
+  if (suppliedToken === undefined && env.ANALYTICS_OWNER_APP === 'true') {
+    const row = await env.DB.prepare('SELECT ciphertext,iv FROM analytics_connections WHERE project = ?').bind(project.id).first();
+    if (row) {
+      const saved = await analyticsConnectionCrypt(env,project.id,row,false);
+      project = {...project,accountId:saved.accountId || '',zoneId:saved.zoneId || '',workerName:saved.workerName || ''};
+      suppliedToken = saved.token;
+    }
+  }
   let tokens = {};try { tokens = JSON.parse(env.CLOUDFLARE_ANALYTICS_TOKENS || '{}'); } catch (_) {}
-  const token = tokens?.[project.id];
+  const token = suppliedToken ?? tokens?.[project.id];
   const base = {project:project.id,source:'cloudflare_graphql',range:{from:range.from,to:range.to}};
   if (typeof token !== 'string' || !token || (!project.accountId && !project.zoneId)) return {...base,status:'not_configured',workers:null,zone:null};
   const reports = await Promise.all([
@@ -730,7 +739,9 @@ async function analyticsApi(req, env) {
   const url = new URL(req.url), path=url.pathname, projects=analyticsProjects(env);
   try {
     if (path === '/api/analytics/events') return await analyticsIngest(req,env,projects);
-    if (req.method !== 'GET') return analyticsResponse({error:'Method not allowed.'},405);
+    const saveConnection = path === '/api/analytics/connections' && env.ANALYTICS_OWNER_APP === 'true';
+    const suppliedReport = (path === '/api/analytics/cloudflare-report' || saveConnection) && env.ANALYTICS_OWNER_APP === 'true';
+    if (req.method !== 'GET' && !(suppliedReport && req.method === 'POST')) return analyticsResponse({error:'Method not allowed.'},405);
     if (!await analyticsOwner(req,env)) return analyticsResponse({error:'Owner authorization required.'},401);
     if (!env.ANALYTICS_READ_LIMITER) return analyticsResponse({error:'Owner read limits are not configured.'},503);
     if (!(await env.ANALYTICS_READ_LIMITER.limit({key:'owner'})).success) {
@@ -743,8 +754,51 @@ async function analyticsApi(req, env) {
     const project=projects.find(p=>p.id===url.searchParams.get('project'));
     if(!project)return analyticsResponse({error:'Select a configured project.'},400);
     const range=analyticsDates(url);if(!range)return analyticsResponse({error:'Use valid UTC YYYY-MM-DD dates, at most 31 days, within the past 90 days.'},400);
+    if (suppliedReport) {
+      if (req.method !== 'POST') return analyticsResponse({error:'Method not allowed.'},405);
+      const local = url.protocol === 'http:' && ['localhost','127.0.0.1'].includes(url.hostname);
+      if ((!local && url.protocol !== 'https:') || req.headers.get('Origin') !== url.origin) {
+        return analyticsResponse({error:'Use the secure owner dashboard.'},403);
+      }
+      const result = await analyticsReadBody(req);
+      if (result.status) return analyticsResponse({error:'Invalid or oversized JSON request.'},result.status);
+      const b = result.body;
+      if (saveConnection && b?.action === 'delete' && Object.keys(b).length === 1) {
+        await env.DB.prepare('DELETE FROM analytics_connections WHERE project = ?').bind(project.id).run();
+        return analyticsResponse({project:project.id,saved:false});
+      }
+      if (!b || typeof b !== 'object' || Array.isArray(b) ||
+          Object.keys(b).some(k=>!['token','accountId','zoneId','workerName'].includes(k)) ||
+          typeof b.token !== 'string' || !/^[a-zA-Z0-9_-]{20,256}$/.test(b.token) ||
+          (b.accountId !== undefined && b.accountId !== '' && !/^[a-f0-9]{32}$/i.test(b.accountId)) ||
+          (b.zoneId !== undefined && b.zoneId !== '' && !/^[a-f0-9]{32}$/i.test(b.zoneId)) ||
+          (b.workerName !== undefined && b.workerName !== '' && !/^[a-zA-Z0-9_-]{1,64}$/.test(b.workerName)) ||
+          !(b.zoneId || (b.accountId && b.workerName))) {
+        return analyticsResponse({error:'Enter a read-only token and a zone ID, or an account ID plus worker name.'},400);
+      }
+      if (saveConnection) {
+        const sealed = await analyticsConnectionCrypt(env,project.id,b,true);
+        await env.DB.prepare('INSERT INTO analytics_connections (project,ciphertext,iv,updated_at) VALUES (?,?,?,?) ON CONFLICT(project) DO UPDATE SET ciphertext=excluded.ciphertext,iv=excluded.iv,updated_at=excluded.updated_at')
+          .bind(project.id,sealed.ciphertext,sealed.iv,Date.now()).run();
+        return analyticsResponse({project:project.id,saved:true});
+      }
+      // One-off reporting also remains supported; never echo credentials.
+      return analyticsResponse(await analyticsCloudflare(env,{...project,
+        accountId:b.accountId || '',zoneId:b.zoneId || '',workerName:b.workerName || ''},range,b.token));
+    }
     if(path==='/api/analytics/summary')return analyticsResponse(await analyticsSummary(env,project,range));
     if(path==='/api/analytics/cloudflare')return analyticsResponse(await analyticsCloudflare(env,project,range));
     return analyticsResponse({error:'Not found.'},404);
   } catch (_) {return analyticsResponse({error:'Analytics service is unavailable.'},503);}
+}
+
+async function analyticsConnectionCrypt(env,project,value,encrypt) {
+  if (!/^[a-f0-9]{64}$/i.test(env.ANALYTICS_ENCRYPTION_KEY || '')) throw new Error('Encryption is not configured');
+  const bytes = hex => Uint8Array.from(hex.match(/../g) || [],x=>parseInt(x,16));
+  const hex = raw => Array.from(new Uint8Array(raw),x=>x.toString(16).padStart(2,'0')).join('');
+  const key = await crypto.subtle.importKey('raw',bytes(env.ANALYTICS_ENCRYPTION_KEY),'AES-GCM',false,[encrypt?'encrypt':'decrypt']);
+  const iv = encrypt ? crypto.getRandomValues(new Uint8Array(12)) : bytes(value.iv);
+  const algorithm = {name:'AES-GCM',iv,additionalData:new TextEncoder().encode('analytics-connection:'+project)};
+  if (encrypt) return {iv:hex(iv),ciphertext:hex(await crypto.subtle.encrypt(algorithm,key,new TextEncoder().encode(JSON.stringify(value))))};
+  return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt(algorithm,key,bytes(value.ciphertext))));
 }

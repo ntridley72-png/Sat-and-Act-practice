@@ -1,151 +1,178 @@
 # Private phone analytics app
 
-Implemented locally; not deployed or connected to live Cloudflare accounts yet.
-FunSAT and Pillcounted are separate projects, with separate source scopes and report
-cards. This is not a promise of every Cloudflare product: initial sources are
-Workers requests/errors/subrequests/CPU quantiles, zone HTTP requests/bytes/cache/
-threats/daily unique estimates, and optional consented client events. Billing,
-Cloudflare Web Analytics RUM, revenue and unique people are not inferred.
+FunSAT and Pillcounted have separate owner report cards and encrypted saved
+Cloudflare connections. The dedicated owner app opens with a PIN screen. Public
+FunSAT does not expose the dashboard. Implementation is committed; Cloudflare
+hosting and real provider credentials still require configuration.
 
-## Private HTTPS access from anywhere (recommended phone setup)
+## Deploy from your phone
 
-1. In Cloudflare Zero Trust → Access → Applications, add a **self-hosted** app
-   for `analytics.funsat.bid`, covering the **entire hostname**, not just one path.
-   Add an Allow policy limited to your email/identity; require your identity provider
-   or email one-time PIN. Do not add an Everyone, Bypass or Service Auth policy.
-   Configure this before deploying. The hostname uses the existing FunSAT zone;
-   change `routes` in `wrangler.analytics.toml` if you prefer another hostname.
-2. Create read-only Cloudflare API tokens for each project's account/zone scope:
-   Account → Account Analytics → Read, and Zone → Analytics → Read. Limit resource
-   access to the relevant accounts/zones. One shared account can use the same
-   read-only token for both entries, while keeping distinct worker/zone scopes.
-   Do not grant write/billing permissions. These tokens remain server-side.
-3. Put a generated random owner token (at least 32 characters, recommended 64 hex)
-   into `npx wrangler secret put ANALYTICS_OWNER_TOKEN --config wrangler.analytics.toml`.
-   Store it in your password manager. It is **not** a Cloudflare API token.
-   Use an interactive prompt; never paste credentials into chat or commit them.
-4. Set secret `CLOUDFLARE_ANALYTICS_TOKENS` with the same command, changing the name.
-   Its JSON format is `{"funsat":"READ_TOKEN","pillcounted":"READ_TOKEN"}`.
-5. Set `ANALYTICS_PROJECTS` through `wrangler secret put` on this config. Format:
+1. In Cloudflare Zero Trust → Access → Applications, add a self-hosted app covering
+   the entire `analytics.funsat.bid` hostname. Allow only your email/identity, using
+   email one-time PIN or your identity provider. No Everyone/Bypass policies.
+2. Import this GitHub repository into **Workers & Pages** as a Worker, selecting
+   the `feat/adsense-private-analytics` branch. Build command:
+   `node scripts/build-analytics-owner.mjs`. Deploy command:
+   `npx wrangler deploy --config wrangler.analytics.toml`.
+   Use that config, not the public website's `wrangler.toml`.
+   The configured custom hostname is `analytics.funsat.bid`; change its route if
+   necessary. workers.dev and preview URLs are disabled to avoid Access bypasses.
+3. In the owner Worker's **Settings → Variables and Secrets**, add these as **secrets**:
+   - `ANALYTICS_LOGIN_PIN`: the private PIN chosen by the owner. It is not in source.
+   - `ANALYTICS_ENCRYPTION_KEY`: a securely generated random 64-character hex key
+     (32 random bytes). Generate it with a trusted password manager/random generator;
+     never use your PIN, account ID, an API token or a repeated/example key.
+   Without both settings the app fails closed with a setup-required response.
+4. In D1 → `sat-act-practice-db` → Console, apply the SQL from
+   `worker/migrations/0001_analytics.sql` and then
+   `worker/migrations/0002_analytics_connections.sql`.
+   They add tables/indexes without modifying existing account/progress data.
+   The owner Worker binds this existing database. Command-line alternative:
+   `npx wrangler d1 execute sat-act-practice-db --remote --config wrangler.analytics.toml --file worker/migrations/0002_analytics_connections.sql`
+   (repeat with 0001 first).
+5. Verify signed-out visitors encounter Access login, then the app PIN screen.
+   After PIN login, verify reports load; after Lock dashboard, verify APIs return
+   401 and dashboard navigation redirects to the login screen. Do not enable live
+   credentials before these checks. Deployment initially returns setup-required
+   until its secrets/database are configured.
+6. Open `https://analytics.funsat.bid/owner-analytics/` in Safari, sign in, then
+   Share → Add to Home Screen. In Android Chrome use Add to Home Screen/Install
+   when offered. Home Screen apps may require Access login again. Supported browsers
+   display the manifest standalone; no offline report cache/service worker exists.
 
-   ```json
-   {"funsat":{"cloudflare":{"accountId":"32_HEX_ACCOUNT_ID","zoneId":"32_HEX_ZONE_ID","workerName":"sat-act-practice"}},"pillcounted":{"cloudflare":{"accountId":"32_HEX_ACCOUNT_ID","zoneId":"32_HEX_ZONE_ID","workerName":"YOUR_PILLCOUNTED_WORKER"}}}
-   ```
+This does not change or deploy the public FunSAT website or edit Pillcounted's code.
+It does not require a computer to remain running. A Home Screen shortcut is not a
+native App Store app. Physical-device and live HTTPS checks happen after deployment.
 
-   IDs are available in Cloudflare's account/zone overview. Use actual worker names;
-   do not assume Pillcounted uses a Worker. If it is static Pages hosting, omit
-   `workerName` and use its zone analytics. Zone metrics cover that whole zone,
-   including other hostnames, not just the project. Prefer dedicated zones for
-   meaningful isolation. Distinct projects sharing one zone share those zone totals.
-6. Once, apply the additive schema to the existing FunSAT database:
-   `npx wrangler d1 execute sat-act-practice-db --remote --config wrangler.analytics.toml --file worker/migrations/0001_analytics.sql`.
-   This creates only analytics tables/indexes; it does not recreate account tables.
-7. Deploy the dedicated owner app: `npx wrangler deploy --config wrangler.analytics.toml`.
-   `workers_dev = false` and `preview_urls = false` prevent those alternate public URLs.
-   The owner Worker exposes only dashboard assets and read-only report routes.
-   It has no scheduled handler and does not accept events/account API requests.
-8. In a signed-out/private browser, confirm **every dashboard/API path** requires
-   Cloudflare Access login. An authorized Access session without the owner bearer
-   must still receive 401 from report endpoints. If either check fails, correct the
-   Access policy before using live reports.
-9. On iPhone, open `https://analytics.funsat.bid/owner-analytics/` in Safari, log in,
-   then Share → Add to Home Screen → Add. On Android Chrome, use Add to Home Screen
-   or Install when offered. The manifest opens standalone on supported browsers.
-   Cloudflare Access may require login again when the Home Screen app opens.
-   Enter your owner token and tap Load reports. Tap Clear token and reports to lock.
+## Save Cloudflare connections from the app
 
-The app has no ads, persistent token storage or offline report cache. No service
-worker caches confidential responses. It requires internet access; browser install
-UI varies. API fetches retain same-origin Access cookies and carry a separate owner
-bearer. A home-screen shortcut is not a native App Store application.
+After entering your PIN, expand **Connect Cloudflare analytics from this phone**.
+For each project enter:
 
-## Local computer preview
+- Read-only Cloudflare API token: Profile → API Tokens → Create Custom Token.
+  Permissions: Account → Account Analytics → Read, Zone → Analytics → Read;
+  restrict it to the relevant accounts/zones. Never use a deployment/service token.
+- Account ID from the Cloudflare account overview and Worker name from Workers &
+  Pages, if the project uses a Worker.
+- Zone ID from the domain overview, for website HTTP metrics.
 
-Requires Node.js, npm/network for Wrangler, and a browser:
+Provide a zone ID, or an account ID plus worker name; either or both reports can
+be configured. If Pillcounted uses static Pages without a Worker, omit worker name
+and use its zone. Click **Save connection** for each project, then **Load reports**.
+The token field clears after saving; it is never filled with the saved token.
+Reopening the app after PIN login uses saved credentials automatically.
+**Remove saved connection** deletes that project's encrypted record. If legacy
+server-secret configuration exists, it remains a fallback after deletion.
+
+Tokens/scope configuration are AES-256-GCM encrypted with a random IV and project
+binding in D1. Encryption key stays in a Worker secret, separately from the data.
+Tokens are decrypted only on the server for the fixed Cloudflare GraphQL endpoint.
+No tokens are echoed to the client, put in URLs, logged by the app, or saved in
+browser local/session storage. Secrets are encrypted, not irreversibly hashed,
+because the server needs them to contact Cloudflare. Protect Cloudflare account
+access/backups and review platform logging settings. Never paste tokens into chat.
+
+Changing the PIN invalidates current app sessions. Changing the encryption key
+invalidates sessions **and makes saved credentials unreadable**; re-save both
+connections afterwards. An API token's expiry/revocation also requires replacement.
+Save validates format, not live permission entitlement; source errors remain clearly
+identified when reports load. Zone reports cover the entire zone, including other
+hostnames. Shared zones therefore share zone totals, not isolated project traffic.
+
+## Authentication and API security
+
+The app uses the configured PIN, five attempts per hashed client IP/15-minute UTC
+bucket plus a Cloudflare five/minute limiter, and a signed one-hour cookie. Cookies
+are HttpOnly, SameSite=Strict, and Secure on HTTPS. Rotating the PIN or server key
+invalidates cookies. The dedicated app rejects account and event-collection APIs.
+Use Cloudflare Access in front of the PIN screen; a short numeric PIN is not an
+internet identity system. Client addresses are HMAC-hashed only for bounded login
+attempt records, cleaned on subsequent login attempts. Login attempt records are
+separate from anonymous product events. Logout clears the browser cookie; copied
+cookies expire after an hour or can be invalidated by rotating the PIN/key.
+
+The dashboard does not require entering a separate owner bearer. The wrapper
+validates its signed cookie and provides internal backend authorization. The public
+site's legacy owner report endpoints still require an explicitly configured owner
+bearer and cannot accept credential uploads.
+
+- `POST /api/analytics/login` accepts `{pin}` from the same origin.
+- `POST /api/analytics/logout` clears the app cookie.
+- `POST /api/analytics/connections?project=funsat` accepts
+  `{token,accountId,zoneId,workerName}`, or `{action:"delete"}`, with owner session.
+- `GET /api/analytics/summary?project=funsat&from=YYYY-MM-DD&to=YYYY-MM-DD`
+  reports consented event/session aggregates.
+- `GET /api/analytics/cloudflare?project=pillcounted&from=...&to=...`
+  uses saved connection credentials, then optional legacy server configuration.
+- `POST /api/analytics/cloudflare-report?...` supports request-scoped one-off
+  credentials for compatible integrations; the dashboard uses persistent saves.
+- `GET /api/analytics/projects` reports configured scope flags, not tokens.
+
+All credential and login POSTs require same origin; non-loopback HTTP redirects to
+HTTPS. Authenticated reporting uses no-store and bounded dates/rates/payloads.
+Unknown fields/schemas reject. The app is an owner system, not a multi-tenant system;
+its owner can choose any scope granted by their read-only Cloudflare token.
+
+Legacy server configuration is optional: `ANALYTICS_PROJECTS` JSON with each
+project's `cloudflare:{accountId,zoneId,workerName}`, and secret
+`CLOUDFLARE_ANALYTICS_TOKENS` JSON `{funsat:"READ_TOKEN",pillcounted:"READ_TOKEN"}`.
+Saved connections override these settings without modifying them.
+
+## Local preview
 
 ```
 node scripts/start-analytics-local.mjs
 ```
 
-Open `http://localhost:8790/owner-analytics/`. The first run generates a private
-owner token in `.analytics-local/.dev.vars`, uses a separate local D1 database,
-and binds only to this computer. Copy the owner token from that ignored file into
-the form. Local usage summaries start empty. For live Cloudflare reads during a
-local preview, add `ANALYTICS_PROJECTS` and `CLOUDFLARE_ANALYTICS_TOKENS` JSON values
-as quoted variables in that file. Stop with Ctrl+C. Never expose Wrangler's local
-explorer/debug server to the internet or a public tunnel.
+This initializes an isolated local D1 database and listens only on this computer at
+`http://localhost:8790/owner-analytics/`. The local PIN and encryption key are in
+ignored `.analytics-local/.dev.vars`; they are not deployed or committed. New local
+setups generate random values. Keep that file private. Stop with Ctrl+C. Do not
+expose Wrangler's local explorer/debug server through an internet tunnel.
+On a phone, localhost refers to the phone; use the private HTTPS host from above.
 
-On a phone, `localhost` means the phone itself. Use the private HTTPS deployment
-above for access from anywhere. It does not require leaving a computer running.
+## Optional consented product events
 
-## Optional product-event collection
+FunSAT's public Worker supports `POST /api/analytics/events?project=funsat` with
+exact approved Origin, JSON <=16 KiB and <=20 events:
 
-The existing FunSAT Worker serves `/api/analytics/events`. Collection is OFF until
-`ANALYTICS_ENABLED=true` is explicitly configured on the public site's Worker and
-the consent implementation explicitly calls
-`CloudProjectAnalytics.connectFunSat({consent:true})`. Withdraw consent using
-`CloudProjectAnalytics.configure({consent:false})` and
-`FunSatMetrics.configure({consent:false})`. Advertising consent and analytics consent must be handled as
-separate purposes. Do not assume one grants the other.
+```json
+{"consent":true,"sessionId":"UUID_V4","events":[{"id":"UUID_V4","name":"page_view","properties":{"view":"site"}}]}
+```
 
-Apply the additive schema before enabling collection. The main Worker has a daily
-90-day cleanup job. Wire the CMP's analytics grant/withdraw callbacks; no fabricated
-consent or automatic activation is present. Owner reports can read the public
-Worker's event tables because the dedicated owner Worker binds the same database.
-The public Worker may have its own owner token only if owner reporting there is
-wanted; it is not needed for public event collection.
+Collection is off until `ANALYTICS_ENABLED=true` on that public Worker and a real
+analytics consent callback calls `CloudProjectAnalytics.connectFunSat({consent:true})`.
+Withdraw using `CloudProjectAnalytics.configure({consent:false})` and
+`FunSatMetrics.configure({consent:false})`. Analytics and advertising are separate
+consent purposes. The public Worker cleans events/budgets older than 90 days daily,
+including after collection is disabled. Anonymous tab sessions expire after 30
+minutes of inactivity; no persistent visitor identity exists. Client events can
+be forged and consented traffic is incomplete. Idempotent UUIDs are project-scoped.
+Rate/session/project limits and an atomic daily budget (default 100,000 attempted
+events/project, configurable `ANALYTICS_DAILY_EVENT_LIMIT`) bound storage abuse.
+Cloudflare rate limits are location-local, not billing quotas. Attempts including
+duplicates count against the daily event budget.
 
-Pillcounted's repository was inaccessible in this session, so no client code there
-was changed. Its Cloudflare reporting can be connected without editing that site.
-If you later add the generic `analytics-client.js` to Pillcounted, initialize only
-on affirmative analytics consent with
-`CloudProjectAnalytics.configure({consent:true,project:'pillcounted',endpoint:'https://funsat.bid/api/analytics/events'})`.
-Only `CloudProjectAnalytics.track('page_view',{})` is supported there, normalized to
-`view:site`; never include page paths, queries, medication, diagnosis, patient,
-account, form or other health data. Review/update Pillcounted's privacy notice
-before enabling any collection. Existing unrelated site analytics are unaffected.
+Pillcounted's client repository was inaccessible during initial implementation and
+was not edited. Its provider reports do not require client changes. If later added,
+its consented client accepts only generic page_view normalized to view:site, with no
+URLs, health/medication/diagnosis/patient/account/form data. Review its consent/privacy
+notice before collection. Existing unrelated site analytics remain unchanged.
 
-## API contract and limitations
+## Metric limitations
 
-- `GET /api/analytics/projects`: configured scope/collection flags, owner-only.
-- `GET /api/analytics/summary?project=funsat&from=YYYY-MM-DD&to=YYYY-MM-DD`:
-  project-filtered event/session aggregates and daily counts, owner-only.
-- `GET /api/analytics/cloudflare?project=pillcounted&from=...&to=...`:
-  project-scoped official Cloudflare GraphQL reports, owner-only.
-- Public Worker only: `POST /api/analytics/events?project=funsat` with exact
-  allowed Origin and `Content-Type: application/json`, up to 16 KiB/20 events:
+Initial provider reporting includes Workers requests/errors/subrequests/CPU p50/p99
+(μs) and daily zone HTTP requests/bytes/cache/threats/unique estimates. It does not
+include every Cloudflare product, billing, RUM or AdSense revenue. Requests include
+assets/bots and are not pageviews; daily uniques cannot be summed into unique people.
+Client sessions are not users or verified test completion. Dates are inclusive UTC,
+max 31 days within 90 days. Provider plan, retention, permissions and sampling can
+reduce availability. Source failures are unavailable, never fabricated estimates.
 
-  ```json
-  {"consent":true,"sessionId":"UUID_V4","events":[{"id":"UUID_V4","name":"page_view","properties":{"view":"site"}}]}
-  ```
-
-Unknown fields/events are rejected. Event UUIDs deduplicate within a project;
-projects do not share identifiers or counts. CORS permits only configured origins
-(apex/www FunSAT and Pillcounted by default), but is not proof of legitimate traffic.
-Client events can be forged; they must never be used for billing/verified earnings.
-Bounded session/project request rates plus an atomic daily per-project event budget
-(default 100,000 attempted events, configurable `ANALYTICS_DAILY_EVENT_LIMIT`) limit
-storage abuse. Rate limits are Cloudflare location-local, not global billing quotas.
-Daily budget counts duplicates/failed insert attempts too. Events older than 90 days
-are cleaned daily by the public Worker, including after collection is disabled. There is no persistent person ID;
-consented sessionStorage tab identifiers expire after 30 minutes of inactivity.
-Do not add session counts across days to obtain unique users.
-
-Dates are UTC/inclusive, max 31 days, within the previous 90 days. Provider retention,
-plan entitlements and sampling can reduce availability. CPU quantiles are μs.
-Workers/HTTP requests include assets, retries and bots, **not pageviews**. Daily zone
-uniques are provider estimates, not deduplicated period users. AdSense earnings are
-not part of Cloudflare and are not invented. Source failures return unavailable
-status without tokens/upstream raw error bodies. Owner responses use no-store.
-An owner bearer grants both projects' reports; this is not a multi-tenant customer
-permission system. Rotate secrets if leaked. Cloudflare Access adds owner identity
-protection but must be configured and verified externally.
-
-Official sources used:
+Official references:
 - https://developers.cloudflare.com/analytics/graphql-api/tutorials/querying-workers-metrics/
 - https://developers.cloudflare.com/analytics/graphql-api/getting-started/authentication/api-token-auth/
 - https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
 - https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/
 
-Live provider queries cannot be verified until read credentials and scopes exist.
-No deployments, external migrations or changes to Cloudflare accounts were made.
+No remote deployment or database migration was performed in this implementation.

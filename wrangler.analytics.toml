@@ -25,3 +25,8 @@ database_id = "8f1793ec-e23e-439e-9285-55f183146491"
 name = "ANALYTICS_READ_LIMITER"
 namespace_id = "714023"
 simple = {limit = 30, period = 60}
+
+[[ratelimits]]
+name = "ANALYTICS_LOGIN_LIMITER"
+namespace_id = "714024"
+simple = {limit = 5, period = 60}

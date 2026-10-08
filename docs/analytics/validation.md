@@ -45,3 +45,32 @@ Analytics-request files modified:
 `worker/schema.sql`, `wrangler.toml`.
 Earlier AdSense work remains in the same working tree; see
 `docs/monetization/report.md` for that implementation's separate report.
+
+
+## PIN and saved connections update
+
+The owner app now requires a private configured PIN and encryption key; no default
+production PIN/key exists in source. Its signed one-hour HttpOnly/SameSite/Secure
+session gates dashboard assets and reporting. Five login attempts per hashed client
+address/15-minute bucket plus a five/minute limiter bound guesses. Tests verified
+cross-site rejection, wrong/missing PIN, gated API/assets, tampered sessions, PIN
+rotation and logout. The public site no longer serves owner dashboard assets.
+
+The owner can save/remove separate Cloudflare connections. AES-256-GCM ciphertext
+uses random IVs and project-specific authenticated data; no raw token is saved in
+D1 or returned. Tests verified encryption round trips, cross-project decryption
+rejection, saved credentials reused for scoped provider requests, and deletion.
+Real local D1/browser checks covered PIN login, both connection saves, cleared token
+fields, responsive 320/390/768/1366 layouts, reload and sign-out protection. Provider
+reports in the browser check were mocked, so no real credentials were needed.
+Local D1 inspection confirmed encrypted rows for both projects. Owner and main
+Worker dry-run builds passed. Live hosting/credentials remain unconfigured.
+
+New update files: `owner-analytics/login.html`, `owner-analytics/login.js`,
+`worker/migrations/0002_analytics_connections.sql`, `tests/analytics-connection-ui.cjs`.
+Modified update files: `worker/index.js`, `worker/analytics-owner.js`,
+`worker/schema.sql`, `wrangler.analytics.toml`, `wrangler.toml`,
+`owner-analytics/index.html`, `owner-analytics/dashboard.js`, `owner-analytics/style.css`,
+`scripts/start-analytics-local.mjs`, `tests/analytics.test.cjs`,
+`tests/analytics-owner.test.cjs`, `tests/analytics-ui.cjs`,
+`docs/analytics/README.md`, and this validation document.

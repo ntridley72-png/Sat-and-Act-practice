@@ -51,6 +51,26 @@
     if(equations.length){const questionText=body.querySelector('.qtext');const holder=document.createElement('div');holder.className='question-equations';place(holder,equations);questionText?.after(holder);}
     if(detailed&&explanationEquations.length){const holder=document.createElement('div');holder.className='explanation-equations';place(holder,explanationEquations);detailed.append(holder);}
   }
+  // The action bar is sticky and wraps to two rows on a narrow viewport, so the
+  // reading column reserves its real height rather than a guessed one. Without
+  // this the bar sits over the last answer choice at some widths.
+  let footObserver = null;
+  function trackFooterHeight(canvas, foot) {
+    if (footObserver) { footObserver.disconnect(); footObserver = null; }
+    if (!canvas) return;
+    const apply = () => {
+      const h = foot ? Math.round(foot.getBoundingClientRect().height) : 0;
+      canvas.style.setProperty('--ws-foot-h', (h || 76) + 'px');
+      // How much chrome sits above the reading column, so it can be given the
+      // rest of the viewport as its own scroller from 1024 up.
+      const top = Math.round(canvas.getBoundingClientRect().top + (window.scrollY || 0));
+      canvas.style.setProperty('--ws-above', Math.max(0, top) + 'px');
+    };
+    apply();
+    if (!foot) return;
+    if (typeof ResizeObserver === 'function') { footObserver = new ResizeObserver(apply); footObserver.observe(foot); footObserver.observe(document.documentElement); }
+    else window.addEventListener('resize', apply);
+  }
   function buildWorkspace() {
     if(state.view!=='test')return;
     const card=$('questionCard');const qid=currentQids()[state.qi];const q=byId(qid);if(!q)return;
@@ -106,6 +126,7 @@
     if(theme==='notebook'){toolsHome.append(toolbar);canvas.insertBefore(dock,foot||null);grid.append(canvas,learn,nav);}
     if(theme==='focus'){rail.append(toolbar);grid.append(rail,dock,canvas,learn,nav);}
     dock.append($('calcPanel'));card.append(grid);selectLearningTab(activeTab);
+    trackFooterHeight(canvas,foot);
   }
   const baseQuestionRender=renderQuestion;
   renderQuestion=function(){
@@ -117,7 +138,13 @@
     if(calcTool.engine==='desmos'&&calcTool.calc)requestAnimationFrame(()=>calcTool.calc.resize());
   };
   const baseShowScreen=showScreen;
-  showScreen=function(id){document.body.classList.toggle('workspace-practicing',id==='screen-test');baseShowScreen(id);if(id!=='screen-test'){document.body.append($('calcPanel'));toolsHome.append(toolbar);}};
+  let shownScreen=null;
+  showScreen=function(id){document.body.classList.toggle('workspace-practicing',id==='screen-test');baseShowScreen(id);
+    if(id!=='screen-test'){document.body.append($('calcPanel'));toolsHome.append(toolbar);}
+    // Practice is usually started from a button well down the home screen, and
+    // nothing reset the scroll, so the student arrived below the question.
+    if(id!==shownScreen){shownScreen=id;try{window.scrollTo(0,0);}catch(e){}}
+  };
   document.body.classList.toggle('workspace-practicing',state.view==='test'||state.view==='routing');
   if(state.view==='test')renderQuestion();
 })();

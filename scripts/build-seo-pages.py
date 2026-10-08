@@ -44,6 +44,160 @@ def table(rows, head=("", "")):
             f'<th scope="col">{head[1]}</th></tr></thead><tbody>{body}</tbody></table>')
 
 
+SOCIAL_GRADE_HEAD = {
+    "A": "Busy, with plenty of people to meet",
+    "B": "A steady social scene",
+    "C": "A quieter social scene",
+    "D": "A small, quiet social scene",
+}
+LOCALE_LINE = {
+    "city": "in a city, so a lot of what students do happens off campus too",
+    "suburb": "in a suburb, within reach of a bigger city but with its own centre of gravity",
+    "town": "in a college town, where the campus largely is the social scene",
+    "rural": "in a rural setting, where almost everything social happens on campus",
+}
+
+
+def size_word(enr):
+    if not enr:
+        return None
+    if enr >= 25000:
+        return "very large"
+    if enr >= 12000:
+        return "large"
+    if enr >= 4000:
+        return "mid-sized"
+    if enr >= 1200:
+        return "small"
+    return "very small"
+
+
+def social_life(c, name, state):
+    """A social-life section assembled only from figures already in the bundle,
+    each line credited to the collection it comes from. There is no student
+    survey behind any of this and the copy says so: the letter grade is the
+    app's own estimate, and every number under it is federal or BEA data the
+    reader can check."""
+    grade = c.get("sg")
+    enr, loc = c.get("enr"), c.get("loc")
+    ret, gr_, div = c.get("ret"), c.get("gr"), c.get("div")
+    age25, rpp, rpph = c.get("age25"), c.get("rpp"), c.get("rpph")
+    sfr = c.get("sfr")
+    if not grade and not enr:
+        return "", None
+
+    # A reported 0 for a rate is a hole in the source, not a measurement. Saying
+    # "0% finish within six years" about a 50,000-student university would be a
+    # fabrication dressed as data.
+    if not ret:
+        ret = None
+    if not gr_:
+        gr_ = None
+
+    # Where most students are older, the figures are not describing residential
+    # campus life at all, whatever the letter grade works out to.
+    commuter = age25 is not None and age25 >= 35
+    size = size_word(enr)
+
+    bits = []
+    if size and commuter:
+        article = "an" if str(loc or "").startswith(("u", "a", "e", "i", "o")) else "a"
+        where = f", on {article} {str(loc).lower()} campus in {e(state)}" if loc else f" in {e(state)}"
+        bits.append(f"{name} enrolls a {size} student body{where}")
+    elif size and loc:
+        bits.append(f"{name} is a {size} campus {LOCALE_LINE.get(loc, 'in ' + e(state))}")
+    elif size:
+        bits.append(f"{name} is a {size} campus")
+    if age25 is not None:
+        if commuter:
+            bits.append(f"but {age25:.0f}% of students are 25 or older, so these figures describe "
+                        f"a largely non-residential student body rather than campus social life")
+        elif age25 < 5:
+            bits.append("almost everyone is traditional college age")
+        elif age25 < 15:
+            bits.append("most students are traditional college age")
+        else:
+            bits.append(f"{age25:.0f}% of students are 25 or older, so a good share are "
+                        f"working or commuting rather than living student life full time")
+    if ret is not None:
+        if ret >= 75:
+            bits.append(f"and {ret:.0f}% come back after first year")
+        else:
+            bits.append(f"and only {ret:.0f}% come back after first year, which is worth asking about")
+    lead = "; ".join(bits).replace("; and ", " and ").replace("; but ", " but ") + "."
+
+    rows = []
+    if enr:
+        rows.append(("Undergraduates", f"{enr:,}",
+                     "U.S. Dept. of Education, College Scorecard"))
+    if loc:
+        rows.append(("Setting", f"{str(loc).title()} &middot; {e(c.get('city') or '')}, {e(c.get('st') or '')}",
+                     "IPEDS locale classification"))
+    if ret is not None:
+        rows.append(("Come back after first year", f"{ret:.0f}%",
+                     "College Scorecard (RET_FT4)"))
+    if gr_ is not None:
+        rows.append(("Finish within six years", f"{gr_:.0f}%",
+                     "College Scorecard (C150_4)"))
+    if div is not None:
+        rows.append(("Spread across reported groups", f"{div:.0f} out of 100",
+                     "Computed from Scorecard enrollment shares"))
+    if age25 is not None:
+        rows.append(("Students 25 or older", f"{age25:.1f}%",
+                     "College Scorecard"))
+    if sfr:
+        rows.append(("Students per faculty member", f"{sfr:.0f}:1",
+                     "College Scorecard"))
+    if rpp:
+        rent = f" &middot; rent {rpph:.0f}" if rpph else ""
+        rows.append(("Local prices (U.S. = 100)", f"{rpp:.0f}{rent}",
+                     f"BEA Regional Price Parities, {e(state)}, 2024"))
+
+    cells = "".join(
+        f'<div class="sl-fact"><dt>{label}</dt>'
+        f'<dd class="sl-val">{value}</dd>'
+        f'<dd class="sl-src">{source}</dd></div>'
+        for label, value, source in rows)
+
+    if commuter:
+        head = "Largely a non-residential student body"
+        badge = ""
+    else:
+        head = SOCIAL_GRADE_HEAD.get(grade or "", "Campus social signals")
+        badge = (f'<span class="sl-grade" data-grade="{e(grade)}" '
+                 f'aria-label="Social life estimate: grade {e(grade)}">{e(grade)}</span>') if grade else ""
+
+    # A low spread figure at a college that serves one community is a description
+    # of who it serves, not a shortcoming, and the page should say which it is.
+    served = ""
+    if c.get("hbcu"):
+        served = (" This is a historically Black college or university, so the spread figure "
+                  "describes the community it was founded to serve.")
+    elif str(c.get("st") or "") in ("PR", "GU", "VI"):
+        served = (" Nearly all students here come from the island's own population, which is why "
+                  "the spread figure is low.")
+
+    html_out = (
+        f'<h2 id="social-life">Social life at {e(name)}</h2>'
+        f'<section class="sl">'
+        f'<div class="sl-head">{badge}'
+        f'<div><p class="sl-title">{head}</p>'
+        f'<p class="sl-lead">{lead}</p></div></div>'
+        f'<dl class="sl-facts">{cells}</dl>'
+        f'<p class="sl-note"><strong>How to read this.</strong> There is no student survey behind '
+        f'this section. The letter is {SITE_NAME}&rsquo;s own estimate from the figures above &mdash; '
+        f'size, how many students return, the spread of backgrounds and the setting &mdash; and the '
+        f'figures themselves come from the U.S. Department of Education&rsquo;s College Scorecard '
+        f'and IPEDS collections and the Bureau of Economic Analysis. Retention is the closest thing '
+        f'in public data to &ldquo;students are happy here&rdquo;, but it is a proxy, not a verdict. '
+        f'The spread figure measures how evenly enrollment is divided across the groups the college '
+        f'reports; a low number means a more homogeneous student body, not a worse one.{served} '
+        f'For the things official data cannot measure &mdash; Greek life, clubs, whether weekends '
+        f'empty out &mdash; read the student paper and ask on a visit.</p>'
+        f'</section>')
+    return html_out, (ret, grade, size, loc, commuter)
+
+
 def college_page(c, data):
     name, st = c["n"], c["st"]
     state = STATES.get(st, st)
@@ -165,6 +319,9 @@ def college_page(c, data):
                     f"level with the {pct(c['gr'])} rate for the class as a whole &mdash; a sign "
                     f"the college supports lower-income students about as well as everyone else.</p>")
 
+    # --- social life (from data already in the bundle; see social_life())
+    social, social_facts = social_life(c, name, state)
+
     # --- majors
     majors = ""
     if c.get("maj"):
@@ -215,6 +372,22 @@ def college_page(c, data):
                      f"The most recent federal data lists {name}'s testing policy as "
                      f"\"{c['test']}\". Policies change yearly, so confirm with the admissions "
                      f"office for your application cycle."))
+    if social_facts:
+        ret_v, grade_v, size_v, loc_v, commuter_v = social_facts
+        parts = []
+        if commuter_v:
+            parts.append(f"{name} enrolls a {size_v or 'mixed'} student body, but most students "
+                         f"here are 25 or older, so it is largely not a residential campus")
+        elif size_v and loc_v:
+            parts.append(f"{name} is a {size_v} campus {LOCALE_LINE.get(loc_v, '')}".rstrip())
+        if ret_v is not None:
+            parts.append(f"{ret_v:.0f}% of first-year students return for a second year")
+        if parts:
+            faqs.append((f"What is social life like at {name}?",
+                         ". ".join(p[0].upper() + p[1:] for p in parts) +
+                         ". Public data cannot measure Greek life, clubs or whether the campus "
+                         "empties at weekends, so treat these figures as a starting point and "
+                         "check the student newspaper and a campus visit for the rest."))
     if c.get("np"):
         faqs.append((f"How much does {name} cost?",
                      f"Published tuition and fees are {money(c.get('ti'))} in-state and "
@@ -224,12 +397,44 @@ def college_page(c, data):
     faq_html = "<h2>Frequently asked questions</h2>" + "".join(
         f"<h3>{e(q)}</h3><p>{e(a)}</p>" for q, a in faqs)
 
-    # --- image
+    # --- photo gallery
+    # Built from `imgs`, a list of curated Commons images. Accepts the stored
+    # shape {u, a, l} and the {src, credit, license} shape, and falls back to the
+    # single `img`/`imgA`/`imgL` fields. Each image carries its own credit
+    # because the Commons licences require attribution per work, not per page.
+    shots = []
+    for item in (c.get("imgs") or []):
+        src = item.get("src") or item.get("u")
+        if not src:
+            continue
+        shots.append({"src": src,
+                      "credit": item.get("credit") or item.get("a") or "Wikimedia Commons",
+                      "license": item.get("license") or item.get("l") or ""})
+    if not shots and c.get("img"):
+        shots.append({"src": c["img"], "credit": c.get("imgA", "Wikimedia Commons"),
+                      "license": c.get("imgL", "")})
+
     img = ""
-    if c.get("img"):
-        img = (f'<figure class="gfig"><img src="{e(c["img"])}" alt="{e(name)} campus" '
-               f'loading="lazy" decoding="async" width="960" height="540">'
-               f'<figcaption class="muted">Photo: {e(c.get("imgA", "Wikimedia Commons"))}</figcaption></figure>')
+    if shots:
+        cells = []
+        for i, shot in enumerate(shots):
+            credit = (f'<a href="{e(shot["license"])}" target="_blank" rel="noopener nofollow">'
+                      f'{e(shot["credit"])}</a>') if shot["license"] else e(shot["credit"])
+            cells.append(
+                f'<figure class="cg-item">'
+                f'<button type="button" class="cg-open" data-cg="{i}" '
+                f'aria-label="Open photo {i + 1} of {len(shots)} of {e(name)} larger">'
+                f'<img src="{e(shot["src"])}" alt="{e(name)} campus, photo {i + 1}" '
+                f'loading="lazy" decoding="async" width="960" height="540"></button>'
+                f'<figcaption class="cg-credit">{credit}</figcaption></figure>')
+        gallery_data = json.dumps(
+            [{"src": x["src"], "credit": x["credit"], "license": x["license"]} for x in shots],
+            separators=(",", ":"), ensure_ascii=False)
+        img = (f'<section class="cg" data-college-gallery data-count="{len(shots)}" '
+               f'aria-label="Photos of {e(name)}">'
+               f'<div class="cg-grid">{"".join(cells)}</div>'
+               f'<script type="application/json" class="cg-data">{gallery_data}</script>'
+               f'</section>')
 
     related = "".join(
         f'<a href="/colleges/{o["slug"]}/">{e(o["n"])}</a>' for o in c.get("_related", []))
@@ -250,7 +455,7 @@ def college_page(c, data):
             f'<a href="/colleges/">All colleges</a></nav>'
             f'<p class="gkicker">{e(state)} &middot; College profile</p>'
             f'<h1>{e(name)}: SAT &amp; ACT Scores, Acceptance Rate and Costs</h1>'
-            f'{intro}{personal}{img}{scores}{sel}{cost}{out}{majors}{cta}{faq_html}{src}{links}')
+            f'{intro}{personal}{img}{scores}{sel}{cost}{out}{social}{majors}{cta}{faq_html}{src}{links}')
 
     schema = [
         {"@type": "CollegeOrUniversity", "name": name,
@@ -265,6 +470,8 @@ def college_page(c, data):
         schema.append(faq_schema(faqs))
 
     extra = '<script src="/college-profile.js" defer></script>' if personal else ""
+    if img:
+        extra += '<script src="/college-gallery.js" defer></script>'
     return path, page(path=path, title=title, description=description, body=body,
                       schema=schema, extra_head=extra)
 

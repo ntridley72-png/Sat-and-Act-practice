@@ -60,7 +60,7 @@ vm.runInContext(extract('/*__DATA_START__*/','const STORAGE_KEY'),bankContext);
 const actual=vm.runInContext('({math:BANK.math,rw:BANK.rw,science:BANK.science,english:BANK.english,reading:BANK.reading})',bankContext);
 const all=[...actual.math,...actual.rw,...actual.science];
 assert.equal(new Set(all.map(q=>q.id)).size,all.length,'Duplicate question IDs');
-for(const q of all){assert.equal(q.choices.length,4);assert(q.ans>=0&&q.ans<4);assert(q.exp);assert(['easy','medium','hard'].includes(q.diff));}
+for(const q of all){if(q.kind==="gridin"){assert.ok(q.answer,"grid-in needs an answer");}else{assert.equal(q.choices.length, q.id.startsWith("am")?5:4);}assert(q.ans>=0&&q.ans<(q.id.startsWith("am")?5:4));assert(q.exp);assert(['easy','medium','hard'].includes(q.diff));}
 for(const bank of ['math','rw'])for(const diff of ['easy','medium','hard'])assert(actual[bank].filter(q=>q.diff===diff).length>50,`${bank} ${diff} pool too small`);
 vm.runInContext(extract('const DIFF_B', '// ---- AI TUTOR'),context);
 context.byId=id=>all.find(q=>q.id===id);

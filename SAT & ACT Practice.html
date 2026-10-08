@@ -384,7 +384,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 .feedback.good{background:var(--green-bg);border:1px solid #bbf7d0}
 .feedback.bad{background:var(--red-bg);border:1px solid #fecaca}
 .feedback .head{font-weight:800;margin-bottom:5px}
-.explain{margin-top:8px;color:#1f2937}
+.explain{margin-top:8px;color:inherit}
 .nav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px;flex-wrap:wrap}
 .dots{display:flex;gap:5px;flex-wrap:wrap}
 .qdot{width:27px;height:27px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:.76rem;color:var(--muted);cursor:pointer;transition:background .12s,border-color .12s}
@@ -599,7 +599,10 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
             <div class="st-resume-btns"><button id="btnResume">Resume</button><button id="btnDiscard" class="danger">Discard</button></div>
           </div>
 
-          <div class="st-step first"><span class="st-n">1</span>Choose a test</div>
+          <details class="st-setup" id="setupDetails" open>
+        <summary class="st-setup-sum"><span class="st-setup-line"><b id="setupSumText">Set up your practice</b><span class="st-setup-hint" id="setupSumHint"></span></span><span class="st-setup-act">Change</span></summary>
+        <div class="st-setup-body">
+        <div class="st-step first"><span class="st-n">1</span>Choose a test</div>
           <div class="pick-row st-tests" id="typePicker">
             <button class="pick selected" data-type="sat"><span class="st-logo sat">SAT</span><span class="st-tt"><span class="t">SAT</span><span class="d">Digital, adaptive · 400–1600</span></span></button>
             <button class="pick" data-type="act"><span class="st-logo act">ACT</span><span class="st-tt"><span class="t">ACT</span><span class="d">4 sections · 1–36</span></span></button>
@@ -652,7 +655,8 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
             <div class="curve-note" id="curveNote"></div>
           </details>
 
-          <div class="st-go">
+          </div></details>
+        <div class="st-go">
             <div class="st-summary"><strong id="stSummary">SAT · Both sections</strong><span id="stTime"></span></div>
             <button id="btnStart">Start practice →</button>
           </div>
@@ -728,22 +732,30 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
       <div class="card" id="routingCard" style="margin-top:14px;display:none"></div>
     </section>
 
-    <section id="screen-results" class="card" style="display:none">
-      <h2>Your score</h2>
+    <section id="screen-results" class="card results-screen" style="display:none">
+      <h1 class="rs-h">Your score</h1>
       <p class="muted" id="resultsIntro"></p>
       <p class="small muted" id="resultsSaveStatus"></p>
-      <div class="score-grid" id="scoreGrid"></div>
-      <div id="rewardsSummary" class="rewards-summary" style="display:none"></div>
-      <div id="resultsDelta"></div>
-      <div id="resultsPred"></div>
+      <div class="rs-hero">
+        <div class="score-grid" id="scoreGrid"></div>
+        <div id="resultsDelta"></div>
+        <div id="rewardsSummary" class="rewards-summary" style="display:none"></div>
+      </div>
+      <div id="resultsWork" class="rs-work"></div>
+      <details class="rs-more" id="resultsMore">
+        <summary>All domains, module routing and your predicted score</summary>
+        <div class="rs-more-body">
+          <div id="resultsRouting"></div>
+          <div id="resultsDomains"></div>
+          <div id="resultsPred"></div>
+        </div>
+      </details>
       <div class="notice info" id="resultsNote"></div>
-      <div id="resultsRouting"></div>
-      <div id="resultsDomains"></div>
       <aside class="sponsor-slot" data-ad-slot="results-top" aria-label="Sponsored content" hidden></aside>
       <aside class="sponsor-slot" data-ad-slot="results-grid" aria-label="Sponsored content" hidden></aside>
-      <div style="margin:18px 0 6px;display:flex;gap:10px;flex-wrap:wrap">
-        <button id="btnNewTest">Start a new session</button>
-        <button id="btnReview" class="secondary">Review answers</button>
+      <div class="rs-actions">
+        <button id="btnReview">Review your answers</button>
+        <button id="btnNewTest" class="secondary">Start a new session</button>
       </div>
       <div id="reviewArea" style="display:none"></div>
     </section>
@@ -845,6 +857,11 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
     </div>
     <div id="authIn" style="display:none">
       <p style="margin:6px 0 4px">Signed in as <strong id="authWho"></strong></p>
+      <section class="fxav-picker" id="avatarPicker" aria-labelledby="avatarPickerTitle" hidden>
+        <h3 id="avatarPickerTitle">Pick an avatar</h3>
+        <p class="small muted">Drawn in your browser from your account name. Nothing is uploaded.</p>
+        <div class="fxav-grid" id="avatarChoices" role="radiogroup" aria-labelledby="avatarPickerTitle"></div>
+      </section>
       <p class="small muted" id="authSync">Your progress syncs automatically.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" id="authSyncNow">Sync now</button><button type="button" class="secondary" id="btnHelpHistory">Help history</button><button type="button" class="secondary" id="authOutBtn">Sign out</button></div>
       <section id="helpHistoryPanel" class="help-history" hidden aria-labelledby="helpHistoryTitle">
@@ -877,6 +894,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 
 <canvas id="confettiCanvas"></canvas>
 
+<script defer src="avatar.js"></script>
 <script defer src="app.js"></script>
 
 <div class="modal-overlay" id="pauseModal"><div class="modal"><h2>⏸ Paused</h2><p class="muted" style="margin-bottom:16px">The timer is stopped and the question is hidden.</p><button id="btnUnpause" type="button">▶ Resume</button></div></div>

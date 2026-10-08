@@ -1,11 +1,18 @@
 const fs = require('node:fs');
 const vm = require('node:vm');
 
-const html = fs.readFileSync('SAT & ACT Practice.html', 'utf8');
-const script = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]).find((s) => s.includes('/*__DATA_START__*/'));
-if (!script) throw new Error('Question bank script was not found.');
-const start = script.indexOf('/*__DATA_START__*/');
-const end = script.indexOf('const STORAGE_KEY', start);
+// The bank moved out of the HTML shell into app.js; read the data region there
+// (from the DATA marker to the first browser-only API after the banks are built).
+const app = fs.readFileSync('app.js', 'utf8');
+const start = app.indexOf('/*__DATA_START__*/');
+if (start < 0) throw new Error('Question bank data region was not found in app.js.');
+let end = app.indexOf('const STORAGE_KEY', start);
+if (end < 0) {
+  const tail = app.slice(app.indexOf('ALL_UNIQUE_QUESTIONS.push(...SUBJECT_PACK)', start));
+  const nextBrowser = tail.search(/\ndocument\.|\nwindow\.|\nlocalStorage\./);
+  end = nextBrowser >= 0 ? app.indexOf('ALL_UNIQUE_QUESTIONS.push(...SUBJECT_PACK)', start) + nextBrowser : app.length;
+}
+const script = app;
 const context = vm.createContext({ console });
 vm.runInContext(script.slice(start, end), context);
 const questions = vm.runInContext('ALL_UNIQUE_QUESTIONS', context);
@@ -15,8 +22,19 @@ const findings = questions.map((q) => {
   if (!q.id || !q.domain || !q.diff || !q.q) issues.push('Missing required metadata.');
   if (!['easy', 'medium', 'hard'].includes(q.diff)) issues.push('Invalid difficulty label.');
   if (!Array.isArray(q.choices) || q.choices.length !== 4) issues.push('Question does not have four choices.');
-  if (Array.isArray(q.choices) && new Set(q.choices.map(String)).size !== q.choices.length) issues.push('Duplicate answer choices.');
-  if (!Number.isInteger(q.ans) || q.ans < 0 || q.ans > 3) issues.push('Answer index is invalid.');
+  const gridin = q.kind === 'gridin';
+  const wantFive = /^am/.test(q.id);
+  if (gridin) {
+    if (!q.answer) issues.push('Grid-in missing its numeric answer string.');
+  } else {
+    if (Array.isArray(q.choices) && new Set(q.choices.map(String)).size !== q.choices.length) issues.push('Duplicate answer choices.');
+    if (Array.isArray(q.choices) && q.choices.length !== (wantFive ? 5 : 4)) issues.push('Wrong number of choices.');
+    if (!Number.isInteger(q.ans) || q.ans < 0 || q.ans > (wantFive ? 4 : 3)) issues.push('Answer index is invalid.');
+  }
+  if (Array.isArray(q.dw) && !gridin) {
+    const want = (q.choices || []).length - 1;
+    if (q.dw.length !== want || q.dw.some((w) => !w || String(w).trim().length < 8)) issues.push('Distractor explanations missing or too short.');
+  }
   if (!q.exp || String(q.exp).trim().length < 20) issues.push('Explanation is missing or too short.');
   let textWords = null;
   if (q.kind === 'reading' || q.kind === 'writing') {
@@ -38,7 +56,7 @@ const findings = questions.map((q) => {
             ? 'Text-length/domain check plus grammar or rhetorical-goal review and explanation comparison.'
             : 'Data/experimental-condition review, answer-choice uniqueness, and explanation comparison.';
   return {
-    id: q.id, version: q.version || '2026-10-02', bank: /^m/.test(q.id) || q.id.startsWith('variety-math') ? 'math' : /^s/.test(q.id) || q.id.startsWith('variety-science') ? 'science' : 'reading-writing',
+    id: q.id, version: q.version || '2026-10-02', bank: /^(m|am)/.test(q.id) || q.id.startsWith('variety-math') ? 'math' : /^(s|ar|ae)/.test(q.id) || q.id.startsWith('variety-science') ? (/^ar|^ae/.test(q.id) ? 'reading-writing' : 'science') : 'reading-writing',
     domain: q.domain, skill: q.skill || q.domain, difficulty: q.diff, status,
     answer: Array.isArray(q.choices) && Number.isInteger(q.ans) ? q.choices[q.ans] : null,
     textWords, reason: issues.join(' ') || q.auditReason || 'Passed required checks.', verificationMethod: method
@@ -57,3 +75,5 @@ if (process.argv.includes('--write')) {
   fs.writeFileSync('docs/question-audit-summary.md', summary);
 }
 console.log(JSON.stringify({ total: report.total, counts }));
+
+/*__QB2_AUDIT__*/

@@ -444,7 +444,7 @@ body[data-workspace] .ui-icon{display:inline-block;vertical-align:-.17em;margin-
    broadly because the same pattern had crept into several components. */
 body[data-workspace] button,body[data-workspace] .st-chip,body[data-workspace] .subject-chip,
 body[data-workspace] .scholar-chip,body[data-workspace] .hsc-tab,body[data-workspace] .subject-tab{
-white-space:normal;overflow-wrap:anywhere;height:auto;min-height:40px}
+white-space:normal;overflow-wrap:break-word;word-break:normal;height:auto;min-height:40px}
 body[data-workspace] .college-saved-item{white-space:normal}
 
 /* ---------- Scholarship filters ----------
@@ -468,14 +468,71 @@ body[data-workspace] .scholar-chip.on::before{content:"\2713";margin-right:5px;f
 @font-face{font-family:"Space Grotesk";font-style:normal;font-weight:300 700;font-display:swap;src:url(fonts/space-grotesk-914.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:"Space Grotesk";font-style:normal;font-weight:300 700;font-display:swap;src:url(fonts/space-grotesk-385.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:"Space Grotesk";font-style:normal;font-weight:300 700;font-display:swap;src:url(fonts/space-grotesk-101.woff2) format("woff2");unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}
+/* The --fx-* layer is the semantic palette the redesigned screens are built from.
+   It is defined once per workspace layout and aliases that layout's --ws-* values,
+   so there is exactly one palette on screen at a time. The dark mockup values stay
+   as the :root default for pages that are rendered without a layout attribute. */
 :root{
   --fx-bg:#0D0D0F; --fx-surface:#141418; --fx-surface-2:#17171C;
-  --fx-border:#22222A; --fx-border-2:#26262D;
-  --fx-text:#F4F3F0; --fx-muted:#8C8A85;
-  --fx-accent:#F2743B; --fx-accent-bg:#1C1310;
-  --fx-good:#6FD08C; --fx-good-lt:#8FE0A8; --fx-warn:#F09A6B; --fx-info:#7EA6F0; --fx-violet:#C99BF0; --fx-gold:#F0C64E;
+  --fx-border:#22222A; --fx-border-2:#2E2E37; --fx-border-hover:#3A3A44;
+  --fx-text:#F4F3F0; --fx-text-2:#DEDCD7; --fx-muted:#8C8A85;
+  --fx-accent:#F2743B; --fx-accent-bg:#1C1310; --fx-accent-line:#6A3A22; --fx-on-accent:#1A0E08;
+  --fx-good:#6FD08C; --fx-good-lt:#8FE0A8; --fx-good-bg:#14241A; --fx-good-line:#2F5A3D; --fx-on-good:#0C1A10;
+  --fx-warn:#F09A6B; --fx-warn-bg:#241711; --fx-warn-line:#5E382A;
+  --fx-gold:#F0C64E; --fx-gold-bg:#241E10; --fx-gold-line:#5C4C1E;
+  --fx-info:#7EA6F0; --fx-info-text:#BFD3FA; --fx-info-bg:#121A28; --fx-info-line:#2F4568;
+  --fx-violet:#C99BF0; --fx-violet-bg:#1E1626;
+  --fx-track:#1B1B21; --fx-band:#3A4A66; --fx-overlay:rgba(4,7,12,.6);
+  --fx-accept:#6FD08C; --fx-waitlist:#7EA6F0; --fx-deny:#F08A80;
+  --fx-cat-1:#7EA6F0; --fx-cat-2:#F0C64E; --fx-cat-3:#E88FB8; --fx-cat-4:#C99BF0; --fx-cat-5:#6FD08C; --fx-cat-6:#9FA3AD;
   --fx-r-sm:11px; --fx-r-md:14px; --fx-r-lg:18px;
   --fx-ui:"Space Grotesk",system-ui,sans-serif; --fx-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+/* Structural slots follow the active layout; every colour below is checked to
+   4.5:1 against the surfaces it is painted on by tests/contrast-audit.cjs. */
+body[data-workspace]{
+  --fx-bg:var(--ws-bg); --fx-surface:var(--ws-surface); --fx-surface-2:var(--ws-soft);
+  --fx-border:var(--ws-line); --fx-text:var(--ws-ink); --fx-muted:var(--ws-muted);
+  --fx-accent:var(--ws-accent); --fx-accent-bg:var(--ws-tint);
+}
+body[data-workspace="exam"]{
+  --fx-border-2:#CFCFC9; --fx-border-hover:#8F8F88;
+  --fx-text-2:#3A3A36; --fx-muted:#67675F;
+  --fx-accent-line:#E0A184; --fx-on-accent:#FFFFFF;
+  --fx-good:#1D6B3F; --fx-good-lt:#1D6B3F; --fx-good-bg:#EDF6F0; --fx-good-line:#8FC4A6; --fx-on-good:#FFFFFF;
+  --fx-warn:#8A5410; --fx-warn-bg:#FDF4E6; --fx-warn-line:#D9B57C;
+  --fx-gold:#7A5A00; --fx-gold-bg:#FBF3DA; --fx-gold-line:#D8BE72;
+  --fx-info:#1F4FA8; --fx-info-text:#1F4FA8; --fx-info-bg:#EAF0FD; --fx-info-line:#9FBAEA;
+  --fx-violet:#6B3FA0; --fx-violet-bg:#F3ECFB;
+  --fx-track:#E7E7E3; --fx-band:#A9BEE6; --fx-overlay:rgba(26,26,26,.74);
+  --fx-accept:#1D6B3F; --fx-waitlist:#1F4FA8; --fx-deny:#B4241F;
+  --fx-cat-1:#1F4FA8; --fx-cat-2:#8A5410; --fx-cat-3:#9B2B63; --fx-cat-4:#6B3FA0; --fx-cat-5:#1D6B3F; --fx-cat-6:#4F5560;
+}
+body[data-workspace="notebook"]{
+  --fx-border-2:#C9C3B2; --fx-border-hover:#8B8574;
+  --fx-text-2:#3C3A33; --fx-muted:#635F55;
+  --fx-accent-line:#D59F82; --fx-on-accent:#FFFFFF;
+  --fx-good:#1C6038; --fx-good-lt:#1C6038; --fx-good-bg:#E9F1EA; --fx-good-line:#86BB9C; --fx-on-good:#FFFFFF;
+  --fx-warn:#7E4A0C; --fx-warn-bg:#F5EEDA; --fx-warn-line:#CFAF72;
+  --fx-gold:#6F5200; --fx-gold-bg:#F4EBCF; --fx-gold-line:#CDB268;
+  --fx-info:#1E4C9E; --fx-info-text:#1E4C9E; --fx-info-bg:#E8EEF9; --fx-info-line:#9BB4E0;
+  --fx-violet:#653A99; --fx-violet-bg:#EFE7F7;
+  --fx-track:#DED9C9; --fx-band:#A6BADF; --fx-overlay:rgba(31,30,26,.74);
+  --fx-accept:#1C6038; --fx-waitlist:#1E4C9E; --fx-deny:#A62420;
+  --fx-cat-1:#1E4C9E; --fx-cat-2:#7E4A0C; --fx-cat-3:#8F2A5C; --fx-cat-4:#653A99; --fx-cat-5:#1C6038; --fx-cat-6:#4B5159;
+}
+body[data-workspace="focus"]{
+  --fx-border-2:#2E2E37; --fx-border-hover:#4A4A55;
+  --fx-text-2:#DEDCD7; --fx-muted:#A5A29A;
+  --fx-accent-line:#7A452A; --fx-on-accent:#1A1008;
+  --fx-good:#7FCF9A; --fx-good-lt:#8FE0A8; --fx-good-bg:#17291E; --fx-good-line:#36654A; --fx-on-good:#0C1A10;
+  --fx-warn:#E8BB5E; --fx-warn-bg:#332A19; --fx-warn-line:#6B5629;
+  --fx-gold:#F0C64E; --fx-gold-bg:#2A2314; --fx-gold-line:#60501F;
+  --fx-info:#9BB8F5; --fx-info-text:#BFD3FA; --fx-info-bg:#161E2C; --fx-info-line:#39507A;
+  --fx-violet:#C99BF0; --fx-violet-bg:#221829;
+  --fx-track:#262521; --fx-band:#44557A; --fx-overlay:rgba(0,0,0,.84);
+  --fx-accept:#7FCF9A; --fx-waitlist:#9BB8F5; --fx-deny:#FF8F85;
+  --fx-cat-1:#9BB8F5; --fx-cat-2:#F0C64E; --fx-cat-3:#F09BC2; --fx-cat-4:#C99BF0; --fx-cat-5:#7FCF9A; --fx-cat-6:#A8ACB6;
 }
 
 /* ---------- Question screen (dark immersive, per mockup) ---------- */
@@ -488,27 +545,27 @@ body[data-workspace] .scholar-chip.on::before{content:"\2713";margin-right:5px;f
 #screen-test .ghost{background:transparent;border:1px solid var(--fx-border-2);color:var(--fx-muted);border-radius:var(--fx-r-sm);min-height:44px}
 #screen-test .ghost:hover{border-color:var(--fx-accent);color:var(--fx-text)}
 #screen-test .secondary{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-text);border-radius:var(--fx-r-sm);min-height:44px}
-#screen-test .progress-track{background:#1B1B21;height:4px;border-radius:999px;margin:0 16px}
+#screen-test .progress-track{background:var(--fx-track);height:4px;border-radius:999px;margin:0 16px}
 #screen-test .progress-fill{background:var(--fx-accent);border-radius:999px;height:4px}
 #screen-test .progress-label{font-family:var(--fx-mono);font-size:11px;color:var(--fx-muted);padding:6px 16px 12px;letter-spacing:.06em}
 #screen-test .qfx-streak{display:flex;align-items:center;gap:10px;padding:0 16px 10px;flex-wrap:wrap}
-#screen-test .qfx-streak-pill{display:inline-flex;align-items:center;gap:6px;background:var(--fx-accent-bg);color:var(--fx-accent);border:1px solid rgba(242,116,59,.45);border-radius:999px;padding:5px 12px;font-weight:700;font-size:13px}
+#screen-test .qfx-streak-pill{display:inline-flex;align-items:center;gap:6px;background:var(--fx-accent-bg);color:var(--fx-accent);border:1px solid var(--fx-accent-line);border-radius:999px;padding:5px 12px;font-weight:700;font-size:13px}
 #screen-test .qfx-streak-note{color:var(--fx-muted);font-size:13px}
 #screen-test #questionCard{padding:16px}
 #screen-test .qtext{font-size:18px;line-height:1.5;color:var(--fx-text);font-family:var(--fx-ui)}
-#screen-test .passage{color:#DEDCD7;font-family:var(--fx-ui)}
+#screen-test .passage{color:var(--fx-text-2);font-family:var(--fx-ui)}
 #screen-test .choices{display:flex;flex-direction:column;gap:10px;margin-top:14px}
 #screen-test .choice-row{display:flex;gap:8px;align-items:stretch}
 #screen-test .choice{flex:1;display:flex;align-items:center;gap:14px;text-align:left;background:var(--fx-surface);border:1px solid var(--fx-border-2);border-radius:var(--fx-r-md);color:var(--fx-text);min-height:56px;padding:12px 14px;font-size:16px;font-family:var(--fx-ui)}
 #screen-test .choice .key{flex:none;width:28px;height:28px;border-radius:50%;border:1px solid var(--fx-border-2);display:grid;place-items:center;font-family:var(--fx-mono);font-size:12px;color:var(--fx-muted)}
-#screen-test .choice:hover{border-color:#3A3A44}
+#screen-test .choice:hover{border-color:var(--fx-border-hover)}
 #screen-test .choice.sel{border-color:var(--fx-accent);background:var(--fx-accent-bg)}
-#screen-test .choice.sel .key{background:var(--fx-accent);border-color:var(--fx-accent);color:#1A0E08}
+#screen-test .choice.sel .key{background:var(--fx-accent);border-color:var(--fx-accent);color:var(--fx-on-accent)}
 #screen-test .choice-row.struck .choice{opacity:.45;text-decoration:line-through}
 #screen-test .choice.correct{border-color:var(--fx-good)}
-#screen-test .choice.correct .key{background:var(--fx-good);border-color:var(--fx-good);color:#0C1A10}
+#screen-test .choice.correct .key{background:var(--fx-good);border-color:var(--fx-good);color:var(--fx-on-good)}
 #screen-test .choice.wrong{border-color:var(--fx-warn)}
-#screen-test .choice.wrong .key{background:var(--fx-warn);border-color:var(--fx-warn);color:#1A0E08}
+#screen-test .choice.wrong .key{background:var(--fx-warn);border-color:var(--fx-warn);color:var(--fx-on-accent)}
 #screen-test .elim-btn{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-muted);border-radius:var(--fx-r-sm);min-width:44px;font-family:var(--fx-mono)}
 #screen-test .qfx-stuck{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);border-radius:var(--fx-r-md);margin-top:16px;padding:12px 14px}
 #screen-test .qfx-stuck-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
@@ -517,17 +574,17 @@ body[data-workspace] .scholar-chip.on::before{content:"\2713";margin-right:5px;f
 #screen-test .qfx-stuck-note{color:var(--fx-muted);font-size:12px;font-family:var(--fx-mono);letter-spacing:.04em}
 #screen-test .qfx-stuck-btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 #screen-test .qfx-stuck-btns button{min-height:44px;border-radius:var(--fx-r-sm);border:1px solid var(--fx-border-2);background:var(--fx-surface);color:var(--fx-text);padding:8px 14px;font-weight:600}
-#screen-test .qfx-stuck-btns button.primary{background:rgba(126,166,240,.14);border-color:rgba(126,166,240,.5);color:#BFD3FA}
+#screen-test .qfx-stuck-btns button.primary{background:var(--fx-info-bg);border-color:var(--fx-info-line);color:var(--fx-info-text)}
 #screen-test .qfx-stuck-btns button[disabled]{opacity:.55;cursor:not-allowed}
-#screen-test .qfx-stuck-out{margin-top:10px;color:#DEDCD7;font-size:14px;line-height:1.5;white-space:pre-wrap}
+#screen-test .qfx-stuck-out{margin-top:10px;color:var(--fx-text-2);font-size:14px;line-height:1.5;white-space:pre-wrap}
 #screen-test .qfx-stuck-out:empty{display:none}
 #screen-test .bb-foot{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--fx-border);flex-wrap:wrap}
-#screen-test .qfx-bar{display:flex;gap:10px;align-items:center;flex:1;min-width:0}
+#screen-test .qfx-bar{display:flex;gap:10px;align-items:center;flex:0 0 auto;flex-wrap:nowrap;min-width:0}
 #screen-test .qfx-icon{min-width:48px;min-height:48px;display:inline-grid;place-items:center;background:var(--fx-surface-2);border:1px solid var(--fx-border-2);border-radius:var(--fx-r-sm);color:var(--fx-muted)}
 #screen-test .qfx-icon.on{border-color:var(--fx-accent);color:var(--fx-accent);background:var(--fx-accent-bg)}
-#screen-test .qfx-check{flex:1;min-height:48px;border-radius:var(--fx-r-sm);background:var(--fx-accent);border:1px solid var(--fx-accent);color:#1A0E08;font-weight:800;font-size:16px;font-family:var(--fx-ui)}
-#screen-test .qfx-check[disabled]{opacity:.5;cursor:not-allowed}
-#screen-test .qfx-check.next{background:var(--fx-good);border-color:var(--fx-good);color:#0C1A10}
+#screen-test .qfx-check{flex:0 0 auto;min-height:48px;padding:0 22px;border-radius:var(--fx-r-sm);background:var(--fx-accent);border:1px solid var(--fx-accent);color:var(--fx-on-accent);font-weight:800;font-size:16px;font-family:var(--fx-ui);white-space:nowrap}
+#screen-test .qfx-check[disabled]{background:var(--fx-surface-2);border-color:var(--fx-border-2);color:var(--fx-muted);cursor:not-allowed}
+#screen-test .qfx-check.next{background:var(--fx-accent);border-color:var(--fx-accent);color:var(--fx-on-accent)}
 #screen-test .bb-coin{color:var(--fx-muted);font-size:12px;font-family:var(--fx-mono)}
 #screen-test .feedback{border-radius:var(--fx-r-md);border-width:1px}
 footer + .fx-note{}
@@ -556,7 +613,7 @@ footer + .fx-note{}
 .schl-fs legend{font-family:var(--fx-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--fx-muted);padding:0;margin-bottom:8px}
 .schl-grades{display:flex;gap:8px}
 .schl-gchip{width:44px;height:44px;padding:0;border-radius:50%;border:1px solid var(--fx-border-2);background:var(--fx-surface-2);color:var(--fx-text);font-weight:700;font-size:14px;white-space:nowrap;display:inline-grid;place-items:center}
-.schl-gchip.on{background:var(--fx-accent);border-color:var(--fx-accent);color:#1A0E08}
+.schl-gchip.on{background:var(--fx-accent);border-color:var(--fx-accent);color:var(--fx-on-accent)}
 .schl-check{display:flex;align-items:center;gap:10px;min-height:44px;color:var(--fx-text);font-size:14px;cursor:pointer}
 .schl-check input{width:18px;height:18px;accent-color:var(--fx-accent)}
 .schl-check .schl-count{margin-left:auto;color:var(--fx-muted);font-family:var(--fx-mono);font-size:11px}
@@ -572,22 +629,40 @@ footer + .fx-note{}
 .schl-card:focus-visible{outline:2px solid var(--fx-accent);outline-offset:2px}
 .schl-card-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
 .schl-name{margin:0;font-size:16px;color:var(--fx-text)}
-.schl-amt{color:var(--fx-accent);font-weight:700;white-space:nowrap}
+.schl-amt{color:var(--fx-text);font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
 .schl-sponsor{margin:4px 0 8px;color:var(--fx-muted);font-size:13px}
 .schl-chips{display:flex;gap:8px;flex-wrap:wrap}
 .schl-chip{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-muted);border-radius:999px;padding:3px 10px;font-size:12px}
-.schl-chip.open{color:var(--fx-good-lt);border-color:rgba(111,208,140,.4)}
+.schl-chip.open{color:var(--fx-good-lt);border-color:var(--fx-good-line)}
 .schl-detail{flex:1 1 300px;max-width:420px;background:var(--fx-surface);border:1px solid var(--fx-border);border-radius:var(--fx-r-md);padding:16px;position:sticky;top:12px}
 .schl-detail-back{display:none}
-.schl-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
-.schl-tile{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);border-radius:var(--fx-r-sm);padding:10px 12px;display:flex;flex-direction:column;gap:4px}
-.schl-tile .t-lbl{font-family:var(--fx-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--fx-muted)}
-.schl-tile .t-val{font-weight:700}
+/* Two orange blocks on one pane is one too many: back is a quiet ghost. */
+.schl-detail-head{margin-bottom:10px}
+.schl-detail-head h2{margin:0 0 2px;font-size:19px;line-height:1.25}
+.schl-detail-org{margin:0;color:var(--fx-muted);font-size:13px}
+.schl-detail-desc{margin:6px 0 0;color:var(--fx-text-2);font-size:13.5px;line-height:1.5}
+/* 16:9 header image, dimensions set so the pane does not jump as it loads. */
+.schl-hero{margin:0 0 12px;padding:0}
+.schl-hero img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:var(--fx-r-md);border:1px solid var(--fx-border-2);background:var(--fx-surface-2);overflow:hidden;font-size:11px;color:var(--fx-muted)}
+.schl-hero-credit{margin-top:5px;font-size:10.5px;line-height:1.35;color:var(--fx-muted)}
+.schl-hero-credit a{color:var(--fx-muted);text-decoration:underline}
+.schl-hero-fallback{display:grid;place-items:center;aspect-ratio:16/9;border-radius:var(--fx-r-md);border:1px solid var(--fx-border-2);background:var(--fx-surface-2)}
+.schl-hero-fallback[data-tint="1"]{background:var(--fx-good-bg)}
+.schl-hero-fallback[data-tint="2"]{background:var(--fx-gold-bg)}
+.schl-hero-fallback[data-tint="3"]{background:var(--fx-info-bg)}
+.schl-hero-fallback[data-tint="4"]{background:var(--fx-violet-bg)}
+.schl-hero-fallback[data-tint="5"]{background:var(--fx-warn-bg)}
+.schl-hero-fallback[data-tint="6"]{background:var(--fx-accent-bg)}
+.schl-hero-initials{font-family:var(--fx-ui);font-weight:800;font-size:clamp(28px,12cqi,44px);letter-spacing:.02em;color:var(--fx-text)}
+.schl-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.schl-tile{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);border-radius:var(--fx-r-sm);padding:7px 10px;display:flex;flex-direction:column;gap:1px;line-height:1.25}
+.schl-tile .t-lbl{font-family:var(--fx-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--fx-muted);line-height:1.2}
+.schl-tile .t-val{font-weight:700;font-size:14px;line-height:1.2}
 .schl-sec h3{margin:14px 0 6px;font-size:14px}
-.schl-sec ul,.schl-sec ol{margin:0;padding-left:18px;color:#DEDCD7;font-size:14px;line-height:1.5}
-.schl-detail-actions{display:flex;gap:10px;margin-top:14px;align-items:stretch}
-.schl-official{flex:1;display:grid;place-items:center;min-height:48px;background:var(--fx-accent);color:#1A0E08;border-radius:var(--fx-r-sm);font-weight:800;text-decoration:none}
-.schl-star{width:48px;min-height:48px;border-radius:var(--fx-r-sm);background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-gold);font-size:20px}
+.schl-sec ul,.schl-sec ol{margin:0;padding-left:18px;color:var(--fx-text-2);font-size:14px;line-height:1.5}
+.schl-detail-actions{display:flex;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap}
+.schl-official{flex:0 0 auto;display:inline-grid;place-items:center;height:44px;padding:0 18px;background:var(--fx-accent);color:var(--fx-on-accent);border-radius:var(--fx-r-sm);font-weight:700;text-decoration:none;white-space:nowrap}
+.schl-star{flex:0 0 auto;width:44px;height:44px;min-height:44px;padding:0;display:inline-grid;place-items:center;border-radius:var(--fx-r-sm);background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-gold);font-size:19px}
 .schl-detail-empty h2{margin:0 0 6px}
 .schl-empty{background:var(--fx-surface);border:1px dashed var(--fx-border-2);border-radius:var(--fx-r-md);padding:20px;text-align:center}
 .schl-rail-backdrop{display:none}
@@ -599,11 +674,8 @@ footer + .fx-note{}
   .schl-filters.open{transform:translateX(0)}
   .schl-filterbtn{display:inline-flex;align-items:center}
   .schl-close{display:inline-grid;place-items:center}
-  .schl-rail-backdrop{display:none;position:fixed;inset:0;background:rgba(4,7,12,.6);z-index:1390}
+  .schl-rail-backdrop{display:none;position:fixed;inset:0;background:var(--fx-overlay);z-index:1390}
   .schl-rail-backdrop.show{display:block}
-  .schl-detail{max-width:none;flex:1 1 100%;position:static}
-}
-@media (max-width:767px){
   .schl-detail{position:fixed;inset:0;z-index:1400;border-radius:0;overflow:auto;transform:translateX(102%);transition:transform .2s ease;max-width:none}
   .schl-detail.open{transform:translateX(0)}
   .schl-detail-back{display:inline-flex;align-items:center;gap:6px;min-height:44px;background:transparent;border:0;color:var(--fx-muted);font-weight:600;cursor:pointer}
@@ -619,13 +691,8 @@ footer + .fx-note{}
 .cc-rail{flex:1 1 280px;max-width:300px;display:flex;flex-direction:column;gap:14px}
 .cc-score-card,.cc-narrow{background:var(--fx-surface);border:1px solid var(--fx-border);border-radius:var(--fx-r-md);padding:16px}
 .cc-score-top{display:flex;align-items:center;gap:14px}
-.cc-ring{position:relative;flex:none}
-.cc-ring svg{display:block;transform:rotate(-90deg)}
-.cc-ring-track{fill:none;stroke:var(--fx-border-2)}
-.cc-ring-prog{fill:none;stroke:var(--fx-accent);stroke-linecap:round;transition:stroke-dashoffset 1s ease}
-.cc-ring-lbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.cc-ring-lbl b{font-size:20px;line-height:1}
-.cc-ring-lbl i{font-style:normal;font-family:var(--fx-mono);font-size:9px;color:var(--fx-muted);letter-spacing:.08em;text-transform:uppercase}
+/* The score rail uses the shared .fxring component (redesign.css). */
+.cc-score-top .ring-wrap{gap:0}
 .cc-score-num{display:flex;flex-direction:column}
 .cc-score-num b{font-size:34px;line-height:1;font-family:var(--fx-ui)}
 .cc-score-num span{color:var(--fx-muted);font-size:12px;margin-top:4px}
@@ -633,12 +700,12 @@ footer + .fx-note{}
 .cc-field input,.cc-field select{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-text);border-radius:var(--fx-r-sm);min-height:44px;padding:0 10px;font-size:15px}
 .cc-field-row{display:flex;gap:10px}
 .cc-field-row .cc-field{flex:1;margin-top:12px}
-.cc-pred{margin-top:12px;width:100%;min-height:44px;border-radius:var(--fx-r-sm);background:var(--fx-accent-bg);border:1px solid rgba(242,116,59,.45);color:var(--fx-accent);font-weight:700}
+.cc-pred{margin-top:12px;width:100%;min-height:44px;border-radius:var(--fx-r-sm);background:var(--fx-accent-bg);border:1px solid var(--fx-accent-line);color:var(--fx-accent);font-weight:700}
 .cc-narrow h3{margin:0 0 8px;font-size:15px}
 .cc-narrow-lbl{font-family:var(--fx-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--fx-muted);margin:12px 0 8px}
 .cc-fit-chips{display:flex;gap:8px;flex-wrap:wrap}
 .cc-fitb{min-height:44px;padding:0 16px;border-radius:999px;background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-text);font-weight:600}
-.cc-fitb.on{background:var(--fx-accent);border-color:var(--fx-accent);color:#1A0E08}
+.cc-fitb.on{background:var(--fx-accent);border-color:var(--fx-accent);color:var(--fx-on-accent)}
 .cc-check{display:flex;align-items:center;gap:10px;min-height:44px;font-size:14px;cursor:pointer}
 .cc-check input{width:18px;height:18px;accent-color:var(--fx-accent)}
 .cc-home select{width:100%}
@@ -647,14 +714,14 @@ footer + .fx-note{}
 .cc-count{font-weight:700}
 .cc-sort{margin-left:auto;color:var(--fx-muted);font-size:12px;display:flex;align-items:center;gap:8px}
 .cc-sort select{background:var(--fx-surface);border:1px solid var(--fx-border-2);color:var(--fx-text);border-radius:var(--fx-r-sm);min-height:36px;padding:0 8px}
-.cc-add{min-height:44px;padding:0 18px;border-radius:var(--fx-r-sm);background:var(--fx-accent);border:1px solid var(--fx-accent);color:#1A0E08;font-weight:800}
+.cc-add{min-height:44px;padding:0 18px;border-radius:var(--fx-r-sm);background:var(--fx-accent);border:1px solid var(--fx-accent);color:var(--fx-on-accent);font-weight:800}
 .cc-summary{background:var(--fx-surface);border:1px solid var(--fx-border);border-radius:var(--fx-r-md);padding:14px 16px;margin-top:12px}
 .cc-summary-label{margin:0 0 10px;color:var(--fx-muted);font-size:13px}
-.cc-track{position:relative;height:8px;border-radius:999px;background:#1B1B21}
+.cc-track{position:relative;height:8px;border-radius:999px;background:var(--fx-track)}
 .cc-track.big{height:10px}
-.cc-band{position:absolute;top:0;bottom:0;border-radius:999px;background:rgba(201,155,240,.35)}
+.cc-band{position:absolute;top:0;bottom:0;border-radius:999px;background:var(--fx-band)}
 .cc-marker{position:absolute;top:-7px;bottom:-7px;width:3px;border-radius:2px;background:var(--fx-accent)}
-.cc-marker b{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--fx-warn);white-space:nowrap}
+.cc-marker b{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;color:var(--fx-text);background:var(--fx-surface);padding:1px 5px;border-radius:999px;border:1px solid var(--fx-border-2);white-space:nowrap}
 .cc-scale{display:flex;justify-content:space-between;color:var(--fx-muted);font-family:var(--fx-mono);font-size:10px;margin-top:6px}
 .cc-cards{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 .cc-card{position:relative;background:var(--fx-surface);border:1px solid var(--fx-border-2);border-radius:var(--fx-r-md)}
@@ -663,9 +730,9 @@ footer + .fx-note{}
 .cc-card-head{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
 .cc-card-head h3{margin:0;font-size:16px}
 .cc-verdict{border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;white-space:nowrap}
-.cc-verdict.v-likely{background:rgba(111,208,140,.14);color:var(--fx-good-lt);border:1px solid rgba(111,208,140,.4)}
-.cc-verdict.v-target{background:rgba(240,198,78,.12);color:var(--fx-gold);border:1px solid rgba(240,198,78,.4)}
-.cc-verdict.v-reach{background:var(--fx-accent-bg);color:var(--fx-warn);border:1px solid rgba(240,154,107,.4)}
+.cc-verdict.v-likely{background:var(--fx-good-bg);color:var(--fx-good-lt);border:1px solid var(--fx-good-line)}
+.cc-verdict.v-target{background:var(--fx-gold-bg);color:var(--fx-gold);border:1px solid var(--fx-gold-line)}
+.cc-verdict.v-reach{background:var(--fx-accent-bg);color:var(--fx-warn);border:1px solid var(--fx-warn-line)}
 .cc-sub{margin:4px 0 10px;color:var(--fx-muted);font-size:13px}
 .cc-bar{margin-top:2px}
 .cc-where{display:flex;justify-content:space-between;gap:10px;color:var(--fx-muted);font-family:var(--fx-mono);font-size:10px;margin-top:6px;flex-wrap:wrap}
@@ -681,35 +748,56 @@ footer + .fx-note{}
 @media (max-width:767px){.cc-rail{flex-direction:column}.cc-list-head .cc-sort{margin-left:0}}
 @media (max-width:380px){body[data-workspace]{overflow-x:hidden}body[data-workspace] .topbar{max-width:100vw}body[data-workspace] .badges{max-width:100%;overflow-x:auto}}
 
-/* ---------- Redesign specificity + contrast fixes (workspace base styles are
-   strongly typed; these keep the mockup tokens authoritative inside the three
-   screens) ---------- */
-:where(.cc-score-card,.cc-narrow,.cc-summary,.cc-card,.cc-drawer,.schl-filters,.schl-detail,.schl-card,.schl-empty,#screen-test .card,.qfx-stuck){color:var(--fx-text)}
-body[data-workspace] :where(.cc-score-card,.cc-narrow,.cc-summary,.cc-card,.cc-drawer,.schl-filters,.schl-detail,.schl-card,.schl-empty,#screen-test .card,.qfx-stuck) :where(h1,h2,h3,h4,p,span,label,b,strong,li,legend,div){color:inherit!important;text-transform:none!important}
-body[data-workspace] :where(.cc-score-card,.cc-narrow,.cc-summary,.cc-card,.cc-drawer,.schl-filters,.schl-detail,.schl-card,.schl-empty,#screen-test .card,.qfx-stuck) :where(.muted,.small,.cc-sub,.cc-where,.cc-scale,.cc-summary-label,.cc-narrow-lbl,.schl-sponsor,.schl-count,.schl-range-labels,.cc-list-head,.schl-list-head,.schl-chip,.cc-ring-lbl i){color:var(--fx-muted)!important}
-body[data-workspace] .cc-fitb,body[data-workspace] .schl-gchip{background:var(--fx-surface-2)!important;border:1px solid var(--fx-border-2)!important;color:var(--fx-text)!important;box-shadow:none!important}
-body[data-workspace] .cc-fitb.on{background:var(--fx-accent)!important;border-color:var(--fx-accent)!important;color:#1A0E08!important}
-body[data-workspace] .schl-gchip.on{background:var(--fx-accent)!important;border-color:var(--fx-accent)!important;color:#1A0E08!important}
-body[data-workspace] .cc-remove{background:transparent!important;border:0!important;color:var(--fx-muted)!important;box-shadow:none!important;top:8px;right:8px;font-size:15px;line-height:1;border-radius:999px}
-body[data-workspace] .cc-remove:hover,body[data-workspace] .cc-remove:focus-visible{background:var(--fx-surface-2)!important;color:var(--fx-accent)!important}
+/* ---------- Redesign specificity ----------
+   body[data-workspace] button / a rules are element-qualified, so a class-only
+   rule in the blocks above loses to them and a chip would paint accent-orange.
+   Re-qualifying by element raises specificity without !important. The former
+   blanket "color:inherit!important" sweep is gone: the --fx-* palette now
+   matches the active layout, so nothing needs forcing and semantic colours
+   (verdict chips, the score marker) survive. ---------- */
+body[data-workspace] :where(.cc-score-card,.cc-narrow,.cc-summary,.cc-card,.cc-drawer,.schl-filters,.schl-detail,.schl-card,.schl-empty,#screen-test .card,.qfx-stuck){color:var(--fx-text)}
+body[data-workspace] button.cc-fitb,body[data-workspace] button.schl-gchip{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-text);box-shadow:none}
+body[data-workspace] button.cc-fitb.on,body[data-workspace] button.schl-gchip.on{background:var(--fx-accent);border-color:var(--fx-accent);color:var(--fx-on-accent)}
+body[data-workspace] button.cc-remove{background:transparent;border:0;color:var(--fx-muted);box-shadow:none;top:8px;right:8px;font-size:15px;line-height:1;border-radius:999px}
+body[data-workspace] button.cc-remove:hover,body[data-workspace] button.cc-remove:focus-visible{background:var(--fx-surface-2);color:var(--fx-accent)}
 body[data-workspace] .cc-card-head{padding-right:34px}
-body[data-workspace] .cc-add{background:var(--fx-accent)!important;border:1px solid var(--fx-accent)!important;color:#1A0E08!important;box-shadow:none!important}
-body[data-workspace] .cc-pred{background:var(--fx-accent-bg)!important;border:1px solid rgba(242,116,59,.45)!important;color:var(--fx-accent)!important;box-shadow:none!important}
-body[data-workspace] .schl-mylist,body[data-workspace] .schl-filterbtn,body[data-workspace] .schl-close,body[data-workspace] .schl-star,body[data-workspace] .schl-clear{background:var(--fx-surface)!important;border:1px solid var(--fx-border-2)!important;color:var(--fx-text)!important;box-shadow:none!important}
-body[data-workspace] .schl-mylist.on{border-color:var(--fx-accent)!important;background:var(--fx-accent-bg)!important;color:var(--fx-accent)!important}
-body[data-workspace] .schl-official{background:var(--fx-accent)!important;color:#1A0E08!important}
-body[data-workspace] .qfx-icon{background:var(--fx-surface-2)!important;border:1px solid var(--fx-border-2)!important;color:var(--fx-muted)!important;box-shadow:none!important}
-body[data-workspace] .qfx-icon.on{border-color:var(--fx-accent)!important;color:var(--fx-accent)!important;background:var(--fx-accent-bg)!important}
-body[data-workspace] .qfx-check{background:var(--fx-accent)!important;border:1px solid var(--fx-accent)!important;color:#1A0E08!important;min-width:170px;white-space:nowrap}
-body[data-workspace] .qfx-check.next{background:var(--fx-good)!important;border-color:var(--fx-good)!important;color:#0C1A10!important}
-body[data-workspace] .qfx-check[disabled]{background:var(--fx-surface-2)!important;border-color:var(--fx-border-2)!important;color:var(--fx-muted)!important;opacity:1!important}
-body[data-workspace] .qfx-stuck-btns button{background:var(--fx-surface)!important;border:1px solid var(--fx-border-2)!important;color:var(--fx-text)!important;box-shadow:none!important}
-body[data-workspace] .qfx-stuck-btns button.primary{background:rgba(126,166,240,.14)!important;border-color:rgba(126,166,240,.5)!important;color:#BFD3FA!important}
-body[data-workspace] .bb-navbtn{white-space:nowrap!important}
-body[data-workspace] .bb-foot{flex-wrap:wrap}
+body[data-workspace] button.cc-add{background:var(--fx-accent);border:1px solid var(--fx-accent);color:var(--fx-on-accent);box-shadow:none}
+body[data-workspace] button.cc-pred{background:var(--fx-accent-bg);border:1px solid var(--fx-accent-line);color:var(--fx-accent);box-shadow:none}
+body[data-workspace] button.schl-mylist,body[data-workspace] button.schl-filterbtn,body[data-workspace] button.schl-close,body[data-workspace] button.schl-star,body[data-workspace] button.schl-clear{background:var(--fx-surface);border:1px solid var(--fx-border-2);color:var(--fx-text);box-shadow:none}
+body[data-workspace] button.schl-star{height:44px;min-height:44px;width:44px}
+body[data-workspace] button.schl-clear{border-color:transparent;background:transparent;color:var(--fx-accent)}
+body[data-workspace] button.schl-mylist.on{border-color:var(--fx-accent);background:var(--fx-accent-bg);color:var(--fx-accent)}
+body[data-workspace] a.schl-official{background:var(--fx-accent);color:var(--fx-on-accent)}
+body[data-workspace] button.qfx-icon{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-muted);box-shadow:none}
+body[data-workspace] button.qfx-icon.on{border-color:var(--fx-accent);color:var(--fx-accent);background:var(--fx-accent-bg)}
+/* One accent, one primary action: Check and Next are the same orange button.
+   Correctness is signalled by the choice rows and the feedback block, not by
+   recolouring the primary action green and making it the loudest thing here. */
+body[data-workspace] button.qfx-check,body[data-workspace] button.qfx-check.next{background:var(--fx-accent);border:1px solid var(--fx-accent);color:var(--fx-on-accent)}
+body[data-workspace] #screen-test button.qfx-check[disabled]{background:var(--fx-surface-2);border-color:var(--fx-border-2);color:var(--fx-muted);opacity:1}
+body[data-workspace] .qfx-stuck-btns button{background:var(--fx-surface);border:1px solid var(--fx-border-2);color:var(--fx-text);box-shadow:none}
+body[data-workspace] .qfx-stuck-btns button.primary{background:var(--fx-info-bg);border-color:var(--fx-info-line);color:var(--fx-info-text)}
 body[data-workspace] .cc-link{padding-right:56px}
-body[data-workspace] .cc-verdict{max-width:130px;overflow:hidden;text-overflow:ellipsis}
-@media (max-width:560px){body[data-workspace] #screen-test #questionCard{padding-bottom:12px}body[data-workspace] .qfx-check{min-width:140px}}
+
+/* ---------- De-emphasis without fading text ----------
+   A disabled control, a dimmed choice and a struck choice were all expressed as
+   opacity, which drags their label under 4.5:1 against whatever is behind it.
+   Inside these screens the same states are drawn with the muted/surface pair
+   instead, so "unavailable" still reads as unavailable and the label stays
+   legible. The strike-through and the border already carry the meaning.
+   :is() (not :where()) because the screen rules these have to beat are
+   id-qualified. */
+body[data-workspace] :is(#screen-test,#screen-college,#screen-scholarships) :is(button,a,.choice):disabled,
+body[data-workspace] :is(#screen-test,#screen-college,#screen-scholarships) :is(button,a)[aria-disabled="true"]{
+  opacity:1;background:var(--fx-surface-2);color:var(--fx-muted);border-color:var(--fx-border-2);cursor:not-allowed}
+body[data-workspace] #screen-test .choice:disabled{background:var(--fx-surface);color:var(--fx-text)}
+body[data-workspace] #screen-test .choice.dim{opacity:1;color:var(--fx-muted);border-color:var(--fx-border)}
+body[data-workspace] #screen-test .choice.dim:not(.correct):not(.wrong):not(.sel) .key{color:var(--fx-muted);background:var(--fx-surface-2)}
+body[data-workspace] #screen-test .choice-row.struck .choice{opacity:1;color:var(--fx-muted);text-decoration:line-through;text-decoration-thickness:2px}
+/* The marked keys keep their own on-fill colour: they are the answer feedback. */
+body[data-workspace] #screen-test .choice:is(.correct,.wrong,.sel) .key{opacity:1;color:var(--fx-on-accent)}
+body[data-workspace] #screen-test .choice.correct .key{background:var(--fx-good);border-color:var(--fx-good);color:var(--fx-on-good)}
+body[data-workspace] #screen-test .choice.wrong .key{background:var(--fx-warn);border-color:var(--fx-warn);color:var(--fx-on-accent)}
 
 /* The action bar is sticky, so the scroller has to reserve its height or the
    last answer choice sits underneath it on a short viewport. */
@@ -740,21 +828,522 @@ body[data-workspace] #screen-test #questionCard{scroll-padding-bottom:96px}
 .fxcp-score{margin:4px 0 0;font-size:15px;color:var(--fx-muted,#8C8A85)}
 .fxcp-score b{font-size:32px;letter-spacing:-.03em;color:var(--fx-text,#F4F3F0);margin-right:6px}
 .fxcp-verdict{flex:none;border-radius:9px;padding:6px 12px;font-size:13px;font-weight:700}
-.fxcp-verdict.good{background:#1F2A1F;color:#8FE0A8}
-.fxcp-verdict.mid{background:#2A2418;color:#E5C46B}
-.fxcp-verdict.warn{background:#2A1D18;color:#F09A6B}
-.fxcp-bar{position:relative;height:14px;margin-top:16px;border-radius:999px;background:#22222A}
-.fxcp-range{position:absolute;top:0;height:14px;border-radius:999px;background:#3A4A66;min-width:6px}
+.fxcp-verdict.good{background:var(--fx-good-bg);color:var(--fx-good-lt)}
+.fxcp-verdict.mid{background:var(--fx-gold-bg);color:var(--fx-gold)}
+.fxcp-verdict.warn{background:var(--fx-warn-bg);color:var(--fx-warn)}
+.fxcp-bar{position:relative;height:14px;margin-top:16px;border-radius:999px;background:var(--fx-track)}
+.fxcp-range{position:absolute;top:0;height:14px;border-radius:999px;background:var(--fx-band);min-width:6px}
 .fxcp-mark{position:absolute;top:-4px;width:4px;height:22px;border-radius:999px;background:var(--fx-accent,#F2743B);box-shadow:0 0 0 3px var(--fx-surface,#141418)}
 .fxcp-scale{display:flex;justify-content:space-between;gap:10px;margin:8px 0 0;font-size:11px;color:var(--fx-muted,#8C8A85)}
 .fxcp-note{margin:10px 0 0;font-size:14px;line-height:1.45}
 .fxcp-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--fx-border,#22222A)}
 .fxcp-save{min-height:44px;padding:0 16px;border-radius:var(--fx-r-sm,11px);background:var(--fx-surface-2,#17171C);border:1px solid var(--fx-border-2,#26262D);color:var(--fx-text,#F4F3F0);font-weight:600;cursor:pointer}
-.fxcp-save.on{background:var(--fx-accent-bg,#1C1310);border-color:rgba(242,116,59,.45);color:var(--fx-accent,#F2743B)}
+.fxcp-save.on{background:var(--fx-accent-bg,#1C1310);border-color:var(--fx-accent-line);color:var(--fx-accent,#F2743B)}
 .fxcp-back{font-size:13px;color:var(--fx-accent,#F2743B)}
 @media (max-width:420px){
   .fxcp{padding:14px}
   .fxcp-score b{font-size:28px}
   .fxcp-scale span:nth-child(1),.fxcp-scale span:nth-child(3){display:none}
   .fxcp-scale{justify-content:flex-start}
+}
+
+/* ======================================================================
+   TEST WORKSPACE LAYOUT SYSTEM
+   One set of rules for all three layouts, so width is allocated by rank
+   rather than patched per element.
+
+   Rank: the question column is what the student is reading, so it takes the
+   largest track and is capped at ~68ch to keep line length sane on a big
+   monitor. The learning-tools pane is secondary and is the track that shrinks.
+   The rail is fixed-width and collapses to icons before anything else gives
+   way.
+
+   Breakpoints (each a deliberate arrangement, not a squeeze):
+     >=1280  three panes side by side
+     1024-1279  rail collapses to icons; question + tools split
+     768-1023   learning tools move below the question
+     <768    single column; rail becomes a horizontal toolbar and the tools
+             sit under the question as a tabbed panel
+   ====================================================================== */
+body[data-workspace] .workspace-grid{
+  --ws-rail:96px;
+  --ws-q:minmax(0,1.7fr);
+  --ws-tools:minmax(300px,1fr);
+  --ws-qmax:68ch;
+  grid-template-columns:var(--ws-rail) var(--ws-q) var(--ws-tools);
+  align-items:start;
+}
+body[data-workspace="notebook"] .workspace-grid{grid-template-columns:var(--ws-q) var(--ws-tools)}
+body[data-workspace="focus"] .workspace-grid{grid-template-columns:var(--ws-rail) var(--ws-q) var(--ws-tools)}
+body[data-workspace="focus"].calc-open .workspace-grid{grid-template-columns:var(--ws-rail) minmax(0,.85fr) var(--ws-q) var(--ws-tools)}
+
+/* The reading column: its own container, so type scales with the column it is
+   set in and not with the viewport. */
+body[data-workspace] .workspace-canvas{min-width:0;container-type:inline-size;container-name:qcol}
+body[data-workspace] .workspace-question-body{max-width:var(--ws-qmax);margin-inline:auto;overflow-wrap:break-word;min-width:0}
+body[data-workspace] .workspace-learning{min-width:0;max-width:440px;overflow-wrap:break-word}
+body[data-workspace="notebook"] .workspace-learning,body[data-workspace="focus"] .workspace-learning{max-width:440px}
+
+/* Type sized against the column (cqi), clamped so it is never small enough to
+   strain and never large enough to clip. */
+body[data-workspace] #screen-test .qtext{font-size:clamp(18px,10px + 1.6cqi,22px);line-height:1.5}
+body[data-workspace] #screen-test .passage{font-size:clamp(15px,9px + 1.1cqi,17px);line-height:1.75}
+body[data-workspace] #screen-test .choice{font-size:clamp(15px,9px + 1.1cqi,17px)}
+body[data-workspace] #screen-test .bb-qhead{font-size:clamp(12px,8px + .7cqi,13px)}
+
+/* Nothing in the question column clips. Anything that cannot wrap (an equation,
+   a wide table) gets its own scroller instead of spilling out of the column. */
+body[data-workspace] .workspace-question-body :is(pre,table,.equation-copy-row,.question-equations){max-width:100%;overflow-x:auto}
+body[data-workspace] .workspace-question-body :is(img,svg,canvas){max-width:100%;height:auto}
+body[data-workspace] #screen-test :is(.qtext,.passage,.choice,.choice-text){overflow:visible;text-overflow:clip}
+
+/* The action bar is sticky, so the column reserves its measured height at every
+   width — workspace.js keeps --ws-foot-h in step with the bar as it wraps. */
+body[data-workspace] .workspace-canvas{padding-bottom:0}
+body[data-workspace] .workspace-question-body{padding-bottom:calc(var(--ws-foot-h,76px) + 24px)}
+body[data-workspace] #screen-test #questionCard{scroll-padding-bottom:calc(var(--ws-foot-h,76px) + 16px)}
+
+/* Buttons are sized by their content and never broken mid-word. When a pair no
+   longer fits side by side it stacks. */
+body[data-workspace] :is(.bb-navbtn,.qfx-check,.bb-btns button,.module-actions button,.workspace-learning .learning-tab){white-space:nowrap;overflow-wrap:normal;word-break:normal;width:auto}
+body[data-workspace] #screen-test .bb-foot{display:flex;flex-wrap:wrap;align-items:center;gap:10px;row-gap:10px}
+body[data-workspace] #screen-test .bb-btns{display:flex;gap:10px;flex:0 0 auto;min-width:0}
+body[data-workspace] #screen-test .qfx-bar{display:flex;gap:10px;align-items:center;flex:0 0 auto;flex-wrap:nowrap;min-width:0}
+body[data-workspace] #screen-test .bb-coin{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+body[data-workspace] #screen-test .bb-coin .meter{flex:0 1 80px;min-width:40px}
+
+@media (min-width:1280px){
+  body[data-workspace] .workspace-grid{--ws-rail:96px;--ws-q:minmax(0,1.7fr);--ws-tools:minmax(300px,1fr)}
+}
+/* 1024-1279: the rail drops its labels and keeps only the icons, which buys the
+   question column back about 90px without moving anything. */
+@media (min-width:1024px) and (max-width:1279px){
+  body[data-workspace] .workspace-grid{--ws-rail:60px;--ws-q:minmax(0,1.6fr);--ws-tools:minmax(260px,1fr);--ws-qmax:62ch}
+  body[data-workspace="focus"].calc-open .workspace-grid{grid-template-columns:var(--ws-rail) minmax(0,.8fr) var(--ws-q) minmax(240px,1fr)}
+  body[data-workspace] .workspace-tool-rail .tool-btn span,
+  body[data-workspace] .workspace-navigator>strong{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  body[data-workspace] .workspace-tool-rail .tool-btn{justify-content:center;padding:14px 4px;gap:0;min-height:52px}
+  body[data-workspace] .workspace-navigator{padding:16px 8px}
+  body[data-workspace] .workspace-number-grid{grid-template-columns:repeat(1,minmax(0,1fr));margin-top:6px}
+  body[data-workspace] .workspace-question-body{padding:26px 22px calc(var(--ws-foot-h,76px) + 24px)}
+  body[data-workspace] .workspace-learning{padding:20px 18px}
+}
+/* 768-1023: two panes is one too many at this width, so the tools take the full
+   width under the question instead of being squeezed beside it. */
+@media (min-width:768px) and (max-width:1023px){
+  body[data-workspace] .workspace-grid,
+  body[data-workspace="notebook"] .workspace-grid,
+  body[data-workspace="focus"] .workspace-grid,
+  body[data-workspace="focus"].calc-open .workspace-grid{grid-template-columns:60px minmax(0,1fr);--ws-qmax:62ch}
+  body[data-workspace] .workspace-navigator,
+  body[data-workspace="focus"] .workspace-tool-rail{grid-column:1;grid-row:1}
+  body[data-workspace] .workspace-canvas,
+  body[data-workspace="focus"] .workspace-canvas,
+  body[data-workspace="focus"].calc-open .workspace-canvas{grid-column:2;grid-row:1;border-right:0}
+  body[data-workspace="notebook"] .workspace-canvas{grid-column:1/-1;grid-row:1}
+  body[data-workspace] .workspace-calculator-dock,
+  body[data-workspace="focus"] .workspace-calculator-dock,
+  body[data-workspace="focus"].calc-open .workspace-calculator-dock{grid-column:1/-1;grid-row:2}
+  body[data-workspace] .workspace-learning,
+  body[data-workspace="focus"] .workspace-learning,
+  body[data-workspace="focus"].calc-open .workspace-learning{grid-column:1/-1;grid-row:3;max-width:none;border-top:1px solid var(--ws-line)}
+  body[data-workspace="notebook"] .workspace-navigator,
+  body[data-workspace="focus"] .workspace-navigator{grid-column:1/-1;grid-row:4;border-top:1px solid var(--ws-line);padding:12px 20px}
+  body[data-workspace="notebook"] .workspace-navigator{grid-row:4}
+  body[data-workspace] .workspace-tool-rail .tool-btn span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+  body[data-workspace] .workspace-tool-rail .tool-btn{justify-content:center;padding:14px 4px;gap:0}
+  body[data-workspace] .workspace-navigator>strong{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+  body[data-workspace] .workspace-number-grid{grid-template-columns:repeat(1,minmax(0,1fr))}
+  body[data-workspace] .workspace-question-body{padding:26px 22px calc(var(--ws-foot-h,76px) + 24px)}
+}
+/* <768: one column. The rail becomes a horizontal toolbar above the question and
+   the learning tools sit under it as the tabbed panel they already are. */
+@media (max-width:767px){
+  body[data-workspace] .workspace-grid,
+  body[data-workspace="notebook"] .workspace-grid,
+  body[data-workspace="focus"] .workspace-grid,
+  body[data-workspace="focus"].calc-open .workspace-grid{grid-template-columns:minmax(0,1fr);--ws-qmax:none}
+  body[data-workspace] .workspace-tool-rail,
+  body[data-workspace="focus"] .workspace-tool-rail{grid-column:1;grid-row:1;padding:0;border-bottom:1px solid var(--ws-line)}
+  body[data-workspace] .workspace-tool-rail .tools-bar,
+  body[data-workspace="focus"] .workspace-tool-rail .tools-bar{flex-direction:row;flex-wrap:nowrap;overflow-x:auto}
+  body[data-workspace] .workspace-tool-rail .tool-btn,
+  body[data-workspace="focus"] .tool-btn{flex:1 1 0;min-width:0;min-height:48px;flex-direction:row;justify-content:center;gap:6px;padding:8px 6px;font-size:12px;border-bottom:0;border-right:1px solid var(--ws-line)}
+  body[data-workspace] .workspace-tool-rail .tool-btn span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+  body[data-workspace] .workspace-canvas,
+  body[data-workspace="focus"] .workspace-canvas,
+  body[data-workspace="focus"].calc-open .workspace-canvas{grid-column:1;grid-row:2;border-left:0;border-right:0}
+  body[data-workspace] .workspace-calculator-dock,
+  body[data-workspace="focus"] .workspace-calculator-dock,
+  body[data-workspace="focus"].calc-open .workspace-calculator-dock{grid-column:1;grid-row:3;border-left:0}
+  body[data-workspace] .workspace-learning,
+  body[data-workspace="notebook"] .workspace-learning,
+  body[data-workspace="focus"] .workspace-learning,
+  body[data-workspace="focus"].calc-open .workspace-learning{grid-column:1;grid-row:4;max-width:none;padding:18px 16px;border-top:1px solid var(--ws-line)}
+  body[data-workspace] .workspace-navigator,
+  body[data-workspace="notebook"] .workspace-navigator,
+  body[data-workspace="focus"] .workspace-navigator,
+  body[data-workspace="focus"].calc-open .workspace-navigator{grid-column:1;grid-row:5;border-top:1px solid var(--ws-line);padding:14px 16px}
+  body[data-workspace] .workspace-number-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  body[data-workspace] .workspace-question-number{min-width:34px;flex:0 0 auto}
+  body[data-workspace] .workspace-question-body{padding:20px 16px calc(var(--ws-foot-h,76px) + 20px)}
+  body[data-workspace] .learning-tabs{overflow-x:auto;scrollbar-width:thin}
+  body[data-workspace] .workspace-learning .learning-tab{flex:0 0 auto}
+  /* Back / Next stack rather than break: the pair owns the full row. */
+  body[data-workspace] #screen-test .bb-btns{flex:1 1 100%}
+  body[data-workspace] #screen-test .bb-btns button{flex:1 1 0;min-width:0}
+  body[data-workspace] #screen-test .qfx-bar{flex:1 1 100%;flex-wrap:wrap}
+  body[data-workspace] #screen-test .qfx-check{flex:1 1 auto;min-width:0}
+  body[data-workspace] #screen-test .bb-coin{justify-content:flex-start}
+}
+@media (max-width:420px){
+  body[data-workspace] .bb-btns{flex-direction:column;align-items:stretch}
+  body[data-workspace] .bb-btns button{width:100%}
+}
+
+/* The mockup's 720px reading cap is for the single-column question card. The
+   workspace grid lives inside that same card, and the cap was squeezing all
+   three panes into 720px — which is why the question column came out narrowest.
+   Inside a workspace layout the panes are governed by the grid instead. */
+body[data-workspace] #screen-test #questionCard,
+body[data-workspace] #screen-test>.card:first-child,
+body[data-workspace] #screen-test .qfx-wrap{max-width:none}
+
+/* With the calculator open below 1280 the question column would be squeezed to
+   a third of its width, so the calculator docks full width under the question
+   and the tools pane stays where it is. */
+@media (min-width:1024px) and (max-width:1279px){
+  body[data-workspace="focus"].calc-open .workspace-grid{grid-template-columns:var(--ws-rail) var(--ws-q) var(--ws-tools)}
+  body[data-workspace="focus"].calc-open .workspace-canvas{grid-column:2;grid-row:1}
+  body[data-workspace="focus"].calc-open .workspace-calculator-dock{grid-column:2;grid-row:2;border-left:0;border-top:1px solid var(--ws-line)}
+  body[data-workspace="focus"].calc-open .workspace-learning{grid-column:3;grid-row:1/span 2}
+  body[data-workspace="focus"].calc-open .workspace-navigator{grid-column:1/-1;grid-row:3}
+}
+@media (min-width:1280px){
+  /* The calculator is a fixed-width tool: it must not bid for the reading column. */
+  body[data-workspace="focus"].calc-open .workspace-grid{grid-template-columns:var(--ws-rail) 320px var(--ws-q) minmax(280px,1fr)}
+  body[data-workspace="focus"].calc-wide .workspace-grid{grid-template-columns:var(--ws-rail) 400px var(--ws-q) minmax(280px,1fr)}
+}
+
+/* The scholarship pane's quiet back control: it competes with "Official page"
+   otherwise, and only one of the two is the primary action. */
+body[data-workspace] button.schl-detail-back{background:transparent;border:0;color:var(--fx-muted);font-weight:600;box-shadow:none;padding:0 2px;min-height:44px}
+body[data-workspace] button.schl-detail-back:hover,body[data-workspace] button.schl-detail-back:focus-visible{color:var(--fx-accent);background:transparent}
+.schl-detail{container-type:inline-size}
+
+/* ---------- Generated avatars ----------
+   30px in the top bar, 76px in the picker. The glyph fallback (the person
+   outline drawn with a clip-path in redesign.css) is suppressed once there is
+   real art to show. */
+body[data-workspace] .acct-btn .av.has-avatar{width:30px;height:30px;flex:0 0 30px;font-size:0;background:transparent;border-radius:50%;overflow:hidden}
+body[data-workspace] .acct-btn .av.has-avatar::before{display:none}
+.fxav{display:block;border-radius:50%}
+.fxav-picker{margin:12px 0 4px;padding:14px;border:1px solid var(--fx-border);border-radius:var(--fx-r-md);background:var(--fx-surface)}
+.fxav-picker[hidden]{display:none}
+.fxav-picker h3{margin:0 0 2px;font-size:15px}
+.fxav-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+body[data-workspace] button.fxav-opt{padding:4px;background:var(--fx-surface-2);border:2px solid var(--fx-border-2);border-radius:var(--fx-r-md);
+  line-height:0;min-height:0;cursor:pointer}
+body[data-workspace] button.fxav-opt .fxav{width:76px;height:76px}
+body[data-workspace] button.fxav-opt.on{border-color:var(--fx-accent)}
+body[data-workspace] button.fxav-opt:focus-visible{outline:2px solid var(--fx-accent);outline-offset:2px}
+body[data-workspace] button.fxav-none{width:84px;height:84px;display:grid;place-items:center;line-height:1.2;font-size:12px;font-weight:600;
+  color:var(--fx-muted);background:var(--fx-surface-2)}
+body[data-workspace] button.fxav-none.on{border-color:var(--fx-accent);color:var(--fx-text)}
+/* The top bar sizes every button icon to 20px and the modal's flex row will
+   shrink an svg: the avatar states its own box at both sizes. */
+body[data-workspace] .acct-btn .av.has-avatar .fxav{width:30px;height:30px;flex:none;max-width:none}
+body[data-workspace] .fxav-picker button.fxav-opt .fxav{width:76px;height:76px;flex:none;max-width:none}
+body[data-workspace] .fxav-picker button.fxav-opt{flex:0 0 auto;width:auto;box-sizing:content-box}
+
+/* ---------- One accent, one primary action ----------
+   body[data-workspace] button paints every unmarked button in the accent, so a
+   calculator keypad, its zoom controls and the tutor's Send button all came out
+   orange and the accent stopped meaning "this is the next thing to press".
+   Inside the tool panes a button is a surface control unless it opts in. */
+body[data-workspace] :is(.workspace-calculator-dock,.workspace-learning) button:not(.primary):not(.qfx-check):not(.fxav-opt){
+  background:var(--fx-surface-2);color:var(--fx-text);border:1px solid var(--fx-border-2)}
+body[data-workspace] :is(.workspace-calculator-dock,.workspace-learning) button:not(.primary):not(.qfx-check):hover:not(:disabled){
+  border-color:var(--fx-accent);color:var(--fx-accent)}
+
+/* ---------- The question column is its own scroller ----------
+   With the page as the only scroller, a sticky action bar necessarily floats
+   over whatever is behind it — which is how it ended up covering answer
+   choices. Instead the canvas is a bounded flex column: the question body takes
+   whatever height is left and scrolls, while the calculator dock and the action
+   bar keep their own. The bar can never overlap the question at any width or
+   scroll position, and it cannot be pushed off screen by the calculator either.
+   --ws-above is the canvas's distance from the top of the document, kept in
+   step by workspace.js. */
+body[data-workspace] .workspace-canvas{
+  display:flex;flex-direction:column;
+  max-height:max(460px,calc(100dvh - var(--ws-above,280px)))}
+body[data-workspace] .workspace-question-body{
+  flex:1 1 auto;min-height:150px;overflow-y:auto;overscroll-behavior:contain;
+  padding-bottom:24px;scrollbar-gutter:stable}
+body[data-workspace] .workspace-calculator-dock,body[data-workspace] .bb-foot{flex:0 0 auto}
+/* The calculator is a fixed-height panel; capped so it always leaves the
+   question and the action bar room. */
+body[data-workspace] .workspace-calculator-dock #calcPanel{max-height:min(460px,42dvh)}
+body[data-workspace] .bb-foot{position:static}
+body[data-workspace] #screen-test #questionCard{scroll-padding-bottom:0}
+@media (max-width:1023px){
+  body[data-workspace] .workspace-question-body{padding-bottom:20px}
+}
+/* The clip edge of a scroller reads as "cut off" unless something says there is
+   more below it, so the column fades its bottom edge while it can scroll. */
+body[data-workspace] .workspace-canvas{position:relative}
+body[data-workspace] .workspace-canvas::after{
+  content:"";position:absolute;left:0;right:0;height:28px;pointer-events:none;
+  bottom:var(--ws-foot-h,76px);
+  background:linear-gradient(to bottom,transparent,var(--ws-surface));opacity:.9}
+body[data-workspace] .workspace-canvas:not(:has(.workspace-question-body))::after{display:none}
+
+/* ---------- Panels contain their own horizontal overflow ----------
+   A 3px marker label or a nested wide table inside these panels was adding a
+   few pixels to the document and giving the whole page a sideways scrollbar at
+   320px. Each panel clips horizontally at its own edge instead. */
+body[data-workspace] :is(#screen-college,#screen-scholarships){overflow-x:clip}
+.cc-summary{padding-top:26px;overflow-x:clip}
+body[data-workspace] button.cc-remove{padding:0;overflow:hidden}
+
+/* Repeated list links take the text colour and lean on their underline. Accent
+   on every row made the accent mean "row", not "primary action". */
+body[data-workspace] #screen-college a.chance-link,body[data-workspace] #screen-college .chance-name{color:var(--fx-text);text-decoration:none}
+body[data-workspace] #screen-college a.chance-link:hover,body[data-workspace] #screen-college a.chance-link:focus-visible{color:var(--fx-accent);text-decoration:underline}
+body[data-workspace] #screen-college .cc-sub{color:var(--fx-muted)}
+
+/* The comparison card is wrapped in an <a>, so the base link colour turned
+   every college name orange. The card is a surface, not an action; the accent
+   stays on "Add a college" and the selected filter. */
+body[data-workspace] #screen-college a.cc-link{color:var(--fx-text)}
+body[data-workspace] #screen-college a.cc-link:hover .cc-card-head h3,
+body[data-workspace] #screen-college a.cc-link:focus-visible .cc-card-head h3{color:var(--fx-accent)}
+/* Profile chip values are data, not actions. */
+body[data-workspace] #screen-college .hero-chip b{color:var(--fx-text)}
+
+/* ======================================================================
+   COLLEGE SCREEN — one profile, one list
+   The rail is the student: the ring, the four figures that drive the estimate,
+   and the rest behind one disclosure. It is sticky, so a figure and the
+   verdicts it moves stay on screen together, which is the reason the profile
+   and the comparison list were merged in the first place. Filters describe the
+   list, so they sit over the list.
+   ====================================================================== */
+.cc-body{align-items:start}
+.cc-rail{position:sticky;top:12px;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.cc-score-card{display:flex;flex-direction:column;gap:10px}
+.cc-score-card .cc-field{margin-top:0}
+.cc-score-card .cc-field-row .cc-field{margin-top:0}
+.cc-score-top{margin-bottom:2px}
+.cc-score-num b{font-size:30px}
+.cc-pred{margin-top:2px}
+.cc-savestatus{margin:2px 0 0;font-size:11.5px}
+
+/* "More about you" — the long tail of the profile, open in place. */
+.cc-more{border-top:1px solid var(--fx-border-2);margin-top:4px;padding-top:10px}
+.cc-more>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;
+  gap:8px;min-height:36px;font-size:13.5px;font-weight:700;color:var(--fx-text)}
+.cc-more>summary::-webkit-details-marker{display:none}
+.cc-more>summary::after{content:"+";font-family:var(--fx-mono);font-size:15px;color:var(--fx-muted)}
+.cc-more[open]>summary::after{content:"\2212"}
+.cc-more>summary:focus-visible{outline:2px solid var(--fx-accent);outline-offset:3px;border-radius:var(--fx-r-sm)}
+.cc-more-body{display:flex;flex-direction:column;gap:10px;padding-top:10px}
+.cc-more-lbl{display:block;font-family:var(--fx-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--fx-muted);margin-bottom:6px}
+.cc-more-sec{border-top:1px solid var(--fx-border-2);padding-top:10px}
+.cc-rigor-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.cc-rigor-row .cc-field{margin-top:0}
+.cc-rigor-row .cc-field>span{text-align:center;font-size:10.5px}
+.cc-rigor-row input{text-align:center;padding:0 4px}
+.cc-more-body textarea{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-text);
+  border-radius:var(--fx-r-sm);padding:9px 10px;font:inherit;font-size:14px;resize:vertical;min-height:58px}
+.cc-more-body .college-activities{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.cc-more-body .college-activity-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;
+  align-items:center;padding:8px;background:var(--fx-surface-2);border:1px solid var(--fx-border-2);border-radius:var(--fx-r-sm)}
+.cc-more-body .college-activity-row input,.cc-more-body .college-activity-row select{min-width:0;font-size:13px;min-height:36px}
+.cc-more-body .college-activity-row .college-check{grid-column:1/-1}
+.cc-more-body .college-activity-row [data-act="remove"]{grid-column:2;justify-self:end}
+.cc-more-body .college-checks{display:flex;flex-direction:column;gap:2px}
+.cc-more-body .college-check{display:flex;align-items:center;gap:8px;font-size:13px;min-height:34px;cursor:pointer}
+.cc-more-body .college-check input{width:17px;height:17px;flex:none;accent-color:var(--fx-accent)}
+
+/* The filter bar: one row over the list, never inside the profile. */
+.cc-filterbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:12px;padding:10px 12px;
+  background:var(--fx-surface);border:1px solid var(--fx-border);border-radius:var(--fx-r-md)}
+.cc-filter-lbl{font-family:var(--fx-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--fx-muted)}
+.cc-filter-sep{width:1px;align-self:stretch;min-height:24px;background:var(--fx-border-2);margin:0 4px}
+.cc-filterbar .cc-fitb{min-height:34px;padding:0 13px;font-size:13px}
+.cc-filterbar .cc-check{min-height:34px;font-size:13px;gap:7px;white-space:nowrap}
+.cc-chanceswrap{margin-top:16px}
+
+@media (max-width:1023px){
+  /* Below 1024 the rail cannot sit beside the list, so it stops being sticky
+     and runs full width above it rather than being squeezed. */
+  .cc-rail{position:static;max-height:none;overflow:visible;max-width:none;flex:1 1 100%;flex-direction:column}
+  .cc-rail>*{flex:1 1 auto}
+  .cc-more-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start}
+  .cc-more-body>.cc-field,.cc-more-body>.cc-more-sec,.cc-more-body>.cc-rigor{grid-column:auto}
+  .cc-more-body>.cc-more-sec{grid-column:1/-1}
+}
+@media (max-width:640px){
+  .cc-more-body{grid-template-columns:minmax(0,1fr)}
+  .cc-filterbar{padding:9px 10px}
+  .cc-filter-sep{display:none}
+  .cc-filterbar .cc-filter-lbl{flex:1 1 100%}
+}
+/* flex:1 leaves min-width:auto, so a select wider than its share pushed out of
+   the 300px rail. */
+.cc-field{min-width:0}
+.cc-field-row{min-width:0}
+.cc-field-row .cc-field{flex:1 1 0;min-width:0}
+.cc-field input,.cc-field select,.cc-field textarea{max-width:100%}
+.cc-more-body .cc-field select{text-overflow:ellipsis}
+/* The fit percentage and the verdict are one reading, so they sit together. */
+.cc-fitgroup{display:inline-flex;align-items:center;gap:8px;flex:none;white-space:nowrap}
+.cc-fitpct{font-family:var(--fx-mono);font-size:11px;color:var(--fx-muted);font-variant-numeric:tabular-nums}
+body[data-workspace] .cc-card-head{padding-right:40px}
+@media (max-width:480px){
+  body[data-workspace] .cc-card-head{flex-wrap:wrap}
+  .cc-fitgroup{gap:6px}
+}
+
+/* ======================================================================
+   RESULTS SCREEN (R1)
+   The estimate is the screen, so it takes the size, with the change since last
+   time attached to it rather than in a notice three blocks down. The domain
+   table becomes "what to work on" with the drill already set up on each row:
+   the question after a score is "now what", and that used to be answered by a
+   read-only table. Session rewards drop to one quiet chip line.
+   ====================================================================== */
+body[data-workspace] .results-screen{background:var(--fx-bg);border:1px solid var(--fx-border);
+  border-radius:var(--fx-r-lg);color:var(--fx-text);padding:20px}
+body[data-workspace] .results-screen h1.rs-h{font-family:var(--fx-ui);font-size:23px;margin:0 0 4px;letter-spacing:-.01em}
+body[data-workspace] .results-screen .muted,body[data-workspace] .results-screen .small{color:var(--fx-muted)}
+
+.rs-hero{background:var(--fx-surface);border:1px solid var(--fx-border);border-radius:var(--fx-r-md);
+  padding:18px 20px;margin-top:14px}
+body[data-workspace] .rs-hero .score-grid{display:flex;gap:12px;flex-wrap:wrap;margin:0;background:none;border:0;padding:0}
+body[data-workspace] .rs-hero .score-box{flex:0 1 auto;min-width:138px;background:var(--fx-surface-2);
+  border:1px solid var(--fx-border-2);border-radius:var(--fx-r-sm);padding:12px 16px;box-shadow:none;text-align:left}
+body[data-workspace] .rs-hero .score-box .num{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.05;
+  color:var(--fx-text);font-variant-numeric:tabular-nums}
+body[data-workspace] .rs-hero .score-box .lbl{font-family:var(--fx-mono);font-size:10px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--fx-muted);margin-top:5px}
+/* The headline figure is the one that gets the size. */
+body[data-workspace] .rs-hero .score-box.hl{flex:1 1 220px;background:transparent;border:0;padding:0 14px 0 0}
+body[data-workspace] .rs-hero .score-box.hl .num{font-size:clamp(46px,8vw,62px);line-height:.95;letter-spacing:-.04em}
+body[data-workspace] .rs-hero .score-box.hl .lbl{font-size:11px}
+body[data-workspace] .rs-hero #resultsDelta .notice{display:inline-flex;align-items:center;gap:6px;margin:12px 0 0;
+  padding:4px 11px;border-radius:999px;font-size:12.5px;font-weight:700;width:auto}
+body[data-workspace] .rs-hero #resultsDelta .notice.good{background:var(--fx-good-bg);color:var(--fx-good);border:1px solid var(--fx-good-line)}
+body[data-workspace] .rs-hero #resultsDelta .notice.bad{background:var(--fx-warn-bg);color:var(--fx-warn);border:1px solid var(--fx-warn-line)}
+
+.rs-ico{width:15px;height:15px;flex:none;stroke:currentColor;fill:none;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round}
+.rs-ico-coin{color:var(--fx-gold);stroke-width:1.7}
+body[data-workspace] .rewards-summary{background:none;border:0;padding:12px 0 0;margin:12px 0 0;
+  border-top:1px solid var(--fx-border-2);box-shadow:none}
+.rs-rewards{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.rs-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12.5px;
+  background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-muted)}
+.rs-chip b{color:var(--fx-text);font-weight:700;font-variant-numeric:tabular-nums}
+.rs-chip .rs-ico{opacity:.85}
+
+.rs-work{margin-top:16px}
+.rs-work-h{margin:0 0 9px;font-size:15px}
+.rs-work-none{margin:0;color:var(--fx-muted);font-size:13.5px;max-width:62ch}
+.rs-worklist{display:flex;flex-direction:column;gap:8px}
+.rs-workrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--fx-surface);
+  border:1px solid var(--fx-border-2);border-radius:var(--fx-r-sm);padding:11px 13px}
+.rs-worknm{flex:1 1 170px;min-width:0;font-weight:700;font-size:14px}
+.rs-meter{flex:0 0 104px;height:6px;border-radius:999px;background:var(--fx-track);position:relative;overflow:hidden}
+.rs-meter i{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--fx-good)}
+.rs-meter.mid i{background:var(--fx-gold)}
+.rs-meter.low i{background:var(--fx-warn)}
+.rs-worksc{flex:0 0 58px;text-align:right;font-family:var(--fx-mono);font-size:11.5px;color:var(--fx-muted)}
+body[data-workspace] button.rs-drill{flex:0 0 auto;min-height:34px;padding:0 13px;font-size:13px;font-weight:600;
+  white-space:nowrap;background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-text);
+  border-radius:var(--fx-r-sm)}
+body[data-workspace] button.rs-drill:hover{border-color:var(--fx-accent);color:var(--fx-accent)}
+
+.rs-more{margin-top:16px;border-top:1px solid var(--fx-border-2);padding-top:12px}
+.rs-more>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;
+  gap:10px;min-height:38px;font-size:13.5px;font-weight:700}
+.rs-more>summary::-webkit-details-marker{display:none}
+.rs-more>summary::after{content:"+";font-family:var(--fx-mono);font-size:15px;color:var(--fx-muted)}
+.rs-more[open]>summary::after{content:"\2212"}
+.rs-more>summary:focus-visible{outline:2px solid var(--fx-accent);outline-offset:3px;border-radius:var(--fx-r-sm)}
+.rs-more-body{padding-top:10px}
+body[data-workspace] .results-screen .notice.info{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);
+  color:var(--fx-muted);border-radius:var(--fx-r-sm);font-size:12.5px;margin-top:14px}
+.rs-actions{display:flex;gap:9px;flex-wrap:wrap;margin:16px 0 0}
+body[data-workspace] .rs-actions #btnReview{background:var(--fx-accent);border:1px solid var(--fx-accent);
+  color:var(--fx-on-accent);font-weight:800;min-height:46px;padding:0 20px;border-radius:var(--fx-r-sm)}
+body[data-workspace] .rs-actions #btnNewTest{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);
+  color:var(--fx-text);min-height:46px;padding:0 18px;border-radius:var(--fx-r-sm)}
+
+/* Answer review: a filter rather than every question in one wall. */
+.rev-bar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:18px 0 12px}
+.rev-bar h2{margin:0;font-size:17px;flex:1 1 auto}
+body[data-workspace] button.rev-filter{min-height:34px;padding:0 12px;font-size:12.5px;font-weight:600;
+  background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-muted);border-radius:999px}
+body[data-workspace] button.rev-filter b{color:var(--fx-text);font-variant-numeric:tabular-nums;margin-left:3px}
+body[data-workspace] button.rev-filter.on{border-color:var(--fx-accent);background:var(--fx-accent-bg);color:var(--fx-accent)}
+body[data-workspace] button.rev-filter.on b{color:var(--fx-accent)}
+#reviewArea[data-rev-filter="wrong"] .review:not([data-outcome="wrong"]),
+#reviewArea[data-rev-filter="skipped"] .review:not([data-outcome="skipped"]),
+#reviewArea[data-rev-filter="right"] .review:not([data-outcome="right"]){display:none}
+/* A section heading with nothing under it after filtering is noise. */
+#reviewArea h3:has(+ .review[style*="display: none"]){opacity:.4}
+body[data-workspace] .results-screen .review{border-left:3px solid var(--fx-border-2)}
+body[data-workspace] .results-screen .review[data-outcome="wrong"]{border-left-color:var(--fx-warn)}
+body[data-workspace] .results-screen .review[data-outcome="right"]{border-left-color:var(--fx-good)}
+body[data-workspace] .results-screen .review[data-outcome="skipped"]{border-left-color:var(--fx-muted)}
+
+@media (max-width:560px){
+  body[data-workspace] .results-screen{padding:14px}
+  body[data-workspace] .rs-hero{padding:14px}
+  body[data-workspace] .rs-hero .score-box.hl{flex:1 1 100%;padding:0}
+  .rs-meter{flex:1 1 100%;order:3}
+  .rs-worksc{flex:0 0 auto;text-align:left}
+  .rs-actions button{flex:1 1 auto}
+}
+
+/* ======================================================================
+   START SCREEN (S1)
+   One orange button on the screen. The home score card used to carry a
+   "Start a practice test" CTA that called the same handler as "Start practice"
+   directly below it, in the same column. The setup folds to a line once there
+   is a finished attempt to infer a preference from, and a step number stops
+   wearing the accent: a number is not an action.
+   ====================================================================== */
+body[data-workspace] .st-n{background:var(--fx-surface-2);color:var(--fx-muted);
+  border:1px solid var(--fx-border-2);font-family:var(--fx-mono);font-size:11px;font-weight:500}
+body[data-workspace] .st-logo{background:var(--fx-surface-2);color:var(--fx-text);border:1px solid var(--fx-border-2)}
+body[data-workspace] .pick.selected .st-logo{background:var(--fx-accent);color:var(--fx-on-accent);border-color:var(--fx-accent)}
+
+.st-setup{margin:0}
+body[data-workspace] .st-setup-sum{cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px;
+  min-height:52px;padding:10px 0}
+body[data-workspace] .st-setup-sum::-webkit-details-marker{display:none}
+.st-setup-line{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.st-setup-line b{font-size:15px;font-weight:700}
+.st-setup-hint{font-size:12.5px;color:var(--fx-muted)}
+.st-setup-act{flex:none;min-height:36px;display:inline-flex;align-items:center;padding:0 14px;border-radius:var(--fx-r-sm);
+  background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-text);font-size:13px;font-weight:600}
+body[data-workspace] .st-setup[open] .st-setup-act{color:var(--fx-muted)}
+body[data-workspace] .st-setup[open] .st-setup-act::after{content:" \2212"}
+body[data-workspace] .st-setup:not([open]) .st-setup-act::after{content:" +"}
+body[data-workspace] .st-setup-sum:focus-visible{outline:2px solid var(--fx-accent);outline-offset:3px;border-radius:var(--fx-r-sm)}
+body[data-workspace] .st-setup:not([open]) .st-setup-sum{border-bottom:1px solid var(--fx-border-2)}
+.st-setup-body{padding-top:4px}
+
+/* A segment label must not break mid-word or wrap to three lines while its
+   neighbours sit on one: "Reading & Writing" was doing exactly that at 320. */
+body[data-workspace] .seg .pick{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+@media (max-width:420px){
+  body[data-workspace] #sectionPicker .pick,body[data-workspace] #actSectionPicker .pick{font-size:13px;padding-inline:8px}
+  body[data-workspace] .st-setup-sum{flex-wrap:wrap}
+  body[data-workspace] .st-setup-act{width:100%;justify-content:center}
 }

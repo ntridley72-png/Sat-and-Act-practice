@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>College: merging profile + comparison</title>
+<style>
+  /* The live --fx-* focus-theme values, so these read as the real screens. */
+  :root{
+    --fx-bg:#0D0D0F; --fx-surface:#141418; --fx-surface-2:#17171C;
+    --fx-border:#22222A; --fx-border-2:#2E2E37;
+    --fx-text:#F4F3F0; --fx-text-2:#DEDCD7; --fx-muted:#A5A29A;
+    --fx-accent:#FF7A3D; --fx-accent-bg:#2E1D12; --fx-accent-line:#7A452A; --fx-on-accent:#1A1008;
+    --fx-good:#7FCF9A; --fx-good-bg:#17291E; --fx-good-line:#36654A;
+    --fx-gold:#F0C64E; --fx-gold-bg:#2A2314; --fx-gold-line:#60501F;
+    --fx-warn:#E8BB5E; --fx-warn-bg:#332A19; --fx-warn-line:#6B5629;
+    --fx-info:#9BB8F5; --fx-info-bg:#161E2C; --fx-info-line:#39507A;
+    --fx-violet:#C99BF0; --fx-band:#44557A; --fx-track:#262521;
+    --fx-r-sm:11px; --fx-r-md:14px; --fx-r-lg:18px;
+    --fx-ui:"Space Grotesk",system-ui,-apple-system,sans-serif;
+    --fx-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  @font-face{font-family:"Space Grotesk";src:url(/fonts/space-grotesk-914.woff2) format("woff2");font-weight:300 700;font-display:swap}
+  @font-face{font-family:"IBM Plex Mono";src:url(/fonts/ibm-plex-mono-400.woff2) format("woff2");font-weight:400;font-display:swap}
+  *{box-sizing:border-box}
+  body{margin:0;background:#07070a;color:var(--fx-text);font-family:var(--fx-ui);line-height:1.45}
+  .page{max-width:1240px;margin:0 auto;padding:40px 24px 80px}
+  .page>header{margin-bottom:40px;max-width:760px}
+  h1{font-size:30px;letter-spacing:-.02em;margin:0 0 10px}
+  .lede{color:var(--fx-text-2);font-size:15px;margin:0 0 20px}
+  .mono{font-family:var(--fx-mono)}
+  .kicker{font-family:var(--fx-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--fx-muted);margin:0 0 8px}
+
+  /* --- the audit table --- */
+  table.dupes{width:100%;border-collapse:collapse;font-size:13.5px;margin:0 0 8px}
+  table.dupes th,table.dupes td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--fx-border);vertical-align:top}
+  table.dupes thead th{font-family:var(--fx-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--fx-muted)}
+  table.dupes td:last-child{color:var(--fx-good)}
+
+  /* --- option frame --- */
+  .opt{margin:0 0 56px}
+  .opt-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 4px}
+  .opt-head h2{font-size:21px;margin:0;letter-spacing:-.01em}
+  .tag{font-family:var(--fx-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;border-radius:999px;padding:4px 10px;
+    background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-muted)}
+  .tag.rec{background:var(--fx-good-bg);border-color:var(--fx-good-line);color:var(--fx-good)}
+  .opt-note{color:var(--fx-muted);font-size:13.5px;margin:0 0 6px;max-width:860px}
+  .opt-note b{color:var(--fx-text-2);font-weight:600}
+  .tradeoff{font-size:12.5px;color:var(--fx-muted);margin:0 0 16px;max-width:860px}
+  .tradeoff span{color:var(--fx-warn)}
+  .frame{background:var(--fx-bg);border:1px solid var(--fx-border);border-radius:var(--fx-r-lg);padding:18px;overflow:hidden}
+
+  /* --- shared app bits --- */
+  .scr-head h3{margin:0 0 2px;font-size:22px;letter-spacing:-.01em}
+  .scr-head p{margin:0 0 14px;color:var(--fx-muted);font-size:13px}
+  .card{background:var(--fx-surface);border:1px solid var(--fx-border);border-radius:var(--fx-r-md);padding:16px}
+  .soft{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);border-radius:var(--fx-r-sm)}
+  .btn{min-height:40px;padding:0 16px;border-radius:var(--fx-r-sm);background:var(--fx-surface-2);
+    border:1px solid var(--fx-border-2);color:var(--fx-text);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
+  .btn.primary{background:var(--fx-accent);border-color:var(--fx-accent);color:var(--fx-on-accent);font-weight:800}
+  .btn.quiet{background:transparent;border-color:transparent;color:var(--fx-muted)}
+  .btn.sm{min-height:32px;padding:0 11px;font-size:12.5px}
+  .fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+  .fld>span{font-size:11.5px;color:var(--fx-muted)}
+  .fld input,.fld select{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-text);
+    border-radius:var(--fx-r-sm);min-height:40px;padding:0 10px;font:inherit;font-size:14.5px;width:100%}
+  .chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12.5px;
+    background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-muted)}
+  .chip b{color:var(--fx-text);font-weight:700}
+  .chip.on{background:var(--fx-accent);border-color:var(--fx-accent);color:var(--fx-on-accent);font-weight:700}
+  .verdict{border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:700;white-space:nowrap}
+  .v-likely{background:var(--fx-good-bg);color:var(--fx-good);border:1px solid var(--fx-good-line)}
+  .v-target{background:var(--fx-gold-bg);color:var(--fx-gold);border:1px solid var(--fx-gold-line)}
+  .v-reach{background:var(--fx-warn-bg);color:var(--fx-warn);border:1px solid var(--fx-warn-line)}
+  .track{position:relative;height:8px;border-radius:999px;background:var(--fx-track)}
+  .band{position:absolute;top:0;bottom:0;border-radius:999px;background:var(--fx-band)}
+  .mark{position:absolute;top:-5px;bottom:-5px;width:3px;border-radius:2px;background:var(--fx-accent)}
+  .scale{display:flex;justify-content:space-between;font-family:var(--fx-mono);font-size:10px;color:var(--fx-muted);margin-top:6px}
+  .ring-num{font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--fx-text)}
+  .ring-sub{font-family:var(--fx-mono);font-size:9px;letter-spacing:.14em;color:var(--fx-muted)}
+  .x{width:30px;height:30px;border-radius:999px;background:transparent;border:0;color:var(--fx-muted);cursor:pointer;font-size:14px}
+
+  /* college row shared by several options */
+  .crow{background:var(--fx-surface);border:1px solid var(--fx-border-2);border-radius:var(--fx-r-md);padding:13px 15px}
+  .crow-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+  .crow-top h4{margin:0;font-size:15.5px;color:var(--fx-text);font-weight:700}
+  .crow-sub{margin:3px 0 10px;color:var(--fx-muted);font-size:12.5px}
+  .crow-where{display:flex;justify-content:space-between;gap:10px;font-family:var(--fx-mono);font-size:10px;color:var(--fx-muted);margin-top:6px}
+  .fitpct{font-family:var(--fx-mono);font-size:11px;color:var(--fx-muted)}
+
+  /* --- option A --- */
+  .a-hero{display:flex;align-items:center;gap:20px;flex-wrap:wrap;background:var(--fx-surface);
+    border:1px solid var(--fx-border);border-radius:var(--fx-r-md);padding:16px 18px}
+  .a-hero .who{flex:1 1 260px;min-width:0}
+  .a-hero .who h4{margin:0 0 3px;font-size:17px}
+  .a-hero .who p{margin:0 0 9px;color:var(--fx-muted);font-size:13px}
+  .a-facts{display:flex;gap:8px;flex-wrap:wrap}
+  .a-edit{flex:0 0 auto;display:flex;gap:8px;align-items:center}
+  .a-drawer{margin-top:10px;border:1px dashed var(--fx-border-2);border-radius:var(--fx-r-md);padding:14px 16px;background:var(--fx-surface-2)}
+  .a-drawer .dh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .a-drawer .dh strong{font-size:13.5px}
+  .a-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .rigor{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .rigor .fld>span{text-align:center;font-size:10.5px}
+  .rigor input{text-align:center;padding:0 4px}
+  .a-listhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:22px 0 10px}
+  .a-listhead strong{font-size:15px}
+  .a-listhead .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .filterbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 12px;
+    padding:10px 12px;background:var(--fx-surface);border:1px solid var(--fx-border);border-radius:var(--fx-r-md)}
+  .filterbar .lbl{font-family:var(--fx-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--fx-muted);margin-right:2px}
+  .filterbar .sep{width:1px;height:22px;background:var(--fx-border-2);margin:0 6px}
+  .summary{background:var(--fx-surface);border:1px solid var(--fx-border);border-radius:var(--fx-r-md);padding:26px 16px 14px;margin-bottom:12px}
+  .summary p{margin:0 0 12px;color:var(--fx-muted);font-size:13px}
+  .youlbl{position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;
+    color:var(--fx-text);background:var(--fx-surface);border:1px solid var(--fx-border-2);border-radius:999px;padding:1px 6px;white-space:nowrap}
+  .rows{display:flex;flex-direction:column;gap:10px}
+
+  /* --- option B --- */
+  .b-wrap{display:grid;grid-template-columns:316px minmax(0,1fr);gap:16px;align-items:start}
+  .b-rail{display:flex;flex-direction:column;gap:12px}
+  .b-you{display:flex;align-items:center;gap:14px}
+  .b-you .big{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1}
+  .b-you .cap{color:var(--fx-muted);font-size:12px;margin-top:3px}
+  .b-sec{border-top:1px solid var(--fx-border-2);margin-top:14px;padding-top:12px}
+  .b-sec>summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--fx-text);list-style:none;display:flex;justify-content:space-between}
+  .b-sec>summary::-webkit-details-marker{display:none}
+  .b-sec>summary::after{content:"+";color:var(--fx-muted);font-family:var(--fx-mono)}
+  .b-sec[open]>summary::after{content:"\2212"}
+  .b-sec .pairs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .b-impact{display:flex;align-items:center;gap:8px;margin-top:12px;padding:9px 11px;border-radius:var(--fx-r-sm);
+    background:var(--fx-info-bg);border:1px solid var(--fx-info-line);font-size:12.5px;color:var(--fx-info)}
+
+  /* --- option C --- */
+  .c-head{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding-bottom:16px}
+  .c-tabs{display:flex;gap:0;border-bottom:1px solid var(--fx-border);margin-bottom:16px}
+  .c-tab{padding:11px 16px;font-size:13.5px;font-weight:700;color:var(--fx-muted);border:0;background:none;cursor:pointer;
+    border-bottom:2px solid transparent}
+  .c-tab.on{color:var(--fx-text);border-bottom-color:var(--fx-accent)}
+  .c-tab .n{font-family:var(--fx-mono);font-size:11px;color:var(--fx-muted);margin-left:5px}
+  .c-split{display:grid;grid-template-columns:minmax(0,1fr) 272px;gap:16px;align-items:start}
+
+  /* --- option D --- */
+  .d-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;background:var(--fx-surface);
+    border:1px solid var(--fx-border);border-radius:var(--fx-r-md);margin-bottom:12px}
+  .d-inline{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:5px 11px;font-size:12.5px;
+    background:var(--fx-surface-2);border:1px dashed var(--fx-border-2);color:var(--fx-muted);cursor:text}
+  .d-inline b{color:var(--fx-text);font-weight:700;font-variant-numeric:tabular-nums}
+  .d-inline.editing{border-style:solid;border-color:var(--fx-accent);background:var(--fx-accent-bg)}
+  .d-inline input{width:56px;background:transparent;border:0;color:var(--fx-text);font:inherit;font-weight:700;padding:0}
+  .d-stage{position:relative;overflow:hidden;border-radius:var(--fx-r-md)}
+  .d-drawer{position:absolute;top:0;right:0;bottom:0;width:360px;background:var(--fx-surface);
+    border-left:1px solid var(--fx-border-2);padding:16px;box-shadow:-18px 0 40px rgba(0,0,0,.5);overflow:auto}
+  .d-drawer h4{margin:0 0 2px;font-size:16px}
+  .d-drawer .sub{margin:0 0 14px;color:var(--fx-muted);font-size:12.5px}
+  .d-dim{opacity:.4;pointer-events:none}
+  .d-stack{display:grid;gap:12px}
+
+  @media (max-width:980px){
+    .b-wrap,.c-split{grid-template-columns:minmax(0,1fr)}
+    .a-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .d-drawer{position:static;width:auto;box-shadow:none;border-left:0;border-top:1px solid var(--fx-border-2)}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <p class="kicker">College · Oct 2026</p>
+  <h1>One profile, one list</h1>
+  <p class="lede">
+    &ldquo;Your profile&rdquo; and &ldquo;How your scores compare&rdquo; are currently two screens that
+    ask for the same facts and answer the same question twice. Four ways to make them one.
+  </p>
+
+  <p class="kicker">What the merge removes</p>
+  <table class="dupes">
+    <thead><tr><th>Appears twice today</th><th>On the profile screen</th><th>On the comparison screen</th><th>Merged</th></tr></thead>
+    <tbody>
+      <tr><td>Percentile ring</td><td>120px, &ldquo;86th&rdquo; + SAT percentile</td><td>76px, &ldquo;86 PCTL&rdquo;</td><td>one ring</td></tr>
+      <tr><td>SAT total</td><td>Test scores fieldset</td><td>Score rail input</td><td>one input</td></tr>
+      <tr><td>GPA &amp; grade</td><td>Academics fieldset</td><td>Score rail inputs</td><td>one input each</td></tr>
+      <tr><td>Use predicted score</td><td>&ldquo;Use predicted (SAT 1400)&rdquo;</td><td>&ldquo;Use my predicted score (1400)&rdquo;</td><td>one button</td></tr>
+      <tr><td>Your saved colleges</td><td>sidebar list, fit&nbsp;% badge</td><td>comparison cards, verdict pill</td><td>one list</td></tr>
+      <tr><td>Fit estimate</td><td>a green/amber percentage</td><td>a Likely/Target/Reach pill</td><td>pill <em>and</em> percentage, once</td></tr>
+    </tbody>
+  </table>
+  <p class="tradeoff">
+    Two encodings of the same estimate is the subtle one: a 63% badge and a &ldquo;Likely&rdquo; pill are the
+    same number wearing different clothes, and a reader has to learn both.
+  </p>
+</header>
+
+<!-- ============================ OPTION A ============================ -->
+<section class="opt">
+  <div class="opt-head">
+    <h2>A · Profile on top, list below</h2>
+    <span class="tag">one column</span>
+  </div>
+  <p class="opt-note">
+    The profile collapses to <b>the four facts that actually move the estimate</b> — score, GPA, grade,
+    rigor — as a header strip. Everything else (major, plan, essays, class rank, state) lives behind
+    <b>Edit full profile</b>, open in place. The sidebar of saved colleges is gone: the list below <em>is</em>
+    the saved colleges.
+  </p>
+  <p class="tradeoff">Trade-off: <span>the form pushes the list down</span> — on a laptop you land on inputs, not answers.</p>
+
+  <div class="frame">
+    <div class="scr-head">
+      <p class="kicker">College · data from the U.S. Department of Education</p>
+      <h3>Your colleges</h3>
+      <p>Ranges describe enrolled students, not admitted applicants. Percentages are fit estimates, never admission predictions.</p>
+    </div>
+
+    <div class="a-hero">
+      <svg width="104" height="104" viewBox="0 0 104 104" role="img" aria-label="86th percentile" style="transform:rotate(-90deg);flex:none">
+        <circle cx="52" cy="52" r="46" fill="none" stroke="var(--fx-border)" stroke-width="9"/>
+        <circle cx="52" cy="52" r="46" fill="none" stroke="var(--fx-accent)" stroke-width="9" stroke-linecap="round"
+                stroke-dasharray="289.0" stroke-dashoffset="40.5"/>
+      </svg>
+      <div class="who">
+        <h4><span class="ring-num" style="font-size:19px">86th percentile</span></h4>
+        <p>SAT 1280 puts you ahead of about 86% of test takers.</p>
+        <div class="a-facts">
+          <span class="chip">SAT <b>1280</b></span>
+          <span class="chip">GPA <b>3.3</b> <span style="color:var(--fx-muted)">5.0&nbsp;w</span></span>
+          <span class="chip">Grade <b>12</b></span>
+          <span class="chip">Rigor <b>7</b> <span style="color:var(--fx-muted)">AP/honors</span></span>
+          <span class="chip">Target <b>75th pct</b></span>
+        </div>
+      </div>
+      <div class="a-edit">
+        <button class="btn">Use predicted (1400)</button>
+        <button class="btn">Edit full profile</button>
+      </div>
+    </div>
+
+    <div class="a-drawer">
+      <div class="dh"><strong>Edit full profile</strong><button class="btn quiet sm">Done</button></div>
+      <div class="a-grid">
+        <label class="fld"><span>Primary test</span><select><option>SAT</option></select></label>
+        <label class="fld"><span>SAT total (400–1600)</span><input value="1280"></label>
+        <label class="fld"><span>ACT composite (1–36)</span><input placeholder="e.g., 30"></label>
+        <label class="fld"><span>Target</span><select><option>75th percentile</option></select></label>
+        <label class="fld"><span>Grade level</span><select><option>12th</option></select></label>
+        <label class="fld"><span>GPA</span><input value="3.3"></label>
+        <label class="fld"><span>GPA scale</span><select><option>5.0 weighted</option></select></label>
+        <label class="fld"><span>Class rank</span><select><option>Not ranked</option></select></label>
+        <label class="fld"><span>Home state</span><select><option>CO</option></select></label>
+        <label class="fld"><span>Intended major</span><input value="Chemistry"></label>
+        <label class="fld"><span>Application plan</span><select><option>Regular decision</option></select></label>
+        <label class="fld"><span>Essays &amp; recs</span><select><option>Strong</option></select></label>
+        <div class="fld" style="grid-column:1/-1">
+          <span>Course rigor (AP, IB, honors, dual-enrollment)</span>
+          <div class="rigor">
+            <label class="fld"><span>AP</span><input value="6"></label>
+            <label class="fld"><span>IB</span><input value="0"></label>
+            <label class="fld"><span>Honors</span><input value="1"></label>
+            <label class="fld"><span>Dual</span><input value="0"></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="a-listhead">
+      <strong>Your list · 12 colleges</strong>
+      <div class="right">
+        <span class="fitpct">Sort</span>
+        <select class="btn sm" style="padding:0 8px"><option>best fit</option></select>
+        <button class="btn primary">Add a college</button>
+      </div>
+    </div>
+
+    <div class="filterbar">
+      <span class="lbl">Fit</span>
+      <span class="chip on">All</span><span class="chip">Reach</span><span class="chip">Target</span><span class="chip">Likely</span>
+      <span class="sep"></span>
+      <span class="lbl">Only</span>
+      <span class="chip">In-state (CO)</span><span class="chip">Public</span><span class="chip">Test-optional</span>
+    </div>
+
+    <div class="summary">
+      <p>Where 1280 lands across your list</p>
+      <div class="track" style="height:10px">
+        <span class="band" style="left:24%;width:58%"></span>
+        <span class="mark" style="left:52%"><b class="youlbl">you: 1280</b></span>
+      </div>
+      <div class="scale"><span>1010</span><span>1600</span></div>
+    </div>
+
+    <div class="rows">
+      <div class="crow">
+        <div class="crow-top"><h4>University of Oregon</h4>
+          <span style="display:flex;gap:8px;align-items:center"><span class="fitpct">97% fit</span><span class="verdict v-likely">Likely</span><button class="x">✕</button></span></div>
+        <p class="crow-sub">OR · public · 88% admit rate</p>
+        <div class="track"><span class="band" style="left:20%;width:46%"></span><span class="mark" style="left:52%"></span></div>
+        <div class="crow-where"><span>middle 50%: 1130–1360 · you: 1280</span><span>Right in their range</span></div>
+      </div>
+      <div class="crow">
+        <div class="crow-top"><h4>California State Polytechnic University-Pomona</h4>
+          <span style="display:flex;gap:8px;align-items:center"><span class="fitpct">91% fit</span><span class="verdict v-likely">Likely</span><button class="x">✕</button></span></div>
+        <p class="crow-sub">CA · public · 75% admit rate</p>
+        <div class="track"><span class="band" style="left:14%;width:40%"></span><span class="mark" style="left:52%"></span></div>
+        <div class="crow-where"><span>middle 50%: 1080–1290 · you: 1280</span><span>Near the top of their range</span></div>
+      </div>
+      <div class="crow">
+        <div class="crow-top"><h4>University of South Florida</h4>
+          <span style="display:flex;gap:8px;align-items:center"><span class="fitpct">63% fit</span><span class="verdict v-target">Target</span><button class="x">✕</button></span></div>
+        <p class="crow-sub">FL · public · 43% admit rate</p>
+        <div class="track"><span class="band" style="left:38%;width:40%"></span><span class="mark" style="left:52%"></span></div>
+        <div class="crow-where"><span>middle 50%: 1240–1390 · you: 1280</span><span>Lower half of their range</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ OPTION B ============================ -->
+<section class="opt">
+  <div class="opt-head">
+    <h2>B · Sticky &ldquo;you&rdquo; rail beside the list</h2>
+    <span class="tag rec">recommended</span>
+  </div>
+  <p class="opt-note">
+    The rail becomes the <b>single home for everything about you</b> and nothing else — ring, the inputs
+    that drive the estimate, and <b>More about you</b> holding the rest. Filters move <em>out</em> of the rail
+    into a bar over the list, so the rail never mixes &ldquo;who I am&rdquo; with &ldquo;what I'm looking at&rdquo;.
+    Change GPA and watch the verdicts move beside it.
+  </p>
+  <p class="tradeoff">Trade-off: <span>the rail gets tall</span>, and under 1024 it has to stack above the list.</p>
+
+  <div class="frame">
+    <div class="scr-head">
+      <h3>Your colleges</h3>
+      <p>Edit anything on the left; the list re-sorts as you type.</p>
+    </div>
+
+    <div class="b-wrap">
+      <aside class="b-rail">
+        <div class="card">
+          <div class="b-you">
+            <svg width="76" height="76" viewBox="0 0 76 76" role="img" aria-label="86th percentile" style="transform:rotate(-90deg);flex:none">
+              <circle cx="38" cy="38" r="33.5" fill="none" stroke="var(--fx-border)" stroke-width="7"/>
+              <circle cx="38" cy="38" r="33.5" fill="none" stroke="var(--fx-accent)" stroke-width="7" stroke-linecap="round"
+                      stroke-dasharray="210.5" stroke-dashoffset="29.5"/>
+            </svg>
+            <div>
+              <div class="big">1280</div>
+              <div class="cap">SAT total · 86th percentile</div>
+            </div>
+          </div>
+
+          <div style="display:grid;gap:10px;margin-top:14px">
+            <label class="fld"><span>SAT total (400–1600)</span><input value="1280"></label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <label class="fld"><span>GPA</span><input value="3.3"></label>
+              <label class="fld"><span>Scale</span><select><option>5.0 w</option></select></label>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <label class="fld"><span>Grade</span><select><option>12</option></select></label>
+              <label class="fld"><span>Home state</span><select><option>CO</option></select></label>
+            </div>
+            <button class="btn">Use my predicted score (1400)</button>
+          </div>
+
+          <details class="b-sec" open>
+            <summary>More about you</summary>
+            <div class="pairs">
+              <label class="fld"><span>ACT composite</span><input placeholder="e.g., 30"></label>
+              <label class="fld"><span>Class rank</span><select><option>Not ranked</option></select></label>
+              <label class="fld"><span>Intended major</span><input value="Chemistry"></label>
+              <label class="fld"><span>Application plan</span><select><option>Regular</option></select></label>
+              <label class="fld"><span>Essays &amp; recs</span><select><option>Strong</option></select></label>
+              <label class="fld"><span>Target</span><select><option>75th pct</option></select></label>
+              <div class="fld" style="grid-column:1/-1"><span>Course rigor</span>
+                <div class="rigor">
+                  <label class="fld"><span>AP</span><input value="6"></label>
+                  <label class="fld"><span>IB</span><input value="0"></label>
+                  <label class="fld"><span>Hon</span><input value="1"></label>
+                  <label class="fld"><span>Dual</span><input value="0"></label>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <div class="b-impact">◆ 7 AP/honors courses lifts 4 of your 12 colleges by one band.</div>
+        </div>
+      </aside>
+
+      <section>
+        <div class="a-listhead" style="margin-top:0">
+          <strong>Your list · 12 colleges</strong>
+          <div class="right">
+            <span class="fitpct">Sort</span>
+            <select class="btn sm" style="padding:0 8px"><option>best fit</option></select>
+            <button class="btn primary">Add a college</button>
+          </div>
+        </div>
+
+        <div class="filterbar">
+          <span class="lbl">Fit</span>
+          <span class="chip on">All</span><span class="chip">Reach</span><span class="chip">Target</span><span class="chip">Likely</span>
+          <span class="sep"></span>
+          <span class="chip">In-state</span><span class="chip">Public</span><span class="chip">Test-optional</span>
+        </div>
+
+        <div class="summary">
+          <p>Where 1280 lands across your list</p>
+          <div class="track" style="height:10px">
+            <span class="band" style="left:24%;width:58%"></span>
+            <span class="mark" style="left:52%"><b class="youlbl">you: 1280</b></span>
+          </div>
+          <div class="scale"><span>1010</span><span>1600</span></div>
+        </div>
+
+        <div class="rows">
+          <div class="crow">
+            <div class="crow-top"><h4>University of Oregon</h4>
+              <span style="display:flex;gap:8px;align-items:center"><span class="fitpct">97% fit</span><span class="verdict v-likely">Likely</span><button class="x">✕</button></span></div>
+            <p class="crow-sub">OR · public · 88% admit rate</p>
+            <div class="track"><span class="band" style="left:20%;width:46%"></span><span class="mark" style="left:52%"></span></div>
+            <div class="crow-where"><span>middle 50%: 1130–1360 · you: 1280</span><span>Right in their range</span></div>
+          </div>
+          <div class="crow">
+            <div class="crow-top"><h4>San Jose State University</h4>
+              <span style="display:flex;gap:8px;align-items:center"><span class="fitpct">95% fit</span><span class="verdict v-likely">Likely</span><button class="x">✕</button></span></div>
+            <p class="crow-sub">CA · public · 85% admit rate</p>
+            <div class="track"><span class="band" style="left:16%;width:38%"></span><span class="mark" style="left:52%"></span></div>
+            <div class="crow-where"><span>middle 50%: 1070–1280 · you: 1280</span><span>At the top of their range</span></div>
+          </div>
+          <div class="crow">
+            <div class="crow-top"><h4>University of South Florida</h4>
+              <span style="display:flex;gap:8px;align-items:center"><span class="fitpct">63% fit</span><span class="verdict v-target">Target</span><button class="x">✕</button></span></div>
+            <p class="crow-sub">FL · public · 43% admit rate</p>
+            <div class="track"><span class="band" style="left:38%;width:40%"></span><span class="mark" style="left:52%"></span></div>
+            <div class="crow-where"><span>middle 50%: 1240–1390 · you: 1280</span><span>Lower half of their range</span></div>
+          </div>
+          <div class="crow">
+            <div class="crow-top"><h4>Arizona State University</h4>
+              <span style="display:flex;gap:8px;align-items:center"><span class="fitpct">—</span><span class="verdict v-likely">Likely</span><button class="x">✕</button></span></div>
+            <p class="crow-sub">AZ · public · 90% admit rate</p>
+            <div class="track"><span class="band" style="left:0;width:100%;background:var(--fx-surface-2);border:1px dashed var(--fx-border-2)"></span><span class="mark" style="left:52%"></span></div>
+            <div class="crow-where"><span>range not reported · you: 1280</span><span>Judged on admit rate alone</span></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ OPTION C ============================ -->
+<section class="opt">
+  <div class="opt-head">
+    <h2>C · Shared header, two tabs</h2>
+    <span class="tag">least rebuild</span>
+  </div>
+  <p class="opt-note">
+    One header owns every fact that was duplicated — ring, score, chips, <b>Use predicted</b> — and it stays
+    put across both tabs. <b>Your list</b> and <b>Your profile</b> then hold only what is unique to each, so
+    nothing appears twice without either screen being restructured.
+  </p>
+  <p class="tradeoff">Trade-off: <span>a tab is a mode</span> — you can't watch a field change the list, which is the main reason to merge at all.</p>
+
+  <div class="frame">
+    <div class="c-head">
+      <svg width="86" height="86" viewBox="0 0 86 86" role="img" aria-label="86th percentile" style="transform:rotate(-90deg);flex:none">
+        <circle cx="43" cy="43" r="38" fill="none" stroke="var(--fx-border)" stroke-width="8"/>
+        <circle cx="43" cy="43" r="38" fill="none" stroke="var(--fx-accent)" stroke-width="8" stroke-linecap="round"
+                stroke-dasharray="238.8" stroke-dashoffset="33.4"/>
+      </svg>
+      <div style="flex:1 1 240px;min-width:0">
+        <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+          <span class="ring-num" style="font-size:28px">1280</span>
+          <span style="color:var(--fx-muted);font-size:13px">SAT total · 86th percentile nationally</span>
+        </div>
+        <div class="a-facts" style="margin-top:9px">
+          <span class="chip">GPA <b>3.3</b></span><span class="chip">Grade <b>12</b></span>
+          <span class="chip">Rigor <b>7</b></span><span class="chip">CO</span><span class="chip">Target <b>75th pct</b></span>
+        </div>
+      </div>
+      <button class="btn">Use predicted (1400)</button>
+    </div>
+
+    <div class="c-tabs">
+      <button class="c-tab on">Your list <span class="n">12</span></button>
+      <button class="c-tab">Your profile</button>
+    </div>
+
+    <div class="c-split">
+      <section>
+        <div class="filterbar" style="margin-top:0">
+          <span class="lbl">Fit</span>
+          <span class="chip on">All</span><span class="chip">Reach</span><span class="chip">Target</span><span class="chip">Likely</span>
+          <span class="sep"></span><span class="chip">In-state</span><span class="chip">Public</span>
+        </div>
+        <div class="rows">
+          <div class="crow">
+            <div class="crow-top"><h4>University of Oregon</h4>
+              <span style="display:flex;gap:8px;align-items:center"><span class="fitpct">97% fit</span><span class="verdict v-likely">Likely</span><button class="x">✕</button></span></div>
+            <p class="crow-sub">OR · public · 88% admit rate</p>
+            <div class="track"><span class="band" style="left:20%;width:46%"></span><span class="mark" style="left:52%"></span></div>
+            <div class="crow-where"><span>middle 50%: 1130–1360 · you: 1280</span><span>Right in their range</span></div>
+          </div>
+          <div class="crow">
+            <div class="crow-top"><h4>University of South Florida</h4>
+              <span style="display:flex;gap:8px;align-items:center"><span class="fitpct">63% fit</span><span class="verdict v-target">Target</span><button class="x">✕</button></span></div>
+            <p class="crow-sub">FL · public · 43% admit rate</p>
+            <div class="track"><span class="band" style="left:38%;width:40%"></span><span class="mark" style="left:52%"></span></div>
+            <div class="crow-where"><span>middle 50%: 1240–1390 · you: 1280</span><span>Lower half of their range</span></div>
+          </div>
+        </div>
+      </section>
+      <aside class="card">
+        <p class="kicker" style="margin-bottom:10px">Across your list</p>
+        <div class="track" style="height:10px;margin-top:22px">
+          <span class="band" style="left:24%;width:58%"></span>
+          <span class="mark" style="left:52%"><b class="youlbl">1280</b></span>
+        </div>
+        <div class="scale"><span>1010</span><span>1600</span></div>
+        <div style="display:grid;gap:8px;margin-top:16px;font-size:13px">
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--fx-muted)">Likely</span><b>7</b></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--fx-muted)">Target</span><b>4</b></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--fx-muted)">Reach</span><b>1</b></div>
+        </div>
+        <button class="btn primary" style="width:100%;margin-top:14px">Add a college</button>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ OPTION D ============================ -->
+<section class="opt">
+  <div class="opt-head">
+    <h2>D · List is the screen, profile is a drawer</h2>
+    <span class="tag">most editing work</span>
+  </div>
+  <p class="opt-note">
+    The list is the whole product. The facts that drive it sit in the top bar as <b>editable chips</b> —
+    click <span class="mono">GPA&nbsp;3.3</span> and type over it. The long tail of the form lives in a drawer
+    you open only when you need it, so a 12-field form never competes with the answers.
+  </p>
+  <p class="tradeoff">Trade-off: <span>inline chip editing is the biggest build</span> of the four, and the full form is cramped in a 360px drawer.</p>
+
+  <div class="frame">
+    <div class="d-bar">
+      <svg width="54" height="54" viewBox="0 0 54 54" role="img" aria-label="86th percentile" style="transform:rotate(-90deg);flex:none">
+        <circle cx="27" cy="27" r="23.5" fill="none" stroke="var(--fx-border)" stroke-width="6"/>
+        <circle cx="27" cy="27" r="23.5" fill="none" stroke="var(--fx-accent)" stroke-width="6" stroke-linecap="round"
+                stroke-dasharray="147.7" stroke-dashoffset="20.7"/>
+      </svg>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;flex:1 1 auto;min-width:0">
+        <span class="d-inline">SAT <b>1280</b></span>
+        <span class="d-inline editing">GPA <input value="3.3"></span>
+        <span class="d-inline">Grade <b>12</b></span>
+        <span class="d-inline">Rigor <b>7</b></span>
+        <span class="d-inline">CO</span>
+      </div>
+      <button class="btn">Everything about you</button>
+      <button class="btn primary">Add a college</button>
+    </div>
+
+    <div class="d-stage">
+      <div class="d-stack d-dim">
+        <div class="summary" style="margin:0">
+          <p>Where 1280 lands across your list</p>
+          <div class="track" style="height:10px">
+            <span class="band" style="left:24%;width:58%"></span>
+            <span class="mark" style="left:52%"><b class="youlbl">you: 1280</b></span>
+          </div>
+          <div class="scale"><span>1010</span><span>1600</span></div>
+        </div>
+        <div class="crow">
+          <div class="crow-top"><h4>University of Oregon</h4>
+            <span style="display:flex;gap:8px;align-items:center"><span class="fitpct">97% fit</span><span class="verdict v-likely">Likely</span></span></div>
+          <p class="crow-sub">OR · public · 88% admit rate</p>
+          <div class="track"><span class="band" style="left:20%;width:46%"></span><span class="mark" style="left:52%"></span></div>
+        </div>
+        <div class="crow">
+          <div class="crow-top"><h4>University of South Florida</h4>
+            <span style="display:flex;gap:8px;align-items:center"><span class="fitpct">63% fit</span><span class="verdict v-target">Target</span></span></div>
+          <p class="crow-sub">FL · public · 43% admit rate</p>
+          <div class="track"><span class="band" style="left:38%;width:40%"></span><span class="mark" style="left:52%"></span></div>
+        </div>
+        <div class="crow">
+          <div class="crow-top"><h4>Oregon State University</h4>
+            <span style="display:flex;gap:8px;align-items:center"><span class="fitpct">93% fit</span><span class="verdict v-likely">Likely</span></span></div>
+          <p class="crow-sub">OR · public · 83% admit rate</p>
+          <div class="track"><span class="band" style="left:18%;width:44%"></span><span class="mark" style="left:52%"></span></div>
+        </div>
+      </div>
+
+      <aside class="d-drawer">
+        <h4>Everything about you</h4>
+        <p class="sub">Only the first few change your estimate. The rest sharpen the advice.</p>
+        <div style="display:grid;gap:11px">
+          <label class="fld"><span>Primary test</span><select><option>SAT</option></select></label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <label class="fld"><span>SAT total</span><input value="1280"></label>
+            <label class="fld"><span>ACT</span><input placeholder="30"></label>
+          </div>
+          <button class="btn">Use predicted (1400)</button>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <label class="fld"><span>GPA</span><input value="3.3"></label>
+            <label class="fld"><span>Scale</span><select><option>5.0 w</option></select></label>
+          </div>
+          <div class="fld"><span>Course rigor</span>
+            <div class="rigor">
+              <label class="fld"><span>AP</span><input value="6"></label>
+              <label class="fld"><span>IB</span><input value="0"></label>
+              <label class="fld"><span>Hon</span><input value="1"></label>
+              <label class="fld"><span>Dual</span><input value="0"></label>
+            </div>
+          </div>
+          <div class="b-sec" style="border-top:1px solid var(--fx-border-2);padding-top:12px;margin-top:2px">
+            <strong style="font-size:13px">Sharpens the advice</strong>
+            <div class="pairs" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:11px">
+              <label class="fld"><span>Grade</span><select><option>12th</option></select></label>
+              <label class="fld"><span>Home state</span><select><option>CO</option></select></label>
+              <label class="fld"><span>Class rank</span><select><option>Not ranked</option></select></label>
+              <label class="fld"><span>Major</span><input value="Chemistry"></label>
+              <label class="fld"><span>Plan</span><select><option>Regular</option></select></label>
+              <label class="fld"><span>Essays</span><select><option>Strong</option></select></label>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button class="btn primary" style="flex:1">Done</button>
+          <button class="btn quiet">Cancel</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<footer style="border-top:1px solid var(--fx-border);padding-top:20px;color:var(--fx-muted);font-size:13px;max-width:860px">
+  <p class="kicker">Shared by all four</p>
+  <p style="margin:0 0 8px">
+    The <b style="color:var(--fx-text-2)">saved-colleges sidebar disappears</b> in every option — it was a
+    worse copy of the list it sat next to. The fit percentage and the verdict pill travel together on one
+    row, so the estimate is stated once. Filters never sit in the same container as your own details.
+  </p>
+  <p style="margin:0">
+    <b style="color:var(--fx-text-2)">B is the recommendation</b>: it is the only one where a field and the
+    thing it changes are visible at the same time, which is the whole argument for merging the screens.
+    C is the cheapest path if the rebuild has to be small.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

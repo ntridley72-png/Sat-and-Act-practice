@@ -140,6 +140,28 @@
       '<fieldset class="schl-fs"><legend>Effort</legend><div class="schl-checks">' + [["noessay", "No essay"], ["open", "Deadline still open"], ["renewable", "Renewable"]].map(effort).join("") + "</div></fieldset>";
   }
 
+  /* The detail pane leads with a 16:9 image. When a program has no photo on
+     file it gets a category-tinted panel carrying the sponsor's initials —
+     never an empty box, and never a logo stretched to fill 16:9. */
+  const CATEGORY_TINT = { need: 1, merit: 2, stem: 3, service: 4, arts: 5, writing: 6, cte: 1, military: 2, athletics: 3, state: 4 };
+  function initials(org) {
+    return String(org || "?").replace(/[^A-Za-z0-9 ]/g, " ").split(/\s+/)
+      .filter((w) => w && !/^(the|of|for|and|a|an)$/i.test(w))
+      .slice(0, 2).map((w) => w[0].toUpperCase()).join("") || "?";
+  }
+  function headerImageHtml(s) {
+    const img = s.img && s.img.src ? s.img : null;
+    if (!img) {
+      return '<div class="schl-hero schl-hero-fallback" data-tint="' + (CATEGORY_TINT[s.category] || 1) + '" role="img" aria-label="' + esc(s.org || s.n) + '">' +
+        '<span class="schl-hero-initials" aria-hidden="true">' + esc(initials(s.org)) + "</span></div>";
+    }
+    const credit = img.credit ? (img.page
+      ? '<a href="' + esc(img.page) + '" target="_blank" rel="noopener nofollow">' + esc(img.credit) + "</a>"
+      : esc(img.credit)) + (img.license ? " \u00b7 " + esc(img.license) : "") : "";
+    return '<figure class="schl-hero">' +
+      '<img src="' + esc(img.src) + '" alt="' + esc(img.alt || "") + '" loading="lazy" decoding="async" width="960" height="540">' +
+      (credit ? '<figcaption class="schl-hero-credit">' + credit + "</figcaption>" : "") + "</figure>";
+  }
   function detailHtml() {
     const c = sp();
     const s = LIST.find((x) => x.id === c.selected);
@@ -153,11 +175,14 @@
     else steps.push("Gather your application details: school, GPA, activities, and any documents the provider lists.");
     if (s.tags.indexOf("need") >= 0) steps.push("File the FAFSA first — need-based programs usually ask for it.");
     steps.push("Apply on the official page before the deadline and keep a confirmation copy.");
-    return '<div class="schl-detail-head"><h2>' + esc(s.n) + "</h2><p class=\"small muted\">" + esc(s.org) + "</p></div>" +
+    // The description belongs with the name and sponsor it describes, not
+    // stranded underneath the numbered steps.
+    return headerImageHtml(s) +
+      '<div class="schl-detail-head"><h2>' + esc(s.n) + "</h2><p class=\"schl-detail-org\">" + esc(s.org) + "</p>" +
+      (s.desc ? '<p class="schl-detail-desc">' + esc(s.desc) + "</p>" : "") + "</div>" +
       '<div class="schl-tiles"><div class="schl-tile"><span class="t-lbl">Award</span><span class="t-val">' + esc(amountLabel(s)) + '</span></div><div class="schl-tile"><span class="t-lbl">Deadline</span><span class="t-val">' + esc(s.deadline) + "</span></div></div>" +
       '<section class="schl-sec"><h3>Who can apply</h3><ul>' + elig.map((l) => "<li>" + esc(l) + "</li>").join("") + "</ul></section>" +
       '<section class="schl-sec"><h3>What it takes</h3><ol>' + steps.map((l) => "<li>" + esc(l) + "</li>").join("") + "</ol></section>" +
-      '<p class="small muted">' + esc(s.desc) + "</p>" +
       '<div class="schl-detail-actions"><a class="schl-official" href="' + esc(s.link) + '" target="_blank" rel="noopener">Official page ↗</a>' +
       '<button type="button" class="schl-star" data-scholar-save="' + esc(s.id) + '" aria-pressed="' + saved + '" aria-label="' + (saved ? "Remove from your list" : "Save to your list") + '">' + (saved ? "★" : "☆") + "</button></div>";
   }

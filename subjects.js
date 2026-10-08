@@ -103,7 +103,7 @@
   function statsFor(key) { const s = (profile.skillStats || {})[key]; if (!s || !(s.r + s.w)) return null; return { accuracy: Math.round((s.r / (s.r + s.w)) * 100), sessions: s.sessions || 0, r: s.r, w: s.w }; }
 
   // ---- Picker UI ----
-  const pick = { test: "sat", section: "rw", selected: null, length: 10 };
+  const pick = { test: "sat", section: "rw", selected: null, length: 10, sort: "weak" };
   function sectionsFor(test) { return test === "act" ? ["english", "math", "reading", "science"] : ["rw", "math"]; }
   function itemsFor() {
     const list = Object.values(INVENTORY).filter((x) => x.test === pick.test && x.section === pick.section);
@@ -115,26 +115,76 @@
     const all = Object.values(INVENTORY).filter((x) => x.test === pick.test);
     return all.map((x) => ({ x, st: statsFor(x.key) })).filter((e) => e.st && e.st.r + e.st.w >= 4).sort((a, b) => a.st.accuracy - b.st.accuracy).slice(0, 4);
   }
+  const SORTS = [["weak", "Weakest first"], ["az", "A\u2013Z"], ["pool", "Most questions"]];
+  function sortedItems() {
+    const list = Object.values(INVENTORY).filter((x) => x.test === pick.test && x.section === pick.section);
+    const acc = (x) => { const st = statsFor(x.key); return st ? st.accuracy : null; };
+    if (pick.sort === "az") return list.sort((a, b) => a.skill.localeCompare(b.skill));
+    if (pick.sort === "pool") return list.sort((a, b) => b.ids.length - a.ids.length || a.skill.localeCompare(b.skill));
+    // Weakest first, and skills with no attempts yet sort last: a dash is not a
+    // weakness, it is an unknown, and putting unknowns on top buries the
+    // skills the student has actually struggled with.
+    return list.sort((a, b) => {
+      const sa = acc(a), sb = acc(b);
+      if (sa == null && sb == null) return a.skill.localeCompare(b.skill);
+      if (sa == null) return 1;
+      if (sb == null) return -1;
+      return sa - sb || a.skill.localeCompare(b.skill);
+    });
+  }
+  function accCell(st) {
+    if (!st) return '<span class="sk-none">Not practised yet</span>';
+    const tone = st.accuracy < 50 ? " low" : st.accuracy < 75 ? " mid" : " ok";
+    return '<span class="sk-acc"><span class="sk-meter' + tone + '"><i style="width:' + st.accuracy + '%"></i></span>' +
+      '<b>' + st.accuracy + '%</b><span class="sk-of">' + st.r + "/" + (st.r + st.w) + "</span></span>";
+  }
   function renderSubjectsScreen() {
     const host = $id("subjectsBody") || $id("screen-subjects");
     if (!host) return;
     refreshInventory();
-    const byDomain = itemsFor();
-    const domains = Object.keys(byDomain);
-    const weak = weakSkills();
-    const selectedItem = pick.selected ? INVENTORY[pick.selected] : null;
+    const items = sortedItems();
+    const practised = items.filter((x) => statsFor(x.key)).length;
+    const tab = (on, attr, value, label) => '<button type="button" role="tab" aria-selected="' + on + '" class="subject-tab' +
+      (on ? " active" : "") + '" data-s-' + attr + '="' + esc(value) + '">' + esc(label) + "</button>";
+    const SECTION_LABEL = { rw: "Reading & Writing", math: "Math", english: "English", reading: "Reading", science: "Science" };
+
     host.innerHTML =
-      '<header class="subjects-head"><div class="st-kicker">Subject practice · separate from test scoring</div><h1>Drill one skill at a time</h1>' +
-      '<p class="small muted">Choose a subject and get a short set of practice questions. Results are saved as skill stats and never replace your full practice tests or change your predicted score.</p></header>' +
-      '<div class="subject-tabs" role="tablist" aria-label="Test">' + ["sat", "act"].map((x) => '<button type="button" role="tab" aria-selected="' + (pick.test === x) + '" class="subject-tab' + (pick.test === x ? " active" : "") + '" data-s-test="' + x + '">' + x.toUpperCase() + "</button>").join("") + "</div>" +
-      '<div class="subject-tabs" role="tablist" aria-label="Section">' + sectionsFor(pick.test).map((x) => '<button type="button" role="tab" aria-selected="' + (pick.section === x) + '" class="subject-tab' + (pick.section === x ? " active" : "") + '" data-s-section="' + x + '">' + SECTION_LABEL[x] + "</button>").join("") + "</div>" +
-      '<div class="subject-length"><span>Questions per drill</span><div class="subject-seg">' + [5, 10, 15, 20].map((n) => '<button type="button" class="subject-len' + (pick.length === n ? " active" : "") + '" data-s-len="' + n + '">' + n + "</button>").join("") + "</div></div>" +
-      (weak.length ? '<div class="subject-weak"><strong>Suggested for you</strong><div class="subject-weak-row">' + weak.map((e) => '<button type="button" class="subject-chip" data-s-key="' + esc(e.x.key) + '">' + esc(e.x.skill) + " · " + e.st.accuracy + "%</button>").join("") + "</div></div>" : "") +
-      (domains.length ? domains.map((d) => '<section class="subject-domain"><h3>' + esc(d) + '</h3><div class="subject-skill-grid">' + byDomain[d].sort((a, b) => a.skill.localeCompare(b.skill)).map((x) => {
-        const st = statsFor(x.key);
-        return '<button type="button" class="subject-skill' + (pick.selected === x.key ? " selected" : "") + '" data-s-key="' + esc(x.key) + '"><span class="ss-name">' + esc(x.skill) + '</span><span class="ss-meta">' + x.ids.length + " question" + (x.ids.length === 1 ? "" : "s") + (st ? " · " + st.accuracy + "% correct" : "") + "</span></button>";
-      }).join("") + "</div></section>").join("") : '<p class="small muted">No questions available for this section yet.</p>') +
-      '<div class="subject-start"><div class="small muted">' + (selectedItem ? esc(selectedItem.skill) + " · " + Math.min(pick.length, selectedItem.ids.length) + " question set" : "Pick a skill to begin") + '</div><button type="button" id="subjectStartBtn"' + (selectedItem ? "" : " disabled") + ">Start subject drill →</button></div>";
+      '<header class="subjects-head"><div class="st-kicker">Subject practice \u00b7 separate from test scoring</div>' +
+      '<h1>Drill one skill at a time</h1>' +
+      '<p class="small muted">Every skill in this section against what you have scored on it. Drill results are saved as skill stats and never change your predicted score.</p></header>' +
+
+      '<div class="sk-controls">' +
+      '<div class="subject-tabs" role="tablist" aria-label="Test">' +
+      ["sat", "act"].map((x) => tab(pick.test === x, "test", x, x.toUpperCase())).join("") + "</div>" +
+      '<div class="subject-tabs" role="tablist" aria-label="Section">' +
+      sectionsFor(pick.test).map((x) => tab(pick.section === x, "section", x, SECTION_LABEL[x] || x)).join("") + "</div>" +
+      '<label class="sk-sort">Sort<select id="subjectSort">' +
+      SORTS.map(([v, t]) => '<option value="' + v + '"' + (pick.sort === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label>" +
+      '<label class="sk-sort">Per drill<select id="subjectLen">' +
+      [5, 10, 15, 20].map((n) => '<option value="' + n + '"' + (pick.length === n ? " selected" : "") + ">" + n + "</option>").join("") + "</select></label>" +
+      "</div>" +
+
+      (items.length
+        ? '<p class="sk-summary small muted">' + items.length + " skill" + (items.length === 1 ? "" : "s") +
+          " \u00b7 " + practised + " practised" + (practised < items.length ? " \u00b7 a skill shows no accuracy until you have drilled it" : "") + "</p>" +
+          '<div class="sk-tablewrap"><table class="sk-table"><thead><tr>' +
+          '<th scope="col">Skill</th><th scope="col">Domain</th><th scope="col">Your accuracy</th>' +
+          '<th scope="col" class="sk-num">Pool</th><th scope="col"><span class="visually-hidden">Start</span></th>' +
+          "</tr></thead><tbody>" +
+          items.map((x) => {
+            const st = statsFor(x.key);
+            const n = Math.min(pick.length, x.ids.length);
+            return '<tr data-s-key="' + esc(x.key) + '">' +
+              '<th scope="row" class="sk-name">' + esc(x.skill) + "</th>" +
+              '<td class="sk-dom">' + esc(x.domain) + "</td>" +
+              '<td class="sk-acccell">' + accCell(st) + "</td>" +
+              '<td class="sk-num">' + x.ids.length + "</td>" +
+              '<td class="sk-go"><button type="button" class="sk-drill" data-s-go="' + esc(x.key) + '" ' +
+              'aria-label="Drill ' + esc(x.skill) + ", " + n + ' questions">Drill ' + n + "</button></td></tr>";
+          }).join("") + "</tbody></table></div>"
+        : '<p class="small muted">No questions available for this section yet.</p>') +
+
+      '<p class="sk-foot small muted">Drill results are saved separately from your practice tests.</p>';
     wireSubjects();
     if (window.FunSatAds) window.FunSatAds.mount();
   }
@@ -143,17 +193,16 @@
     if (!host) return;
     host.querySelectorAll("[data-s-test]").forEach((b) => b.addEventListener("click", () => { pick.test = b.dataset.sTest; pick.section = sectionsFor(pick.test)[0]; pick.selected = null; renderSubjectsScreen(); }));
     host.querySelectorAll("[data-s-section]").forEach((b) => b.addEventListener("click", () => { pick.section = b.dataset.sSection; pick.selected = null; renderSubjectsScreen(); }));
-    host.querySelectorAll("[data-s-len]").forEach((b) => b.addEventListener("click", () => { pick.length = Number(b.dataset.sLen); renderSubjectsScreen(); }));
-    host.querySelectorAll("[data-s-key]").forEach((b) => b.addEventListener("click", () => {
-      pick.selected = b.dataset.sKey;
-      const item = INVENTORY[pick.selected];
-      if (item) { pick.test = item.test; pick.section = item.section; }
-      renderSubjectsScreen();
-      const start = $id("subjectStartBtn");
-      if (start) { start.scrollIntoView({ behavior: "smooth", block: "nearest" }); start.focus(); }
+    const lenSel = $id("subjectLen");
+    if (lenSel) lenSel.addEventListener("change", () => { pick.length = Number(lenSel.value) || 10; renderSubjectsScreen(); });
+    const sortSel = $id("subjectSort");
+    if (sortSel) sortSel.addEventListener("change", () => { pick.sort = sortSel.value; renderSubjectsScreen(); });
+    host.querySelectorAll("[data-s-go]").forEach((b) => b.addEventListener("click", (e) => {
+      e.stopPropagation();
+      startSubjectDrill(b.dataset.sGo, pick.length);
     }));
-    const start = $id("subjectStartBtn");
-    if (start) start.addEventListener("click", () => { if (pick.selected) startSubjectDrill(pick.selected, pick.length); });
+    // The Drill button on each row is the action; the row itself is not clickable,
+    // so a stray tap on a long skill name cannot start a drill.
   }
   function openSubjects() {
     state.view = "subjects";

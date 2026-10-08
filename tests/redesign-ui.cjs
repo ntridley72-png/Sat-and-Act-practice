@@ -58,7 +58,9 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   });
   await page.waitForSelector("#homeScoreCard .ring-num", { state: "visible" });
   const pctText = await page.textContent("#homeScoreCard .ring-num");
-  if (!/^\d+(st|nd|rd|th)$/.test(pctText.trim())) throw new Error("home ring percentile missing: " + pctText);
+  // The ring reads as a number with PCTL beneath it; the ordinal is on the aria-label.
+  if (!/^\d+$/.test(pctText.trim())) throw new Error("home ring percentile missing: " + pctText);
+  if (!/^\d+(st|nd|rd|th) percentile$/.test(await page.getAttribute("#homeScoreCard .fxring svg", "aria-label") || "")) throw new Error("home ring aria-label missing the ordinal");
   if (!(await page.locator("#homeScoreCard .ring-caption").count())) throw new Error("ring caption missing");
   if (!(await page.locator("#hscCompareChk").count())) throw new Error("comparison toggle missing");
   const avgText = await page.textContent("#homeScoreCard .hsc-average");
@@ -77,19 +79,68 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   await page.click("[data-close-detail]");
   await page.waitForTimeout(120);
 
-  // Profile hero ring on the College screen.
+  // College screen, merged: one profile, one list. The rail owns everything
+  // about the student (ring, the figures that drive the estimate, and the rest
+  // behind one disclosure); the filters describe the list so they sit over it;
+  // and there is no second copy of the profile and no sidebar repeating the
+  // comparison list.
   await page.click("#btnCollege");
   await page.waitForSelector("#screen-college", { state: "visible" });
-  if (!(await page.locator("#collegeProfileHero .ring").count())) throw new Error("missing profile hero ring");
-  if ((await page.locator("#collegeSavedPanel .college-saved-item").count()) < 2) throw new Error("saved colleges panel should list saved schools beside the profile");
-  await page.click("#collegeSavedPanel .college-saved-item");
+  if ((await page.locator("#screen-college .fxring").count()) !== 1) throw new Error("the college screen should carry exactly one percentile ring (the score rail)");
+  if (await page.locator("#collegeProfileHero").count()) throw new Error("the duplicated profile hero should be gone");
+  if (await page.locator("#collegeSavedPanel").count()) throw new Error("the saved-colleges sidebar should be gone; the list is the saved colleges");
+  for (const sel of ["#ccSat", "#ccGpa", "#collegeGpaScale", "#ccGrade", "#ccHomeState", "#ccMore"]) {
+    if (!(await page.locator(".cc-rail " + sel).count())) throw new Error("the profile rail should own " + sel);
+  }
+  if (await page.locator(".cc-rail [data-cc-fit], .cc-rail [data-cc-state]").count()) throw new Error("filters describe the list, not the student: they must not sit in the profile rail");
+  if (!(await page.locator(".cc-main .cc-filterbar [data-cc-fit]").count())) throw new Error("the filter bar should sit over the list");
+  // Only one input per fact on the whole screen.
+  for (const sel of ["#ccSat", "#ccGpa", "#ccGrade", "#ccHomeState"]) {
+    if ((await page.locator("#screen-college " + sel).count()) !== 1) throw new Error("duplicate input for " + sel);
+  }
+  if (await page.locator("#screen-college #collegeSat").count()) throw new Error("#collegeSat is the old duplicate of #ccSat and should be gone");
+
+  // The rest of the profile opens in place and survives the re-render editing triggers.
+  await page.click(".cc-rail #ccMore > summary");
+  if (!(await page.locator(".cc-rail #collegeMajor").count())) throw new Error("More about you should hold the remaining profile fields");
+  await page.fill(".cc-rail #collegeMajor", "Chemistry");
+  await page.dispatchEvent(".cc-rail #collegeMajor", "change");
+  await page.waitForTimeout(200);
+  if (!(await page.locator(".cc-rail #ccMore[open]").count())) throw new Error("the disclosure should stay open across the re-render an edit causes");
+  if ((await page.inputValue(".cc-rail #collegeMajor")) !== "Chemistry") throw new Error("the edit should persist");
+
+  // Editing a figure in the rail re-sorts the list beside it.
+  const verdictsBefore = await page.locator(".cc-card .cc-verdict").allTextContents();
+  await page.fill(".cc-rail #ccSat", "800");
+  await page.dispatchEvent(".cc-rail #ccSat", "change");
+  await page.waitForTimeout(250);
+  const verdictsAfter = await page.locator(".cc-card .cc-verdict").allTextContents();
+  if (JSON.stringify(verdictsBefore) === JSON.stringify(verdictsAfter)) throw new Error("dropping the score to 800 should move the verdicts: " + JSON.stringify(verdictsAfter));
+  await page.fill(".cc-rail #ccSat", "1340");
+  await page.dispatchEvent(".cc-rail #ccSat", "change");
+  await page.waitForTimeout(250);
+
+  // A detail still opens, from the search drawer.
+  await page.click("#ccAdd");
+  await page.fill("#collegeQuery", "UCLA");
+  await page.waitForTimeout(350);
+  await page.click(".college-row-main");
   await page.waitForSelector(".college-detail .college-pie");
   if ((await page.locator(".college-detail .college-pie-legend li").count()) < 3) throw new Error("acceptance pie should show accept, waitlist, and deny");
-  if (await page.locator("#collegeProfileHero .ring-num").textContent() === "—") throw new Error("profile ring should show a percentile for SAT 1340");
   await page.click("[data-close-detail]");
   await page.click("#collegeBack");
 
   // Enter advances to the next question (12 questions guarantees a multi-question module).
+  // The setup folds to a summary line once there is a finished attempt (S1), so
+  // the controls inside it have to be opened before they can be driven.
+  const openSetup = async (page) => {
+    const det = page.locator("#setupDetails");
+    if (await det.count() && !(await det.evaluate((d) => d.open))) {
+      await page.click("#setupDetails > summary");
+      await page.waitForTimeout(120);
+    }
+  };
+  await openSetup(page);
   await page.fill("#customLen", "12");
   await page.dispatchEvent("#customLen", "change");
   await page.click("#btnStart");

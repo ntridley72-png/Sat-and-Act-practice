@@ -123,17 +123,25 @@ body[data-workspace] #screen-start h1, body[data-workspace] #screen-start h3, bo
 .home-score-card .hsc-top .hsc-summary { flex: 1 1 240px; min-width: 0; max-width: 680px; }
 .home-score-card .hsc-title { font-weight: 800; font-size: 19px; color: var(--text); }
 .home-score-card .hsc-sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
-.ring { position: relative; flex: none; }
-.ring svg { display: block; transform: rotate(-90deg); }
-.ring circle { fill: none; stroke-linecap: round; }
-.ring .ring-track { stroke: var(--line); opacity: .55; }
-.ring .ring-progress { transition: stroke-dashoffset 1.3s cubic-bezier(.22,.61,.36,1); }
-.ring .ring-stop-2 { stop-color: var(--blue, var(--mint)); }
-.ring .ring-val { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-.ring .ring-num { font-weight: 800; color: var(--text, #1f2430); line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; display: inline-flex; align-items: baseline; }
-.ring .ring-pct { font-size: .48em; font-weight: 700; color: var(--mint); margin-left: 1px; }
+/* ---------- Percentile ring ----------
+   Two circles: a track in --fx-border and a value arc in --fx-accent drawn over
+   it with stroke-dasharray/offset, so the sweep is the thing you read. Rotated
+   -90deg, which starts the arc at 12 o'clock and runs it clockwise. The arc is
+   painted from zero on load, so 20% is visibly a stub and not a full circle.
+   Size comes in through --fxring-size; everything else is derived from it. */
+.fxring { position: relative; flex: none; width: var(--fxring-size, 120px); height: var(--fxring-size, 120px); }
+.fxring svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
+.fxring circle { fill: none; stroke-linecap: round; }
+.fxring .fxring-track { stroke: var(--fx-border); }
+.fxring[data-empty="1"] .fxring-track { stroke-dasharray: 3 7; stroke-linecap: butt; }
+.fxring .fxring-arc { stroke: var(--fx-accent); transition: stroke-dashoffset .6s cubic-bezier(.22,.61,.36,1); }
+.fxring .fxring-val { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; }
+.fxring .ring-num { font-weight: 800; color: var(--fx-text); line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  font-size: var(--fxring-num, 22px); }
+.fxring .fxring-sub { font-style: normal; font-family: var(--fx-mono); font-weight: 500; color: var(--fx-muted);
+  font-size: var(--fxring-sub, 9px); letter-spacing: .14em; line-height: 1; }
 .ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 9px; flex: none; }
-.ring-caption { color: var(--muted); font-size: 12px; letter-spacing: 0; font-weight: 600; text-align: center; max-width: 170px; line-height: 1.3; }
+.ring-caption { color: var(--fx-muted); font-size: 12px; letter-spacing: 0; font-weight: 600; text-align: center; max-width: 170px; line-height: 1.3; }
 .hsc-compare { flex: 0 0 260px; box-sizing: border-box; padding-left: 20px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
 .hsc-compare[hidden] { display: none; }
 .hsc-compare-head { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
@@ -164,7 +172,7 @@ body[data-workspace] .hsc-expand { display: none; margin-top: 18px; border-top: 
 .hsc-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 12px 2px 4px; }
 .hsc-tab { flex: none; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font-weight: 700; font-size: 13px; white-space: nowrap; }
 .hsc-tab.active { background: var(--blue); border-color: var(--blue); color: #fff; }
-body[data-workspace] .hsc-cta { min-height: 44px; border-radius: 12px; background: var(--mint); color: #1a1008; font-weight: 800; }
+body[data-workspace] .hsc-cta { min-height: 44px; border-radius: 12px; background: var(--fx-accent); color: var(--fx-on-accent); font-weight: 800; }
 .hsc-note { color: var(--muted); font-size: 11px; margin-top: 8px; }
 
 /* ---------- Profile hero + rounds ---------- */
@@ -192,14 +200,13 @@ body[data-workspace] .arcade-hud .chip, body[data-workspace] .cab-top { color: v
   body[data-workspace] .badges { gap: 6px; width: 100%; justify-content: flex-start; }
   body[data-workspace] .badge, body[data-workspace] .hud-streak, body[data-workspace] #autosave { display: none; }
   .home-score-card .hsc-top { flex-wrap: wrap; justify-content: center; text-align: center; gap: 12px; }
-  .ring { transform: scale(.88); transform-origin: center; }
   .hsc-tiles { grid-template-columns: 1fr 1fr; }
   .cab3d { transform: scale(.9); }
 }
 @media (prefers-reduced-motion: reduce) {
   .fx-coin.drop { animation-duration: .01s; }
   #arcadeIntro.zooming .cab3d { transition-duration: .01s; }
-  .ring .ring-progress { transition: none; }
+  .fxring .fxring-arc { transition: none; }
 }
 
 /* The redesign follows the selected workspace palette everywhere. */
@@ -217,8 +224,6 @@ body[data-workspace] .home-score-card .hsc-sub,body[data-workspace] .hsc-tile .t
 body[data-workspace] .hsc-scale-track{background:var(--ws-soft)!important;border-color:var(--ws-line)!important}
 body[data-workspace] #screen-college .college-profile fieldset{background:var(--ws-surface)!important;border-color:var(--ws-line)!important}
 body[data-workspace] #screen-college .college-profile input,body[data-workspace] #screen-college .college-profile select,body[data-workspace] #screen-college .college-profile textarea{background:var(--ws-surface)!important;color:var(--ws-ink)!important;border-color:var(--ws-line)!important}
-body[data-workspace="exam"] #screen-college,body[data-workspace="exam"] #collegeDetailHost{--ws-bg:#fff;--ws-surface:#fff;--ws-soft:#f4f4f2;--ws-ink:#1a1a1a;--ws-muted:#6b6b66;--ws-line:#dcdcd8;--ws-tint:#fdf0ea;--ws-accent:#c43b00;--text:#1a1a1a;--muted:#6b6b66;--line:#dcdcd8}
-body[data-workspace="notebook"] #screen-college,body[data-workspace="notebook"] #collegeDetailHost{--ws-bg:#f4f1e8;--ws-surface:#fbf9f3;--ws-soft:#ebe7db;--ws-ink:#1f1e1a;--ws-muted:#6a665c;--ws-line:#d5d0c2;--ws-tint:#f6e9e0;--ws-accent:#a8420b;--text:#1f1e1a;--muted:#6a665c;--line:#d5d0c2}
 
 /* Concept C: an editorial toolbar with dividers and underlined active sections. */
 body[data-workspace] .topbar{padding:0!important;gap:0!important;min-height:58px;flex-wrap:nowrap!important;justify-content:flex-start;max-width:100%}
@@ -343,13 +348,13 @@ body[data-workspace] .hsc-tab.active{background:var(--mint);border-color:var(--m
 .college-chances{min-width:0}
 .chance-mix{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
 .fit{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700;white-space:nowrap}
-.fit-reach{background:rgba(239,68,68,.16);color:var(--ws-error)}
-.fit-target{background:rgba(59,130,246,.18);color:var(--ws-accent)}
-.fit-likely{background:rgba(34,197,94,.16);color:var(--ws-success)}
-.fit-safety{background:rgba(255,122,61,.2);color:var(--ws-success)}
+.fit-reach{background:var(--fx-warn-bg);color:var(--fx-warn)}
+.fit-target{background:var(--fx-gold-bg);color:var(--fx-gold)}
+.fit-likely{background:var(--fx-good-bg);color:var(--fx-good)}
+.fit-safety{background:var(--fx-info-bg);color:var(--fx-info)}
 .chance-advice{margin:4px 0 10px}
 .chance-list{list-style:none;margin:0;padding:0;display:grid;gap:10px;max-height:620px;overflow:auto}
-.chance-item{border:1px solid var(--ws-line,var(--line));border-radius:12px;padding:10px 12px;background:var(--ws-soft,rgba(255,255,255,.03))}
+.chance-item{border:1px solid var(--fx-border-2);border-radius:12px;padding:10px 12px;background:var(--fx-surface-2)}
 .chance-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .chance-name{font-weight:700;font-size:14px;line-height:1.3}
 .chance-nums{font-size:13px;margin-top:4px}
@@ -384,14 +389,16 @@ body.cpop-open{overflow:hidden}
 .cpop-box .small.muted,.cpop-box .muted{color:var(--ws-muted,var(--muted))}
 .college-equation-row,.equation-copy-row{background:var(--ws-soft,var(--panel))}
 .college-equation-row code,.equation-copy-row code,.tutor-equations code{color:var(--ws-ink,var(--text))}
-/* The college screen uses the redesign's dark chrome in every layout, so give it a matching dark set
-   of layout tokens. Without this, Exam/Notebook mixed light boxes with dark cards and text vanished. */
-#screen-college,#collegeDetailHost{--ws-bg:#121210;--ws-surface:#1b1b18;--ws-soft:var(--panel);--ws-ink:#ecebe4;--ws-muted:#9d9a90;--ws-line:#34332d;--ws-rule:#4a483f;--ws-tint:#2e1d12;color:var(--ws-ink)}
-#screen-college,#collegeDetailHost{--ws-accent:#ff7a3d;--ws-on-accent:#1a1008;--ws-success:#7fcf9a;--ws-warn:#e8bb5e;--ws-error:#ff8f85;--blue:#ff7a3d}
+/* The college screen and its detail popup are built from the --fx-* palette, so
+   their layout tokens alias it rather than carrying a second hard-coded set.
+   --fx-* follows the active workspace layout, which is what kept light boxes and
+   dark cards from mixing here. */
+#screen-college,#collegeDetailHost{--ws-bg:var(--fx-bg);--ws-surface:var(--fx-surface);--ws-soft:var(--fx-surface-2);--ws-ink:var(--fx-text);--ws-muted:var(--fx-muted);--ws-line:var(--fx-border);--ws-rule:var(--fx-border-2);--ws-tint:var(--fx-accent-bg);color:var(--fx-text)}
+#screen-college,#collegeDetailHost{--ws-accent:var(--fx-accent);--ws-on-accent:var(--fx-on-accent);--ws-success:var(--fx-good);--ws-warn:var(--fx-warn);--ws-error:var(--fx-deny);--blue:var(--fx-accent)}
 #screen-college a,#collegeDetailHost a{color:var(--ws-accent)}
-#screen-college .ring-lbl,#screen-college .ring-num{color:var(--ws-ink)}
+#screen-college .ring-num{color:var(--fx-text)}
 #screen-college .hero-line,#screen-college .hero-line *:not(b):not(strong){color:var(--ws-ink)}
-#screen-college,#collegeDetailHost{--muted:#a3b0c2;--text:#e8edf4;--ink:#e8edf4;--line:#2f3b4b}
+#screen-college,#collegeDetailHost{--muted:var(--fx-muted);--text:var(--fx-text);--ink:var(--fx-text);--line:var(--fx-border)}
 /* ---- Your chances: full-width, larger, card grid ---- */
 .college-chances.college-wide{grid-column:1/-1;padding:18px 20px 20px}
 .college-chances legend{font-size:20px;font-weight:800;padding:0 8px}
@@ -425,16 +432,16 @@ body.cpop-open{overflow:hidden}
 .chance-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px;font-size:14px;color:var(--ws-ink)}
 .chance-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 .chance-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
-.cg-cell{background:rgba(255,255,255,.04);border:1px solid var(--ws-line);border-radius:10px;padding:10px 12px}
+.cg-cell{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);border-radius:10px;padding:10px 12px}
 .cg-k{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ws-muted);font-weight:700}
 .cg-v{font-size:18px;font-weight:800;margin-top:3px;color:var(--ws-ink)}
 .cg-v .muted{font-size:14px;font-weight:600}
 .chance-sub{font-size:15px;font-weight:700;margin-top:14px;color:var(--ws-ink)}
 .chance-range{position:relative;margin:8px 0 22px}
-.cr-track{position:relative;height:12px;border-radius:999px;background:rgba(255,255,255,.08)}
-.cr-band{position:absolute;top:0;bottom:0;border-radius:999px;background:rgba(59,130,246,.55)}
-.cr-you{position:absolute;top:-6px;width:4px;height:24px;margin-left:-2px;border-radius:2px;background:var(--mint)}
-.cr-you b{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--mint);white-space:nowrap}
+.cr-track{position:relative;height:12px;border-radius:999px;background:var(--fx-track)}
+.cr-band{position:absolute;top:0;bottom:0;border-radius:999px;background:var(--fx-band)}
+.cr-you{position:absolute;top:-6px;width:4px;height:24px;margin-left:-2px;border-radius:2px;background:var(--fx-accent)}
+.cr-you b{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:700;color:var(--fx-text);background:var(--fx-surface);border:1px solid var(--fx-border-2);border-radius:999px;padding:1px 6px;white-space:nowrap}
 .cr-labels{position:relative;height:16px;margin-top:4px;font-size:12px;color:var(--ws-muted)}
 .cr-labels span{position:absolute;transform:translateX(-50%)}
 .chance-tags{gap:8px;margin-top:10px;font-size:14px}
@@ -466,13 +473,13 @@ body.cpop-open{overflow:hidden}
 .context-review{margin-top:10px;display:grid;gap:8px}
 .context-review>.secondary{justify-self:start}
 .context-stale{font-size:14px;color:var(--ws-warn);margin:0}
-.context-card{border:1px solid var(--ws-line);border-radius:14px;padding:14px 16px;background:rgba(255,255,255,.03)}
+.context-card{border:1px solid var(--fx-border-2);border-radius:14px;padding:14px 16px;background:var(--fx-surface-2)}
 .context-card.stale{opacity:.6}
 .context-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .context-cat{font-weight:800;font-size:16px;color:var(--ws-ink)}
 .context-impact{font-size:13px;font-weight:700;padding:3px 10px;border-radius:999px}
 .impact-high{background:rgba(255,122,61,.18);color:var(--ws-success)}.impact-moderate{background:rgba(59,130,246,.18);color:var(--ws-accent)}
-.impact-low,.impact-none{background:rgba(255,255,255,.08);color:var(--ws-muted)}
+.impact-low,.impact-none{background:var(--fx-surface-2);color:var(--fx-muted)}
 .context-sum{font-size:15px;margin:8px 0 0;color:var(--ws-ink)}
 .context-applied{font-size:14px;margin:8px 0 0;color:var(--ws-success)}
 .context-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px}
@@ -511,7 +518,7 @@ body.cpop-open{overflow:hidden}
 @media(max-width:480px){.college-profile-grid .college-band{grid-template-columns:1fr}}
 .chance-factors{margin-top:12px}
 .chance-factors ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:4px}
-.chance-factors li{display:flex;justify-content:space-between;gap:10px;font-size:15px;padding:4px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
+.chance-factors li{display:flex;justify-content:space-between;gap:10px;font-size:15px;padding:4px 0;border-bottom:1px dashed var(--fx-border-2)}
 .chance-factors li b{font-variant-numeric:tabular-nums;white-space:nowrap}
 .chance-factors .f-up{color:var(--ws-success)}.chance-factors .f-down{color:var(--ws-error)}
 

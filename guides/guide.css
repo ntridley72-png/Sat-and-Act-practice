@@ -29,3 +29,94 @@
 .gcols li{break-inside:avoid;line-height:1.8}
 .gwrap .gcols a{color:var(--ws-accent);text-decoration:none}
 @media (max-width:620px){.gcols{columns:1}.gtable{font-size:13px}.gtable th,.gtable td{padding:8px}.gtable tbody th{width:50%}}
+
+/* ---- College photo gallery ----
+   Equal tracks so every photo gets the same weight; a fixed 16:9 box with
+   object-fit:cover plus width/height on the img so the page does not reflow as
+   the lazy images arrive. One image fills a single column rather than being
+   stretched across three. Each photo carries its own credit: these are Commons
+   images whose licences require attribution per work. */
+.cg{margin:20px 0}
+.cg-grid{display:grid;grid-template-columns:1fr;gap:14px}
+.cg-item{margin:0;min-width:0}
+.cg-open,body[data-workspace] button.cg-open{display:block;width:100%;padding:0;border:1px solid var(--ws-line);
+  background:var(--ws-soft);border-radius:var(--fx-r-md);overflow:hidden;cursor:zoom-in;line-height:0;min-height:0}
+.cg-open:focus-visible{outline:2px solid var(--ws-accent);outline-offset:2px}
+.cg-item img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover}
+.cg-credit{font-size:11px;line-height:1.4;color:var(--ws-muted);margin-top:6px}
+.cg-credit a{color:var(--ws-muted);text-decoration:underline}
+.cg[data-count="1"] .cg-grid{max-width:620px}
+@media (min-width:560px){.cg-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cg[data-count="1"] .cg-grid{grid-template-columns:minmax(0,1fr)}}
+@media (min-width:900px){.cg-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .cg[data-count="1"] .cg-grid{grid-template-columns:minmax(0,1fr)}
+  .cg[data-count="2"] .cg-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cg[data-count="4"] .cg-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ---- Lightbox ---- */
+html.cg-lb-open{overflow:hidden}
+.cg-lb[hidden]{display:none}
+.cg-lb{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px}
+.cg-lb-backdrop{position:absolute;inset:0;background:var(--fx-overlay,rgba(0,0,0,.8))}
+.cg-lb-box{position:relative;display:flex;align-items:center;gap:8px;width:min(1100px,100%);max-height:100%}
+.cg-lb-fig{position:relative;margin:0;flex:1 1 auto;min-width:0;background:var(--ws-surface);
+  border:1px solid var(--ws-line);border-radius:var(--fx-r-md);overflow:hidden}
+.cg-lb-img{display:block;width:100%;aspect-ratio:16/9;max-height:calc(100dvh - 160px);min-height:200px;object-fit:contain;background:var(--ws-soft);overflow:hidden;font-size:12px;color:var(--ws-muted)}
+.cg-lb-cap{display:flex;gap:10px;flex-wrap:wrap;padding:10px 14px;font-size:12px;color:var(--ws-muted)}
+.cg-lb-cap a{color:var(--ws-accent)}
+.cg-lb-count{font-variant-numeric:tabular-nums}
+.cg-lb-btn,.cg-lb-close,
+body[data-workspace] button.cg-lb-btn,body[data-workspace] button.cg-lb-close{flex:none;width:44px;height:44px;
+  display:grid;place-items:center;padding:0;font-size:20px;border-radius:999px;border:1px solid var(--ws-line);
+  background:var(--ws-surface);color:var(--ws-ink);cursor:pointer;min-height:0}
+body[data-workspace] button.cg-lb-btn:hover,body[data-workspace] button.cg-lb-close:hover{border-color:var(--ws-accent);color:var(--ws-accent)}
+.cg-lb-close,body[data-workspace] button.cg-lb-close{position:absolute;top:10px;right:10px;width:40px;height:40px;font-size:15px;z-index:2;box-shadow:0 1px 6px rgba(0,0,0,.25)}
+.cg-lb.cg-one .cg-lb-btn{display:none}
+@media (max-width:620px){
+  .cg-lb-box{flex-wrap:wrap;justify-content:center}
+  .cg-lb-fig{flex:1 1 100%;order:1}
+  .cg-lb-btn{order:2}
+}
+
+/* ---- Generated-page footer nav ----
+   These were unseparated inline links ("Free test prepSAT practiceACT practice…")
+   that also refused to wrap, which is what gave the page a sideways scrollbar
+   at 320 and 390. Now a wrapping row with a dot between entries. */
+.gfootnav{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:16px;
+  padding-top:14px;border-top:1px solid var(--ws-line)}
+.gfootnav a{position:relative;font-size:12.5px;line-height:1.5;color:var(--ws-muted);text-decoration:none}
+.gfootnav a:hover,.gfootnav a:focus-visible{color:var(--ws-accent);text-decoration:underline}
+.gfootnav a:not(:last-child)::after{content:"\00b7";position:absolute;right:-9px;color:var(--ws-line)}
+
+/* ---- Social life section ----
+   A letter grade beside the figures it was estimated from, each figure carrying
+   its own source. The grade is deliberately not the loudest thing in the block:
+   the numbers are checkable and it is not. */
+.sl{margin:14px 0 18px;padding:16px 18px;border:1px solid var(--ws-line);border-radius:var(--fx-r-md);background:var(--ws-surface)}
+.sl-head{display:flex;gap:16px;align-items:flex-start}
+.sl-grade{flex:none;width:58px;height:58px;display:grid;place-items:center;border-radius:var(--fx-r-md);
+  font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1;
+  background:var(--ws-soft);border:1px solid var(--ws-line);color:var(--ws-ink)}
+.sl-grade[data-grade="A"]{background:var(--fx-good-bg);border-color:var(--fx-good-line);color:var(--fx-good)}
+.sl-grade[data-grade="B"]{background:var(--fx-info-bg);border-color:var(--fx-info-line);color:var(--fx-info)}
+.sl-grade[data-grade="C"]{background:var(--fx-gold-bg);border-color:var(--fx-gold-line);color:var(--fx-gold)}
+.sl-grade[data-grade="D"]{background:var(--fx-warn-bg);border-color:var(--fx-warn-line);color:var(--fx-warn)}
+.sl-title{margin:0 0 4px;font-size:16px;font-weight:700;line-height:1.3;color:var(--ws-ink)}
+.gwrap .sl-lead{margin:0;font-size:14px;line-height:1.6;color:var(--ws-ink)}
+.sl-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:1px;margin:16px 0 0;
+  background:var(--ws-line);border:1px solid var(--ws-line);border-radius:var(--fx-r-sm);overflow:hidden}
+.sl-fact{margin:0;padding:10px 12px;background:var(--ws-surface);min-width:0}
+.sl-fact dt{font-size:11.5px;line-height:1.35;color:var(--ws-muted)}
+.sl-fact dd{margin:0}
+.sl-fact .sl-val{margin-top:3px;font-size:17px;font-weight:700;letter-spacing:-.01em;color:var(--ws-ink);
+  font-variant-numeric:tabular-nums;overflow-wrap:break-word}
+.sl-fact .sl-src{margin-top:4px;font-size:10.5px;line-height:1.35;color:var(--ws-muted)}
+.gwrap .sl-note{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--ws-line);
+  font-size:12.5px;line-height:1.6;color:var(--ws-muted)}
+.gwrap .sl-note strong{color:var(--ws-ink)}
+@media (max-width:460px){
+  .sl{padding:14px}
+  .sl-head{gap:12px}
+  .sl-grade{width:46px;height:46px;font-size:21px}
+  .sl-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+}

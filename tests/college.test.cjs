@@ -122,7 +122,8 @@ const feature = loadFeature(profile);
   assert(developing.estimate < strong.estimate, "developing essays/recs lower the estimate");
   const pieSource = fs.readFileSync("college.js", "utf8");
   assert(pieSource.includes("function pieHtml"), "pie renderer present");
-  assert(pieSource.includes("collegeSavedPanel"), "saved colleges panel present");
+  assert(pieSource.includes("function ccFilterBarHtml"), "list filters live over the list");
+  assert(!pieSource.includes("function profileHtml"), "the stacked duplicate profile block is gone");
 
   // Official ACT Composite rule is applied in both the results screen and the predictor.
   const html = fs.readFileSync("SAT & ACT Practice.html", "utf8");

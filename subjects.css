@@ -23,8 +23,69 @@ body[data-workspace] .subject-skill:hover{border-color:var(--mint)}
 body[data-workspace] .subject-skill.selected{border-color:var(--mint);background:rgba(94,240,176,.1)}
 .ss-name{font-weight:700;font-size:14px}
 .ss-meta{font-size:12px;color:var(--muted)}
-.subject-start{position:sticky;bottom:0;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;background:rgba(15,20,28,.97);border:1px solid var(--line);border-radius:16px;margin-top:10px}
-body[data-workspace] #subjectStartBtn{min-height:48px;border-radius:12px;background:linear-gradient(180deg,var(--mint),var(--mint2));color:#06281c;font-weight:800;font-size:16px;padding:0 22px;border:0}
-body[data-workspace] #subjectStartBtn:disabled{opacity:.5}
 .subject-result{margin-bottom:12px}
-@media(max-width:560px){.subject-start{flex-direction:column;align-items:stretch}.subject-skill-grid{grid-template-columns:1fr}.subjects-screen{padding-top:14px}}
+@media(max-width:560px){.subject-skill-grid{grid-template-columns:1fr}.subjects-screen{padding-top:14px}}
+
+/* ---------- Subject practice: skill table (U2) ----------
+   Every skill in the section against what you have actually scored on it, with
+   the drill on the row. Replaces a wall of chips whose only ordering was
+   alphabetical. A skill with no attempts shows "Not practised yet" rather than
+   0%, and sorts last under "weakest first": a dash is an unknown, not a
+   weakness, and sorting unknowns to the top buries the real ones. */
+.sk-controls{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:14px 0 10px}
+.sk-controls .subject-tabs{margin:0}
+.sk-sort{display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--fx-muted)}
+.sk-sort select{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-text);
+  border-radius:var(--fx-r-sm);min-height:38px;padding:0 10px;font:inherit;font-size:14px}
+.sk-sort:last-of-type{margin-left:auto}
+.sk-summary{margin:0 0 10px}
+
+.sk-tablewrap{overflow-x:auto;border:1px solid var(--fx-border);border-radius:var(--fx-r-md);background:var(--fx-surface)}
+.sk-table{width:100%;border-collapse:collapse;font-size:14px;min-width:620px}
+.sk-table th,.sk-table td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--fx-border-2);vertical-align:middle}
+.sk-table thead th{font-family:var(--fx-mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--fx-muted);font-weight:500;background:var(--fx-surface-2);position:sticky;top:0;z-index:1}
+.sk-table tbody tr:last-child th,.sk-table tbody tr:last-child td{border-bottom:0}
+.sk-table tbody tr:hover{background:var(--fx-surface-2)}
+.sk-table tbody tr.sel{background:var(--fx-accent-bg)}
+.sk-table tbody tr.sel .sk-name{color:var(--fx-accent)}
+.sk-name{font-weight:700;color:var(--fx-text);min-width:0}
+.sk-dom{color:var(--fx-muted);font-size:13px}
+.sk-num{font-family:var(--fx-mono);font-variant-numeric:tabular-nums;color:var(--fx-muted);white-space:nowrap;text-align:right}
+.sk-acccell{white-space:nowrap}
+.sk-acc{display:inline-flex;align-items:center;gap:9px}
+.sk-meter{display:inline-block;width:72px;height:6px;border-radius:999px;background:var(--fx-track);
+  position:relative;overflow:hidden;flex:none}
+.sk-meter i{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--fx-good)}
+.sk-meter.low i{background:var(--fx-warn)}
+.sk-meter.mid i{background:var(--fx-gold)}
+.sk-acc b{font-variant-numeric:tabular-nums;font-size:13.5px}
+.sk-of{font-family:var(--fx-mono);font-size:11px;color:var(--fx-muted)}
+.sk-none{color:var(--fx-muted);font-size:13px}
+.sk-go{text-align:right}
+body[data-workspace] button.sk-drill{min-height:34px;padding:0 13px;font-size:13px;font-weight:600;white-space:nowrap;
+  background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-text);border-radius:var(--fx-r-sm)}
+body[data-workspace] button.sk-drill:hover{border-color:var(--fx-accent);color:var(--fx-accent)}
+body[data-workspace] button.sk-drill:focus-visible{outline:2px solid var(--fx-accent);outline-offset:2px}
+
+@media (max-width:760px){
+  .sk-sort:last-of-type{margin-left:0}
+  /* The table becomes one card per skill: a 5-column table on a phone is a
+     sideways scroll for every row. */
+  .sk-tablewrap{overflow:visible;border:0;background:transparent}
+  .sk-table{min-width:0}
+  .sk-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+  .sk-table tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;
+    background:var(--fx-surface);border:1px solid var(--fx-border-2);border-radius:var(--fx-r-md);
+    padding:11px 13px;margin-bottom:8px}
+  .sk-table tbody tr:hover{background:var(--fx-surface)}
+  .sk-table th,.sk-table td{border:0;padding:0}
+  .sk-name{grid-column:1;grid-row:1;font-size:14.5px}
+  .sk-dom{grid-column:1;grid-row:2}
+  .sk-acccell{grid-column:1;grid-row:3;margin-top:6px}
+  .sk-num{grid-column:2;grid-row:2;align-self:start}
+  .sk-num::after{content:" in pool"}
+  .sk-go{grid-column:2;grid-row:3;align-self:end;margin-top:6px}
+}
+
+.sk-foot{margin:12px 0 0}

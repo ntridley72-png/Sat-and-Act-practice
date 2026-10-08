@@ -21,3 +21,16 @@ When the user explicitly asks for a cross-review of coding work, asks the other 
 5. Independently verify each finding. Apply only valid fixes, then rerun relevant tests and summarize the result.
 
 The review scope is only the supplied changes. Do not include unrelated dirty-tree files or request a whole-repository audit. Use one review round unless the user asks for more. Do not run this workflow unless the user requested cross-review, because it consumes usage in two additional AI tools.
+
+## Personal writing voice
+
+When the user asks an agent to write, rewrite, edit, revise, polish, summarize,
+or draft text "in my voice," "in my own voice," "in my style," "sound like
+me," or with equivalent wording, use the installed `humanizer` skill. Treat
+the user's supplied writing samples as the primary voice reference and match
+their sentence length, word choice, punctuation, rhythm, and deliberate
+quirks. Preserve the source's meaning and every supported fact; do not invent
+details to make the voice stronger. If no reliable sample is available and an
+accurate personal match materially matters, ask for 2-3 representative
+paragraphs. Otherwise produce a natural Humanizer rewrite and do not claim it
+is an exact imitation of the user's voice.

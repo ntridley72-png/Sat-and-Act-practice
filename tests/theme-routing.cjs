@@ -18,6 +18,16 @@ function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); re
 
   await page.goto(BASE + PAGE_PATH, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("body[data-workspace]");
+  // The setup folds to a summary line once there is a finished attempt (S1), so
+  // the controls inside it have to be opened before they can be driven.
+  const openSetup = async (page) => {
+    const det = page.locator("#setupDetails");
+    if (await det.count() && !(await det.evaluate((d) => d.open))) {
+      await page.click("#setupDetails > summary");
+      await page.waitForTimeout(120);
+    }
+  };
+  await openSetup(page);
   await page.fill("#customLen", "4");
   await page.dispatchEvent("#customLen", "change");
   await page.click("#btnStart");

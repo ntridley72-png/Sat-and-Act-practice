@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Results, setup, subject drills</title>
+<style>
+  /* The live --fx-* focus-theme values, so these read as the real screens. */
+  :root{
+    --fx-bg:#0D0D0F; --fx-surface:#141418; --fx-surface-2:#17171C;
+    --fx-border:#22222A; --fx-border-2:#2E2E37;
+    --fx-text:#F4F3F0; --fx-text-2:#DEDCD7; --fx-muted:#A5A29A;
+    --fx-accent:#FF7A3D; --fx-accent-bg:#2E1D12; --fx-accent-line:#7A452A; --fx-on-accent:#1A1008;
+    --fx-good:#7FCF9A; --fx-good-bg:#17291E; --fx-good-line:#36654A;
+    --fx-gold:#F0C64E; --fx-gold-bg:#2A2314; --fx-gold-line:#60501F;
+    --fx-warn:#E8BB5E; --fx-warn-bg:#332A19; --fx-warn-line:#6B5629;
+    --fx-info:#9BB8F5; --fx-info-bg:#161E2C; --fx-info-line:#39507A;
+    --fx-violet:#C99BF0; --fx-band:#44557A; --fx-track:#262521;
+    --fx-r-sm:11px; --fx-r-md:14px; --fx-r-lg:18px;
+    --fx-ui:"Space Grotesk",system-ui,-apple-system,sans-serif;
+    --fx-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  @font-face{font-family:"Space Grotesk";src:url(/fonts/space-grotesk-914.woff2) format("woff2");font-weight:300 700;font-display:swap}
+  @font-face{font-family:"IBM Plex Mono";src:url(/fonts/ibm-plex-mono-400.woff2) format("woff2");font-weight:400;font-display:swap}
+  *{box-sizing:border-box}
+  body{margin:0;background:#07070a;color:var(--fx-text);font-family:var(--fx-ui);line-height:1.45}
+  .page{max-width:1240px;margin:0 auto;padding:40px 24px 80px}
+  .page>header{margin-bottom:40px;max-width:760px}
+  h1{font-size:30px;letter-spacing:-.02em;margin:0 0 10px}
+  .lede{color:var(--fx-text-2);font-size:15px;margin:0 0 20px}
+  .mono{font-family:var(--fx-mono)}
+  .kicker{font-family:var(--fx-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--fx-muted);margin:0 0 8px}
+
+  /* --- the audit table --- */
+  table.dupes{width:100%;border-collapse:collapse;font-size:13.5px;margin:0 0 8px}
+  table.dupes th,table.dupes td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--fx-border);vertical-align:top}
+  table.dupes thead th{font-family:var(--fx-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--fx-muted)}
+  table.dupes td:last-child{color:var(--fx-good)}
+
+  /* --- option frame --- */
+  .opt{margin:0 0 56px}
+  .opt-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 4px}
+  .opt-head h2{font-size:21px;margin:0;letter-spacing:-.01em}
+  .tag{font-family:var(--fx-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;border-radius:999px;padding:4px 10px;
+    background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-muted)}
+  .tag.rec{background:var(--fx-good-bg);border-color:var(--fx-good-line);color:var(--fx-good)}
+  .opt-note{color:var(--fx-muted);font-size:13.5px;margin:0 0 6px;max-width:860px}
+  .opt-note b{color:var(--fx-text-2);font-weight:600}
+  .tradeoff{font-size:12.5px;color:var(--fx-muted);margin:0 0 16px;max-width:860px}
+  .tradeoff span{color:var(--fx-warn)}
+  .frame{background:var(--fx-bg);border:1px solid var(--fx-border);border-radius:var(--fx-r-lg);padding:18px;overflow:hidden}
+
+  /* --- shared app bits --- */
+  .scr-head h3{margin:0 0 2px;font-size:22px;letter-spacing:-.01em}
+  .scr-head p{margin:0 0 14px;color:var(--fx-muted);font-size:13px}
+  .card{background:var(--fx-surface);border:1px solid var(--fx-border);border-radius:var(--fx-r-md);padding:16px}
+  .soft{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);border-radius:var(--fx-r-sm)}
+  .btn{min-height:40px;padding:0 16px;border-radius:var(--fx-r-sm);background:var(--fx-surface-2);
+    border:1px solid var(--fx-border-2);color:var(--fx-text);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
+  .btn.primary{background:var(--fx-accent);border-color:var(--fx-accent);color:var(--fx-on-accent);font-weight:800}
+  .btn.quiet{background:transparent;border-color:transparent;color:var(--fx-muted)}
+  .btn.sm{min-height:32px;padding:0 11px;font-size:12.5px}
+  .fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+  .fld>span{font-size:11.5px;color:var(--fx-muted)}
+  .fld input,.fld select{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-text);
+    border-radius:var(--fx-r-sm);min-height:40px;padding:0 10px;font:inherit;font-size:14.5px;width:100%}
+  .chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12.5px;
+    background:var(--fx-surface-2);border:1px solid var(--fx-border-2);color:var(--fx-muted)}
+  .chip b{color:var(--fx-text);font-weight:700}
+  .chip.on{background:var(--fx-accent);border-color:var(--fx-accent);color:var(--fx-on-accent);font-weight:700}
+  .verdict{border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:700;white-space:nowrap}
+  .v-likely{background:var(--fx-good-bg);color:var(--fx-good);border:1px solid var(--fx-good-line)}
+  .v-target{background:var(--fx-gold-bg);color:var(--fx-gold);border:1px solid var(--fx-gold-line)}
+  .v-reach{background:var(--fx-warn-bg);color:var(--fx-warn);border:1px solid var(--fx-warn-line)}
+  .track{position:relative;height:8px;border-radius:999px;background:var(--fx-track)}
+  .band{position:absolute;top:0;bottom:0;border-radius:999px;background:var(--fx-band)}
+  .mark{position:absolute;top:-5px;bottom:-5px;width:3px;border-radius:2px;background:var(--fx-accent)}
+  .scale{display:flex;justify-content:space-between;font-family:var(--fx-mono);font-size:10px;color:var(--fx-muted);margin-top:6px}
+  .ring-num{font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--fx-text)}
+  .ring-sub{font-family:var(--fx-mono);font-size:9px;letter-spacing:.14em;color:var(--fx-muted)}
+  .x{width:30px;height:30px;border-radius:999px;background:transparent;border:0;color:var(--fx-muted);cursor:pointer;font-size:14px}
+
+  /* college row shared by several options */
+  .crow{background:var(--fx-surface);border:1px solid var(--fx-border-2);border-radius:var(--fx-r-md);padding:13px 15px}
+  .crow-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+  .crow-top h4{margin:0;font-size:15.5px;color:var(--fx-text);font-weight:700}
+  .crow-sub{margin:3px 0 10px;color:var(--fx-muted);font-size:12.5px}
+  .crow-where{display:flex;justify-content:space-between;gap:10px;font-family:var(--fx-mono);font-size:10px;color:var(--fx-muted);margin-top:6px}
+  .fitpct{font-family:var(--fx-mono);font-size:11px;color:var(--fx-muted)}
+
+  
+  /* ---------- icons ----------
+     The app draws its tool icons as 24x24 currentColor strokes (workspace.js),
+     so these follow that rather than reaching for emoji: a colour emoji ignores
+     the palette, and the coin glyph in particular renders as a grey disc on a
+     dark ground. Each one inherits the chip's own colour. */
+  .ico{width:15px;height:15px;flex:none;stroke:currentColor;fill:none;
+    stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .ico-lg{width:17px;height:17px}
+  .chip .ico{opacity:.85}
+  /* The coin is the one mark that carries its own colour: it is the product's
+     existing token, minted gold in the top bar, so it stays gold here. */
+  .ico-coin{color:var(--fx-gold);stroke-width:1.7}
+
+  /* ---------- results ---------- */
+  .r-hero{display:flex;align-items:center;gap:22px;flex-wrap:wrap;background:var(--fx-surface);
+    border:1px solid var(--fx-border);border-radius:var(--fx-r-md);padding:20px 22px}
+  .r-total{display:flex;flex-direction:column;min-width:0}
+  .r-total b{font-size:62px;line-height:.95;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+  .r-total .cap{color:var(--fx-muted);font-size:12.5px;margin-top:4px}
+  .r-delta{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;margin-top:8px;
+    border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;
+    background:var(--fx-good-bg);color:var(--fx-good);border:1px solid var(--fx-good-line)}
+  .r-sections{display:flex;gap:10px;flex-wrap:wrap;margin-left:auto}
+  .r-sec{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);border-radius:var(--fx-r-sm);
+    padding:11px 15px;min-width:132px}
+  .r-sec .k{font-family:var(--fx-mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--fx-muted)}
+  .r-sec .v{font-size:25px;font-weight:800;letter-spacing:-.02em;margin-top:2px;font-variant-numeric:tabular-nums}
+  .r-sec .r-route{font-size:11px;color:var(--fx-muted);margin-top:3px}
+  .r-next{margin-top:14px}
+  .r-next h4{margin:0 0 9px;font-size:14px}
+  .r-work{display:flex;flex-direction:column;gap:8px}
+  .r-workrow{display:flex;align-items:center;gap:12px;background:var(--fx-surface);border:1px solid var(--fx-border-2);
+    border-radius:var(--fx-r-sm);padding:11px 13px;flex-wrap:wrap}
+  .r-workrow .nm{font-weight:700;font-size:14px;flex:1 1 170px;min-width:0}
+  .r-meter{flex:0 0 110px;height:6px;border-radius:999px;background:var(--fx-track);position:relative;overflow:hidden}
+  .r-meter i{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--fx-warn)}
+  .r-meter.ok i{background:var(--fx-good)}
+  .r-workrow .sc{font-family:var(--fx-mono);font-size:11.5px;color:var(--fx-muted);flex:0 0 68px;text-align:right}
+  .r-rewards{flex:1 1 100%;display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px;
+    padding-top:12px;border-top:1px solid var(--fx-border-2);font-size:12.5px;color:var(--fx-muted)}
+  .r-note{margin:12px 0 0;font-size:12px;color:var(--fx-muted)}
+  .r-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+  .rev-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:18px 0 10px}
+  .rev-head h4{margin:0;font-size:15px;flex:1 1 auto}
+  .rev-row{background:var(--fx-surface);border:1px solid var(--fx-border-2);border-radius:var(--fx-r-sm);padding:11px 13px;
+    display:flex;align-items:flex-start;gap:11px}
+  .rev-row.wrong{border-left:3px solid var(--fx-warn)}
+  .rev-row.right{border-left:3px solid var(--fx-good)}
+  .rev-n{font-family:var(--fx-mono);font-size:11.5px;color:var(--fx-muted);flex:none;width:22px;padding-top:2px}
+  .rev-body{flex:1 1 auto;min-width:0}
+  .rev-stem{font-size:13.5px;line-height:1.45;margin:0 0 5px}
+  .rev-ans{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--fx-mono);font-size:11.5px;color:var(--fx-muted)}
+  .rev-ans b{font-weight:500}
+  .rev-ans .bad{color:var(--fx-warn)}
+  .rev-ans .good{color:var(--fx-good)}
+  .rev-ans .rev-expand{display:inline-flex;align-items:center;gap:4px}
+  .rev-ans .rev-expand .ico{width:13px;height:13px}
+  .r-delta .ico{width:13px;height:13px;stroke-width:1.9}
+  .rev-dom{font-family:var(--fx-mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--fx-muted);flex:none}
+  .r-twocol{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+  .r-side{background:var(--fx-surface);border:1px solid var(--fx-border);border-radius:var(--fx-r-md);padding:16px;position:sticky;top:12px}
+
+  /* ---------- start / setup ---------- */
+  .s-resume{display:flex;align-items:center;gap:20px;flex-wrap:wrap;background:var(--fx-surface);
+    border:1px solid var(--fx-border);border-radius:var(--fx-r-md);padding:18px 20px}
+  .s-resume .who{flex:1 1 220px;min-width:0}
+  .s-resume .who .big{font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1.05}
+  .s-resume .who .cap{color:var(--fx-muted);font-size:12.5px;margin-top:3px}
+  .s-setupline{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;padding:12px 14px;
+    background:var(--fx-surface-2);border:1px solid var(--fx-border-2);border-radius:var(--fx-r-sm)}
+  .s-setupline .sum{flex:1 1 auto;min-width:0;font-size:14px}
+  .s-setupline .sum b{font-weight:700}
+  .s-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+  .s-group>span{display:block;font-family:var(--fx-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--fx-muted);margin-bottom:7px}
+  .s-seg{display:flex;border:1px solid var(--fx-border-2);border-radius:var(--fx-r-sm);overflow:hidden;background:var(--fx-surface-2)}
+  .s-seg button{flex:1 1 0;min-width:0;border:0;background:transparent;color:var(--fx-text);font:inherit;font-size:13px;
+    font-weight:600;min-height:42px;padding:0 6px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .s-seg button.on{background:var(--fx-accent-bg);color:var(--fx-accent);box-shadow:inset 0 -2px var(--fx-accent)}
+  .s-seg button+button{border-left:1px solid var(--fx-border-2)}
+  .s-go{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--fx-border-2)}
+  .s-go .sum{flex:1 1 auto;min-width:0}
+  .s-go .sum b{display:block;font-size:15px}
+  .s-go .sum span{color:var(--fx-muted);font-size:12.5px}
+  .s-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .s-link{display:inline-flex;align-items:center;gap:7px;background:transparent;border:1px solid var(--fx-border-2);
+    border-radius:999px;padding:7px 13px;font-size:13px;color:var(--fx-text);text-decoration:none}
+  .s-link span{color:var(--fx-muted);font-size:11.5px}
+
+  /* ---------- subject practice ---------- */
+  .u-sugg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+  .u-card{background:var(--fx-surface);border:1px solid var(--fx-border-2);border-radius:var(--fx-r-md);padding:13px 14px;
+    display:flex;flex-direction:column;gap:8px;min-width:0}
+  .u-card.lead{border-color:var(--fx-accent-line);background:var(--fx-accent-bg)}
+  .u-dom{font-family:var(--fx-mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--fx-muted)}
+  .u-skill{font-size:15px;font-weight:700;line-height:1.3;margin:0}
+  .u-stat{font-family:var(--fx-mono);font-size:11.5px;color:var(--fx-muted)}
+  .u-browse{margin-top:18px}
+  .u-domrow{border-top:1px solid var(--fx-border-2)}
+  .u-domrow>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;
+    min-height:46px;font-size:14px;font-weight:700}
+  .u-domrow>summary::-webkit-details-marker{display:none}
+  .u-domrow>summary::after{content:"+";font-family:var(--fx-mono);color:var(--fx-muted)}
+  .u-domrow[open]>summary::after{content:"\2212"}
+  .u-domrow .cnt{font-family:var(--fx-mono);font-size:11px;color:var(--fx-muted);font-weight:400}
+  .u-chips{display:flex;gap:7px;flex-wrap:wrap;padding:2px 0 14px}
+  .u-chip{background:var(--fx-surface-2);border:1px solid var(--fx-border-2);border-radius:999px;padding:7px 13px;
+    font-size:13px;color:var(--fx-text);cursor:pointer}
+  .u-chip.on{border-color:var(--fx-accent);background:var(--fx-accent-bg);color:var(--fx-accent);font-weight:700}
+  .u-table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px}
+  .u-table th,.u-table td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--fx-border-2)}
+  .u-table thead th{font-family:var(--fx-mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--fx-muted)}
+  .u-table td.num{font-family:var(--fx-mono);font-variant-numeric:tabular-nums;color:var(--fx-muted);white-space:nowrap}
+  .u-table tr:last-child th,.u-table tr:last-child td{border-bottom:0}
+  .u-tablewrap{overflow-x:auto}
+
+  @media (max-width:860px){
+    .r-twocol{grid-template-columns:minmax(0,1fr)}
+    .r-side{position:static}
+    .s-row{grid-template-columns:minmax(0,1fr)}
+    .u-sugg{grid-template-columns:minmax(0,1fr)}
+    .r-sections{margin-left:0;width:100%}
+    .r-sec{flex:1 1 140px}
+  }
+  @media (max-width:560px){
+    .r-total b{font-size:50px}
+    .r-meter{flex:1 1 100%;order:3}
+    .u-table{min-width:460px}
+  }
+
+  .dupes-scroll{overflow-x:auto;margin:0 0 8px}
+  .dupes-scroll table.dupes{min-width:620px;margin:0}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <p class="kicker">Screens with no design pass · Oct 2026</p>
+  <h1>Results, setup, subject drills</h1>
+  <p class="lede">
+    Counting style rules that target each screen: practice 93, college 42 &mdash; and
+    <strong>results 0</strong>, <strong>subject practice 0</strong>. Two options for each of the
+    three, and the specific thing each one is fixing.
+  </p>
+  <div class="dupes-scroll">
+  <table class="dupes">
+    <thead><tr><th>Screen</th><th>Style rules</th><th>What is wrong today</th><th>Option here</th></tr></thead>
+    <tbody>
+      <tr><td>Results + review</td><td class="mono">0 + 3</td><td>Score, rewards, routing, prediction and the domain table all carry equal weight; review is every question in a flat wall</td><td>R1 / R2</td></tr>
+      <tr><td>Start / setup</td><td class="mono">9</td><td>~20 orange elements, two orange primaries for the same action, numbered steps that are not a sequence</td><td>S1 / S2</td></tr>
+      <tr><td>Subject practice</td><td class="mono">0</td><td>15KB of markup on a 2.9KB stylesheet; a wall of skill chips with &ldquo;Suggested for you&rdquo; below it</td><td>U1 / U2</td></tr>
+    </tbody>
+  </table>
+  </div>
+</header>
+
+<!-- ======================= RESULTS ======================= -->
+<section class="opt">
+  <div class="opt-head"><h2>R1 &middot; One number, then what to do about it</h2><span class="tag rec">recommended</span></div>
+  <p class="opt-note">
+    The estimate is the screen, so it gets the size &mdash; with the change since last time attached to
+    it instead of sitting in its own notice three blocks down. The domain table becomes
+    <b>what to work on</b>, with the drill already set up on each row: the question a student has after
+    a score is &ldquo;now what&rdquo;, and the answer was previously a read-only table. Session rewards drop
+    to one quiet line; they were a titled box competing with the score.
+  </p>
+  <p class="tradeoff">Trade-off: <span>the full domain breakdown moves behind a disclosure</span>, so a student who wants every number has one more tap.</p>
+
+  <div class="frame">
+    <div class="scr-head">
+      <p class="kicker">SAT &middot; Both sections &middot; 54 questions</p>
+      <h3>Your estimate</h3>
+      <p>Estimated from your answered questions using the College Board Practice Test 4 (2023) curve.</p>
+    </div>
+
+    <div class="r-hero">
+      <div class="r-total">
+        <b>1280</b>
+        <span class="cap">Total &middot; 400&ndash;1600</span>
+        <span class="r-delta"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 16.5 10 10l3.5 3.5L20 7"/><path d="M15 7h5v5"/></svg> +30 vs your last SAT</span>
+      </div>
+      <div class="r-sections">
+        <div class="r-sec"><div class="k">Reading &amp; Writing</div><div class="v">640</div><div class="r-route">Module 2: harder</div></div>
+        <div class="r-sec"><div class="k">Math</div><div class="v">640</div><div class="r-route">Module 2: standard</div></div>
+        <div class="r-sec"><div class="k">Percentile</div><div class="v">86th</div><div class="r-route">nationally</div></div>
+      </div>
+      <div class="r-rewards">
+        <span class="chip"><svg class="ico ico-coin" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="9.6" cy="12" r="6.3"/><path d="M14.3 6.2a6.3 6.3 0 0 1 0 11.6"/><path d="M9.6 9.6v4.8"/></svg> <b>18</b> credits earned</span>
+        <span class="chip"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12.7 2.4c-.5 2.4-1.8 3.7-3.2 5.2C8 9.2 6.6 10.9 6.6 13.6a5.4 5.4 0 0 0 10.8 0c0-2.3-1-3.9-2.4-5.5-.3 1.1-.9 1.9-1.8 2.4.8-2.6.5-5.4-.5-8.1Z"/><path d="M12 18.6c1.6 0 2.9-1.2 2.9-2.8 0-1.6-1.3-2.5-2.9-4.4-1.6 1.9-2.9 2.8-2.9 4.4 0 1.6 1.3 2.8 2.9 2.8Z"/></svg> best streak <b>9</b></span>
+        <span class="chip"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.2V12l3.4 2"/></svg> arcade time <b>+180s</b></span>
+        <span class="chip"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="6.4" width="18" height="11.6" rx="2.5"/><path d="M3 10.6h18"/><path d="M15.8 14.4h3"/></svg> wallet <b>24</b></span>
+      </div>
+    </div>
+
+    <div class="r-next">
+      <h4>What to work on</h4>
+      <div class="r-work">
+        <div class="r-workrow">
+          <span class="nm">Linear equations in one variable</span>
+          <span class="r-meter"><i style="width:36%"></i></span>
+          <span class="sc">4 / 11</span>
+          <button class="btn sm">Drill 10</button>
+        </div>
+        <div class="r-workrow">
+          <span class="nm">Inference from text evidence</span>
+          <span class="r-meter"><i style="width:50%"></i></span>
+          <span class="sc">5 / 10</span>
+          <button class="btn sm">Drill 10</button>
+        </div>
+        <div class="r-workrow">
+          <span class="nm">Percentages and proportions</span>
+          <span class="r-meter ok"><i style="width:78%"></i></span>
+          <span class="sc">7 / 9</span>
+          <button class="btn sm">Drill 10</button>
+        </div>
+      </div>
+      <details class="b-sec" style="border-top:1px solid var(--fx-border-2);margin-top:12px;padding-top:12px">
+        <summary>All 14 domains and your predicted score</summary>
+        <div class="u-tablewrap">
+          <table class="u-table">
+            <thead><tr><th>Domain</th><th>Correct</th><th>Share of section</th></tr></thead>
+            <tbody>
+              <tr><td>Information and ideas</td><td class="num">8 / 11</td><td class="num">26%</td></tr>
+              <tr><td>Craft and structure</td><td class="num">7 / 10</td><td class="num">28%</td></tr>
+              <tr><td>Algebra</td><td class="num">9 / 13</td><td class="num">35%</td></tr>
+              <tr><td>Advanced math</td><td class="num">6 / 11</td><td class="num">32%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <p class="r-note">These are practice estimates, not an official score.</p>
+      <div class="r-actions">
+        <button class="btn primary">Review your answers</button>
+        <button class="btn">Start another test</button>
+        <button class="btn quiet">Save &amp; exit</button>
+      </div>
+    </div>
+
+    <div class="rev-head">
+      <h4>Answer review</h4>
+      <span class="chip on">Wrong only <b>11</b></span>
+      <span class="chip">Skipped <b>2</b></span>
+      <span class="chip">All <b>54</b></span>
+    </div>
+    <div class="rows">
+      <div class="rev-row wrong">
+        <span class="rev-n">7.</span>
+        <div class="rev-body">
+          <p class="rev-stem">The researchers concluded that the colony&rsquo;s decline was driven primarily by which factor?</p>
+          <div class="rev-ans"><span>you <b class="bad">C. habitat loss</b></span><span>correct <b class="good">B. parasite load</b></span><span class="rev-expand"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9.5 12 15.5l6-6"/></svg> explanation</span></div>
+        </div>
+        <span class="rev-dom">Information &amp; ideas</span>
+      </div>
+      <div class="rev-row wrong">
+        <span class="rev-n">12.</span>
+        <div class="rev-body">
+          <p class="rev-stem">If 3x &minus; 7 = 2x + 5, what is the value of x?</p>
+          <div class="rev-ans"><span>you <b class="bad">A. 6</b></span><span>correct <b class="good">D. 12</b></span><span class="rev-expand"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9.5 12 15.5l6-6"/></svg> explanation</span></div>
+        </div>
+        <span class="rev-dom">Algebra</span>
+      </div>
+      <div class="rev-row right">
+        <span class="rev-n">13.</span>
+        <div class="rev-body">
+          <p class="rev-stem">Which choice completes the text so that it conforms to Standard English?</p>
+          <div class="rev-ans"><span>you <b class="good">B. miles; hikers often stop</b></span><span class="rev-expand"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9.5 12 15.5l6-6"/></svg> explanation</span></div>
+        </div>
+        <span class="rev-dom">Craft &amp; structure</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="opt">
+  <div class="opt-head"><h2>R2 &middot; Score report, with next steps pinned</h2><span class="tag">two columns</span></div>
+  <p class="opt-note">
+    Same content, read as a document: the report on the left in the order a score report runs
+    (estimate, sections, routing, curve, prediction), and a <b>sticky panel on the right</b> holding the
+    actions, so &ldquo;drill this&rdquo; and &ldquo;another test&rdquo; stay reachable however far down the
+    numbers you are.
+  </p>
+  <p class="tradeoff">Trade-off: <span>the panel stacks under the report below 860px</span>, which is most phone sessions, so the sticky benefit only lands on desktop.</p>
+
+  <div class="frame">
+    <div class="r-twocol">
+      <div>
+        <div class="r-hero" style="padding:18px 20px">
+          <div class="r-total"><b>1280</b><span class="cap">Total &middot; 400&ndash;1600</span>
+            <span class="r-delta"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 16.5 10 10l3.5 3.5L20 7"/><path d="M15 7h5v5"/></svg> +30 vs your last SAT</span></div>
+          <div class="r-sections">
+            <div class="r-sec"><div class="k">Reading &amp; Writing</div><div class="v">640</div></div>
+            <div class="r-sec"><div class="k">Math</div><div class="v">640</div></div>
+          </div>
+        </div>
+        <div class="u-tablewrap">
+          <table class="u-table">
+            <thead><tr><th>Measure</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>Percentile, nationally</td><td class="num">86th</td></tr>
+              <tr><td>Reading &amp; Writing module 2</td><td class="num">harder</td></tr>
+              <tr><td>Math module 2</td><td class="num">standard</td></tr>
+              <tr><td>Curve used</td><td class="num">Practice Test 4 (2023)</td></tr>
+              <tr><td>Predicted next score</td><td class="num">1300 &plusmn; 40</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="r-note">These are practice estimates, not an official score.</p>
+      </div>
+      <aside class="r-side">
+        <p class="kicker" style="margin-bottom:10px">What to work on</p>
+        <div class="r-work">
+          <div class="r-workrow" style="padding:9px 11px"><span class="nm" style="flex:1 1 100%;font-size:13.5px">Linear equations</span>
+            <span class="sc" style="flex:0 0 auto">4 / 11</span><button class="btn sm">Drill</button></div>
+          <div class="r-workrow" style="padding:9px 11px"><span class="nm" style="flex:1 1 100%;font-size:13.5px">Text evidence</span>
+            <span class="sc" style="flex:0 0 auto">5 / 10</span><button class="btn sm">Drill</button></div>
+        </div>
+        <button class="btn primary" style="width:100%;margin-top:14px">Review your answers</button>
+        <button class="btn" style="width:100%;margin-top:8px">Start another test</button>
+        <div class="r-rewards" style="margin-top:14px">
+          <span class="chip"><svg class="ico ico-coin" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="9.6" cy="12" r="6.3"/><path d="M14.3 6.2a6.3 6.3 0 0 1 0 11.6"/><path d="M9.6 9.6v4.8"/></svg> <b>18</b></span><span class="chip"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12.7 2.4c-.5 2.4-1.8 3.7-3.2 5.2C8 9.2 6.6 10.9 6.6 13.6a5.4 5.4 0 0 0 10.8 0c0-2.3-1-3.9-2.4-5.5-.3 1.1-.9 1.9-1.8 2.4.8-2.6.5-5.4-.5-8.1Z"/><path d="M12 18.6c1.6 0 2.9-1.2 2.9-2.8 0-1.6-1.3-2.5-2.9-4.4-1.6 1.9-2.9 2.8-2.9 4.4 0 1.6 1.3 2.8 2.9 2.8Z"/></svg> <b>9</b></span><span class="chip"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="6.4" width="18" height="11.6" rx="2.5"/><path d="M3 10.6h18"/><path d="M15.8 14.4h3"/></svg> <b>24</b></span>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= START / SETUP ======================= -->
+<section class="opt">
+  <div class="opt-head"><h2>S1 &middot; Resume first, setup folded away</h2><span class="tag rec">recommended</span></div>
+  <p class="opt-note">
+    There is <b>one orange button on the screen</b>. Today there are two for the same action &mdash;
+    &ldquo;Start a practice test&rdquo; inside the score card and &ldquo;Start practice&rarr;&rdquo; under the
+    setup &mdash; plus orange step badges, orange tile labels and orange footer links, about twenty in all.
+    For a returning student the setup is already decided, so it collapses to a line you can read and
+    change. The three feature cards become a quiet row of links rather than three cards competing with
+    the primary.
+  </p>
+  <p class="tradeoff">Trade-off: <span>a first-time visitor has to open the setup</span> to see what the choices are, so the collapsed state has to state them in full.</p>
+
+  <div class="frame">
+    <div class="scr-head">
+      <p class="kicker">FunSAT &middot; SAT &amp; ACT prep, college &amp; scholarships</p>
+      <h3>Pick up where you left off</h3>
+    </div>
+
+    <div class="s-resume">
+      <svg width="88" height="88" viewBox="0 0 88 88" role="img" aria-label="86th percentile" style="transform:rotate(-90deg);flex:none">
+        <circle cx="44" cy="44" r="39" fill="none" stroke="var(--fx-border)" stroke-width="8"/>
+        <circle cx="44" cy="44" r="39" fill="none" stroke="var(--fx-accent)" stroke-width="8" stroke-linecap="round"
+                stroke-dasharray="245.0" stroke-dashoffset="34.3"/>
+      </svg>
+      <div class="who">
+        <div class="big">1280</div>
+        <div class="cap">Your average &middot; 86th percentile &middot; last 3 tests</div>
+        <div class="a-facts" style="margin-top:9px">
+          <span class="chip"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 16.5 10 10l3.5 3.5L20 7"/><path d="M15 7h5v5"/></svg> +30 since last</span>
+          <span class="chip">575 questions unseen</span>
+        </div>
+      </div>
+      <button class="btn primary" style="min-height:48px;font-size:15px">Continue practising &rarr;</button>
+    </div>
+
+    <div class="s-setupline">
+      <span class="sum"><b>SAT</b> &middot; Both sections &middot; <b>25</b> questions &middot; <span style="color:var(--fx-muted)">about 34 min at real-test pace</span></span>
+      <button class="btn sm">Change</button>
+    </div>
+
+    <div class="s-links">
+      <a class="s-link" href="#">Your question log <span>0 done &middot; 575 unseen</span></a>
+      <a class="s-link" href="#">College score goals <span>5 saved</span></a>
+      <a class="s-link" href="#">Scholarship searcher <span>51 programs</span></a>
+      <a class="s-link" href="#">Study-break arcade <span>24 credits</span></a>
+    </div>
+  </div>
+</section>
+
+<section class="opt">
+  <div class="opt-head"><h2>S2 &middot; Setup as one row, no step numbers</h2><span class="tag">setup visible</span></div>
+  <p class="opt-note">
+    The three choices are independent and all visible at once, so numbering them
+    <span class="mono">1 / 2 / 3</span> is decoration &mdash; it tells the reader a sequence exists where
+    none does. They become one row of three segmented controls with the summary and the single primary
+    beneath. The labels also stop wrapping: &ldquo;Reading &amp; Writing&rdquo; currently breaks to
+    <b>three lines</b> inside its segment at 320px while the other two sit on one.
+  </p>
+  <p class="tradeoff">Trade-off: <span>the row stacks to three full-width controls under 860px</span>, which is taller than the collapsed line in S1.</p>
+
+  <div class="frame">
+    <div class="scr-head"><h3>Set up your practice</h3></div>
+    <div class="card">
+      <div class="s-row">
+        <div class="s-group"><span>Test</span>
+          <div class="s-seg"><button class="on">SAT</button><button>ACT</button></div>
+        </div>
+        <div class="s-group"><span>Section</span>
+          <div class="s-seg"><button>Reading</button><button>Math</button><button class="on">Both</button></div>
+        </div>
+        <div class="s-group"><span>Questions</span>
+          <div class="s-seg"><button>12</button><button>20</button><button class="on">25</button><button>30</button><button>&hellip;</button></div>
+        </div>
+      </div>
+      <div class="s-go">
+        <div class="sum">
+          <b>SAT &middot; Both sections &middot; 25 questions</b>
+          <span>About 34 min at real-test pace &middot; fresh questions each attempt</span>
+        </div>
+        <button class="btn primary" style="min-height:48px;font-size:15px">Start practice &rarr;</button>
+      </div>
+    </div>
+    <p class="tradeoff" style="margin:12px 0 0">
+      Orange left on this screen: the selected segment in each control, and the primary. Nothing else.
+    </p>
+  </div>
+</section>
+
+<!-- ======================= SUBJECT PRACTICE ======================= -->
+<section class="opt">
+  <div class="opt-head"><h2>U1 &middot; Lead with what is weak</h2><span class="tag rec">recommended</span></div>
+  <p class="opt-note">
+    &ldquo;Suggested for you&rdquo; already exists but sits <b>below the full wall of skill chips</b>, which
+    is the wrong way round: a student opening this screen mostly does not know what to pick, and the app
+    already knows. The three suggestions come first as startable cards carrying the accuracy that earned
+    them the spot. The complete browser stays, one domain per row, collapsed with counts.
+  </p>
+  <p class="tradeoff">Trade-off: <span>someone who knows exactly which skill they want</span> has to open a domain row to reach the chip.</p>
+
+  <div class="frame">
+    <div class="scr-head">
+      <p class="kicker">Subject practice &middot; separate from test scoring</p>
+      <h3>Drill one skill at a time</h3>
+      <p>Subject drills never change your estimated score.</p>
+    </div>
+
+    <h4 style="margin:0 0 2px;font-size:15px">Suggested for you</h4>
+    <p class="opt-note" style="margin:0">From the 54 questions you answered in your last test.</p>
+    <div class="u-sugg">
+      <div class="u-card lead">
+        <span class="u-dom">Algebra</span>
+        <p class="u-skill">Linear equations in one variable</p>
+        <span class="u-stat">4 / 11 right &middot; your weakest</span>
+        <button class="btn primary sm">Drill 10 &rarr;</button>
+      </div>
+      <div class="u-card">
+        <span class="u-dom">Information &amp; ideas</span>
+        <p class="u-skill">Inference from text evidence</p>
+        <span class="u-stat">5 / 10 right</span>
+        <button class="btn sm">Drill 10 &rarr;</button>
+      </div>
+      <div class="u-card">
+        <span class="u-dom">Advanced math</span>
+        <p class="u-skill">Quadratic functions</p>
+        <span class="u-stat">6 / 11 right</span>
+        <button class="btn sm">Drill 10 &rarr;</button>
+      </div>
+    </div>
+
+    <div class="u-browse">
+      <div class="rev-head" style="margin-bottom:0">
+        <h4>Or pick a skill</h4>
+        <span class="chip on">SAT</span><span class="chip">ACT</span>
+        <span class="chip" style="margin-left:auto">Questions per drill <b>10</b></span>
+      </div>
+      <details class="u-domrow" open>
+        <summary>Algebra <span class="cnt">6 skills &middot; 84 questions</span></summary>
+        <div class="u-chips">
+          <button class="u-chip on">Linear equations <span style="color:var(--fx-muted)">11</span></button>
+          <button class="u-chip">Systems of equations <span style="color:var(--fx-muted)">14</span></button>
+          <button class="u-chip">Linear functions <span style="color:var(--fx-muted)">16</span></button>
+          <button class="u-chip">Inequalities <span style="color:var(--fx-muted)">12</span></button>
+          <button class="u-chip">Word problems <span style="color:var(--fx-muted)">18</span></button>
+          <button class="u-chip">Graph interpretation <span style="color:var(--fx-muted)">13</span></button>
+        </div>
+      </details>
+      <details class="u-domrow">
+        <summary>Advanced math <span class="cnt">5 skills &middot; 71 questions</span></summary>
+      </details>
+      <details class="u-domrow">
+        <summary>Information and ideas <span class="cnt">4 skills &middot; 62 questions</span></summary>
+      </details>
+      <details class="u-domrow">
+        <summary>Craft and structure <span class="cnt">4 skills &middot; 58 questions</span></summary>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="opt">
+  <div class="opt-head"><h2>U2 &middot; Skill table with your accuracy</h2><span class="tag">for a returning user</span></div>
+  <p class="opt-note">
+    Every skill in one sortable table against what you have actually scored on it, with the drill on the
+    row. Denser than U1 and better the tenth time you open the screen: it answers
+    &ldquo;where am I weakest across everything&rdquo; rather than &ldquo;what should I do next&rdquo;.
+  </p>
+  <p class="tradeoff">Trade-off: <span>a first-time user sees a table of dashes</span>, because no skill has any accuracy yet.</p>
+
+  <div class="frame">
+    <div class="scr-head"><h3>Drill one skill at a time</h3></div>
+    <div class="rev-head" style="margin-top:0">
+      <span class="chip on">SAT</span><span class="chip">ACT</span>
+      <span class="chip">Weakest first</span><span class="chip">A&ndash;Z</span><span class="chip">Most questions</span>
+      <span class="chip" style="margin-left:auto">Per drill <b>10</b></span>
+    </div>
+    <div class="u-tablewrap">
+      <table class="u-table">
+        <thead><tr><th>Skill</th><th>Domain</th><th>Your accuracy</th><th>Pool</th><th></th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Linear equations in one variable</th><td class="u-dom" style="text-transform:none;font-size:12px">Algebra</td>
+              <td class="num"><span class="r-meter" style="display:inline-block;width:64px;vertical-align:middle"><i style="width:36%"></i></span> 36%</td>
+              <td class="num">11</td><td><button class="btn sm">Drill</button></td></tr>
+          <tr><th scope="row">Inference from text evidence</th><td class="u-dom" style="text-transform:none;font-size:12px">Information &amp; ideas</td>
+              <td class="num"><span class="r-meter" style="display:inline-block;width:64px;vertical-align:middle"><i style="width:50%"></i></span> 50%</td>
+              <td class="num">10</td><td><button class="btn sm">Drill</button></td></tr>
+          <tr><th scope="row">Quadratic functions</th><td class="u-dom" style="text-transform:none;font-size:12px">Advanced math</td>
+              <td class="num"><span class="r-meter" style="display:inline-block;width:64px;vertical-align:middle"><i style="width:55%"></i></span> 55%</td>
+              <td class="num">11</td><td><button class="btn sm">Drill</button></td></tr>
+          <tr><th scope="row">Percentages and proportions</th><td class="u-dom" style="text-transform:none;font-size:12px">Problem solving</td>
+              <td class="num"><span class="r-meter ok" style="display:inline-block;width:64px;vertical-align:middle"><i style="width:78%"></i></span> 78%</td>
+              <td class="num">9</td><td><button class="btn sm">Drill</button></td></tr>
+          <tr><th scope="row">Systems of equations</th><td class="u-dom" style="text-transform:none;font-size:12px">Algebra</td>
+              <td class="num">&mdash; not practised</td><td class="num">14</td><td><button class="btn sm">Drill</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer style="border-top:1px solid var(--fx-border);padding-top:20px;color:var(--fx-muted);font-size:13px;max-width:860px">
+  <p class="kicker">Across all six</p>
+  <p style="margin:0 0 8px">
+    Orange is the primary action and the selected state, nothing else. A number and the label for that
+    same number travel together instead of appearing in two places. Anything the app already knows
+    &mdash; your weakest skill, your last setup, what changed since last time &mdash; is stated rather
+    than left for the student to work out.
+  </p>
+  <p style="margin:0">
+    <b style="color:var(--fx-text-2)">R1, S1 and U1 are the recommendations.</b> S2's setup row can fold
+    into S1 as what opens when you press Change, and U2 is worth building later as a second tab on U1
+    rather than instead of it.
+  </p>
+</footer>
+
+</div>
+
+</body>
+</html>

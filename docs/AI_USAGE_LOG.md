@@ -135,3 +135,6 @@ Useful sources:
 | 2026-10-07 06:14 EDT | `q-20261007-061329` | claude | `claude-opus-5` | reviewer | completed | 2709 | $0.2117255 |
 | 2026-10-07 06:25 EDT | `q-20261007-062440` | codex | `gpt-5.6-sol` | reviewer | completed | 19749 | subscription/unavailable |
 | 2026-10-07 06:25 EDT | `q-20261007-062440` | claude | `claude-opus-5` | reviewer | completed | 2663 | $0.1529875 |
+| 2026-10-08 14:06 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-08 14:08 EDT | OpenCode | `deepseek/deepseek-flash` | split | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-08 14:15 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |

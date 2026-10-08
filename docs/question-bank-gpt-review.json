@@ -1,0 +1,1954 @@
+{
+ "reviewed": 1082,
+ "ok": 693,
+ "fix": 389,
+ "drop": 0,
+ "skipped_batches": [],
+ "issues": [
+  {
+   "id": "m4403",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: (366 + 24)/18 is not 20."
+  },
+  {
+   "id": "m4409",
+   "verdict": "fix",
+   "issue": "Explanation for 21 hours gives an incoherent subtraction error; replace with a valid rationale."
+  },
+  {
+   "id": "m4418",
+   "verdict": "fix",
+   "issue": "Explanation for 63 introduces an arbitrary 15 and incorrectly describes the algebra."
+  },
+  {
+   "id": "m4424",
+   "verdict": "fix",
+   "issue": "The squared term always has minimum zero; adding 24 changes the function's minimum, not the squared term's."
+  },
+  {
+   "id": "m4436",
+   "verdict": "fix",
+   "issue": "Omitting division by 3 triples the correct amount; it does not double-count the scale factor."
+  },
+  {
+   "id": "m4439",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: 72 divided by 3 is 24, not 20."
+  },
+  {
+   "id": "m4445",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: 75 pages per minute for 10 minutes gives 750, not 450."
+  },
+  {
+   "id": "m4469",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly calls 20 the mean; the mean is 20.8."
+  },
+  {
+   "id": "m4472",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: (405 + 25)/19 is not 21."
+  },
+  {
+   "id": "m4478",
+   "verdict": "fix",
+   "issue": "Explanation for 22 hours gives an incoherent subtraction error; replace with a valid rationale."
+  },
+  {
+   "id": "m4487",
+   "verdict": "fix",
+   "issue": "Explanation for 66 introduces an arbitrary 16 and incorrectly describes the algebra."
+  },
+  {
+   "id": "m4493",
+   "verdict": "fix",
+   "issue": "The squared term always has minimum zero; adding 25 changes the function's minimum, not the squared term's."
+  },
+  {
+   "id": "m4505",
+   "verdict": "fix",
+   "issue": "Omitting division by 3 triples the correct amount; it does not double-count the scale factor."
+  },
+  {
+   "id": "m4508",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: 76 divided by 3 is not 21."
+  },
+  {
+   "id": "m4514",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: 80 pages per minute for 10 minutes gives 800, not 480."
+  },
+  {
+   "id": "m4541",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: (446 + 26)/20 is 23.6, not 22."
+  },
+  {
+   "id": "m4547",
+   "verdict": "fix",
+   "issue": "Explanation for 23 hours gives an incoherent subtraction error; replace with a valid rationale."
+  },
+  {
+   "id": "m4556",
+   "verdict": "fix",
+   "issue": "Explanation for 69 introduces an arbitrary 17 and incorrectly describes the algebra."
+  },
+  {
+   "id": "m4562",
+   "verdict": "fix",
+   "issue": "The squared term always has minimum zero; adding 26 changes the function's minimum, not the squared term's."
+  },
+  {
+   "id": "m4574",
+   "verdict": "fix",
+   "issue": "Omitting division by 3 triples the correct amount; it does not double-count the scale factor."
+  },
+  {
+   "id": "m4577",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: 80 divided by 3 is not 22."
+  },
+  {
+   "id": "m4583",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: 85 pages per minute for 10 minutes gives 850, not 510."
+  },
+  {
+   "id": "m4607",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly calls 23 the mean; the mean is 23.2."
+  },
+  {
+   "id": "m4610",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: (489 + 27)/21 is not 23."
+  },
+  {
+   "id": "m4616",
+   "verdict": "fix",
+   "issue": "Explanation for 24 hours gives an incoherent subtraction error; replace with a valid rationale."
+  },
+  {
+   "id": "m4625",
+   "verdict": "fix",
+   "issue": "Explanation for 72 introduces an arbitrary 18 and incorrectly describes the algebra."
+  },
+  {
+   "id": "m4631",
+   "verdict": "fix",
+   "issue": "The squared term always has minimum zero; adding 27 changes the function's minimum, not the squared term's."
+  },
+  {
+   "id": "m4643",
+   "verdict": "fix",
+   "issue": "Omitting division by 3 triples the correct amount; it does not double-count the scale factor."
+  },
+  {
+   "id": "m4646",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: 84 divided by 3 is 28, not 23."
+  },
+  {
+   "id": "m4652",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: 90 pages per minute for 10 minutes gives 900, not 540."
+  },
+  {
+   "id": "m4676",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly states the mean is 24; it is 24.4."
+  },
+  {
+   "id": "m4679",
+   "verdict": "fix",
+   "issue": "Adding 28 instead of subtracting gives 562/22, not 24; correct the distractor explanation."
+  },
+  {
+   "id": "m4685",
+   "verdict": "fix",
+   "issue": "Distractor explanation for 25 invents an invalid fixed-fee subtraction rationale."
+  },
+  {
+   "id": "m4694",
+   "verdict": "fix",
+   "issue": "Distractor explanations misleadingly describe distributing 25x and introduce an unexplained substitution of 19."
+  },
+  {
+   "id": "m4700",
+   "verdict": "fix",
+   "issue": "The squared term always has minimum zero; adding 28 changes the function's minimum, not the squared term's."
+  },
+  {
+   "id": "m4715",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 88 divided by 3 is not 24."
+  },
+  {
+   "id": "m4721",
+   "verdict": "fix",
+   "issue": "At 95 pages per minute, ten minutes yields 950 pages, not 570; correct distractor explanation."
+  },
+  {
+   "id": "m4745",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly states the mean is 25; it is 25.6."
+  },
+  {
+   "id": "m4748",
+   "verdict": "fix",
+   "issue": "Adding 29 instead of subtracting gives 610/23, not 25; correct the distractor explanation."
+  },
+  {
+   "id": "m4754",
+   "verdict": "fix",
+   "issue": "Distractor explanation for 26 invents an invalid fixed-fee subtraction rationale."
+  },
+  {
+   "id": "m4763",
+   "verdict": "fix",
+   "issue": "Distractor explanations misleadingly describe distributing 26x and introduce an unexplained substitution of 20."
+  },
+  {
+   "id": "m4769",
+   "verdict": "fix",
+   "issue": "The squared term always has minimum zero; adding 29 changes the function's minimum, not the squared term's."
+  },
+  {
+   "id": "m4784",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 92 divided by 3 is not 25."
+  },
+  {
+   "id": "m4790",
+   "verdict": "fix",
+   "issue": "At 100 pages per minute, ten minutes yields 1000 pages, not 600; correct distractor explanation."
+  },
+  {
+   "id": "m4814",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly states the mean is 26; it is 26.8."
+  },
+  {
+   "id": "m4817",
+   "verdict": "fix",
+   "issue": "Adding 30 instead of subtracting gives 27.5, not 26; correct the distractor explanation."
+  },
+  {
+   "id": "m4823",
+   "verdict": "fix",
+   "issue": "Distractor explanation for 27 invents an invalid fixed-fee subtraction rationale."
+  },
+  {
+   "id": "m4832",
+   "verdict": "fix",
+   "issue": "Distractor explanations misleadingly describe distributing 27x and introduce an unexplained substitution of 21."
+  },
+  {
+   "id": "m4838",
+   "verdict": "fix",
+   "issue": "The squared term always has minimum zero; adding 30 changes the function's minimum, not the squared term's."
+  },
+  {
+   "id": "m4853",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 96 divided by 3 is 32, not 26."
+  },
+  {
+   "id": "m4859",
+   "verdict": "fix",
+   "issue": "At 105 pages per minute, ten minutes yields 1050 pages, not 630; correct distractor explanation."
+  },
+  {
+   "id": "m4886",
+   "verdict": "fix",
+   "issue": "Adding 31 instead of subtracting gives 28.48, not 27; correct the distractor explanation."
+  },
+  {
+   "id": "m4892",
+   "verdict": "fix",
+   "issue": "Distractor explanation for 28 invents an invalid fixed-fee subtraction rationale."
+  },
+  {
+   "id": "m4901",
+   "verdict": "fix",
+   "issue": "Distractor explanations misleadingly describe distributing 28x and introduce an unexplained substitution of 22."
+  },
+  {
+   "id": "m4907",
+   "verdict": "fix",
+   "issue": "The squared term always has minimum zero; adding 31 changes the function's minimum, not the squared term's."
+  },
+  {
+   "id": "m4922",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 100 divided by 3 is not 27."
+  },
+  {
+   "id": "m4928",
+   "verdict": "fix",
+   "issue": "At 110 pages per minute, ten minutes yields 1100 pages, not 660; correct distractor explanation."
+  },
+  {
+   "id": "m4952",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly calls 29 the mean; the mean is 29.2."
+  },
+  {
+   "id": "m4955",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: adding 32 then dividing by 26 gives 766/26, not 28."
+  },
+  {
+   "id": "m4961",
+   "verdict": "fix",
+   "issue": "Explanation for 29 hours describes an invalid subtraction process; replace with a mathematically accurate distractor rationale."
+  },
+  {
+   "id": "m4970",
+   "verdict": "fix",
+   "issue": "Distractor explanation for 87 introduces an unexplained 23 and incorrectly describes the algebra."
+  },
+  {
+   "id": "m4976",
+   "verdict": "fix",
+   "issue": "Distractor explanation falsely says the squared term's minimum depends on the added constant; its minimum remains zero."
+  },
+  {
+   "id": "m4991",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 104 divided by 3 is not 28."
+  },
+  {
+   "id": "m4997",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 115 pages per minute for 10 minutes gives 1150, not 690."
+  },
+  {
+   "id": "m41021",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly calls 30 the mean; the mean is 30.4."
+  },
+  {
+   "id": "m41024",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: adding 33 then dividing by 27 gives 822/27, not 29."
+  },
+  {
+   "id": "m41030",
+   "verdict": "fix",
+   "issue": "Explanation for 30 hours describes an invalid subtraction process; replace with a mathematically accurate distractor rationale."
+  },
+  {
+   "id": "m41039",
+   "verdict": "fix",
+   "issue": "Distractor explanation for 90 introduces an unexplained 24 and incorrectly describes the algebra."
+  },
+  {
+   "id": "m41045",
+   "verdict": "fix",
+   "issue": "Distractor explanation falsely says the squared term's minimum depends on the added constant; its minimum remains zero."
+  },
+  {
+   "id": "m41060",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 108 divided by 3 is 36, not 29."
+  },
+  {
+   "id": "m41066",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 120 pages per minute for 10 minutes gives 1200, not 720."
+  },
+  {
+   "id": "m41090",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly calls 31 the mean; the mean is 31.6."
+  },
+  {
+   "id": "m41093",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: adding 34 then dividing by 28 gives 880/28, not 30."
+  },
+  {
+   "id": "m41099",
+   "verdict": "fix",
+   "issue": "Explanation for 31 hours describes an invalid subtraction process; replace with a mathematically accurate distractor rationale."
+  },
+  {
+   "id": "m41108",
+   "verdict": "fix",
+   "issue": "Distractor explanation for 93 introduces an unexplained 25 and incorrectly describes the algebra."
+  },
+  {
+   "id": "m41114",
+   "verdict": "fix",
+   "issue": "Distractor explanation falsely says the squared term's minimum depends on the added constant; its minimum remains zero."
+  },
+  {
+   "id": "m41129",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 112 divided by 3 is not 30."
+  },
+  {
+   "id": "m41135",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 125 pages per minute for 10 minutes gives 1250, not 750."
+  },
+  {
+   "id": "m41159",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly calls 32 the mean; the mean is 32.8."
+  },
+  {
+   "id": "m41162",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: adding 35 then dividing by 29 gives 940/29, not 31."
+  },
+  {
+   "id": "m41168",
+   "verdict": "fix",
+   "issue": "Explanation for 32 hours describes an invalid subtraction process; replace with a mathematically accurate distractor rationale."
+  },
+  {
+   "id": "m41177",
+   "verdict": "fix",
+   "issue": "Distractor explanation for 96 introduces an unexplained 26 and incorrectly describes the algebra."
+  },
+  {
+   "id": "m41183",
+   "verdict": "fix",
+   "issue": "Distractor explanation falsely says the squared term's minimum depends on the added constant; its minimum remains zero."
+  },
+  {
+   "id": "m41198",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 116 divided by 3 is not 31."
+  },
+  {
+   "id": "m41204",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 130 pages per minute for 10 minutes gives 1300, not 780."
+  },
+  {
+   "id": "r3305",
+   "verdict": "fix",
+   "issue": "Key is supported, but all distractors are generic, implausible claims unrelated to plausible readings of the passage."
+  },
+  {
+   "id": "r3310",
+   "verdict": "fix",
+   "issue": "The stem leaves the conclusion unspecified; distractors invent measurements and claims absent from the passage."
+  },
+  {
+   "id": "r3315",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors about universal proof and discarded measurements are implausible for this passage."
+  },
+  {
+   "id": "r3320",
+   "verdict": "fix",
+   "issue": "Key is supported; distractors deny the passage or assert unsupported universality instead of offering plausible competing inferences."
+  },
+  {
+   "id": "r3325",
+   "verdict": "fix",
+   "issue": "Text 2 never specifies what generalizes; distractors are implausible, and Text 1 does not establish its author's methodological caution."
+  },
+  {
+   "id": "w3330",
+   "verdict": "fix",
+   "issue": "Distractors either deny explicit notes or assert universal proof; replace with plausible but goal-misaligned syntheses."
+  },
+  {
+   "id": "w3340",
+   "verdict": "fix",
+   "issue": "Distractors create additional malformed predicates before 'submitted'; explanation incorrectly treats all errors as merely dangling modifiers."
+  },
+  {
+   "id": "r3345",
+   "verdict": "fix",
+   "issue": "Key is supported, but all distractors are generic extremes rather than plausible interpretations of the glacier project."
+  },
+  {
+   "id": "r3350",
+   "verdict": "fix",
+   "issue": "Specify the conclusion: glacier retreat and reproducibility are distinct claims. Distractors are implausible statements absent from the passage."
+  },
+  {
+   "id": "r3355",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors about universal proof and discarded measurements are implausible."
+  },
+  {
+   "id": "r3360",
+   "verdict": "fix",
+   "issue": "Distractors deny observations or assert universality and irrationality; none offers a plausible competing inference."
+  },
+  {
+   "id": "r3365",
+   "verdict": "fix",
+   "issue": "Text 2 leaves its generalized claim unspecified; distractors are implausible."
+  },
+  {
+   "id": "w3370",
+   "verdict": "fix",
+   "issue": "Keyed answer describes methods, not the glacier finding; explanation incorrectly calls it an outcome."
+  },
+  {
+   "id": "w3380",
+   "verdict": "fix",
+   "issue": "An inventory cannot submit notes; no choice supplies a sensible actor."
+  },
+  {
+   "id": "r3385",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are generic, implausible claims unrelated to the passage."
+  },
+  {
+   "id": "r3390",
+   "verdict": "fix",
+   "issue": "Key restates the mistaken assumption rather than supporting its correction; use the village's earlier adoption as evidence."
+  },
+  {
+   "id": "r3395",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors about universal rules and discarded measurements are implausible."
+  },
+  {
+   "id": "r3400",
+   "verdict": "fix",
+   "issue": "Passage corrects the direction of influence, not whether influence occurred; revise the keyed inference accordingly."
+  },
+  {
+   "id": "r3405",
+   "verdict": "fix",
+   "issue": "Text 2 leaves its generalized claim unspecified; distractors are implausible."
+  },
+  {
+   "id": "w3410",
+   "verdict": "fix",
+   "issue": "Distractors implausibly deny explicit notes; change 'researching loom' to 'researching looms'."
+  },
+  {
+   "id": "w3420",
+   "verdict": "fix",
+   "issue": "Distractors create malformed sentences with duplicate predicates; explanation inaccurately diagnoses them solely as dangling modifiers."
+  },
+  {
+   "id": "r3425",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are generic, implausible claims unrelated to the passage."
+  },
+  {
+   "id": "r3430",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors invent unrelated claims instead of plausible competing evidence."
+  },
+  {
+   "id": "r3435",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors about universal rules and discarded measurements are implausible."
+  },
+  {
+   "id": "r3440",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are implausible denials or sweeping claims."
+  },
+  {
+   "id": "r3445",
+   "verdict": "fix",
+   "issue": "Text 2 leaves its generalized claim unspecified; distractors are implausible."
+  },
+  {
+   "id": "w3450",
+   "verdict": "fix",
+   "issue": "Distractors implausibly deny explicit notes; change 'researching pipeline' to 'researching pipelines'."
+  },
+  {
+   "id": "w3460",
+   "verdict": "fix",
+   "issue": "Distractors create malformed sentences with duplicate predicates; explanation inaccurately diagnoses them solely as dangling modifiers."
+  },
+  {
+   "id": "r3465",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are generic, implausible claims unrelated to the passage."
+  },
+  {
+   "id": "r3470",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors invent unrelated claims instead of plausible competing evidence."
+  },
+  {
+   "id": "r3475",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors about universal rules and discarded measurements are implausible."
+  },
+  {
+   "id": "r3480",
+   "verdict": "fix",
+   "issue": "Replace 'replanting of hives' with 'placement of hives'; distractors are implausible."
+  },
+  {
+   "id": "r3485",
+   "verdict": "fix",
+   "issue": "Text 2 leaves its generalized claim unspecified; distractors are implausible."
+  },
+  {
+   "id": "w3490",
+   "verdict": "fix",
+   "issue": "Distractors implausibly deny explicit notes; change 'researching orchard' to 'researching orchards'."
+  },
+  {
+   "id": "w3500",
+   "verdict": "fix",
+   "issue": "Distractors create malformed sentences with duplicate predicates; explanation inaccurately diagnoses them solely as dangling modifiers."
+  },
+  {
+   "id": "r3505",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are generic, implausible claims unrelated to the passage."
+  },
+  {
+   "id": "r3510",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors invent unrelated claims instead of plausible competing evidence."
+  },
+  {
+   "id": "r3515",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors about universal rules and discarded measurements are implausible."
+  },
+  {
+   "id": "r3520",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are implausible denials or sweeping claims."
+  },
+  {
+   "id": "r3525",
+   "verdict": "fix",
+   "issue": "Text 2 leaves its generalized claim unspecified; distractors are implausible."
+  },
+  {
+   "id": "w3530",
+   "verdict": "fix",
+   "issue": "Distractors implausibly deny explicit notes; change 'researching scribe' to 'researching scribes'."
+  },
+  {
+   "id": "w3540",
+   "verdict": "fix",
+   "issue": "Distractors create malformed sentences with duplicate predicates; explanation inaccurately diagnoses them solely as dangling modifiers."
+  },
+  {
+   "id": "r3545",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are generic, implausible claims unrelated to the passage."
+  },
+  {
+   "id": "r3550",
+   "verdict": "fix",
+   "issue": "Passage does not establish that the misread number was in the log; remove that unsupported location."
+  },
+  {
+   "id": "r3555",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors about universal rules and discarded measurements are implausible."
+  },
+  {
+   "id": "r3560",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are implausible denials or sweeping claims."
+  },
+  {
+   "id": "r3565",
+   "verdict": "fix",
+   "issue": "Text 2 leaves its generalized claim unspecified; distractors are implausible."
+  },
+  {
+   "id": "w3570",
+   "verdict": "fix",
+   "issue": "Distractors implausibly deny the explicitly recorded finding instead of offering plausible alternative syntheses."
+  },
+  {
+   "id": "w3580",
+   "verdict": "fix",
+   "issue": "Distractors create malformed sentences with duplicate predicates; explanation inaccurately diagnoses them solely as dangling modifiers."
+  },
+  {
+   "id": "r3585",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are generic, implausible claims unrelated to the passage."
+  },
+  {
+   "id": "r3590",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors invent unrelated claims instead of plausible competing evidence."
+  },
+  {
+   "id": "r3595",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors about universal rules and discarded measurements are implausible."
+  },
+  {
+   "id": "r3600",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are implausible denials or sweeping claims."
+  },
+  {
+   "id": "r3605",
+   "verdict": "fix",
+   "issue": "Text 2 leaves its generalized claim unspecified; distractors are implausible."
+  },
+  {
+   "id": "w3610",
+   "verdict": "fix",
+   "issue": "Distractors implausibly deny explicit notes; change 'researching reef' to 'researching reefs'."
+  },
+  {
+   "id": "w3620",
+   "verdict": "fix",
+   "issue": "Distractors create malformed sentences with duplicate predicates; explanation inaccurately diagnoses them solely as dangling modifiers."
+  },
+  {
+   "id": "r3625",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are generic, implausible claims unrelated to the passage."
+  },
+  {
+   "id": "r3630",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors invent unrelated claims instead of plausible competing evidence."
+  },
+  {
+   "id": "r3635",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors about universal rules and discarded measurements are implausible."
+  },
+  {
+   "id": "r3640",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are implausible denials or sweeping claims."
+  },
+  {
+   "id": "r3645",
+   "verdict": "fix",
+   "issue": "Text 2 leaves its generalized claim unspecified; distractors are implausible."
+  },
+  {
+   "id": "w3650",
+   "verdict": "fix",
+   "issue": "Distractors implausibly deny explicit notes; change 'researching kiln' to 'researching kilns'."
+  },
+  {
+   "id": "w3660",
+   "verdict": "fix",
+   "issue": "Distractors create malformed sentences with duplicate predicates; explanation inaccurately diagnoses them solely as dangling modifiers."
+  },
+  {
+   "id": "r3665",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are generic, implausible claims unrelated to the passage."
+  },
+  {
+   "id": "r3670",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors invent unrelated claims instead of plausible competing evidence."
+  },
+  {
+   "id": "r3675",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors about universal rules and discarded measurements are implausible."
+  },
+  {
+   "id": "r3680",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are implausible denials or sweeping claims."
+  },
+  {
+   "id": "r3685",
+   "verdict": "fix",
+   "issue": "Text 2 leaves its generalized claim unspecified; distractors are implausible."
+  },
+  {
+   "id": "w3690",
+   "verdict": "fix",
+   "issue": "Distractors implausibly deny explicit notes; change 'researching bridge' to 'researching bridges'."
+  },
+  {
+   "id": "w3700",
+   "verdict": "fix",
+   "issue": "Distractors create malformed sentences with duplicate predicates; explanation inaccurately diagnoses them solely as dangling modifiers."
+  },
+  {
+   "id": "r3705",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are generic, implausible claims unrelated to the passage."
+  },
+  {
+   "id": "r3710",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors invent unrelated claims instead of plausible competing evidence."
+  },
+  {
+   "id": "r3715",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors about universal rules and discarded measurements are implausible."
+  },
+  {
+   "id": "r3720",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are implausible denials or sweeping claims."
+  },
+  {
+   "id": "r3725",
+   "verdict": "fix",
+   "issue": "Text 2 leaves its generalized claim unspecified; distractors are implausible."
+  },
+  {
+   "id": "w3730",
+   "verdict": "fix",
+   "issue": "Distractors implausibly deny explicit notes; change 'researching seed' to 'researching seeds'."
+  },
+  {
+   "id": "w3740",
+   "verdict": "fix",
+   "issue": "Distractors create malformed sentences with duplicate predicates; explanation inaccurately diagnoses them solely as dangling modifiers."
+  },
+  {
+   "id": "r3745",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are generic, implausible claims unrelated to the passage."
+  },
+  {
+   "id": "r3750",
+   "verdict": "fix",
+   "issue": "Testing alone does not support the causal conclusion without results; specify the intended conclusion or provide results."
+  },
+  {
+   "id": "r3755",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors about universal rules and discarded measurements are implausible."
+  },
+  {
+   "id": "r3760",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are implausible denials or sweeping claims."
+  },
+  {
+   "id": "r3765",
+   "verdict": "fix",
+   "issue": "Text 2 leaves its generalized claim unspecified; distractors are implausible."
+  },
+  {
+   "id": "w3770",
+   "verdict": "fix",
+   "issue": "Key describes a procedure, not a finding; 'theater2' is an unreplaced placeholder."
+  },
+  {
+   "id": "w3780",
+   "verdict": "fix",
+   "issue": "Distractors create malformed sentences with duplicate predicates; explanation inaccurately diagnoses them solely as dangling modifiers."
+  },
+  {
+   "id": "r3785",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are generic, implausible claims unrelated to the passage."
+  },
+  {
+   "id": "r3790",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors invent unrelated claims instead of plausible competing evidence."
+  },
+  {
+   "id": "r3795",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors about universal rules and discarded measurements are implausible."
+  },
+  {
+   "id": "r3800",
+   "verdict": "fix",
+   "issue": "Key is supported, but distractors are implausible denials or sweeping claims."
+  },
+  {
+   "id": "r3805",
+   "verdict": "fix",
+   "issue": "Text 2 leaves its generalized claim unspecified; distractors are implausible."
+  },
+  {
+   "id": "w3810",
+   "verdict": "fix",
+   "issue": "Distractors implausibly deny the explicitly recorded finding instead of offering plausible alternative syntheses."
+  },
+  {
+   "id": "w3820",
+   "verdict": "fix",
+   "issue": "Distractors create malformed double predicates, so they do not meaningfully test dangling modifiers."
+  },
+  {
+   "id": "r3825",
+   "verdict": "fix",
+   "issue": "Distractors are generic, implausible claims unrelated to the passage's specific content."
+  },
+  {
+   "id": "r3830",
+   "verdict": "fix",
+   "issue": "Distractors invent obviously absent claims rather than offer plausible competing evidence."
+  },
+  {
+   "id": "r3835",
+   "verdict": "fix",
+   "issue": "Distractors are implausible generic purposes rather than credible interpretations of this passage."
+  },
+  {
+   "id": "r3840",
+   "verdict": "fix",
+   "issue": "The passage does not establish that the letters themselves were similar; distractors are also implausible."
+  },
+  {
+   "id": "r3845",
+   "verdict": "fix",
+   "issue": "Text 2's claim is vague, and distractors are implausible responses unsupported by either text."
+  },
+  {
+   "id": "w3850",
+   "verdict": "fix",
+   "issue": "Two distractors simply deny the supplied notes; replace with plausible misuses of the findings."
+  },
+  {
+   "id": "w3860",
+   "verdict": "fix",
+   "issue": "Distractors create malformed double predicates, so they do not meaningfully test dangling modifiers."
+  },
+  {
+   "id": "r3865",
+   "verdict": "fix",
+   "issue": "Distractors are generic, implausible claims unrelated to the passage's specific content."
+  },
+  {
+   "id": "r3870",
+   "verdict": "fix",
+   "issue": "Distractors invent obviously absent claims rather than offer plausible competing evidence."
+  },
+  {
+   "id": "r3875",
+   "verdict": "fix",
+   "issue": "Replace ambiguous 'dominated' with 'was safest in every habitat'; distractors are implausible."
+  },
+  {
+   "id": "r3880",
+   "verdict": "fix",
+   "issue": "Distractors are implausible blanket claims rather than competing inferences grounded in the passage."
+  },
+  {
+   "id": "r3885",
+   "verdict": "fix",
+   "issue": "Text 2's claim is vague, and distractors are implausible responses unsupported by either text."
+  },
+  {
+   "id": "w3890",
+   "verdict": "fix",
+   "issue": "Change 'researching moth' to 'researching moths'; replace distractors that merely deny the supplied notes."
+  },
+  {
+   "id": "w3900",
+   "verdict": "fix",
+   "issue": "Distractors create malformed double predicates, so they do not meaningfully test dangling modifiers."
+  },
+  {
+   "id": "r3905",
+   "verdict": "fix",
+   "issue": "Distractors are generic, implausible claims unrelated to the passage's specific content."
+  },
+  {
+   "id": "r3910",
+   "verdict": "fix",
+   "issue": "Distractors invent obviously absent claims rather than offer plausible competing evidence."
+  },
+  {
+   "id": "r3915",
+   "verdict": "fix",
+   "issue": "Distractors are implausible generic purposes rather than credible interpretations of this passage."
+  },
+  {
+   "id": "r3920",
+   "verdict": "fix",
+   "issue": "Distractors are implausible blanket claims rather than competing inferences grounded in the passage."
+  },
+  {
+   "id": "r3925",
+   "verdict": "fix",
+   "issue": "Text 2's claim is vague, and distractors are implausible responses unsupported by either text."
+  },
+  {
+   "id": "w3930",
+   "verdict": "fix",
+   "issue": "Change 'researching aqueduct' to 'researching aqueducts'; replace distractors that merely deny the supplied notes."
+  },
+  {
+   "id": "w3940",
+   "verdict": "fix",
+   "issue": "Distractors create malformed double predicates, so they do not meaningfully test dangling modifiers."
+  },
+  {
+   "id": "r3945",
+   "verdict": "fix",
+   "issue": "Distractors are generic, implausible claims unrelated to the passage's specific content."
+  },
+  {
+   "id": "r3950",
+   "verdict": "fix",
+   "issue": "Distractors invent obviously absent claims rather than offer plausible competing evidence."
+  },
+  {
+   "id": "r3955",
+   "verdict": "fix",
+   "issue": "Distractors are implausible generic purposes rather than credible interpretations of this passage."
+  },
+  {
+   "id": "r3960",
+   "verdict": "fix",
+   "issue": "The passage does not establish that curtains were the only change; the explanation overstates the evidence."
+  },
+  {
+   "id": "r3965",
+   "verdict": "fix",
+   "issue": "Text 2's claim is vague, and distractors are implausible responses unsupported by either text."
+  },
+  {
+   "id": "w3970",
+   "verdict": "fix",
+   "issue": "Two distractors simply deny the supplied notes; replace with plausible misuses of the findings."
+  },
+  {
+   "id": "w3980",
+   "verdict": "fix",
+   "issue": "Distractors create malformed double predicates, so they do not meaningfully test dangling modifiers."
+  },
+  {
+   "id": "r3985",
+   "verdict": "fix",
+   "issue": "Distractors are generic, implausible claims unrelated to the passage's specific content."
+  },
+  {
+   "id": "r3990",
+   "verdict": "fix",
+   "issue": "Distractors invent obviously absent claims rather than offer plausible competing evidence."
+  },
+  {
+   "id": "r3995",
+   "verdict": "fix",
+   "issue": "Distractors are implausible generic purposes rather than credible interpretations of this passage."
+  },
+  {
+   "id": "r31000",
+   "verdict": "fix",
+   "issue": "Replace restrictive 'only when' with 'when'; distractors are implausible blanket claims."
+  },
+  {
+   "id": "r31005",
+   "verdict": "fix",
+   "issue": "Text 2's claim is vague, and distractors are implausible responses unsupported by either text."
+  },
+  {
+   "id": "w31010",
+   "verdict": "fix",
+   "issue": "Two distractors simply deny the supplied notes; replace with plausible misuses of the findings."
+  },
+  {
+   "id": "w31020",
+   "verdict": "fix",
+   "issue": "Distractors create malformed double predicates, so they do not meaningfully test dangling modifiers."
+  },
+  {
+   "id": "w4405",
+   "verdict": "fix",
+   "issue": "Correct 'inventorys' to 'inventories'."
+  },
+  {
+   "id": "w4410",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are valid; the signature requirement supports a consequential relationship."
+  },
+  {
+   "id": "w4415",
+   "verdict": "fix",
+   "issue": "Distractors create malformed double predicates rather than grammatical sentences with dangling modifiers."
+  },
+  {
+   "id": "w4435",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are valid; the signature requirement supports a consequential relationship."
+  },
+  {
+   "id": "w4440",
+   "verdict": "fix",
+   "issue": "Distractors create malformed double predicates rather than grammatical sentences with dangling modifiers."
+  },
+  {
+   "id": "w4460",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are valid; the signature requirement supports a consequential relationship."
+  },
+  {
+   "id": "w4465",
+   "verdict": "fix",
+   "issue": "Distractors create malformed double predicates rather than grammatical sentences with dangling modifiers."
+  },
+  {
+   "id": "w4485",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are valid; the signature requirement supports a consequential relationship."
+  },
+  {
+   "id": "w4490",
+   "verdict": "fix",
+   "issue": "Distractors create malformed double predicates rather than grammatical sentences with dangling modifiers."
+  },
+  {
+   "id": "w4510",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are valid; the signature requirement supports a consequential relationship."
+  },
+  {
+   "id": "w4515",
+   "verdict": "fix",
+   "issue": "Distractors create malformed double predicates rather than grammatical sentences with dangling modifiers."
+  },
+  {
+   "id": "w4535",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are valid; the signature requirement supports a consequential relationship."
+  },
+  {
+   "id": "w4540",
+   "verdict": "fix",
+   "issue": "Distractors create malformed double predicates rather than grammatical sentences with dangling modifiers."
+  },
+  {
+   "id": "w4560",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' work; specify a pump-test report as the document being signed."
+  },
+  {
+   "id": "w4565",
+   "verdict": "fix",
+   "issue": "Distractors create malformed double predicates rather than grammatical sentences with dangling modifiers."
+  },
+  {
+   "id": "w4580",
+   "verdict": "fix",
+   "issue": "Correct 'notess' to 'notes' and change passage's 'added it' to 'added them'."
+  },
+  {
+   "id": "w4585",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' work; 'it' also disagrees with plural 'notes'."
+  },
+  {
+   "id": "w4590",
+   "verdict": "fix",
+   "issue": "Distractors create malformed double predicates rather than grammatical sentences with dangling modifiers."
+  },
+  {
+   "id": "w4610",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are valid; the signature requirement supports a consequential relationship."
+  },
+  {
+   "id": "w4615",
+   "verdict": "fix",
+   "issue": "Distractors create malformed double predicates rather than grammatical sentences with dangling modifiers."
+  },
+  {
+   "id": "w4620",
+   "verdict": "fix",
+   "issue": "Plural is 'coaches'; plural possessive is 'coaches\u2019'. The keyed answer is misspelled."
+  },
+  {
+   "id": "w4635",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are valid; the signature requirement supports a consequential relationship."
+  },
+  {
+   "id": "w4640",
+   "verdict": "fix",
+   "issue": "Distractors create malformed double predicates rather than grammatical sentences with dangling modifiers."
+  },
+  {
+   "id": "w4660",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are grammatical and contextually reasonable; the explanation incorrectly excludes causation."
+  },
+  {
+   "id": "w4665",
+   "verdict": "fix",
+   "issue": "Distractors create malformed predicates such as 'were filed filed'; use plausible dangling-modifier alternatives."
+  },
+  {
+   "id": "w4685",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are grammatical and contextually reasonable; the explanation incorrectly excludes causation."
+  },
+  {
+   "id": "w4690",
+   "verdict": "fix",
+   "issue": "Distractors create malformed predicates such as 'were filed filed'; use plausible dangling-modifier alternatives."
+  },
+  {
+   "id": "w4710",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are grammatical and contextually reasonable; the explanation incorrectly excludes causation."
+  },
+  {
+   "id": "w4715",
+   "verdict": "fix",
+   "issue": "Distractors create malformed predicates such as 'were filed filed'; use plausible dangling-modifier alternatives."
+  },
+  {
+   "id": "w4730",
+   "verdict": "fix",
+   "issue": "Change 'patch summarys' to 'patch summaries'."
+  },
+  {
+   "id": "w4735",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are grammatical and contextually reasonable; the explanation incorrectly excludes causation."
+  },
+  {
+   "id": "w4740",
+   "verdict": "fix",
+   "issue": "Distractors create malformed predicates such as 'were filed filed'; use plausible dangling-modifier alternatives."
+  },
+  {
+   "id": "w4760",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are grammatical and contextually reasonable; the explanation incorrectly excludes causation."
+  },
+  {
+   "id": "w4765",
+   "verdict": "fix",
+   "issue": "Distractors create malformed predicates such as 'were filed filed'; use plausible dangling-modifier alternatives."
+  },
+  {
+   "id": "w4785",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are grammatical and contextually reasonable; the explanation incorrectly excludes causation."
+  },
+  {
+   "id": "w4790",
+   "verdict": "fix",
+   "issue": "Distractors create malformed predicates such as 'were filed filed'; use plausible dangling-modifier alternatives."
+  },
+  {
+   "id": "w4805",
+   "verdict": "fix",
+   "issue": "Change 'logbook entrys' to 'logbook entries'."
+  },
+  {
+   "id": "w4810",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are grammatical and contextually reasonable; the explanation incorrectly excludes causation."
+  },
+  {
+   "id": "w4815",
+   "verdict": "fix",
+   "issue": "Distractors create malformed predicates such as 'were filed filed'; use plausible dangling-modifier alternatives."
+  },
+  {
+   "id": "w4835",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are grammatical and contextually reasonable; the explanation incorrectly excludes causation."
+  },
+  {
+   "id": "w4840",
+   "verdict": "fix",
+   "issue": "Distractors create malformed predicates such as 'were filed filed'; use plausible dangling-modifier alternatives."
+  },
+  {
+   "id": "w4860",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are grammatical and contextually reasonable; the explanation incorrectly excludes causation."
+  },
+  {
+   "id": "w4865",
+   "verdict": "fix",
+   "issue": "Distractors create malformed predicates such as 'were filed filed'; use plausible dangling-modifier alternatives."
+  },
+  {
+   "id": "w4885",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are grammatical and contextually reasonable; the explanation incorrectly excludes causation."
+  },
+  {
+   "id": "w4890",
+   "verdict": "fix",
+   "issue": "Distractors create malformed predicates such as 'were filed filed'; use plausible dangling-modifier alternatives."
+  },
+  {
+   "id": "w4910",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are grammatical and contextually reasonable; the explanation incorrectly excludes causation."
+  },
+  {
+   "id": "w4915",
+   "verdict": "fix",
+   "issue": "Distractors create malformed predicates such as 'were filed filed'; use plausible dangling-modifier alternatives."
+  },
+  {
+   "id": "w4935",
+   "verdict": "fix",
+   "issue": "Both ';' and ', so' are grammatical and contextually reasonable; the explanation incorrectly excludes causation."
+  },
+  {
+   "id": "w4940",
+   "verdict": "fix",
+   "issue": "Distractors create malformed predicates such as 'were filed filed'; use plausible dangling-modifier alternatives."
+  },
+  {
+   "id": "r5530",
+   "verdict": "fix",
+   "issue": "Key cites only one interval; explanation incorrectly treats this as establishing monotonicity throughout."
+  },
+  {
+   "id": "r5535",
+   "verdict": "fix",
+   "issue": "Counts show slowing increases in seedling numbers, not slowing growth of individual seedlings; clarify the keyed wording."
+  },
+  {
+   "id": "r5540",
+   "verdict": "fix",
+   "issue": "Identify 6, 5, and 4 as successive positive increases in seedling counts; the keyed fragment lacks context."
+  },
+  {
+   "id": "r5545",
+   "verdict": "fix",
+   "issue": "Table measures chips fired, not survival; values increase without leveling off. No choice is fully supported."
+  },
+  {
+   "id": "r5550",
+   "verdict": "fix",
+   "issue": "Key cites only the final interval; explanation incorrectly treats it as establishing monotonicity throughout."
+  },
+  {
+   "id": "r5560",
+   "verdict": "fix",
+   "issue": "Counts rise then fall, contradicting monotonicity; Route B cannot support the claim."
+  },
+  {
+   "id": "r5570",
+   "verdict": "fix",
+   "issue": "Counts rise then fall, contradicting monotonicity; June and the middle entry also duplicate each other."
+  },
+  {
+   "id": "r5580",
+   "verdict": "fix",
+   "issue": "Identify 5 and 3 as successive positive increases in reach; the keyed fragment lacks context."
+  },
+  {
+   "id": "r5600",
+   "verdict": "fix",
+   "issue": "Keyed phrase is incomplete; state that power increases from 1 to 8 to 27 as wind speed increases."
+  },
+  {
+   "id": "am1002",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: adding 49 gives 1990/43, not 45."
+  },
+  {
+   "id": "am1006",
+   "verdict": "fix",
+   "issue": "Distractor explanation for 46 is invalid; omitting the fixed-fee subtraction gives 2031/44, not 46."
+  },
+  {
+   "id": "am1016",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly says the squared term's minimum depends on the added constant; its minimum remains zero."
+  },
+  {
+   "id": "am1026",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 172 divided by 3 is not 45."
+  },
+  {
+   "id": "am1028",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly identifies 50 as the mean; the mean is 50.8."
+  },
+  {
+   "id": "am1032",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 200 pages per minute for 10 minutes yields 2000, not 1200."
+  },
+  {
+   "id": "am1048",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: adding 50 gives 2080/44, not 46."
+  },
+  {
+   "id": "am1052",
+   "verdict": "fix",
+   "issue": "Distractor explanation for 47 is invalid; omitting the fixed-fee subtraction gives 2122/45, not 47."
+  },
+  {
+   "id": "am1062",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly says the squared term's minimum depends on the added constant; its minimum remains zero."
+  },
+  {
+   "id": "am1072",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 176 divided by 3 is not 46."
+  },
+  {
+   "id": "am1078",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 205 pages per minute for 10 minutes yields 2050, not 1230."
+  },
+  {
+   "id": "am1094",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: adding 51 gives 2172/45, not 47."
+  },
+  {
+   "id": "am1098",
+   "verdict": "fix",
+   "issue": "Distractor explanation for 48 is invalid; omitting the fixed-fee subtraction gives 2215/46, not 48."
+  },
+  {
+   "id": "am1108",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly says the squared term's minimum depends on the added constant; its minimum remains zero."
+  },
+  {
+   "id": "am1118",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 180 divided by 3 is 60, not 47."
+  },
+  {
+   "id": "am1120",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly identifies 53 as the mean; the mean is 53.2."
+  },
+  {
+   "id": "am1124",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 210 pages per minute for 10 minutes yields 2100, not 1260."
+  },
+  {
+   "id": "am1140",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: adding 52 then dividing by 46 gives approximately 49.26, not 48."
+  },
+  {
+   "id": "am1144",
+   "verdict": "fix",
+   "issue": "Distractor explanation does not justify 49 hours; omitting the fixed-fee subtraction gives approximately 49.15."
+  },
+  {
+   "id": "am1154",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly says the squared term's minimum depends on the added constant; its minimum remains zero."
+  },
+  {
+   "id": "am1164",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: 184 divided by 3 is approximately 61.33, not 48."
+  },
+  {
+   "id": "am1166",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly identifies 54 as the mean; the mean is 54.4."
+  },
+  {
+   "id": "am1170",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: 215 pages per minute for 10 minutes yields 2150 pages, not 1290."
+  },
+  {
+   "id": "am1186",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: adding 53 then dividing by 47 gives approximately 50.26, not 49."
+  },
+  {
+   "id": "am1190",
+   "verdict": "fix",
+   "issue": "Distractor explanation does not justify 50 hours; omitting the fixed-fee subtraction gives approximately 50.15."
+  },
+  {
+   "id": "am1200",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly says the squared term's minimum depends on the added constant; its minimum remains zero."
+  },
+  {
+   "id": "am1210",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: 188 divided by 3 is approximately 62.67, not 49."
+  },
+  {
+   "id": "am1212",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly identifies 55 as the mean; the mean is 55.6."
+  },
+  {
+   "id": "am1216",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: 220 pages per minute for 10 minutes yields 2200 pages, not 1320."
+  },
+  {
+   "id": "am1232",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: adding 54 then dividing by 48 gives 51.25, not 50."
+  },
+  {
+   "id": "am1236",
+   "verdict": "fix",
+   "issue": "Distractor explanation does not justify 51 hours; omitting the fixed-fee subtraction gives approximately 51.14."
+  },
+  {
+   "id": "am1246",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly says the squared term's minimum depends on the added constant; its minimum remains zero."
+  },
+  {
+   "id": "am1256",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: 192 divided by 3 is 64, not 50."
+  },
+  {
+   "id": "am1258",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly identifies 56 as the mean; the mean is 56.8."
+  },
+  {
+   "id": "am1262",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: 225 pages per minute for 10 minutes yields 2250 pages, not 1350."
+  },
+  {
+   "id": "am1278",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: adding 55 then dividing by 49 gives approximately 52.24, not 51."
+  },
+  {
+   "id": "am1282",
+   "verdict": "fix",
+   "issue": "Distractor explanation does not justify 52 hours; omitting the fixed-fee subtraction gives 52.14."
+  },
+  {
+   "id": "am1292",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly says the squared term's minimum depends on the added constant; its minimum remains zero."
+  },
+  {
+   "id": "am1302",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: 196 divided by 3 is approximately 65.33, not 51."
+  },
+  {
+   "id": "am1308",
+   "verdict": "fix",
+   "issue": "Distractor explanation is incorrect: 230 pages per minute for 10 minutes yields 2300 pages, not 1380."
+  },
+  {
+   "id": "am1324",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: adding 56 then dividing by 50 gives 53.24, not 52."
+  },
+  {
+   "id": "am1328",
+   "verdict": "fix",
+   "issue": "Explanation for 53 hours describes no valid calculation; replace with an accurate distractor rationale."
+  },
+  {
+   "id": "am1334",
+   "verdict": "fix",
+   "issue": "Explanation for 159 introduces an unexplained 47; subtracting 53x requires no additional distribution."
+  },
+  {
+   "id": "am1338",
+   "verdict": "fix",
+   "issue": "Distractor explanation falsely says the squared term's minimum depends on the added constant; it remains zero."
+  },
+  {
+   "id": "am1346",
+   "verdict": "fix",
+   "issue": "Multiplying 141 by 5 without dividing by 3 triples the correct amount; it does not double-count the scale factor."
+  },
+  {
+   "id": "am1348",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 200 divided by 3 is approximately 66.67, not 52."
+  },
+  {
+   "id": "am1350",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly identifies 59 as the mean; the mean is 59.2."
+  },
+  {
+   "id": "am1354",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 235 pages per minute for 10 minutes gives 2350, not 1410."
+  },
+  {
+   "id": "am1370",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: adding 57 then dividing by 51 gives approximately 54.24, not 53."
+  },
+  {
+   "id": "am1374",
+   "verdict": "fix",
+   "issue": "Explanation for 54 hours describes no valid calculation; replace with an accurate distractor rationale."
+  },
+  {
+   "id": "am1380",
+   "verdict": "fix",
+   "issue": "Explanation for 162 introduces an unexplained 48; subtracting 54x requires no additional distribution."
+  },
+  {
+   "id": "am1384",
+   "verdict": "fix",
+   "issue": "Distractor explanation falsely says the squared term's minimum depends on the added constant; it remains zero."
+  },
+  {
+   "id": "am1392",
+   "verdict": "fix",
+   "issue": "Multiplying 144 by 5 without dividing by 3 triples the correct amount; it does not double-count the scale factor."
+  },
+  {
+   "id": "am1394",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 204 divided by 3 equals 68, not 53."
+  },
+  {
+   "id": "am1396",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly identifies 60 as the mean; the mean is 60.4."
+  },
+  {
+   "id": "am1400",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 240 pages per minute for 10 minutes gives 2400, not 1440."
+  },
+  {
+   "id": "am1416",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: adding 58 then dividing by 52 gives approximately 55.23, not 54."
+  },
+  {
+   "id": "am1420",
+   "verdict": "fix",
+   "issue": "Explanation for 55 hours describes no valid calculation; replace with an accurate distractor rationale."
+  },
+  {
+   "id": "am1426",
+   "verdict": "fix",
+   "issue": "Explanation for 165 introduces an unexplained 49; subtracting 55x requires no additional distribution."
+  },
+  {
+   "id": "am1430",
+   "verdict": "fix",
+   "issue": "Distractor explanation falsely says the squared term's minimum depends on the added constant; it remains zero."
+  },
+  {
+   "id": "am1438",
+   "verdict": "fix",
+   "issue": "Multiplying 147 by 5 without dividing by 3 triples the correct amount; it does not double-count the scale factor."
+  },
+  {
+   "id": "am1440",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 208 divided by 3 is approximately 69.33, not 54."
+  },
+  {
+   "id": "am1442",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly identifies 61 as the mean; the mean is 61.6."
+  },
+  {
+   "id": "am1446",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 245 pages per minute for 10 minutes gives 2450, not 1470."
+  },
+  {
+   "id": "am1462",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: adding 59 then dividing by 53 gives approximately 56.23, not 55."
+  },
+  {
+   "id": "am1466",
+   "verdict": "fix",
+   "issue": "Explanation for 56 hours describes no valid calculation; replace with an accurate distractor rationale."
+  },
+  {
+   "id": "am1472",
+   "verdict": "fix",
+   "issue": "Explanation for 168 introduces an unexplained 50; subtracting 56x requires no additional distribution."
+  },
+  {
+   "id": "am1476",
+   "verdict": "fix",
+   "issue": "Distractor explanation falsely says the squared term's minimum depends on the added constant; it remains zero."
+  },
+  {
+   "id": "am1484",
+   "verdict": "fix",
+   "issue": "Multiplying 150 by 5 without dividing by 3 triples the correct amount; it does not double-count the scale factor."
+  },
+  {
+   "id": "am1486",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 212 divided by 3 is approximately 70.67, not 55."
+  },
+  {
+   "id": "am1488",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly identifies 62 as the mean; the mean is 62.8."
+  },
+  {
+   "id": "am1492",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 250 pages per minute for 10 minutes gives 2500, not 1500."
+  },
+  {
+   "id": "am1508",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: adding 60 then dividing by 54 gives 57.222\u2026, not 56."
+  },
+  {
+   "id": "am1512",
+   "verdict": "fix",
+   "issue": "The explanation for 57 describes an error that does not produce 57; replace it with accurate reasoning."
+  },
+  {
+   "id": "am1522",
+   "verdict": "fix",
+   "issue": "Distractor explanation incorrectly says adding a constant changes the squared term's minimum; that term still has minimum zero."
+  },
+  {
+   "id": "am1532",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 216 divided by 3 equals 72, not 56."
+  },
+  {
+   "id": "am1538",
+   "verdict": "fix",
+   "issue": "Distractor explanation is false: 255 pages per minute for 10 minutes gives 2550, not 1530."
+  },
+  {
+   "id": "ae1101",
+   "verdict": "fix",
+   "issue": "The quoted current text includes a leading comma absent from the passage; synchronize the replacement span."
+  },
+  {
+   "id": "ae1103",
+   "verdict": "fix",
+   "issue": "Keyed answer creates a comma splice; both conjunction alternatives are grammatical. Explanation and quoted current text conflict with key."
+  },
+  {
+   "id": "ae1105",
+   "verdict": "fix",
+   "issue": "Two coordinated why-clauses do not require a comma; the unpunctuated alternative is correct, contradicting the explanation."
+  },
+  {
+   "id": "ae1106",
+   "verdict": "fix",
+   "issue": "Explanation endorses 'that,' but key uses 'which'; quoted current text also differs from passage."
+  },
+  {
+   "id": "ae1107",
+   "verdict": "fix",
+   "issue": "Every option leaves a comma splice or run-on; the semicolon described in the explanation is absent."
+  },
+  {
+   "id": "ae1108",
+   "verdict": "fix",
+   "issue": "Keyed replacement leaves a comma splice with the preceding clause; correct surrounding punctuation."
+  },
+  {
+   "id": "ae1109",
+   "verdict": "fix",
+   "issue": "Both versions with and without the serial comma are grammatical; two answers are correct."
+  },
+  {
+   "id": "ae1112",
+   "verdict": "fix",
+   "issue": "The infinitive subject 'To understand why we sleep' is also grammatical; two answers are correct."
+  },
+  {
+   "id": "ae2113",
+   "verdict": "fix",
+   "issue": "Marker follows the existing article 'a,' while choices include another article; align marker and replacement span."
+  },
+  {
+   "id": "ae2114",
+   "verdict": "fix",
+   "issue": "The version without commas permits a grammatical restrictive reading; context does not uniquely require a nonrestrictive clause."
+  },
+  {
+   "id": "ae2115",
+   "verdict": "fix",
+   "issue": "Key creates a comma splice; semicolon and colon alternatives work. Explanation discusses the wrong comma."
+  },
+  {
+   "id": "ae2116",
+   "verdict": "fix",
+   "issue": "Keyed replacement leaves a comma splice with the preceding clause; correct surrounding punctuation."
+  },
+  {
+   "id": "ae2117",
+   "verdict": "fix",
+   "issue": "The comparison can be integrated without the preceding comma; the final alternative is also grammatical."
+  },
+  {
+   "id": "ae2119",
+   "verdict": "fix",
+   "issue": "Key leaves malformed 'birds, struck ... and often died'; the explanation incorrectly treats this as a valid participial phrase."
+  },
+  {
+   "id": "ae2120",
+   "verdict": "fix",
+   "issue": "Past and present participles can coordinate; 'struck ... and often dying' is also grammatical, contrary to the explanation."
+  },
+  {
+   "id": "ae2121",
+   "verdict": "fix",
+   "issue": "The version without commas permits a grammatical restrictive reading; context does not uniquely require a nonrestrictive clause."
+  },
+  {
+   "id": "ae3126",
+   "verdict": "fix",
+   "issue": "Keyed semicolon correctly joins independent clauses, contradicting explanation; quoted replacement span also mismatches passage and choices."
+  },
+  {
+   "id": "ae3130",
+   "verdict": "fix",
+   "issue": "Explanation wrongly rejects keyed semicolon; quoted current text differs from passage, and 'No change' duplicates a grammatical answer."
+  },
+  {
+   "id": "ae3131",
+   "verdict": "fix",
+   "issue": "Key creates a comma splice; semicolon and quoted colon are valid. Passage, quoted text, and explanation conflict."
+  },
+  {
+   "id": "ae3132",
+   "verdict": "fix",
+   "issue": "A semicolon can join the following independent clause beginning 'Osei'; the period is not uniquely correct."
+  },
+  {
+   "id": "ae3134",
+   "verdict": "fix",
+   "issue": "'Compared to' and 'compared with' are both acceptable here; two answers are correct."
+  },
+  {
+   "id": "ae3135",
+   "verdict": "fix",
+   "issue": "The example phrase can be integrated without a comma; the third choice is also grammatical."
+  },
+  {
+   "id": "ae4137",
+   "verdict": "fix",
+   "issue": "Key inserts a comma between subject and verb, contradicting explanation; quoted current text differs from passage."
+  },
+  {
+   "id": "ae4139",
+   "verdict": "fix",
+   "issue": "Key creates a comma splice; quoted semicolon and colon alternative are valid. Explanation incorrectly restricts colons to lists."
+  },
+  {
+   "id": "ae4140",
+   "verdict": "fix",
+   "issue": "The 'especially' phrase is grammatical with or without the preceding comma; two answers are correct."
+  },
+  {
+   "id": "ae4142",
+   "verdict": "fix",
+   "issue": "'Rather than the repair itself' can be integrated without commas; the third choice is also grammatical."
+  },
+  {
+   "id": "ae4143",
+   "verdict": "fix",
+   "issue": "Key unnecessarily separates a straightforward compound predicate with a comma; supply a comma-free answer and revise explanation."
+  },
+  {
+   "id": "ar1108",
+   "verdict": "fix",
+   "issue": "Stem misstates events: brother declines to invite narrator, while narrator declines to ask permission; revise the reciprocal wording."
+  },
+  {
+   "id": "ar1109",
+   "verdict": "fix",
+   "issue": "Both occurrences of 'patient' describe the canoe; brother is associated with 'patience.' Stem misidentifies the textual repetition."
+  },
+  {
+   "id": "ar2107",
+   "verdict": "fix",
+   "issue": "Choice A can also mean shorter travel distances, overlapping C; distinguish geographic distance from route length."
+  },
+  {
+   "id": "s3303",
+   "verdict": "fix",
+   "issue": "Label distances as cumulative totals; 'traveled each hour' suggests individual hourly distances rather than totals."
+  },
+  {
+   "id": "s3306",
+   "verdict": "fix",
+   "issue": "Label distances as cumulative; if these are distances traveled each hour, the hiker speeds up rather than slows."
+  },
+  {
+   "id": "s3309",
+   "verdict": "fix",
+   "issue": "Gains 2.2, 1.6, 1.0 imply next gain 0.4 and total 8.2 km, absent from choices; clarify cumulative distances."
+  },
+  {
+   "id": "s3312",
+   "verdict": "fix",
+   "issue": "Specify cumulative distance at each hour; the setup currently describes distances traveled during individual hours."
+  },
+  {
+   "id": "s3321",
+   "verdict": "fix",
+   "issue": "Greatest gap is 22 \u00b0C at 30 minutes, choice D; explanation answers first difference instead of greatest."
+  },
+  {
+   "id": "s3330",
+   "verdict": "fix",
+   "issue": "Final height does not establish greatest growth without initial heights; ask greatest height or specify equal initial heights."
+  },
+  {
+   "id": "s3345",
+   "verdict": "fix",
+   "issue": "Reduced sediment supply suggests erosion risk, but does not establish net erosion without deposition and erosion rates."
+  },
+  {
+   "id": "s3348",
+   "verdict": "fix",
+   "issue": "Key is best, but explanation overclaims: before-construction sampling helps assess causation without isolating other temporal changes."
+  },
+  {
+   "id": "s3351",
+   "verdict": "fix",
+   "issue": "Explanation overstates necessity: no rust after three days supports the claim but does not prove humidity universally necessary."
+  },
+  {
+   "id": "s3420",
+   "verdict": "fix",
+   "issue": "One day's readings do not establish a repeating cycle or next-morning direction; explicitly assume the daily pattern repeats."
+  },
+  {
+   "id": "s3423",
+   "verdict": "fix",
+   "issue": "Largest gain is 7 MPa between days 7 and 14, choice A; explanation incorrectly claims 6 exceeds 7."
+  },
+  {
+   "id": "s3429",
+   "verdict": "fix",
+   "issue": "Explanation incorrectly says gains 6, 7, 4 shrink; compare daily rates: 1.5, 1.0, approximately 0.286 MPa/day."
+  },
+  {
+   "id": "s3483",
+   "verdict": "fix",
+   "issue": "Both machines have equal ranges and standard deviations; B is more accurate, not more consistent. Revise key and explanation."
+  }
+ ]
+}

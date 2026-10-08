@@ -1371,6 +1371,12 @@ function render() {
 function showScreen(id) { ["screen-start", "screen-test", "screen-results", "screen-college", "screen-subjects", "screen-scholarships"].forEach((s) => { $(s).style.display = s === id ? "block" : "none"; });
   document.body.classList.toggle("practice-test-active", id === "screen-test");
   if (window.FunSatAds && typeof window.FunSatAds.setPracticeMode === "function") window.FunSatAds.setPracticeMode(id === "screen-test");
+  if (document.body.dataset.analyticsView !== id) {
+    document.body.dataset.analyticsView = id;
+    window.FunSatMetrics?.track("page_view", {view: id});
+    if (id === "screen-results") window.FunSatMetrics?.track("sat_results_viewed", {test_type: state.cfg.testType});
+    if (id === "screen-college") window.FunSatMetrics?.track("college_tool_used");
+  }
   // Slots inside this screen were skipped while it was hidden; mount them now.
   if (id !== "screen-test" && window.FunSatAds) window.FunSatAds.mount();
   const practiceActive = id === "screen-start" || id === "screen-test" || id === "screen-results";
@@ -2056,6 +2062,7 @@ $("unlockKeep").addEventListener("click", () => $("unlockModal").classList.remov
 
 // ---- ROUTING ----
 function advanceAfterModule(confirmed) {
+  window.FunSatMetrics?.track("sat_module_completed", {test_type: state.cfg.testType, section: curSection(), module: state.modIdx + 1, questions_answered: totalAnswered()});
   const sec = curSection();
   const def = defByKey(state.cfg.testType, sec);
   const plan = state.plan[sec];
@@ -2113,6 +2120,7 @@ function finishTest(confirmed) {
   if (!confirmed && totalAnswered() > 0 && totalAnswered() < state.keys.reduce((s, k) => s + state.counts[k], 0)) {
     if (!confirm("You have " + (state.keys.reduce((s, k) => s + state.counts[k], 0) - totalAnswered()) + " unanswered questions. Finish anyway?")) return;
   }
+  if (!state.done) window.FunSatMetrics?.track("sat_test_completed", {test_type: state.cfg.testType, questions_answered: totalAnswered(), duration_seconds: Math.round((Date.now() - state.startedAt) / 1000)});
   state.done = true;
   state.view = "results";
   state.scores = { act: state.cfg.testType === "act" };
@@ -2122,7 +2130,7 @@ function finishTest(confirmed) {
 
 function renderResults() {
   $("resultsSaveStatus").textContent = cloud.user ? $("authSync").textContent : "Saved on this device. Sign in to save these results to your account.";
-  $("screen-results").querySelector("h1").textContent = state.keys.some((k) => state.plan[k].moduleOnly === "drill") ? "Your topic progress" : "Your score";
+  $("screen-results").querySelector("h2").textContent = state.keys.some((k) => state.plan[k].moduleOnly === "drill") ? "Your topic progress" : "Your score";
   $("resultsPred").innerHTML = predictorHtml();
   if (state.keys.some((k) => state.plan[k].moduleOnly === "drill")) return renderTopicResults();
   if (state.cfg.testType === "act") return renderActResults();
@@ -2281,9 +2289,30 @@ function rwRouteLine(sec) {
 
 // ---- REVIEW ----
 function renderReview() {
+  window.FunSatMetrics?.track("sat_answer_review_started", {test_type: state.cfg.testType});
   const area = $("reviewArea");
+  area.reviewObserver?.disconnect();
   area.innerHTML = renderReviewHtml(state.cfg.testType, state.keys, state.plan, state.answers);
   area.style.display = "block";
+  const filters = document.createElement("div"); filters.className = "review-filters";
+  filters.innerHTML = '<label>Show answers <select aria-label="Filter answer review"><option value="all">All questions</option><option value="missed">Missed or unanswered</option><option value="correct">Correct answers</option></select></label>';
+  area.prepend(filters);
+  filters.querySelector("select").addEventListener("change", e => {
+    area.querySelectorAll(".review").forEach(row => {
+      const correct = !!row.querySelector(".tag.right");
+      row.hidden = e.target.value === "missed" ? correct : e.target.value === "correct" ? !correct : false;
+    });
+  });
+  const end = document.createElement("p"); end.textContent = "End of answer review. Use your weakest-domain practice recommendation above to study next.";
+  area.appendChild(end);
+  window.FunSatAds?.mount();
+  if (typeof IntersectionObserver === "function") {
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(e => e.isIntersecting)) { window.FunSatMetrics?.track("sat_answer_review_completed"); observer.disconnect(); }
+    });
+    observer.observe(end);
+    area.reviewObserver = observer;
+  }
 }
 
 function renderReviewHtml(testType, keys, plan, answers) {
@@ -2341,6 +2370,7 @@ $("btnStart").addEventListener("click", () => {
   }
   clearSaved();
   state = newState(state.cfg);
+  window.FunSatMetrics?.track("sat_test_started", {test_type: state.cfg.testType});
   sessionStreak = 0; sessionBestStreak = 0; sessionTokensEarned = 0; sessionUnlocks = []; pendingUnlock = null;
   state.view = "test"; save(); render();
 });
@@ -2431,6 +2461,7 @@ document.addEventListener("click", (e) => { const p = $("navPop"); if (p && p.cl
 
 // ---- DRILL: a 10-question set from one content domain, least-seen questions first ----
 function startDrill(key, domain) {
+  window.FunSatMetrics?.track("practice_started", {section: key});
   // SAT-only keys must never resolve through an ACT config (and vice versa).
   const tt = key === "rw" ? "sat" : key === "english" || key === "reading" || key === "science" ? "act" : state.cfg.testType;
   const d = defByKey(tt, key);
@@ -2500,9 +2531,19 @@ function resultsExtras() {
     '<button type="button" class="secondary" id="btnSpend">🎮 ' + (profile.tokens ? "Spend " + profile.tokens + " credit" + (profile.tokens > 1 ? "s" : "") : "Arcade") + "</button></div>";
   if (idk.length) h += '<div class="idk-box"><h3>🤷 Questions you weren\'t sure about (' + idk.length + ')</h3><p class="small muted" style="margin:0">These need teaching, not just correcting. Re-read each explanation in Review answers, then try a drill.</p><ol>' +
     idk.map((id) => { const q = byId(id); return "<li>" + escapeHtml(q.q.split("\n").pop().slice(0, 150)) + ' <span class="small muted">· ' + escapeHtml(q.domain) + "</span></li>"; }).join("") + "</ol></div>";
+  const summary = {easy: {correct:0,total:0}, medium:{correct:0,total:0}, hard:{correct:0,total:0}};
+  state.keys.forEach(k => sectionQids(k).forEach(id => {
+    const q = byId(id); if (!q || !summary[q.diff]) return;
+    summary[q.diff].total++; if (state.answers[id] === q.ans) summary[q.diff].correct++;
+  }));
+  h += '<details class="difficulty-summary"><summary>Performance by difficulty</summary><p>Correct answers out of questions served, including unanswered questions. Small samples are not score predictions.</p><table><thead><tr><th scope="col">Difficulty</th><th scope="col">Correct / served</th></tr></thead><tbody>' +
+    Object.entries(summary).map(([level, st]) => '<tr><th scope="row">' + level + '</th><td>' + st.correct + ' / ' + st.total + '</td></tr>').join('') + '</tbody></table></details>';
   return h;
 }
 function wireResultsExtras() {
+  $("resultsDomains")?.querySelector(".difficulty-summary")?.addEventListener("toggle", e => {
+    if (e.target.open) window.FunSatMetrics?.track("sat_score_breakdown_viewed");
+  });
   const d = $("btnDrill"); if (d) d.addEventListener("click", () => startDrill(d.dataset.k, d.dataset.d));
   const r = $("btnReturnFullPractice"); if (r) r.addEventListener("click", restoreFullPractice);
   const s = $("btnSpend"); if (s) s.addEventListener("click", () => openArcade());
@@ -3338,6 +3379,7 @@ const arcade = {
     this.remaining = 0; this.game = null; this.runMode = 'timed';
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     this.mode = 'menu'; this.showMsg(false);
+    window.FunSatAds?.layoutGameRails();
     this.stage.classList.remove('active'); this.menu.style.display = '';
     this.buildMenu(); this.updateChips(); saveProfile();
   },
@@ -3371,7 +3413,6 @@ const arcade = {
       '<div class="cab-grid-b" id="cabGrid">' + GAME_LIST.map((g) => tile(g)).join('') + '</div>' +
       '<div class="cab-selected-rules" id="cabSelectedRules" aria-live="polite"></div>' +
       '<div class="cab-bank"><span>TIME BANK ' + fmtTime(carry) + '</span><span class="cab-bar"><i style="width:' + Math.min(100, carry / RUN_MAX_SEC * 100) + '%"></i></span><span>3 Q = 1 CREDIT</span></div>' +
-      '<aside class="sponsor-slot arcade-sponsor" data-ad-slot="arcade-menu" aria-label="Sponsored content" hidden></aside>' +
       '<div class="cab-rules">Round-based games (marked FULL RUN) play until game over, 5:00 max. Everything else uses 30s per credit, spent automatically when time runs out.' + (profile.tokens ? '' : '<br>No credits? You still get a free 30s.') + '</div>' +
       '<div class="cab-hint" style="display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap"><button type="button" class="ghost" id="cabGarageBtn">🏁 GARAGE' + (window.DriftCircuit ? ' · $' + DriftCircuit.garage().cash : '') + '</button><span>← → CHOOSE · ENTER START · ESC BACK</span></div></div>';
     this.menu.querySelectorAll('.cab-tile').forEach((t) => {
@@ -3428,13 +3469,16 @@ const arcade = {
 
   open() {
     arcdeOpen = true;
+    this.overlay.style.top = window.scrollY + 'px';
     this.overlay.classList.add('show');
+    window.FunSatAds?.setPracticeMode(false);
     $('btnArcade')?.classList.add('active');
     this.mode = 'menu';
     this.menu.style.display = '';
     this.stage.classList.remove('active');
     this.buildMenu();
     this.updateChips();
+    window.FunSatAds?.layoutGameRails();
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     // Don't pause quiz timer here since arcade overlay has its own timer
     quizTimerRunning = false;
@@ -3443,6 +3487,9 @@ const arcade = {
   close() {
     arcdeOpen = false;
     this.overlay.classList.remove('show');
+    window.FunSatMetrics?.endGameSession();
+    window.FunSatAds?.setPracticeMode(state.view === 'test' || state.view === 'routing');
+    window.FunSatAds?.layoutGameRails();
     $('btnArcade')?.classList.remove('active');
     this.mode = 'menu';
     this.game = null;
@@ -3508,6 +3555,7 @@ const arcade = {
       const job = washCustomize.querySelector('.wash-job'); if (job) job.style.display = game === 'pressurewash' ? '' : 'none';
     }
     this.game.reset();
+    window.FunSatAds?.layoutGameRails();
     // Any minutes already earned (5 questions = 1 token = ARCDE_ADD_SEC) are applied automatically
     // right when a game opens, so "a minute of playtime per 5 questions" shows up immediately
     // instead of requiring an extra manual "+60s" click.
@@ -3531,6 +3579,7 @@ const arcade = {
 
   play() {
     if (this.remaining <= 0) { this.timeUp(); return; }
+    if (this.mode === 'ready') window.FunSatMetrics?.track('game_started', {game: this.game?.key || 'unknown'});
     this.mode = 'playing';
     if (this.game) this.game.started = true;
     this.statusEl.textContent = this.game ? this.game.name + ' — 🕐 ' + this.remaining + 's' : '';
@@ -3546,6 +3595,7 @@ const arcade = {
     this._lastFrame = now;
     // Countdown
     if (this.mode === 'playing' && this.game && this.game.started) {
+      window.FunSatMetrics?.gameTick(dt);
       if (this.overtime) {
         // Last round: the clock ran out mid-game, so let this game finish (up to 60 extra seconds).
         this.overtimeLeft -= dt;
@@ -3638,6 +3688,7 @@ const arcade = {
   },
 
   gameOver() {
+    window.FunSatMetrics?.track('game_round_completed', {game: this.game?.key || 'unknown'});
     this.overtime = false;
     this.mode = 'over';
     if (this.runMode === 'credit') this.remaining = 0; // a credit run ends at game over
@@ -3703,6 +3754,9 @@ const arcade = {
     this.updateChips();
     this.buildMenu();
     this.overlay.classList.remove('show');
+    window.FunSatMetrics?.endGameSession();
+    window.FunSatAds?.setPracticeMode(state.view === 'test' || state.view === 'routing');
+    window.FunSatAds?.layoutGameRails();
     $('btnArcade')?.classList.remove('active');
     this.stage.classList.remove('active');
     const washCustomize = $('washCustomize'); if (washCustomize) washCustomize.classList.remove('show');

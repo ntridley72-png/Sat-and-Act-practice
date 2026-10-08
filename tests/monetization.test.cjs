@@ -1,0 +1,22 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const worker = fs.readFileSync('worker/index.js','utf8').replace('export default','const worker =');
+const c = vm.createContext({URL,Request,Response,Headers,console});vm.runInContext(worker,c);
+c.env={ADSENSE_CLIENT:'ca-pub-1234567890123456',ADSENSE_SLOTS:'{"results-top":"1234","bad":"<script>","game-left":{"id":"4567"}}',ADSENSE_ENABLED:'true',RESEND_API_KEY:'never-public'};
+const cfg=vm.runInContext('adConfig(env)',c);
+assert.equal(cfg.enabled,true);assert.equal(cfg.autoAdsExclusionsConfirmed,false);assert.equal(cfg.audienceReviewed,false);
+assert.equal(cfg.slots['game-left'],'4567');assert(!cfg.slots.bad);assert(!JSON.stringify(cfg).includes('never-public'));
+c.env={ADSENSE_SLOTS:'not json',ADSENSE_CLIENT:'invalid',ADSENSE_GAME_RAILS:'99'};
+assert.equal(vm.runInContext('adConfig(env).client',c),'');assert.equal(vm.runInContext('adConfig(env).gameRails',c),1);
+(async()=>{
+ c.req=new Request('https://funsat.bid/ads-config.js');let response=await vm.runInContext('worker.fetch(req,env)',c);assert.equal(response.headers.get('Cache-Control'),'no-store');assert((await response.text()).startsWith('window.FUNSAT_ADS='));
+ c.env={ADSENSE_CLIENT:'ca-pub-1234567890123456'};c.req=new Request('https://funsat.bid/ads.txt');response=await vm.runInContext('worker.fetch(req,env)',c);assert.equal(await response.text(),'google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0\n');
+ const events=[];const w={};const metrics=vm.createContext({window:w,document:{visibilityState:'visible'},console});vm.runInContext(fs.readFileSync('monetization.js','utf8'),metrics);
+ w.FunSatMetrics.track('sat_test_started');assert.equal(events.length,0);
+ w.FunSatMetrics.configure({consent:true,send:(n,p)=>events.push({n,p})});w.FunSatMetrics.track('sat_test_started',{email:'private@example.com',score:1400,test_type:'sat'});assert.equal(events.length,1);assert(!events[0].p.email);assert(!events[0].p.score);
+ for(let i=0;i<12002;i++)w.FunSatMetrics.gameTick(.05);assert.equal(events.filter(e=>e.n==='game_session_10min').length,1);
+ metrics.document.visibilityState='hidden';for(let i=0;i<60000;i++)w.FunSatMetrics.gameTick(.05);assert.equal(events.filter(e=>e.n==='game_session_30min').length,0);
+ w.FunSatMetrics.configure({consent:false});w.FunSatMetrics.track('game_started');assert.equal(events.length,2);
+ console.log('PASS: validated public config, fail-closed defaults, ads.txt, consented event allowlist and visible-play milestones.');
+})().catch(e=>{console.error(e);process.exitCode=1});

@@ -10,3 +10,8 @@ logs/
 .DS_Store
 temporal/node_modules/
 .refs/
+
+.analytics-local/
+.analytics-assets/
+.dev.vars
+.dev.vars.*

@@ -1,0 +1,11 @@
+{
+  "id": "/owner-analytics/",
+  "name": "FunSAT & Pillcounted Analytics",
+  "short_name": "My Analytics",
+  "start_url": "/owner-analytics/",
+  "scope": "/owner-analytics/",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#17233b",
+  "icons": [{"src":"/owner-analytics/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}, {"src":"/owner-analytics/icon.png","sizes":"192x192","type":"image/png","purpose":"any"}]
+}

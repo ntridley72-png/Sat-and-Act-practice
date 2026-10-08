@@ -1,1 +1,3 @@
-# No authorized digital sellers: ad units run through a direct network contract only.
+# Advertising is disabled until a publisher is configured.
+# Cloudflare serves the authorized Google seller from ADSENSE_CLIENT at this URL.
+# Static hosts must replace this with their account's actual authorized seller entry.

@@ -24,8 +24,37 @@ const MAX_PROGRESS_BYTES = 900 * 1024;
 const RESET_MINUTES = 60, MAX_RESETS_PER_HOUR = 3;
 
 export default {
+  async scheduled(_event, env) {
+    const tables = await env.DB.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('analytics_events','analytics_budget')").all();
+    const present = new Set((tables.results || []).map(row => row.name));
+    if (present.has('analytics_events')) await env.DB.prepare("DELETE FROM analytics_events WHERE received_at < ?")
+      .bind(Date.now() - 90 * 86400000).run();
+    if (present.has('analytics_budget')) await env.DB.prepare("DELETE FROM analytics_budget WHERE day < ?")
+      .bind(new Date(Date.now() - 90 * 86400000).toISOString().slice(0,10)).run();
+  },
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname.startsWith("/api/analytics/")) return analyticsApi(request, env);
+    if (url.pathname === "/owner-analytics" || url.pathname.startsWith("/owner-analytics/")) {
+      if (url.pathname === "/owner-analytics") return Response.redirect(url.origin + "/owner-analytics/", 302);
+      const assetUrl = url.pathname === "/owner-analytics/" ? url.origin + "/owner-analytics/index.html" : request.url;
+      const asset = await env.ASSETS.fetch(new Request(assetUrl, request));
+      const headers = new Headers(asset.headers);
+      headers.set("Cache-Control", "no-store");headers.set("X-Robots-Tag", "noindex, nofollow");
+      headers.set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
+      headers.set("Referrer-Policy", "no-referrer");headers.set("X-Content-Type-Options", "nosniff");
+      return new Response(asset.body, {status:asset.status,headers});
+    }
+    if (url.pathname === "/ads-config.js") {
+      return new Response("window.FUNSAT_ADS=" + JSON.stringify(adConfig(env)).replace(/</g, "\\u003c") + ";", {
+        headers: { "Content-Type": "application/javascript; charset=utf-8", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" }
+      });
+    }
+    if (url.pathname === "/ads.txt" && /^ca-pub-\d{16}$/.test(env.ADSENSE_CLIENT || "")) {
+      return new Response("google.com, " + env.ADSENSE_CLIENT.replace("ca-", "") + ", DIRECT, f08c47fec0942fa0\n", {
+        headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=3600" }
+      });
+    }
     if (!url.pathname.startsWith("/api/")) {
       const canonical = canonicalRedirect(url);
       if (canonical) return Response.redirect(canonical, 301);
@@ -494,4 +523,228 @@ function mergeAttemptHistory(local, remote) {
     if (!old || (rec.done && !old.done) || (!!rec.done === !!old.done && (rec.finishedAt || 0) >= (old.finishedAt || 0))) records.set(rec.id, rec);
   });
   return [...records.values()].sort((a, b) => (b.finishedAt || 0) - (a.finishedAt || 0)).slice(0, 120);
+}
+
+// Public IDs only. Never expose other Worker secrets in the configuration.
+function adConfig(env) {
+  let slots = {};
+  try { slots = JSON.parse(env.ADSENSE_SLOTS || "{}"); } catch (_) {}
+  const clean = {};
+  for (const [name, spec] of Object.entries(slots && typeof slots === "object" ? slots : {})) {
+    const id = typeof spec === "string" ? spec : spec?.id;
+    if (/^\d+$/.test(id || "")) clean[name] = String(id);
+  }
+  return {
+    enabled: env.ADSENSE_ENABLED === "true", client: /^ca-pub-\d{16}$/.test(env.ADSENSE_CLIENT || "") ? env.ADSENSE_CLIENT : "",
+    slots: clean, productionHosts: ["funsat.bid"],
+    autoAdsExclusionsConfirmed: env.ADSENSE_APP_EXCLUDED === "true",
+    audienceReviewed: env.ADSENSE_AUDIENCE_REVIEWED === "true",
+    gameRails: [0, 1, 2].includes(Number(env.ADSENSE_GAME_RAILS ?? 1)) ? Number(env.ADSENSE_GAME_RAILS ?? 1) : 1,
+    resultsDensity: env.ADSENSE_RESULTS_DENSITY === "moderate" ? "moderate" : "conservative",
+    vignetteFrequencyMinutes: [3, 5, 10].includes(Number(env.ADSENSE_VIGNETTE_MINUTES)) ? Number(env.ADSENSE_VIGNETTE_MINUTES) : 3,
+    experiment: String(env.ADSENSE_EXPERIMENT || "baseline").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 60)
+  };
+}
+
+// ---- Owner-only multi-project analytics. Provider credentials never reach clients. ----
+const ANALYTICS_NAMES = new Set(['page_view','sat_test_started','sat_module_completed','sat_test_completed',
+  'sat_results_viewed','sat_score_breakdown_viewed','sat_answer_review_started','sat_answer_review_completed',
+  'practice_started','game_started','game_round_completed','game_session_10min','game_session_30min',
+  'game_session_60min','game_session_ended','college_tool_used']);
+const ANALYTICS_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function analyticsProjects(env) {
+  let supplied = {};
+  try { supplied = JSON.parse(env.ANALYTICS_PROJECTS || '{}'); } catch (_) {}
+  return ['funsat','pillcounted'].map(id => {
+    const p = supplied?.[id] || {};
+    const origins = p.origins ?? (id === 'funsat' ? ['https://funsat.bid','https://www.funsat.bid'] : ['https://pillcounted.com','https://www.pillcounted.com']);
+    return {
+      id, name: id === 'funsat' ? 'FunSAT' : 'Pillcounted',
+      origins: (Array.isArray(origins) ? origins : []).filter(o => {
+        if (typeof o !== 'string') return false;
+        try { const u = new URL(o); return u.origin === o && (u.protocol === 'https:' ||
+          (u.protocol === 'http:' && ['localhost','127.0.0.1'].includes(u.hostname))); } catch (_) { return false; }
+      }).slice(0,8),
+      accountId: /^[a-f0-9]{32}$/i.test(p.cloudflare?.accountId || '') ? p.cloudflare.accountId : '',
+      zoneId: /^[a-f0-9]{32}$/i.test(p.cloudflare?.zoneId || '') ? p.cloudflare.zoneId : '',
+      workerName: /^[a-zA-Z0-9_-]{1,64}$/.test(p.cloudflare?.workerName || '') ? p.cloudflare.workerName : ''
+    };
+  });
+}
+function analyticsResponse(data, status = 200, origin = '') {
+  const headers = {'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store',
+    'X-Content-Type-Options':'nosniff','Vary':'Origin'};
+  if (origin) {
+    headers['Access-Control-Allow-Origin'] = origin;
+    headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS';
+    headers['Access-Control-Allow-Headers'] = 'Content-Type';
+  }
+  return new Response(JSON.stringify(data), {status, headers});
+}
+async function analyticsOwner(req, env) {
+  const secret = env.ANALYTICS_OWNER_TOKEN;
+  if (typeof secret !== 'string' || secret.length < 32) return false;
+  const token = (req.headers.get('Authorization') || '').match(/^Bearer (\S+)$/)?.[1] || '';
+  if (token.length > 256) return false;
+  return timingSafeEqual(await sha256(token), await sha256(secret));
+}
+function analyticsDates(url) {
+  const today = new Date().toISOString().slice(0,10);
+  const from = url.searchParams.get('from') || new Date(Date.now() - 6 * 86400000).toISOString().slice(0,10);
+  const to = url.searchParams.get('to') || today;
+  for (const date of [from,to]) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(date)) || new Date(date).toISOString().slice(0,10) !== date) return null;
+  }
+  const start = Date.parse(from), end = Date.parse(to) + 86400000;
+  if (end <= start || end - start > 31 * 86400000 || to > today || start < Date.now() - 90 * 86400000 - 86400000) return null;
+  return {from,to,start,end};
+}
+async function analyticsReadBody(req) {
+  if (!/^application\/json(?:\s*;|$)/i.test(req.headers.get('Content-Type') || '')) return {status:415};
+  if (Number(req.headers.get('Content-Length')) > 16384) return {status:413};
+  const reader = req.body?.getReader();
+  if (!reader) return {status:400};
+  let size = 0; const chunks = [];
+  for (;;) {
+    const {value,done} = await reader.read(); if (done) break;
+    size += value.byteLength;
+    if (size > 16384) { await reader.cancel(); return {status:413}; }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(size); let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk,offset); offset += chunk.byteLength; }
+  try { return {body:JSON.parse(new TextDecoder().decode(bytes))}; } catch (_) { return {status:400}; }
+}
+function analyticsProperties(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const categorical = new Set(['test_type','section','game','view','experiment','results_density']);
+  const numeric = new Set(['module','questions_answered','duration_seconds','game_rails','vignette_frequency_label']);
+  const clean = {};
+  for (const [key,value] of Object.entries(raw)) {
+    if (categorical.has(key) && typeof value === 'string' && /^[a-zA-Z0-9_-]{1,60}$/.test(value)) clean[key] = value;
+    else if (numeric.has(key) && typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 86400) clean[key] = value;
+    else return null; // Reject, do not silently store unknown/personal fields.
+  }
+  return clean;
+}
+async function analyticsIngest(req, env, projects) {
+  const url = new URL(req.url), project = projects.find(p => p.id === url.searchParams.get('project'));
+  const origin = req.headers.get('Origin') || '';
+  if (!project || !project.origins.includes(origin)) return analyticsResponse({error:'Origin or project is not permitted.'},403);
+  if (req.method === 'OPTIONS') return new Response(null,{status:204,headers:{
+    'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Methods':'POST, OPTIONS',
+    'Access-Control-Allow-Headers':'Content-Type','Access-Control-Max-Age':'600','Vary':'Origin'}});
+  if (req.method !== 'POST') return analyticsResponse({error:'Method not allowed.'},405,origin);
+  if (env.ANALYTICS_ENABLED !== 'true') return analyticsResponse({error:'Analytics collection is disabled.'},503,origin);
+  const result = await analyticsReadBody(req);
+  if (result.status) return analyticsResponse({error:'Invalid or oversized JSON request.'},result.status,origin);
+  const b = result.body;
+  if (!b || b.consent !== true || !ANALYTICS_UUID.test(b.sessionId || '') || !Array.isArray(b.events) || b.events.length < 1 || b.events.length > 20 ||
+      Object.keys(b).some(k => !['consent','sessionId','events'].includes(k))) return analyticsResponse({error:'Invalid consented event batch.'},400,origin);
+  const events = [];
+  for (const e of b.events) {
+    const properties = analyticsProperties(e?.properties);
+    if (!e || !ANALYTICS_UUID.test(e.id || '') || !ANALYTICS_NAMES.has(e.name) || !properties ||
+        (project.id === 'pillcounted' && (e.name !== 'page_view' || Object.keys(properties).some(k => k !== 'view') || properties.view !== 'site')) ||
+        Object.keys(e).some(k => !['id','name','properties'].includes(k))) return analyticsResponse({error:'Event schema is not permitted.'},400,origin);
+    events.push({id:e.id,name:e.name,properties});
+  }
+  if (!env.ANALYTICS_EVENT_LIMITER || !env.ANALYTICS_PROJECT_LIMITER) return analyticsResponse({error:'Collection limits are not configured.'},503,origin);
+  // No IP/account IDs persisted. Limits protect storage but cannot make public client events trusted.
+  const [session,global] = await Promise.all([
+    env.ANALYTICS_EVENT_LIMITER.limit({key:project.id + ':' + b.sessionId}),
+    env.ANALYTICS_PROJECT_LIMITER.limit({key:project.id})
+  ]);
+  if (!session.success || !global.success) {
+    const response = analyticsResponse({error:'Rate limit exceeded.'},429,origin);response.headers.set('Retry-After','60');return response;
+  }
+  const now = Date.now();
+  const configuredLimit = Number(env.ANALYTICS_DAILY_EVENT_LIMIT || 100000);
+  const limit = Number.isInteger(configuredLimit) && configuredLimit >= 100 && configuredLimit <= 1000000 ? configuredLimit : 100000;
+  const budget = await env.DB.prepare(
+    'INSERT INTO analytics_budget (project,day,n) VALUES (?,?,?) ON CONFLICT(project,day) DO UPDATE SET n = n + excluded.n WHERE n + excluded.n <= ? RETURNING n'
+  ).bind(project.id,new Date(now).toISOString().slice(0,10),events.length,limit).first();
+  if (!budget) return analyticsResponse({error:'Daily event collection budget exceeded.'},429,origin);
+  const results = await env.DB.batch(events.map(e => env.DB.prepare(
+    'INSERT OR IGNORE INTO analytics_events (project,id,session_id,name,received_at,properties) VALUES (?,?,?,?,?,?)'
+  ).bind(project.id,e.id,b.sessionId,e.name,now,JSON.stringify(e.properties))));
+  return analyticsResponse({accepted:results.reduce((n,r)=>n+(r.meta?.changes || 0),0)},202,origin);
+}
+async function analyticsSummary(env, project, range) {
+  const bindings = [project.id,range.start,range.end];
+  const rows = await env.DB.prepare(
+    'SELECT name, COUNT(*) AS events, COUNT(DISTINCT session_id) AS sessions, SUM(CASE WHEN name = \'game_session_ended\' THEN CAST(json_extract(properties, \'$.duration_seconds\') AS REAL) ELSE 0 END) AS visible_game_seconds FROM analytics_events WHERE project = ? AND received_at >= ? AND received_at < ? GROUP BY name ORDER BY name'
+  ).bind(...bindings).all();
+  const total = await env.DB.prepare('SELECT COUNT(*) AS events, COUNT(DISTINCT session_id) AS sessions FROM analytics_events WHERE project = ? AND received_at >= ? AND received_at < ?').bind(...bindings).first();
+  const daily = await env.DB.prepare("SELECT strftime('%Y-%m-%d',received_at/1000,'unixepoch') AS day, COUNT(*) AS events, COUNT(DISTINCT session_id) AS sessions FROM analytics_events WHERE project = ? AND received_at >= ? AND received_at < ? GROUP BY day ORDER BY day").bind(...bindings).all();
+  return {project:project.id,source:'consented_client_events',range:{from:range.from,to:range.to},
+    totals:{events:total?.events || 0,observed_sessions:total?.sessions || 0},events:rows.results || [],daily:daily.results || [],
+    active_users:null,revenue:null,
+    limitations:['Client events can be spoofed; consented traffic is incomplete.','Sessions are anonymous, tab-scoped, and expire after 30 minutes of inactivity; they are not unique people.','SAT submission events include early submissions; they are not a verified full-test completion rate.','No AdSense earnings or pageviews are inferred from these events.']};
+}
+async function analyticsCloudflare(env, project, range) {
+  let tokens = {};try { tokens = JSON.parse(env.CLOUDFLARE_ANALYTICS_TOKENS || '{}'); } catch (_) {}
+  const token = tokens?.[project.id];
+  const base = {project:project.id,source:'cloudflare_graphql',range:{from:range.from,to:range.to}};
+  if (typeof token !== 'string' || !token || (!project.accountId && !project.zoneId)) return {...base,status:'not_configured',workers:null,zone:null};
+  const reports = await Promise.all([
+    project.accountId && project.workerName ? analyticsGraphql(token,
+      'query WorkerMetrics($accountTag: string, $start: string, $end: string, $scriptName: string) { viewer { accounts(filter: {accountTag: $accountTag}) { workersInvocationsAdaptive(limit: 1, filter: {scriptName: $scriptName, datetime_geq: $start, datetime_leq: $end}) { sum {requests errors subrequests} quantiles {cpuTimeP50 cpuTimeP99} } } } }',
+      {accountTag:project.accountId,start:new Date(range.start).toISOString(),end:new Date(range.end-1).toISOString(),scriptName:project.workerName},'workers') : Promise.resolve({status:'not_configured',data:null}),
+    project.zoneId ? analyticsGraphql(token,
+      'query ZoneMetrics($zoneTag: string, $start: Date, $end: Date) { viewer { zones(filter: {zoneTag: $zoneTag}) { httpRequests1dGroups(limit: 31, filter: {date_geq: $start, date_leq: $end}, orderBy: [date_ASC]) { dimensions {date} sum {requests bytes cachedRequests cachedBytes threats} uniq {uniques} } } } }',
+      {zoneTag:project.zoneId,start:range.from,end:range.to},'zone') : Promise.resolve({status:'not_configured',data:null})
+  ]);
+  return {...base,status:reports.every(r=>r.status==='ok')?'ok':'partial',workers:reports[0],zone:reports[1],
+    limitations:['Cloudflare datasets depend on plan, retention, permissions and adaptive sampling.','HTTP requests include assets and bots, not just human pageviews.','Daily unique counts must not be added to estimate distinct users over the whole interval.','Worker CPU quantiles are not browser Core Web Vitals.','Revenue, billing, Web Analytics RUM and every Cloudflare product are not included in these two datasets.']};
+}
+async function analyticsGraphql(token, query, variables, kind) {
+  try {
+    const r = await fetch('https://api.cloudflare.com/client/v4/graphql',{method:'POST',headers:{
+      'Authorization':'Bearer '+token,'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({query,variables}),signal:AbortSignal.timeout(8000)});
+    if (!r.ok) return {status:r.status===401||r.status===403?'access_denied':'upstream_error',data:null};
+    const body = await r.json();
+    if (body.errors?.length) return {status:'query_unavailable',data:null};
+    const scope = kind==='workers'?body.data?.viewer?.accounts:body.data?.viewer?.zones;
+    if (!Array.isArray(scope) || scope.length !== 1) return {status:'scope_unavailable',data:null};
+    const rows = kind==='workers'?scope[0].workersInvocationsAdaptive:scope[0].httpRequests1dGroups;
+    if (!Array.isArray(rows)) return {status:'invalid_response',data:null};
+    // Whitelist provider output; never return raw errors, credentials or unrelated accounts.
+    const clean = rows.map(row => {
+      const sum = {}, quantiles = {}, uniq = {};
+      for (const k of kind==='workers'?['requests','errors','subrequests']:['requests','bytes','cachedRequests','cachedBytes','threats']) {
+        const v=row.sum?.[k];if(typeof v==='number'&&Number.isFinite(v)&&v>=0)sum[k]=v;
+      }
+      if (kind==='workers') {
+        for (const k of ['cpuTimeP50','cpuTimeP99']) {const v=row.quantiles?.[k];if(typeof v==='number'&&Number.isFinite(v)&&v>=0)quantiles[k]=v;}
+        return {sum,quantiles};
+      }
+      const v=row.uniq?.uniques;if(typeof v==='number'&&Number.isFinite(v)&&v>=0)uniq.uniques=v;
+      return {date:/^\d{4}-\d{2}-\d{2}$/.test(row.dimensions?.date || '')?row.dimensions.date:null,sum,uniq};
+    });
+    return {status:'ok',data:clean};
+  } catch (_) {return {status:'upstream_unavailable',data:null};}
+}
+async function analyticsApi(req, env) {
+  const url = new URL(req.url), path=url.pathname, projects=analyticsProjects(env);
+  try {
+    if (path === '/api/analytics/events') return await analyticsIngest(req,env,projects);
+    if (req.method !== 'GET') return analyticsResponse({error:'Method not allowed.'},405);
+    if (!await analyticsOwner(req,env)) return analyticsResponse({error:'Owner authorization required.'},401);
+    if (!env.ANALYTICS_READ_LIMITER) return analyticsResponse({error:'Owner read limits are not configured.'},503);
+    if (!(await env.ANALYTICS_READ_LIMITER.limit({key:'owner'})).success) {
+      const response=analyticsResponse({error:'Rate limit exceeded.'},429);response.headers.set('Retry-After','60');return response;
+    }
+    if (path === '/api/analytics/projects') return analyticsResponse({projects:projects.map(p=>({
+      id:p.id,name:p.name,event_collection_configured:p.origins.length>0&&env.ANALYTICS_ENABLED==='true',
+      workers_scope_configured:!!(p.accountId&&p.workerName),zone_scope_configured:!!p.zoneId
+    }))});
+    const project=projects.find(p=>p.id===url.searchParams.get('project'));
+    if(!project)return analyticsResponse({error:'Select a configured project.'},400);
+    const range=analyticsDates(url);if(!range)return analyticsResponse({error:'Use valid UTC YYYY-MM-DD dates, at most 31 days, within the past 90 days.'},400);
+    if(path==='/api/analytics/summary')return analyticsResponse(await analyticsSummary(env,project,range));
+    if(path==='/api/analytics/cloudflare')return analyticsResponse(await analyticsCloudflare(env,project,range));
+    return analyticsResponse({error:'Not found.'},404);
+  } catch (_) {return analyticsResponse({error:'Analytics service is unavailable.'},503);}
 }

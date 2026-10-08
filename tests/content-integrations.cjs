@@ -14,22 +14,18 @@ for (const expected of [
   'class="noscript-summary"',
   'id="how-it-works"',
   'defer src="app.js"',
-  'provider:"adsterra"',
+  'defer src="ads-config.js"',
   'data-ad-slot="home-sidebar"',
-  'data-ad-slot="rail-left"',
-  'data-ad-slot="results-grid"',
+  'data-ad-slot="game-left"',
+  'data-ad-slot="results-analysis"',
 ]) {
   if (!html.includes(expected)) throw new Error("missing integration marker: " + expected);
 }
 const seoCommon = fs.readFileSync("scripts/seo_common.py", "utf8");
-for (const expected of [
-  'bauval.org/21/ba6d22b48d5d42c6cd1add3ad5e6c681',
-  'container-ba6d22b48d5d42c6cd1add3ad5e6c681',
-  'rail-left',
-  '4e48d9998406ce142c41865c66a4325',
-]) {
-  if (!seoCommon.includes(expected)) throw new Error("generated-page ad config drifted: " + expected);
+for (const expected of ['/ads-config.js', '/ads.js', 'article-bottom']) {
+  if (!seoCommon.includes(expected)) throw new Error("generated-page ad integration missing: " + expected);
 }
+if (/bauval\.org|provider:\"adsterra\"/.test(html + seoCommon + fs.readFileSync('ads.js','utf8'))) throw new Error('legacy ad network must not load');
 for (const expected of ['data-ad-slot="arcade-menu"', 'key: "dirtbike"']) {
   if (!(html + appJs).includes(expected)) throw new Error("missing app integration marker: " + expected);
 }
@@ -47,4 +43,4 @@ vm.runInContext(fs.readFileSync("college-data.js", "utf8"), sandbox);
 const colleges = sandbox.window.COLLEGE_DATA.colleges;
 const attributed = colleges.filter((college) => Array.isArray(college.imgs) && college.imgs.every((photo) => photo.u && photo.a && photo.l));
 if (attributed.length && attributed.some((college) => college.imgs.length > 3)) throw new Error("gallery exceeds three images");
-console.log("PASS: SEO, Adsterra units, controlled slots, dirt-bike registration, and attributed college galleries are present (" + attributed.length + "/" + colleges.length + " galleries cached)." );
+console.log("PASS: SEO, centralized AdSense, controlled slots, dirt-bike registration, and attributed college galleries are present (" + attributed.length + "/" + colleges.length + " galleries cached)." );

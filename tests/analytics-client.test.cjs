@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const {webcrypto}=require('node:crypto');const storage=new Map(),sent=[];
+const context=vm.createContext({window:{},document:{addEventListener(){}},location:{origin:'https://funsat.bid'},crypto:webcrypto,URL,AbortSignal,setTimeout(){return 1},clearTimeout(){},sessionStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},fetch(url,options){sent.push({url,body:JSON.parse(options.body)});return Promise.resolve()}});
+vm.runInContext(fs.readFileSync('analytics-client.js','utf8'),context);const api=context.window.CloudProjectAnalytics;
+api.track('page_view');api.flush();assert.equal(sent.length,0,'default off');
+api.configure({consent:true,project:'funsat'});api.track('page_view',{view:'site',email:'private@example.com'});api.flush();assert.equal(sent.length,1);assert.deepEqual(sent[0].body.events[0].properties,{view:'site'});assert.equal(storage.size,1);
+api.track('sat_test_started');api.configure({consent:false});api.flush();assert.equal(sent.length,1,'withdrawal clears queue');assert.equal(storage.size,0,'withdrawal clears tab ID');
+api.configure({consent:true,project:'pillcounted'});api.track('sat_test_started');api.track('page_view',{view:'medications',diagnosis:'private'});api.flush();assert.equal(sent.length,2);assert.equal(sent[1].body.events.length,1);assert.deepEqual(sent[1].body.events[0].properties,{view:'site'});assert(sent[1].url.endsWith('project=pillcounted'));
+api.configure({consent:true,project:'funsat',endpoint:'http://untrusted.example/api'});api.track('page_view');api.flush();assert.equal(sent.length,2,'reject insecure endpoints');
+console.log('PASS: client disabled by default, consent withdrawal clears queued events/tab IDs, fixed Pillcounted properties, no personal-field forwarding or insecure collection.');

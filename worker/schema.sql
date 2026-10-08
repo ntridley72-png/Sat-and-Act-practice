@@ -31,3 +31,37 @@ CREATE TABLE IF NOT EXISTS help_history (
   PRIMARY KEY (user_id, id)
 );
 CREATE INDEX IF NOT EXISTS help_history_user_created ON help_history(user_id, created_at DESC);
+
+-- Additive migration: preserves existing users, progress, games and tutor data.
+CREATE TABLE IF NOT EXISTS analytics_events (
+  project TEXT NOT NULL,
+  id TEXT NOT NULL,
+  session_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  received_at INTEGER NOT NULL,
+  properties TEXT NOT NULL,
+  PRIMARY KEY (project, id)
+);
+CREATE INDEX IF NOT EXISTS analytics_project_received ON analytics_events(project, received_at);
+CREATE INDEX IF NOT EXISTS analytics_received ON analytics_events(received_at);
+
+CREATE TABLE IF NOT EXISTS analytics_budget (
+  project TEXT NOT NULL,
+  day TEXT NOT NULL,
+  n INTEGER NOT NULL,
+  PRIMARY KEY (project, day)
+);
+CREATE INDEX IF NOT EXISTS analytics_budget_day ON analytics_budget(day);
+-- Credentials are stored only as authenticated AES-GCM ciphertext.
+CREATE TABLE IF NOT EXISTS analytics_connections (
+ project TEXT PRIMARY KEY,
+ ciphertext TEXT NOT NULL,
+ iv TEXT NOT NULL,
+ updated_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS analytics_login_attempts (
+ client TEXT NOT NULL,
+ bucket INTEGER NOT NULL,
+ n INTEGER NOT NULL,
+ PRIMARY KEY(client,bucket)
+);

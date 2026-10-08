@@ -319,12 +319,6 @@ body[data-workspace] .college-row-main:hover:not(:disabled){background:var(--ws-
 .sponsor-slot[hidden]{display:none!important}
 .sponsor-slot iframe{display:block;border:0;margin:0 auto;max-width:100%}
 .sponsor-slot [id^="container-"]{display:block;margin:0 auto;width:100%}
-.ad-rail{display:none}
-@media(min-width:1420px){
-.ad-rail{display:block;position:fixed;top:96px;width:160px;z-index:150}
-.ad-rail--left{left:14px}.ad-rail--right{right:14px}
-.ad-rail[hidden]{display:none!important}
-}
 .sponsor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;border:0;background:transparent;padding:0;min-height:0}
 .sponsor-grid-cell{display:flex;justify-content:center;align-items:flex-start;background:var(--ws-surface,#fff);border:1px solid var(--ws-line,#d7dce2);border-radius:8px;overflow:hidden;min-height:250px}
 @media(max-width:700px){.sponsor-grid{grid-template-columns:1fr}
@@ -340,7 +334,6 @@ body:has(.sponsor-anchor){padding-bottom:124px}
 .sponsor-dismiss:hover{color:var(--ws-ink,#111827)}
 .sponsor-dismiss:focus-visible{outline:3px solid var(--ws-focus,#c43b00);outline-offset:2px}
 .arcade-sponsor{width:min(728px,100%);min-height:90px;margin:12px auto;background:#090f1d;border-color:#334155;color:#cbd5e1}
-body.practice-test-active [data-ad-slot],html.practice-test-active [data-ad-slot],body.practice-test-active ins.adsbygoogle,html.practice-test-active ins.adsbygoogle,body.practice-test-active .google-auto-placed,html.practice-test-active .google-auto-placed,body.practice-test-active #google_vignette,html.practice-test-active #google_vignette{display:none!important;visibility:hidden!important;max-height:0!important;min-height:0!important;margin:0!important;padding:0!important}
 .noscript-summary{max-width:920px;margin:24px auto;padding:24px;border:1px solid #dcdcd8;background:#fff;color:#1a1a1a}.noscript-summary nav{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0}.noscript-summary a{color:#195de6}
 .seo-overview{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:18px;margin:18px 0;padding:18px;border-top:1px solid var(--ws-line);border-bottom:1px solid var(--ws-line);background:var(--ws-surface);color:var(--ws-ink)}
 .seo-overview h2{font-size:1rem;margin:0 0 10px}.seo-how ol{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0;padding:0;list-style:none}.seo-how li{font-size:.8rem;line-height:1.45;padding:10px;border-left:3px solid var(--ws-accent);background:var(--ws-soft)}.seo-how strong{display:block;margin-bottom:3px}.seo-faq details{border-top:1px solid var(--ws-line);padding:8px 0}.seo-faq summary{cursor:pointer;font-size:.84rem;font-weight:700}.seo-faq p{margin:6px 0 0;font-size:.8rem;line-height:1.5;color:var(--ws-muted)}
@@ -469,3 +462,20 @@ body[data-workspace] .scholar-group-chips{flex:1 1 320px;min-width:0;display:fle
 body[data-workspace] .scholar-chip.on{background:var(--ws-accent);color:var(--ws-on-accent);border-color:var(--ws-accent)}
 body[data-workspace] .scholar-chip.on::before{content:"\2713";margin-right:5px;font-weight:700}
 @media(max-width:620px){body[data-workspace] .scholar-group-label{flex:1 1 100%}}
+
+/* AdSense reservations. Manual ads are never fixed or sticky. */
+.sponsor-slot{box-sizing:border-box;min-height:300px;margin:48px auto;max-width:970px;contain:layout;overflow:hidden}
+.sponsor-slot[hidden]{display:none!important}
+.sponsor-slot[data-ad-slot="home-sidebar"]{min-height:300px}
+.game-ad-rail{position:absolute;width:182px;min-height:640px;max-height:640px;margin:0;z-index:1}
+.ad-preview{display:flex;align-items:center;justify-content:center;min-height:250px;color:#64748b;background:#f1f5f9;font:13px system-ui;text-align:center}
+.game-ad-rail .ad-preview{min-height:600px}
+/* The whole game is in document flow; ads do not follow viewport scrolling. */
+.arcade-overlay{position:absolute;inset:auto 0;min-height:100vh;height:auto}
+.arcade-stage.active{min-height:calc(100vh - 65px)}
+@media(max-width:1199px){.game-ad-rail{display:none!important}}
+@media(max-width:640px){.sponsor-slot{margin:40px auto;min-height:300px}}
+.review-filters{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+.difficulty-summary{margin:24px 0}.difficulty-summary table{width:100%;border-collapse:collapse}.difficulty-summary th,.difficulty-summary td{text-align:left;padding:8px;border-bottom:1px solid var(--ws-line,#ddd)}
+
+.arcade-overlay:has(.arcade-stage.active) > .arcade-sponsor{display:none!important}

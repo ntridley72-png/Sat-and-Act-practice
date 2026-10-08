@@ -97,18 +97,18 @@ PAGES["/privacy/"] = web_page(
     """<p>FunSAT collects as little as possible. This page states plainly what is stored and why.</p>
 <h2>Without an account</h2>
 <p>Practice progress, scores, bookmarks, and game unlocks are stored in your browser's local storage on your own
-device. Nothing is sent to a server. Clearing site data removes it permanently.</p>
+device. Optional tutoring requests, advertising and consented measurement may contact the services described here. Clearing site data removes local progress permanently.</p>
 <h2>With an account</h2>
 <p>If you choose to sign in, your email, a password hash, and your progress sync so you can use another device.
 Passwords are stored as PBKDF2-SHA256 hashes with a per-user salt; session tokens are stored only as hashes. You
 can sign out at any time, and you can request deletion of your account data via the contact page.</p>
 <h2>Advertising</h2>
-<p>Display advertising (Google AdSense) appears on content pages only, is suppressed during practice tests, and is
-configured for child-directed treatment. Ad units are placed away from controls and gameplay. See the
-<a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">Google partner
-sites notice</a> for how Google handles ad data.</p>
+<p>When enabled, Google AdSense may show advertisements on study content, results and safely separated game placements. No manual advertisements are placed in active questions. Advertising does not grant game credits or rewards. Google may use cookies, local storage, device information and IP addresses to deliver, limit and measure ads, subject to consent and regional requirements.</p>
+<p>Advertising is disabled until the publisher configures it and a consent platform permits loading. Where required, the publisher uses a Google-certified consent management platform. You can revisit or withdraw choices through that platform's privacy controls. Declining advertising consent does not block practice or games. See Google's <a href="https://policies.google.com/technologies/ads">advertising information</a> and <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">partner sites notice</a>.</p>
+<h2>Optional usage measurement</h2>
+<p>If the publisher enables analytics and you consent, FunSAT can send limited events such as practice completion, review use and visible game duration. These events do not include your email, answers, question text, account identifiers or scores. Consented measurement uses a random tab-session identifier in session storage that expires after 30 minutes of inactivity; server event records are retained for up to 90 days before daily cleanup. Withdrawal stops new events and clears the local session identifier. Local progress and optional account synchronization work independently of advertising and analytics consent.</p>
 <h2>No selling of personal data</h2>
-<p>FunSAT does not sell personal information and does not run third-party behavioural profiles of students.</p>
+<p>FunSAT does not sell personal information or send practice answers and scores to advertising services. Google processes advertising data under its policies and your applicable choices.</p>
 <h2>Contact</h2>
 <p>Privacy questions or deletion requests go through the <a href="/contact/">contact page</a>.</p>""",
     [("Privacy", "/privacy/")], "PrivacyPolicy")

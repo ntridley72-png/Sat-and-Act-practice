@@ -52,29 +52,11 @@ FONT_PRELOAD = (
 )
 
 
-# Adsterra units shared by every generated page. The native widget mounts into
-# one container that migrates to the visible in-content slot (see ads.js), so
-# article-top/mid/bottom all point at the same unit instead of stacking three.
-AD_UNITS = (
-    '{native:{script:"https://bauval.org/21/ba6d22b48d5d42c6cd1add3ad5e6c681",'
-    'container:"container-ba6d22b48d5d42c6cd1add3ad5e6c681"},'
-    'sky:{key:"4e48d9998406ce142c41865c66a4325",'
-    'script:"https://bauval.org/22/4e48d9998406ce142c41865c66a4325",'
-    'width:160,height:600},squares:[]}'
-)
-AD_SLOTS = {
-    "article-top": '{kind:"native"}',
-    "article-mid": '{kind:"native"}',
-    "article-bottom": '{kind:"native"}',
-    "article-grid": '{kind:"grid"}',
-    "rail-left": '{unit:"sky"}',
-    "rail-right": '{unit:"sky"}',
-}
-AD_CONFIG = (
-    '<script>window.FUNSAT_ADS={provider:"adsterra",units:' + AD_UNITS + ',slots:{'
-    + ",".join(f'"{k}":{v}' for k, v in AD_SLOTS.items())
-    + '}};</script>\n<script defer src="/ads.js"></script>'
-)
+# One shared public configuration, supplied by the Worker in production.
+AD_CONFIG = ('<script defer src="/ads-config.js"></script>\n'
+             '<script defer src="/monetization.js"></script>\n'
+             '<script defer src="/analytics-client.js"></script>\n'
+             '<script defer src="/ads.js"></script>')
 
 
 def ad_slot(name):
@@ -93,41 +75,22 @@ def inject_ads(html_text):
     landing page). No-op if the page already declares FUNSAT_ADS, so the build
     stays idempotent. Mirrors page() so hand-written and generated pages carry
     the same units in the same places."""
-    if "FUNSAT_ADS" in html_text:
+    if "/ads-config.js" in html_text or "FUNSAT_ADS" in html_text:
         return html_text
     html_text = html_text.replace("</head>", AD_CONFIG + "\n</head>", 1)
-    # Side rails flank the content on wide screens (hidden below 1420px by CSS).
-    _body = re.search(r"<body[^>]*>", html_text)
-    if _body:
-        _rails = (_body.group(0) + '\n<aside class="sponsor-slot ad-rail ad-rail--left" data-ad-slot="rail-left" aria-label="Sponsored content" hidden></aside>'
-                  '\n<aside class="sponsor-slot ad-rail ad-rail--right" data-ad-slot="rail-right" aria-label="Sponsored content" hidden></aside>')
-        html_text = html_text[:_body.start()] + _rails + html_text[_body.end():]
-    # Grid sits above the bottom unit: grid, then article-bottom, then gfoot.
-    html_text = html_text.replace('<p class="gfoot">', ad_slot("article-grid") + '\n<p class="gfoot">', 1)
-    # Bottom unit above the footer line, anchor last so it closes over the page.
+    # One reserved unit after substantive content; never stack grids or fixed rails.
     html_text = html_text.replace('<p class="gfoot">',
                                   ad_slot("article-bottom") + '\n<p class="gfoot">', 1)
     # No anchor unit ships with the current network config; the old sticky
     # slot markup is gone rather than left permanently unfilled.
-    # In-content units go after the headline, never before it: a unit above the <h1>
-    # pushes the content the reader came for below the fold and reads as an
-    # interstitial. Everything is measured from the end of the <h1>.
+    # A second unit only on a genuine long article, after eight paragraphs.
     start = html_text.find("</h1>")
-    if start == -1:
-        return html_text
-    start += len("</h1>")
-    head, body = html_text[:start], html_text[start:]
-    for marker in ("</table>", "</p>"):
-        placed = _insert_after_nth(body, ad_slot("article-top"), marker, 1)
-        if placed:
-            body = placed
-            break
-    else:
-        return html_text
-    # A second unit only once there is real content below the first; the 8th
-    # paragraph keeps the two from stacking on a short guide.
-    body = _insert_after_nth(body, ad_slot("article-mid"), "</p>", 8) or body
-    return head + body
+    if start != -1:
+        start += len("</h1>")
+        head, body = html_text[:start], html_text[start:]
+        body = _insert_after_nth(body, ad_slot("article-mid"), "</p>", 8) or body
+        html_text = head + body
+    return html_text
 
 
 def slugify(text):
@@ -223,26 +186,10 @@ def _insert_after_nth(body, slot, marker, n):
 
 
 def _insert_midroll(body):
-    """Place the in-article units inside the content: the first after the opening
-    table (falling back to the first paragraph), the second further down so the
-    two never sit next to each other. Short pages keep a single unit.
-
-    Everything is measured from the end of the <h1>, because some bodies open with
-    breadcrumbs or a kicker paragraph and a unit above the headline pushes the
-    content the reader came for below the fold."""
+    """A long article can carry a midpoint unit; short pages only get the bottom unit."""
     start = body.find("</h1>")
     start = start + len("</h1>") if start != -1 else 0
-    head, rest = body[:start], body[start:]
-    for marker in ("</table>", "</p>"):
-        placed = _insert_after_nth(rest, ad_slot("article-top"), marker, 1)
-        if placed:
-            rest = placed
-            break
-    else:
-        return body + ad_slot("article-top")
-    # A second unit only earns its place when there is real content below the
-    # first one; the 6th paragraph keeps it clear of the top unit.
-    return head + (_insert_after_nth(rest, ad_slot("article-mid"), "</p>", 6) or rest)
+    return body[:start] + (_insert_after_nth(body[start:], ad_slot("article-mid"), "</p>", 8) or body[start:])
 
 
 def page(*, path, title, description, body, schema, extra_head=""):

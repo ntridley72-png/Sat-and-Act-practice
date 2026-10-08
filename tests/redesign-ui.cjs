@@ -97,7 +97,7 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
     window.FunSatAds.setPracticeMode(true);
     return { active: document.body.classList.contains("practice-test-active"), display: getComputedStyle(ad).display, slotVisible: Array.from(document.querySelectorAll("[data-ad-slot]")).some((el) => getComputedStyle(el).display !== "none") };
   });
-  if (!adsDuringPractice.active || adsDuringPractice.display !== "none" || adsDuringPractice.slotVisible) throw new Error("ads must be hidden throughout practice tests: " + JSON.stringify(adsDuringPractice));
+  if (!adsDuringPractice.active || adsDuringPractice.display === "none" || adsDuringPractice.slotVisible) throw new Error("manual slots must be hidden and Google elements must remain untouched: " + JSON.stringify(adsDuringPractice));
   await page.locator("#questionCard .choice").first().click();
   // Full screen practice mode: only the test, with Esc to exit.
   await page.click("#btnZen");

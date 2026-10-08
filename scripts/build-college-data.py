@@ -295,10 +295,10 @@ def fetch_photos(colleges):
     for index, e in enumerate(colleges):
         key = str(e["id"])
         cached = cache.get(key, {})
-        photos = list(cached.get("imgs") or []) if cached.get("v") == 2 else []
-        if not photos and cached.get("img") and cached.get("v") == 2:
-            photos.append({"u": cached["img"], "a": cached.get("imgA", "Wikimedia Commons"), "l": cached.get("imgL", "")})
-        if len(photos) >= 3 and cached.get("v") == 2:
+        photos = list(cached.get("imgs") or []) if cached.get("v") in (2, 3) else []
+        if not photos and cached.get("img") and cached.get("v") in (2, 3):
+            photos.append({"u": cached["img"], "a": cached.get("imgA", "Wikimedia Commons"), "l": cached.get("imgL", ""), "credit": cached.get("imgA", "Wikimedia Commons"), "license": "Wikimedia Commons"})
+        if len(photos) >= 6 and cached.get("v") == 3:
             e.update(cached)
             continue
         try:
@@ -348,6 +348,9 @@ def fetch_photos(colleges):
                     "u": url,
                     "a": ((artist + " · ") if artist else "") + (license_name or "Wikimedia Commons"),
                     "l": "https://commons.wikimedia.org/wiki/" + urllib.parse.quote(title.replace(" ", "_")),
+                    "src": url,
+                    "credit": artist or "Wikimedia Commons",
+                    "license": license_name or "Wikimedia Commons",
                 }))
             known = {p.get("u") for p in photos}
             ranked = sorted(candidates, key=lambda item: -item[0])
@@ -357,14 +360,14 @@ def fetch_photos(colleges):
                 for score, bucket, photo in ranked:
                     if bucket == want and photo["u"] not in known and photo["u"] not in chosen:
                         photos.append(photo); known.add(photo["u"]); chosen.add(photo["u"]); break
-                if len(photos) >= 3: break
+                if len(photos) >= 6: break
             for score, bucket, photo in ranked:
-                if len(photos) >= 3: break
+                if len(photos) >= 6: break
                 if photo["u"] in known: continue
                 photos.append(photo); known.add(photo["u"])
         except Exception:
             pass
-        info = {"imgs": photos[:3], "v": 2}
+        info = {"imgs": photos[:6], "v": 3}
         if photos:
             info.update({"img": photos[0]["u"], "imgA": photos[0]["a"], "imgL": photos[0]["l"]})
             cache[key] = info

@@ -238,7 +238,7 @@
       var h0 = pts[(i - 1 + n) % n].heading, h1 = pts[(i + 1) % n].heading;
       raw[i] = wrapAngle(h1 - h0) / (2 * ds);
     }
-    var WIN = 6;            // +/- 6 m of smoothing: shorter than any real corner
+    var WIN = 10;           // +/- 10 m of smoothing: shorter than any real corner
     for (i = 0; i < n; i++) {
       var sum = 0, c = 0;
       for (var j = -WIN; j <= WIN; j++) { sum += raw[(i + j + n * 2) % n]; c++; }
@@ -349,9 +349,23 @@
     this.length = r.length;
     this.half = def.width * WIDTH_TO_HALF;
     // Beyond the kerb is run-off, and beyond that is scenery. Both are
-    // multiples of the road so a wide circuit forgives a wide mistake.
-    this.kerb = this.half * 1.12;
+    // multiples of the road so a wide circuit forgives a wide mistake. The kerb
+    // band is a real two to three metres wide: at half * 1.12 it was under a
+    // metre, so a car a wheel's width off the road was already on grass.
+    this.kerb = this.half * 1.35;
     this.runoff = this.half * 2.6;
+
+    /* The grip a driver should plan corner speeds around, as opposed to the
+       weather multiplier the physics applies.
+     
+       In the wet the two are not the same. Standing water drops the surface
+       under a car from `road` to `kerb` -- another 18% -- and the driver cannot
+       see which part of which corner is flooded, so planning for the dry-line
+       figure means arriving at the one wet apex on the lap too fast. Measured
+       by driving every circuit in every condition: 0.70 of the weather figure is
+       the largest allowance at which all seven stay on the road in rain, and
+       without it the AI put a wheel off on four of them. */
+    this.plannedGrip = this.weatherGrip * (WEATHER[weather].puddles ? 0.70 : 1);
 
     elevation(this);
 
@@ -475,7 +489,26 @@
     };
   };
 
+  /* Built tracks are cached. Building one is not cheap -- the curvature
+     relaxation is iterative -- and the renderer, the AI and the lap timer all
+     ask for the same track. A fresh build per caller would cost about a second
+     of the five the whole game is allowed to take to become playable. The
+     objects are treated as immutable by every consumer, so sharing is safe. */
+  var cache = {};
+
   function get(id, opts) {
+    opts = opts || {};
+    var key = (TRACKS[id] ? id : "oval") + "|" + (opts.weather || "dry") + "|" + (opts.seed == null ? "" : opts.seed);
+    if (cache[key]) return cache[key];
+    var def = TRACKS[id] || TRACKS.oval;
+    var built = new Track(TRACKS[id] ? id : "oval", def, opts);
+    cache[key] = built;
+    return built;
+  }
+
+  /* Build without consulting or populating the cache. For tests that want to
+     prove two builds of the same seed agree. */
+  function build(id, opts) {
     var def = TRACKS[id] || TRACKS.oval;
     return new Track(TRACKS[id] ? id : "oval", def, opts);
   }
@@ -491,6 +524,8 @@
     WEATHER: WEATHER,
     Track: Track,
     get: get,
+    build: build,
+    clearCache: function () { cache = {}; },
     wrapDistance: wrapDistance,
     list: function () {
       return ORDER.map(function (id) {

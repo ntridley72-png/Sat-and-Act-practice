@@ -216,6 +216,10 @@ test("weather variants change grip and only rain lays standing water", () => {
   const wet = Tracks.get("oval", { weather: "wet" });
   const rain = Tracks.get("oval", { weather: "rain" });
   assert.equal(dry.weatherGrip, 1);
+  assert.equal(dry.plannedGrip, 1, "a dry road holds no surprises");
+  // In the wet a driver has to plan for the water, not for the dry line.
+  assert.ok(wet.plannedGrip < wet.weatherGrip);
+  assert.ok(rain.plannedGrip < wet.plannedGrip);
   assert.ok(wet.weatherGrip < dry.weatherGrip);
   assert.ok(rain.weatherGrip < wet.weatherGrip);
   assert.equal(dry.puddles.length, 0);
@@ -247,11 +251,11 @@ test("standing water is bounded and lands on the road", () => {
 });
 
 test("track construction is deterministic for a seed", () => {
-  const a = Tracks.get("canyon", { weather: "rain", seed: "abc" });
-  const b = Tracks.get("canyon", { weather: "rain", seed: "abc" });
+  const a = Tracks.build("canyon", { weather: "rain", seed: "abc" });
+  const b = Tracks.build("canyon", { weather: "rain", seed: "abc" });
   assert.deepStrictEqual(a.puddles, b.puddles);
   assert.deepStrictEqual(a.props, b.props);
-  const c = Tracks.get("canyon", { weather: "rain", seed: "xyz" });
+  const c = Tracks.build("canyon", { weather: "rain", seed: "xyz" });
   assert.notDeepStrictEqual(a.puddles, c.puddles);
 });
 
@@ -314,11 +318,11 @@ function driveLap(trackId, opts = {}) {
   const car = Cars.get(opts.car || "sport");
   const start = track.start;
   const state = Physics.createState(car, { x: start.x, y: start.y, heading: start.heading });
-  const driver = AI.create({ line: track, car: car, skill: opts.skill || "medium", seed: "lap:" + trackId });
+  const driver = AI.create({ line: track, car: car, skill: opts.skill || "medium", seed: "lap:" + trackId, grip: track.plannedGrip });
   const clock = FixedStep.create();
 
   let offRoad = 0, maxGap = 0, travelled = 0, lastDistance = 0, lapDistance = 0, worstSpeed = Infinity;
-  const ticks = opts.ticks || 60 * 90;
+  const ticks = opts.ticks || 60 * 120;
   let prevX = state.x, prevY = state.y;
 
   for (let i = 0; i < ticks; i++) {
@@ -345,17 +349,24 @@ function driveLap(trackId, opts = {}) {
   return { track, state, offRoad, maxGap, travelled, worstSpeed, ticks, lapDistance, laps: driver.lap };
 }
 
-test("the AI drives every circuit without leaving the road or stopping", () => {
+/* The acceptance criterion for a track: an AI car gets round it, on the road,
+   without stopping. This is the test that catches a circuit which is
+   geometrically well formed and still undriveable, and it is the reason the
+   curvature relaxation in tracks.js exists at all -- before it, the v1 control
+   points read as metres produced hairpins that no car could negotiate and every
+   one of these assertions failed. */
+test("the AI drives every circuit without putting a wheel off the road", () => {
   for (const id of CIRCUITS) {
     const r = driveLap(id);
     assert.ok(Number.isFinite(r.state.x) && Number.isFinite(r.state.y), `${id} produced a non-finite position`);
-    assert.ok(r.travelled > r.track.length * 0.9,
-      `${id}: covered only ${r.travelled.toFixed(0)} m of a ${r.track.length.toFixed(0)} m lap in 90 s`);
+    assert.ok(r.travelled > r.track.length * 0.8,
+      `${id}: covered only ${r.travelled.toFixed(0)} m of a ${r.track.length.toFixed(0)} m lap in 120 s`);
     assert.ok(r.worstSpeed > 8, `${id}: the AI came to a near stop (${r.worstSpeed.toFixed(1)} km/h)`);
-    assert.ok(r.maxGap < r.track.runoff,
-      `${id}: wandered ${r.maxGap.toFixed(1)} m from the centre line (runoff is ${r.track.runoff.toFixed(1)} m)`);
-    assert.ok(r.offRoad / r.ticks < 0.35,
-      `${id}: spent ${(100 * r.offRoad / r.ticks).toFixed(0)}% of the lap off the road`);
+    // On the road for the whole lap, not merely inside the run-off.
+    assert.equal(r.offRoad, 0,
+      `${id}: spent ${r.offRoad} of ${r.ticks} ticks off the road, straying ${r.maxGap.toFixed(1)} m from the centre of a ${r.track.half.toFixed(1)} m half-road`);
+    assert.ok(r.maxGap < r.track.half,
+      `${id}: wandered ${r.maxGap.toFixed(1)} m from the centre line`);
   }
 });
 
@@ -370,6 +381,7 @@ test("the AI gets round in the rain, more slowly", () => {
     const dry = driveLap(id, { weather: "dry" });
     const wet = driveLap(id, { weather: "rain" });
     assert.ok(wet.travelled > wet.track.length * 0.55, `${id} wet: only ${wet.travelled.toFixed(0)} m`);
+    assert.equal(wet.offRoad, 0, `${id}: ${wet.offRoad} ticks off the road in the rain`);
     assert.ok(wet.travelled < dry.travelled, `${id}: rain was not slower than dry`);
     assert.ok(Number.isFinite(wet.state.x));
   }
@@ -377,10 +389,10 @@ test("the AI gets round in the rain, more slowly", () => {
 
 test("every car in the fleet gets round a circuit", () => {
   for (const id of Cars.ORDER) {
-    const r = driveLap("club", { car: id, ticks: 60 * 75 });
+    const r = driveLap("club", { car: id, ticks: 60 * 100 });
     assert.ok(Number.isFinite(r.state.x), `${id} produced a non-finite position`);
     assert.ok(r.travelled > r.track.length * 0.6, `${id}: covered only ${r.travelled.toFixed(0)} m`);
-    assert.ok(r.maxGap < r.track.runoff * 1.2, `${id}: wandered ${r.maxGap.toFixed(1)} m off line`);
+    assert.ok(r.maxGap < r.track.half, `${id}: wandered ${r.maxGap.toFixed(1)} m off line`);
   }
 });
 

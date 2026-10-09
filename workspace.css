@@ -774,3 +774,19 @@ body[data-workspace] .workspace-learning .workspace-calculator-dock #calcPanel.w
 /* Results screen: a block with nothing in it still painted a bordered box, which is why the
    score page showed empty bars under "Your score". */
 #screen-results>div:empty,#screen-results .notice:empty,#screen-results .score-grid:empty,#screen-results .rewards-summary:empty{display:none!important;border:0;padding:0;margin:0}
+
+/* Results and review panels hardcode light-theme hexes (#f8fafc, #eff6ff, #ede9fe …).
+   In the notebook and focus themes those stayed pale while the text went light, so whole
+   blocks read as blank. Map them onto the theme tokens. */
+body[data-workspace] .review-head,body[data-workspace] .rewards-summary,body[data-workspace] .workon{background:var(--ws-soft);color:var(--ws-ink);border-color:var(--ws-line)}
+body[data-workspace] .review{border-color:var(--ws-line)}
+body[data-workspace] .routing-box.up,body[data-workspace] .routing-box.std{background:var(--ws-tint);border:1px solid var(--ws-line);color:var(--ws-ink)}
+body[data-workspace] .domain .bar{background:var(--ws-soft)}
+body[data-workspace] .tag.dom{background:var(--ws-soft);color:var(--ws-ink)}
+body[data-workspace] .tag.right{background:var(--ws-soft);color:var(--ws-success)}
+body[data-workspace] .tag.wrong{background:var(--ws-soft);color:var(--ws-error)}
+body[data-workspace] .score-box .num{color:var(--ws-accent)}
+body[data-workspace] .score-box .lbl{color:var(--ws-muted)}
+body[data-workspace] .correct-ans{color:var(--ws-success)}
+body[data-workspace] .your-ans{color:var(--ws-error)}
+body[data-workspace] .delta.up{color:var(--ws-success)}body[data-workspace] .delta.down{color:var(--ws-error)}

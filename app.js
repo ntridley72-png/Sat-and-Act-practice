@@ -847,7 +847,7 @@ const STREAK_TARGET = 3;
 const ARCDE_START_SEC = 30;
 const ARCDE_ADD_SEC = 30;
 const ARCDE_TOKEN_COST = 1;
-const QUESTIONS_PER_TOKEN = 3;
+const QUESTIONS_PER_TOKEN = 1;
 // Round-based games: 1 credit = one full run, until game over (capped at 5 minutes).
 const RUN_GAMES = ["pacman", "snake", "pong", "tetris", "breakout", "flappy", "hopper", "doodle", "invaders", "dirtbike"];
 const RUN_MAX_SEC = 300;
@@ -1963,8 +1963,10 @@ function renderQuestion() {
   const picked = chosen == null ? qSelect[q.id] : null;
   if (chosen != null && qSelect[q.id] != null) delete qSelect[q.id];
   const coinLeftQ = QUESTIONS_PER_TOKEN - (profile.qSinceToken || 0);
+  // At one token per question there is no "x more to go" to count down to.
+  const coinNote = QUESTIONS_PER_TOKEN <= 1 ? "every question earns a token" : coinLeftQ === 1 ? "one more for a bonus token" : coinLeftQ + " more for +1 credit";
   const streakEl = $("qfxStreak");
-  if (streakEl) streakEl.innerHTML = sessionStreak >= 1 && chosen == null ? '<span class="qfx-streak-pill" role="status">\u25b2 ' + sessionStreak + ' in a row</span><span class="qfx-streak-note">' + (coinLeftQ === 1 ? "one more for a bonus token" : coinLeftQ + " more for +1 credit") + "</span>" : (chosen == null ? '<span class="qfx-streak-note">Every question earns arcade credit \u2014 streak bonuses stack up.</span>' : "");
+  if (streakEl) streakEl.innerHTML = sessionStreak >= 1 && chosen == null ? '<span class="qfx-streak-pill" role="status">\u25b2 ' + sessionStreak + ' in a row</span><span class="qfx-streak-note">' + coinNote + "</span>" : (chosen == null ? '<span class="qfx-streak-note">Every question earns arcade credit \u2014 streak bonuses stack up.</span>' : "");
   let html = "";
   if (plan.moduleOnly === "drill") {
     const st = domainStatsAny(state.keys, state.plan, state.answers);
@@ -9120,7 +9122,34 @@ class NeonRacing {
     // Keep the player's large rear sprite for the classic chase-camera look.
     const neonCol = !g.neon || g.neon === 'none' ? null : (String(g.neon)[0] === '#' ? g.neon : ({ mint: '#5ef0b0', cyan: '#22d3ee', pink: '#f472b6', gold: '#fbbf24' }[g.neon] || null));
     const playerScale = (g.cam === 'far' ? 1.52 : 1.85) + (this.speed / R.maxSpeed) * .1;
-    this.drawCarRear(ctx, W / 2 + (Math.random() - .5) * this.shake * .3, H * .96, playerScale, g.paint, DriftCircuit.renderOpts({ neon: neonCol, shape: this.car().shape, brake: this.control('down', this.arcade._heldKeys || {}), yaw: -this.steerSmoothed * .025, t: this.now }));
+    // The chase car used to be pinned dead centre with a hint of yaw, which is what made
+    // the back view feel like a sticker on the screen. Give it the four things the eye
+    // reads as "a car being driven": it slides across the screen as you steer, it leans
+    // on the outside wheels, it dives under brakes and squats on power, and it works
+    // against the camber of the bend.
+    const braking = this.control('down', this.arcade._heldKeys || {});
+    const throttling = this.control('up', this.arcade._heldKeys || {});
+    const spd01 = clamp(this.speed / R.maxSpeed, 0, 1);
+    const curve = (this.curveSmoothed = (this.curveSmoothed || 0) + ((this.lastCurve || 0) - (this.curveSmoothed || 0)) * .08);
+    // lateral: steering pushes the car across the frame, the bend pushes it back out
+    const slide = (this.steerSmoothed * 26 + curve * spd01 * 34) * (g.cam === 'far' ? .8 : 1);
+    this.carLateral = (this.carLateral || 0) + (slide - (this.carLateral || 0)) * .12;
+    // pitch: dive under brakes, squat on power, scaled by how fast you are going
+    const pitchTarget = (braking ? 2.6 : 0) + (throttling ? -1.6 : 0);
+    this.carPitch = (this.carPitch || 0) + (pitchTarget * (.4 + spd01 * .6) - (this.carPitch || 0)) * .1;
+    // roll: lean out of the corner, a touch more the faster you are travelling
+    const roll = -(this.steerSmoothed * .07 + curve * spd01 * .05);
+    this.carRoll = (this.carRoll || 0) + (roll - (this.carRoll || 0)) * .14;
+    // engine bob so the car is never perfectly still
+    const bob = Math.sin(this.now * 13) * (.35 + spd01 * .9) * (throttling ? 1.3 : .7);
+    this.drawCarRear(
+      ctx,
+      W / 2 + this.carLateral + (Math.random() - .5) * this.shake * .3,
+      H * .96 + this.carPitch + bob,
+      playerScale,
+      g.paint,
+      DriftCircuit.renderOpts({ neon: neonCol, shape: this.car().shape, brake: braking, yaw: this.carRoll, t: this.now })
+    );
     return true;
   }
   draw(ctx) {

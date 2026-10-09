@@ -334,7 +334,23 @@ PRIORITY_NAMES = {"university of san diego", "university of california-san diego
                   "university of alabama", "auburn university"}
 LEGACY_REJECT = ("logo", "seal", "crest", "coat of arms", "coat_of_arms", "wordmark", "bookplate",
                  "contact sheet", "map", "flag", "strike", "protest", "rally", "demonstration",
-                 "headshot", "portrait", "award ceremony", "commencement speaker")
+                 "headshot", "portrait", "award ceremony", "commencement speaker", "lathe",
+                 "machinery", "machine shop", "equipment", "usmc", "marine corps", "u.s. navy",
+                 "us navy", "midshipman", "first pitch", "change of command", "swearing in",
+                 "tractor", "aircraft", "weapons", "rifle", "magazine")
+
+
+FILLER_WORDS = {"file", "the", "of", "and", "at", "a", "an", "is", "in", "on", "for", "to", "with", "by"}
+
+
+def photo_fingerprint(p):
+    """Near-duplicate key: the first six meaningful words of the file page name
+    (filler dropped), so three scans of the same building collapse to the first
+    one kept while different buildings at the same college stay distinct."""
+    raw = str(p.get("l") or p.get("u") or "")
+    name = urllib.parse.unquote(raw.split("/wiki/")[-1] if "/wiki/" in raw else raw.rsplit("/", 1)[-1])
+    words = [w for w in re.findall(r"[a-z]+", name.lower()) if w not in FILLER_WORDS]
+    return " ".join(words[:6]) or str(p.get("u"))
 
 
 def photo_only_filter():
@@ -356,6 +372,8 @@ def normalize_photo(p):
     if not license_name:
         license_name = combined.rsplit(" · ", 1)[1].strip() if " · " in combined else "Wikimedia Commons"
     kind = p.get("kind") or photo_kind(page or u) or "campus"
+    if re.match(r"^(public domain|cc[ -]|cc0|no restrictions|fair use|unknown)", credit.lower()):
+        credit = "Wikimedia Commons"
     out = dict(p)
     out.update({"u": u, "src": u, "l": page, "credit": credit or "Wikimedia Commons",
                 "license": license_name, "kind": kind, "label": PHOTO_LABELS.get(kind, PHOTO_LABELS["campus"])})
@@ -365,9 +383,13 @@ def normalize_photo(p):
 def legacy_ok(p):
     """A cached photo from an older pipeline may only be reused if it would pass
     today's reject filters and still points at a Commons-hosted file."""
-    text = urllib.parse.unquote(str(p.get("l") or p.get("u") or "")).lower().replace("_", " ")
+    raw = str(p.get("l") or p.get("u") or "")
+    text = urllib.parse.unquote(raw).lower().replace("_", " ")
     if not text.startswith("https") or "wikimedia.org" not in text:
         return False
+    name = urllib.parse.unquote(raw.split("/wiki/")[-1] if "/wiki/" in raw else raw.rsplit("/", 1)[-1]).lower()
+    if not re.search(r"\.(?:jpe?g|png|webp|tiff?)$", name):
+        return False  # documents, audio, SVG diagrams are not gallery photos
     return not any(bad in text for bad in LEGACY_REJECT)
 
 
@@ -510,7 +532,7 @@ def fetch_photos(colleges):
                 # Three scans of the same building (the Highsmith collection
                 # alone has several) must not fill the gallery. The selection
                 # step keeps only the best-scoring variant per fingerprint.
-                fingerprint = " ".join(re.findall(r"[a-z]+", title.lower())[:6])
+                fingerprint = photo_fingerprint({"l": title})
                 candidates.append((score, bucket, {
                     "u": url,
                     "a": ((artist + " · ") if artist else "") + (license_name or "Wikimedia Commons"),
@@ -577,7 +599,7 @@ def main():
     except Exception as exc:
         print('Majors fetch failed:', exc)
     if os.environ.get("SKIP_PHOTOS") == "1":
-        photos_ok = False
+        photos_ok = True  # a cache-only rebake still ships the cached photos
         print("Photos skipped (SKIP_PHOTOS=1); using cached images only.")
     else:
         try:
@@ -592,7 +614,17 @@ def main():
             info = cached_photos.get(str(e["id"]))
             if not info:
                 continue
-            imgs = [normalize_photo(p) for p in (info.get("imgs") or []) if legacy_ok(p)][:6]
+            seen_fp = set()
+            imgs = []
+            for p in (info.get("imgs") or []):
+                if not legacy_ok(p):
+                    continue
+                fp = photo_fingerprint(p)
+                if fp in seen_fp:
+                    continue
+                seen_fp.add(fp)
+                imgs.append(normalize_photo(p))
+            imgs = imgs[:6]
             if imgs:
                 e["imgs"] = imgs
                 e.update({"img": imgs[0]["u"], "imgA": imgs[0].get("a") or imgs[0]["credit"], "imgL": imgs[0]["l"]})

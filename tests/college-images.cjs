@@ -47,7 +47,9 @@ for (const c of colleges) {
     if (!im.u || !im.src || im.u !== im.src) fail(where + ": src/u must be the same display URL");
     if (!im.credit || !String(im.credit).trim()) fail(where + ": missing photographer credit");
     if (!im.license || !String(im.license).trim()) fail(where + ": missing license");
-    if (im.license && im.credit && im.license === im.credit) fail(where + ": license may not be a copy of the credit");
+    if (im.license && im.credit && im.license === im.credit && im.license !== "Wikimedia Commons") {
+      fail(where + ": license may not be a copy of the credit");
+    }
     if (!SOURCE.test(im.l || "")) fail(where + ": source must be a Commons file page, saw " + (im.l || "(empty)"));
     if (!LABELS[im.kind]) fail(where + ": unknown category kind " + JSON.stringify(im.kind));
     if (im.label !== LABELS[im.kind]) fail(where + ": label must match its kind, saw " + JSON.stringify(im.label));

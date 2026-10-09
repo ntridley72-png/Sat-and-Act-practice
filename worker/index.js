@@ -17,6 +17,8 @@
 // Passwords are hashed with PBKDF2-SHA256 and a per-user salt. Session tokens are random and only
 // their SHA-256 hash is stored, so a database leak doesn't expose usable logins.
 
+import { routeRacing, serverOwnedGarage } from "./racing.js";
+
 const SESSION_DAYS = 60;
 const PBKDF2_ITERATIONS = 100000; // the most Workers' Web Crypto allows
 const MAX_FAILS = 8, LOCK_MINUTES = 15;
@@ -120,6 +122,12 @@ async function route(req, env, path) {
     return json({ ok: true }, 200, req);
   }
   if (path === "me" && req.method === "GET") return json({ email: user.email }, 200, req);
+  // Racing v2 economy, run validation and leaderboard. Every one of these needs
+  // the signed-in user above, which is why the dispatch sits after `authed`.
+  if (path.startsWith("racing/")) {
+    const res = await routeRacing(req, env, path, user);
+    if (res) return json(res.body, res.status, req);
+  }
   if (path === "grade-stats" && req.method === "GET") {
     const params = new URL(req.url).searchParams;
     const grade = String(params.get("grade") || "").slice(0, 8);
@@ -155,6 +163,7 @@ async function route(req, env, path) {
     if (text.length > MAX_PROGRESS_BYTES) return json({ error: "Saved progress is too large." }, 413, req);
     let body; try { body = JSON.parse(text); } catch { return json({ error: "Bad request." }, 400, req); }
     if (!body.data || !Array.isArray(body.data.history)) return json({ error: "Invalid saved progress." }, 400, req);
+    const owned = await serverOwnedGarage(env, user.id);
     for (let attempt = 0; attempt < 5; attempt++) {
       const previous = await env.DB.prepare("SELECT data, updated_at FROM progress WHERE user_id = ?").bind(user.id).first();
       const old = previous ? JSON.parse(previous.data) : null;
@@ -178,7 +187,11 @@ async function route(req, env, path) {
       // erase cars or parts unlocked on another device, nor roll earned cash
       // backwards. The winning edit still controls the currently selected
       // car, paint, track and tune values.
-      mergedProf.garage = mergeGarage(oldProf.garage, incomingProf.garage, mergedProf.garage);
+      // Garage progress is long-lived account data, so a stale browser must not
+      // erase cars unlocked on another device. For accounts that have migrated
+      // to the server-side ledger, `owned` overrides the merge entirely: cash
+      // and unlocks come from the ledger and a progress save cannot move them.
+      mergedProf.garage = mergeGarage(oldProf.garage, incomingProf.garage, mergedProf.garage, owned);
       data.profile = mergedProf;
       const updatedAt = Math.max(Date.now(), incomingAt, (previous && previous.updated_at || 0) + 1);
       const result = await env.DB.prepare("INSERT INTO progress (user_id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at WHERE progress.updated_at = ?")
@@ -190,7 +203,7 @@ async function route(req, env, path) {
   return json({ error: "Not found." }, 404, req);
 }
 
-function mergeGarage(oldGarage, incomingGarage, winnerGarage) {
+function mergeGarage(oldGarage, incomingGarage, winnerGarage, owned) {
   const oldG = oldGarage && typeof oldGarage === "object" ? oldGarage : {};
   const incomingG = incomingGarage && typeof incomingGarage === "object" ? incomingGarage : {};
   const winnerG = winnerGarage && typeof winnerGarage === "object" ? winnerGarage : {};
@@ -200,9 +213,23 @@ function mergeGarage(oldGarage, incomingGarage, winnerGarage) {
       .filter((value) => typeof value === "string" && value.length < 80);
     if (values.length) merged[key] = [...new Set(values)];
   });
+  // max() is wrong, and knowingly so: it restores money that was legitimately
+  // spent and can duplicate earnings across devices. It survives only for
+  // accounts that have NOT yet migrated to the ledger, where the alternative is
+  // a stale tab zeroing a real balance. `owned` is the fix; see worker/racing.js.
   merged.cash = Math.max(Number(oldG.cash) || 0, Number(incomingG.cash) || 0, Number(winnerG.cash) || 0);
   merged.tune = { ...(oldG.tune || {}), ...(incomingG.tune || {}), ...(winnerG.tune || {}) };
   merged.v = Math.max(Number(oldG.v) || 0, Number(incomingG.v) || 0, Number(winnerG.v) || 0);
+  if (owned) {
+    // Server authority. Not merged with what the client sent, replaced by it.
+    merged.cash = owned.cash;
+    merged.unlocked = owned.cars;
+    merged.ownedKits = owned.kits;
+    merged.ownedWings = owned.wings;
+    merged.tracksUnlocked = owned.tracks;
+    merged.v = Math.max(Number(merged.v) || 0, 4);
+    merged.serverRevision = owned.revision;
+  }
   return merged;
 }
 

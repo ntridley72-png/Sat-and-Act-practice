@@ -48,7 +48,7 @@ jobs:
       - name: Refresh photos and rebake the bundle
         env:
           PHOTO_ONLY: ${{ inputs.only }}
-          WIKI_THROTTLE: ${{ inputs.throttle }}
+          WIKI_THROTTLE: ${{ inputs.throttle || '1.8' }}
         run: python3 -u scripts/build-college-data.py
 
       - name: Validate the bundle

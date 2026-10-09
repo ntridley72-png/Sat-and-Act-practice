@@ -36,7 +36,7 @@ UA = {"User-Agent": "funsat.bid college data build script (educational; contact:
 # Wikimedia's anonymous limit for search queries is tight; pace every API call
 # globally and honour Retry-After instead of blind exponential backoff.
 THROTTLE_LOCK = threading.Lock()
-THROTTLE = float(os.environ.get("WIKI_THROTTLE", "1.8"))
+THROTTLE = float(os.environ.get("WIKI_THROTTLE") or "1.8")
 LAST_CALL = [0.0]
 
 SELECTIVE_ADMIT = 0.55

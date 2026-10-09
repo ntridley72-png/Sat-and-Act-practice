@@ -114,12 +114,43 @@ const SHOTS = path.join(ROOT, "tests", "screenshots");
     return { alt: img.getAttribute("alt"), loading: img.getAttribute("loading"), aspect: css.aspectRatio, fit: css.objectFit, caption: (fig.querySelector("figcaption") || {}).textContent || "", onerror: img.getAttribute("onerror") || "" };
   });
   if (!photo) throw new Error("Auburn University should render a campus photo from Wikimedia data");
-  if (!/Campus photo(?: 1)? of Auburn/.test(photo.alt)) throw new Error("photo alt text is wrong: " + photo.alt);
+  if (!/ at Auburn University$/.test(photo.alt) || /^Campus photo/.test(photo.alt)) {
+    throw new Error("photo alt text should be the category label, saw: " + photo.alt);
+  }
   if (photo.loading !== "lazy") throw new Error("photo should lazy-load");
   if (!/16\s*\/\s*9/.test(photo.aspect)) throw new Error("photo aspect ratio CSS not applied: " + photo.aspect);
   if (photo.fit !== "cover") throw new Error("photo object-fit CSS not applied: " + photo.fit);
   if (!/Wikimedia|Public domain|CC/.test(photo.caption)) throw new Error("photo attribution missing: " + photo.caption);
   if (!photo.onerror) throw new Error("photo has no broken-image fallback");
+
+  // No A–D grade: a factual size/setting snapshot stands in its place.
+  const social = await page.evaluate(() => ({
+    chips: document.querySelectorAll("#collegeDetail .cf-grade").length,
+    copy: /App estimate \(A[–-]D\)|letter grade/i.test(document.querySelector("#collegeDetail").textContent),
+    snapshot: ((document.querySelector("#collegeDetail .cf-social-snapshot") || {}).textContent || "").trim(),
+  }));
+  if (social.chips || social.copy) throw new Error("the letter grade must be gone from the profile");
+  if (!/^(Very large|Large|Mid-sized|Small|Very small) · (city|suburban|college-town|rural)$/.test(social.snapshot)) {
+    throw new Error("size/setting snapshot missing or malformed: " + social.snapshot);
+  }
+
+  // Campus-life links stay on the official host, and photo credits link to the Commons file page.
+  const links = await page.evaluate(() => {
+    const sub = document.querySelector("#collegeDetail h5.cf-subhead");
+    const block = sub ? sub.nextElementSibling : null;
+    const clubs = block ? Array.from(block.querySelectorAll("a")).map((a) => decodeURIComponent(a.getAttribute("href"))) : [];
+    const fig = document.querySelector("#collegeDetail .college-photo");
+    const a = fig ? fig.querySelector("figcaption a") : null;
+    const cap = fig ? (fig.querySelector("figcaption") || {}).textContent || "" : "";
+    return { clubs, creditHref: a ? a.getAttribute("href") : "", caption: cap };
+  });
+  if (links.clubs.length < 6) throw new Error("campus-life block needs its six official searches, saw " + links.clubs.length);
+  if (!links.clubs.every((h) => h.includes("site:auburn.edu"))) throw new Error("campus-life links must be restricted to the official host: " + JSON.stringify(links.clubs.slice(0, 2)));
+  if (links.clubs.some((h) => /niche|reddit|ratemyprofessors|unigo/i.test(h))) throw new Error("third-party link leaked into the campus-life block");
+  if (links.creditHref && !/^https:\/\/commons\.wikimedia\.org\//.test(links.creditHref)) {
+    throw new Error("photo credit must link to the Commons file page, saw: " + links.creditHref);
+  }
+  if (!/ · /.test(links.caption)) throw new Error("photo credit needs photographer plus license: " + links.caption);
   await page.click("[data-close-detail]");
 
   // AI reply polish: greetings removed, LaTeX converted, doubled parentheses collapsed, math typeset.

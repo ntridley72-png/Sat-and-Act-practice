@@ -3,14 +3,31 @@
    per-image attribution, and the lightbox keyboard contract.
    Needs a server for the generated pages: PAGES_URL=http://localhost:8898   */
 const { chromium } = require("playwright-core");
+const fs = require("node:fs");
 const path = require("node:path");
 const os = require("node:os");
 
+const ROOT = path.dirname(__dirname);
 const EXEC = path.join(os.homedir(), "Library/Caches/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-mac-x64/chrome-headless-shell");
 const BASE = process.env.PAGES_URL || "http://localhost:8898";
-const MANY = "/colleges/harvard-university/";
-const ONE = "/colleges/anna-maria-college/";
-const NONE = "/colleges/beacon-college/";
+
+/* The photo refresh changes which colleges carry 6 / 1 / 0 photos, so the
+   fixtures come from the same bundle the pages were rendered from. */
+function fixtures() {
+  const src = fs.readFileSync(path.join(ROOT, "college-data.js"), "utf8");
+  const data = JSON.parse(src.match(/window\.COLLEGE_DATA\s*=\s*(\{[\s\S]*\})\s*;?\s*$/)[1]);
+  const slugify = (n) => n.normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase().replace(/-{2,}/g, "-");
+  const cols = data.colleges;
+  // Six photos: the grid intentionally renders 4-photo and 2-photo galleries
+  // as two columns, so the three-column contract is exercised on a full set.
+  const many = cols.find((c) => (c.imgs || []).length >= 6);
+  const one = cols.find((c) => (c.imgs || []).length === 1);
+  const none = cols.find((c) => !(c.imgs || []).length && !c.img);
+  if (!many || !one || !none) throw new Error("gallery fixtures missing from college-data.js");
+  return { MANY: "/colleges/" + slugify(many.n) + "/", ONE: "/colleges/" + slugify(one.n) + "/", NONE: "/colleges/" + slugify(none.n) + "/" };
+}
+const { MANY, ONE, NONE } = fixtures();
 const PIXEL = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/axnLlcAAAAASUVORK5CYII=", "base64");
 const fails = [];
 const ok = (cond, msg) => { if (!cond) fails.push(msg); };

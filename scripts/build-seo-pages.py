@@ -14,6 +14,7 @@ import argparse
 import json
 import re
 import sys
+import urllib.parse
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -44,12 +45,6 @@ def table(rows, head=("", "")):
             f'<th scope="col">{head[1]}</th></tr></thead><tbody>{body}</tbody></table>')
 
 
-SOCIAL_GRADE_HEAD = {
-    "A": "Busy, with plenty of people to meet",
-    "B": "A steady social scene",
-    "C": "A quieter social scene",
-    "D": "A small, quiet social scene",
-}
 LOCALE_LINE = {
     "city": "in a city, so a lot of what students do happens off campus too",
     "suburb": "in a suburb, within reach of a bigger city but with its own centre of gravity",
@@ -75,15 +70,13 @@ def size_word(enr):
 def social_life(c, name, state):
     """A social-life section assembled only from figures already in the bundle,
     each line credited to the collection it comes from. There is no student
-    survey behind any of this and the copy says so: the letter grade is the
-    app's own estimate, and every number under it is federal or BEA data the
-    reader can check."""
-    grade = c.get("sg")
+    survey behind any of this; every number is federal or BEA data the reader
+    can check. It deliberately describes context instead of grading social life."""
     enr, loc = c.get("enr"), c.get("loc")
     ret, gr_, div = c.get("ret"), c.get("gr"), c.get("div")
     age25, rpp, rpph = c.get("age25"), c.get("rpp"), c.get("rpph")
     sfr = c.get("sfr")
-    if not grade and not enr:
+    if not enr:
         return "", None
 
     # A reported 0 for a rate is a hole in the source, not a measurement. Saying
@@ -95,7 +88,7 @@ def social_life(c, name, state):
         gr_ = None
 
     # Where most students are older, the figures are not describing residential
-    # campus life at all, whatever the letter grade works out to.
+    # campus life at all, whatever the size and retention numbers might suggest.
     commuter = age25 is not None and age25 >= 35
     size = size_word(enr)
 
@@ -161,11 +154,27 @@ def social_life(c, name, state):
 
     if commuter:
         head = "Largely a non-residential student body"
-        badge = ""
     else:
-        head = SOCIAL_GRADE_HEAD.get(grade or "", "Campus social signals")
-        badge = (f'<span class="sl-grade" data-grade="{e(grade)}" '
-                 f'aria-label="Social life estimate: grade {e(grade)}">{e(grade)}</span>') if grade else ""
+        setting = {"city": "city", "suburb": "suburban", "town": "college-town", "rural": "rural"}.get(loc, "campus")
+        head = f"{(size or 'Campus').title()} &middot; {setting} setting"
+    badge = ""
+
+    raw_url = str(c.get("url") or "").strip()
+    if raw_url and not raw_url.startswith(("http://", "https://")):
+        raw_url = "https://" + raw_url.lstrip("/")
+    host = urllib.parse.urlparse(raw_url).hostname or ""
+    host = re.sub(r"^www\.", "", host)
+    def discover(label, terms):
+        query = (("site:" + host + " ") if host else "") + name + " " + terms
+        return f'<a href="https://www.google.com/search?q={urllib.parse.quote_plus(query)}" rel="noopener">{label}</a>'
+    discovery = (f'<h3>Clubs &amp; campus life</h3><p class="sl-note">Club popularity changes every year, '
+                 f'so these searches are limited to the college&rsquo;s current official website.</p>'
+                 f'<div class="glinks">{discover("Student organizations", "student organizations clubs directory")}'
+                 f'{discover("Greek life", "fraternity sorority Greek life")}'
+                 f'{discover("Athletics & recreation", "athletics recreation intramural sports")}'
+                 f'{discover("Events & traditions", "student events campus traditions")}'
+                 f'{discover("Housing & dining", "student housing dining")}'
+                 f'{discover("Student newspaper", "student newspaper")}</div>')
 
     # A low spread figure at a college that serves one community is a description
     # of who it serves, not a shortcoming, and the page should say which it is.
@@ -185,17 +194,16 @@ def social_life(c, name, state):
         f'<p class="sl-lead">{lead}</p></div></div>'
         f'<dl class="sl-facts">{cells}</dl>'
         f'<p class="sl-note"><strong>How to read this.</strong> There is no student survey behind '
-        f'this section. The letter is {SITE_NAME}&rsquo;s own estimate from the figures above &mdash; '
-        f'size, how many students return, the spread of backgrounds and the setting &mdash; and the '
-        f'figures themselves come from the U.S. Department of Education&rsquo;s College Scorecard '
+        f'this section. The snapshot describes size, how many students return, the spread of '
+        f'backgrounds and the setting; the figures come from the U.S. Department of Education&rsquo;s College Scorecard '
         f'and IPEDS collections and the Bureau of Economic Analysis. Retention is the closest thing '
         f'in public data to &ldquo;students are happy here&rdquo;, but it is a proxy, not a verdict. '
         f'The spread figure measures how evenly enrollment is divided across the groups the college '
         f'reports; a low number means a more homogeneous student body, not a worse one.{served} '
         f'For the things official data cannot measure &mdash; Greek life, clubs, whether weekends '
-        f'empty out &mdash; read the student paper and ask on a visit.</p>'
+        f'empty out &mdash; read the student paper and ask on a visit.</p>{discovery}'
         f'</section>')
-    return html_out, (ret, grade, size, loc, commuter)
+    return html_out, (ret, size, loc, commuter)
 
 
 def college_page(c, data):
@@ -373,7 +381,7 @@ def college_page(c, data):
                      f"\"{c['test']}\". Policies change yearly, so confirm with the admissions "
                      f"office for your application cycle."))
     if social_facts:
-        ret_v, grade_v, size_v, loc_v, commuter_v = social_facts
+        ret_v, size_v, loc_v, commuter_v = social_facts
         parts = []
         if commuter_v:
             parts.append(f"{name} enrolls a {size_v or 'mixed'} student body, but most students "
@@ -409,26 +417,31 @@ def college_page(c, data):
             continue
         shots.append({"src": src,
                       "credit": item.get("credit") or item.get("a") or "Wikimedia Commons",
-                      "license": item.get("license") or item.get("l") or ""})
+                      "source": item.get("source") or item.get("l") or "",
+                      "license": item.get("license") or "Wikimedia Commons",
+                      "label": item.get("label") or "Campus life"})
     if not shots and c.get("img"):
         shots.append({"src": c["img"], "credit": c.get("imgA", "Wikimedia Commons"),
-                      "license": c.get("imgL", "")})
+                      "source": c.get("imgL", ""), "license": "Wikimedia Commons",
+                      "label": "Campus life"})
 
     img = ""
     if shots:
         cells = []
         for i, shot in enumerate(shots):
-            credit = (f'<a href="{e(shot["license"])}" target="_blank" rel="noopener nofollow">'
-                      f'{e(shot["credit"])}</a>') if shot["license"] else e(shot["credit"])
+            credit_text = f'{shot["credit"]} &middot; {shot["license"]}'
+            credit = (f'<a href="{e(shot["source"])}" target="_blank" rel="noopener nofollow">'
+                      f'{e(credit_text)}</a>') if shot["source"] else e(credit_text)
             cells.append(
                 f'<figure class="cg-item">'
                 f'<button type="button" class="cg-open" data-cg="{i}" '
                 f'aria-label="Open photo {i + 1} of {len(shots)} of {e(name)} larger">'
-                f'<img src="{e(shot["src"])}" alt="{e(name)} campus, photo {i + 1}" '
+                f'<span class="cg-label">{e(shot["label"])}</span>'
+                f'<img src="{e(shot["src"])}" alt="{e(shot["label"])} at {e(name)}" '
                 f'loading="lazy" decoding="async" width="960" height="540"></button>'
                 f'<figcaption class="cg-credit">{credit}</figcaption></figure>')
         gallery_data = json.dumps(
-            [{"src": x["src"], "credit": x["credit"], "license": x["license"]} for x in shots],
+            [{"src": x["src"], "credit": x["credit"] + " · " + x["license"], "license": x["source"]} for x in shots],
             separators=(",", ":"), ensure_ascii=False)
         img = (f'<section class="cg" data-college-gallery data-count="{len(shots)}" '
                f'aria-label="Photos of {e(name)}">'

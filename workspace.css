@@ -302,7 +302,10 @@ body[data-workspace] .college-row-main:hover:not(:disabled){background:var(--ws-
 .cf-link{display:inline-block;border:1px solid var(--ws-line);background:var(--ws-surface);color:var(--ws-ink)!important;padding:7px 10px;font-size:12px;text-decoration:none;border-radius:2px}
 .cf-link:hover,.cf-link:focus-visible{border-color:var(--ws-accent);color:var(--ws-accent)!important}
 .cf-social{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.cf-grade{display:grid;place-items:center;min-width:34px;height:34px;background:var(--ws-tint);color:var(--ws-accent);font-weight:800;font-size:17px;border:1px solid var(--ws-line)}
+.cf-social-snapshot{display:inline-flex;align-items:center;min-height:34px;padding:6px 10px;background:var(--ws-tint);color:var(--ws-accent);border:1px solid var(--ws-line);font-size:13px;white-space:nowrap}
+.cf-subhead{margin:14px 0 8px;font-size:13px;color:var(--ws-ink)}
+.college-photo{position:relative}
+.college-photo-label{position:absolute;z-index:1;top:8px;left:8px;padding:4px 7px;background:rgba(15,23,42,.82);color:#fff;border-radius:2px;font-size:11px;font-weight:700;letter-spacing:.02em}
 .maj-list{display:flex;flex-direction:column;gap:7px}
 .maj-row{display:grid;grid-template-columns:minmax(80px,1.5fr) minmax(30px,1fr) 34px;align-items:center;gap:8px;font-size:12px}
 .maj-row span{overflow-wrap:anywhere}
@@ -1358,3 +1361,8 @@ body[data-workspace] .workspace-calculator-dock .calc-resizer{display:block}
 body.calc-resizing{cursor:ns-resize;user-select:none}
 body.calc-resizing iframe,body.calc-resizing .dcg-container{pointer-events:none}
 @media(prefers-reduced-motion:no-preference){.calc-resizer:after{transition:background .15s}}
+
+/* Adjustable AI tutor chat, Account/Groq dialog, and help history */
+body .cmsgs,body[data-workspace] .cmsgs{height:var(--cmsgs-h,260px);min-height:120px;max-height:80vh;overflow:auto;resize:vertical}
+body .modal.auth-modal{resize:both;min-width:min(320px,100%);max-width:min(96vw,900px);min-height:260px}
+body #helpHistoryList{max-height:45vh;min-height:120px;overflow:auto;resize:vertical}

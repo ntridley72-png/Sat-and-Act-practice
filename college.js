@@ -640,8 +640,20 @@
     const totalIn = college.ti != null && adj != null ? college.ti + adj : null;
     const totalOut = college.to != null && adj != null ? college.to + adj : null;
     const photos = Array.isArray(college.imgs) && college.imgs.length ? college.imgs : (college.img ? [{ u: college.img, a: college.imgA, l: college.imgL }] : []);
-    const photo = photos.length ? '<section class="college-gallery" aria-label="Campus photos of ' + escapeHtml(college.n) + '">' + photos.slice(0, 3).map((img, index) =>
-      '<figure class="college-photo"><img src="' + escapeHtml(img.u || "") + '" alt="Campus photo ' + (index + 1) + ' of ' + escapeHtml(college.n) + '" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.closest(\'figure\').hidden=true"><figcaption>Photo: ' + escapeHtml(img.a || "Wikimedia Commons") + (img.l ? ' · <a href="' + escapeHtml(img.l) + '" target="_blank" rel="noopener">source</a>' : "") + "</figcaption></figure>").join("") + "</section>" : "";
+    const photo = photos.length ? '<section class="college-gallery" aria-label="Campus life photos of ' + escapeHtml(college.n) + '">' + photos.slice(0, 6).map((img, index) => {
+      const creditText = (img.credit || img.a || "Wikimedia Commons") + (img.license ? " · " + img.license : "");
+      const source = img.source || img.l || "";
+      const caption = source
+        ? '<a href="' + escapeHtml(source) + '" target="_blank" rel="noopener nofollow">' + escapeHtml(creditText) + "</a>"
+        : escapeHtml(creditText);
+      return '<figure class="college-photo"><span class="college-photo-label">' + escapeHtml(img.label || "Campus life") + '</span><img src="' + escapeHtml(img.u || img.src || "") + '" alt="' + escapeHtml(img.label || "Campus life") + ' at ' + escapeHtml(college.n) + '" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.closest(\'figure\').hidden=true"><figcaption>' + caption + "</figcaption></figure>";
+    }).join("") + "</section>" : "";
+    const setting = ({ city: "City", suburb: "Suburban", town: "College-town", rural: "Rural" }[college.loc] || "Campus");
+    const size = college.enr >= 25000 ? "Very large" : college.enr >= 12000 ? "Large" : college.enr >= 4000 ? "Mid-sized" : college.enr >= 1200 ? "Small" : "Very small";
+    const socialSnapshot = size + " · " + setting.toLowerCase();
+    const official = collegeUrl(college);
+    let officialHost = ""; try { officialHost = new URL(official).hostname.replace(/^www\./, ""); } catch (e) {}
+    const discover = (label, terms) => '<a class="cf-link" href="https://www.google.com/search?q=' + encodeURIComponent((officialHost ? "site:" + officialHost + " " : "") + college.n + " " + terms) + '" target="_blank" rel="noopener">' + label + "</a>";
     const forum = (label, href) => '<a class="cf-link" href="' + href + '" target="_blank" rel="noopener">' + label + "</a>";
     return photo +
       '<div class="college-facts">' +
@@ -677,13 +689,14 @@
       '<div class="cf-line"><span>Average faculty salary</span><b>' + money(college.fsal) + "</b></div>" +
       '<div class="cf-note">Median family income, federal loan share, median debt at graduation, cohort default rate, age mix, and average faculty salary are the college’s most recent federal reporting (College Scorecard). The Pell graduation rate compares completion for Pell Grant recipients.</div></section>' +
       '<section class="cf-card"><h4>Student experience</h4>' +
-      '<div class="cf-social"><span class="cf-grade">' + escapeHtml(college.sg || "—") + '</span><span class="cf-note">App estimate (A–D) from size, retention, diversity, and location — not a student survey.</span></div>' +
+      '<div class="cf-social"><strong class="cf-social-snapshot">' + escapeHtml(socialSnapshot) + '</strong><span class="cf-note">Campus context from enrollment and setting—not a student-opinion score.</span></div>' +
       '<div class="cf-line"><span>Students returning after year one</span><b>' + (college.ret != null ? college.ret + "%" : "—") + '</b></div>' +
       '<div class="cf-line"><span>Setting</span><b>' + ({ city: "City", suburb: "Suburban", town: "Small town", rural: "Rural" }[college.loc] || "—") + " · " + escapeHtml(college.city) + ", " + college.st + "</b></div>" +
       '<div class="cf-line"><span>Students living on campus</span><b>Not reported</b></div>' +
       '<div class="cf-line"><span>Athletics division</span><b>Not reported</b></div>' +
-      '<div class="cf-note">Retention is official College Scorecard data, not a satisfaction rating. Professor and student-review sites change frequently, so open the current source before deciding.</div>' +
-      '<div class="cf-links">' + forum("Professor ratings on Rate My Professors", "https://www.ratemyprofessors.com/search/professors?q=" + encodeURIComponent(college.n)) + forum("Student reviews on Niche", "https://www.niche.com/search/?q=" + encodeURIComponent(college.n)) + forum("Student opinions on Reddit", "https://www.reddit.com/search/?q=" + encodeURIComponent(college.n + " student experience")) + "</div></section>" +
+      '<div class="cf-note">Retention is official College Scorecard data, not a satisfaction rating. Club popularity and campus traditions change, so use the current official directories below.</div>' +
+      '<h5 class="cf-subhead">Clubs & campus life</h5><div class="cf-links">' + discover("Student organizations", "student organizations clubs directory") + discover("Greek life", "fraternity sorority Greek life") + discover("Athletics & recreation", "athletics recreation intramural sports") + discover("Events & traditions", "student events campus traditions") + discover("Housing & dining", "student housing dining") + discover("Student newspaper", "student newspaper") + "</div>" +
+      '<div class="cf-links">' + forum("Professor ratings", "https://www.ratemyprofessors.com/search/professors?q=" + encodeURIComponent(college.n)) + forum("Student reviews", "https://www.niche.com/search/?q=" + encodeURIComponent(college.n)) + forum("Student discussions", "https://www.reddit.com/search/?q=" + encodeURIComponent(college.n + " student experience")) + "</div></section>" +
       "</div>";
   }
 

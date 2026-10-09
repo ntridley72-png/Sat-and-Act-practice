@@ -1,42 +1,14 @@
--- Already applied to the sat-act-practice-db database. Kept here to recreate it if needed:
---   npx wrangler d1 execute sat-act-practice-db --remote --file=worker/schema.sql
-CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT NOT NULL UNIQUE, pass_hash TEXT NOT NULL, salt TEXT NOT NULL, created_at INTEGER NOT NULL, failed_logins INTEGER NOT NULL DEFAULT 0, locked_until INTEGER NOT NULL DEFAULT 0);
-CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, expires_at INTEGER NOT NULL);
-CREATE INDEX IF NOT EXISTS sessions_user ON sessions(user_id);
-CREATE TABLE IF NOT EXISTS progress (user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, data TEXT NOT NULL, updated_at INTEGER NOT NULL);
-CREATE TABLE IF NOT EXISTS password_resets (token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, used INTEGER NOT NULL DEFAULT 0);
-CREATE INDEX IF NOT EXISTS resets_user ON password_resets(user_id, created_at);
+-- Racing v2 server-side economy: append-only ledger, garage v4, run validation,
+-- leaderboard. ADDITIVE ONLY: no existing table or column is altered or dropped,
+-- so an old Worker keeps working against a migrated database and a rollback is a
+-- code rollback alone.
+--
+-- NOT APPLIED to the remote database. Apply locally with:
+--   npx wrangler d1 migrations apply sat-act-practice-db --local
+-- Applying to --remote is a deliberate, separate decision (see the plan's
+-- "Deployment steps"), because the first deploy that reads these tables must land
+-- after they exist.
 
-CREATE TABLE IF NOT EXISTS ai_usage (ip TEXT NOT NULL, win INTEGER NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (ip, win));
-
-CREATE TABLE IF NOT EXISTS help_history (
-  id TEXT NOT NULL,
-  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  created_at INTEGER NOT NULL,
-  question_id TEXT,
-  question_version TEXT,
-  question_snapshot TEXT,
-  test_type TEXT,
-  section TEXT,
-  domain TEXT,
-  skill TEXT,
-  attempt_id TEXT,
-  category TEXT NOT NULL,
-  request_text TEXT NOT NULL,
-  response_text TEXT NOT NULL,
-  provider TEXT NOT NULL,
-  model TEXT,
-  status TEXT NOT NULL,
-  usage_json TEXT,
-  PRIMARY KEY (user_id, id)
-);
-CREATE INDEX IF NOT EXISTS help_history_user_created ON help_history(user_id, created_at DESC);
-
--- ---- Racing v2 economy ----------------------------------------------------
--- Also kept as migrations/0002_racing_economy.sql, which is the file to apply to
--- an existing database. These statements are the same DDL, so this file still
--- recreates the whole schema from nothing.
--- NOT YET APPLIED to the remote database.
 -- Garage v4. The server owns `cash` and the owned-item lists inside `data`;
 -- `data.prefs` holds last-writer-by-field preferences the client may set freely.
 -- `revision` is the optimistic-concurrency guard every economy write takes.

@@ -7704,7 +7704,7 @@ class PressureWasher {
   drawCarTarget(ctx) {
     const C = PressureWasher.CONFIG, left = this.cx - C.carW / 2, top = this.cy - C.carH / 2;
     ctx.fillStyle = 'rgba(0,0,0,.3)'; rrPath(ctx, left - 6, top + 8, C.carW + 12, C.carH, 14); ctx.fill();
-    drawCustomCar(ctx, this.cx, this.cy, Math.PI, C.carH / 46, this.carPaint, this.carWheels, { finish: DriftCircuit.garage().finish, kit: 'stock', wing: 'none', decal: DriftCircuit.garage().decal, number: DriftCircuit.garage().number, neon: 'none' });
+    drawCustomCar(ctx, this.cx, this.cy, Math.PI, C.carH / 46, this.carPaint, this.carWheels, DriftCircuit.renderOpts({ neon: 'none', neonMode: 'solid' }));
     // dirt overlays per section
     this.sections.forEach((sec) => {
       if (sec.dirt <= 1) return;
@@ -8800,7 +8800,10 @@ class NeonRacing {
   drawCarRear(ctx, x, y, scale, paint, opts) {
     // x/y is the tire contact point on the road. Keeping that contract explicit prevents
     // cars from floating when hills change the projected road height.
-    const o = opts || {}, sh = o.shape || {}, L = 40 * scale, Wd = 43 * scale * (1 + (sh.fender || 0) * .28);
+    const o = opts || {}, sh = o.shape || {}, L = 40 * scale;
+    // Body kit widens the rear track, so a widebody reads as wider from behind.
+    const kitW = o.kit === 'wide' ? 1.17 : o.kit === 'street' ? 1.05 : 1;
+    const Wd = 43 * scale * (1 + (sh.fender || 0) * .28) * kitW;
     ctx.save(); ctx.translate(x, y); ctx.rotate(o.yaw || 0);
     ctx.fillStyle = 'rgba(0,0,0,.38)'; ctx.beginPath(); ctx.ellipse(0, 2 * scale, Wd * .61, 4.2 * scale, 0, 0, Math.PI * 2); ctx.fill();
     if (o.neon && o.neon !== 'none') { ctx.fillStyle = o.neon; ctx.globalAlpha = .3; ctx.beginPath(); ctx.ellipse(0, -1 * scale, Wd * .72, 7 * scale, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
@@ -8809,14 +8812,45 @@ class NeonRacing {
     if (o.finish === 'chrome') { grad.addColorStop(0, '#f8fafc'); grad.addColorStop(.5, '#94a3b8'); grad.addColorStop(1, '#475569'); }
     else if (o.finish === 'metallic') { grad.addColorStop(0, gameShade(base, 58)); grad.addColorStop(.46, gameShade(base, 12)); grad.addColorStop(.47, gameShade(base, -28)); grad.addColorStop(1, gameShade(base, -62)); }
     else if (o.finish === 'matte') { grad.addColorStop(0, gameShade(base, -10)); grad.addColorStop(.48, gameShade(base, -10)); grad.addColorStop(.49, gameShade(base, -38)); grad.addColorStop(1, gameShade(base, -38)); }
+    else if (o.finish === 'pearl') { grad.addColorStop(0, gameShade(base, 62)); grad.addColorStop(.3, '#ffffff'); grad.addColorStop(.46, gameShade(base, 14)); grad.addColorStop(.47, gameShade(base, -26)); grad.addColorStop(1, gameShade(base, -58)); }
     else { grad.addColorStop(0, gameShade(base, 48)); grad.addColorStop(.45, gameShade(base, 8)); grad.addColorStop(.46, gameShade(base, -38)); grad.addColorStop(1, gameShade(base, -52)); }
     // Tires sit on y=0, with visible rims and fender cutouts.
     const wcol = DriftCircuit.WHEEL_COLORS[o.wheelColor] || '#111827';
+    const wsz = clamp(o.wheelSize == null ? 1 : o.wheelSize, .8, 1.35);
+    const style = o.wheelStyle || 'sport';
+    // Rim face is drawn per style so "5-spoke / Mesh / Steel / Deep dish" are told apart,
+    // and the rim colour is the one bought in the garage rather than a fixed silver ring.
     for (const side of [-1, 1]) {
-      const wx = side * Wd * .43;
-      ctx.fillStyle = '#080b12'; ctx.beginPath(); ctx.ellipse(wx, -7 * scale, 5.4 * scale, 7.5 * scale, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = wcol; ctx.beginPath(); ctx.arc(wx, -7 * scale, 3.5 * scale, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = Math.max(1, scale); ctx.beginPath(); ctx.arc(wx, -7 * scale, 2 * scale, 0, Math.PI * 2); ctx.stroke();
+      const wx = side * Wd * .43, wy = -7 * scale, tw = 5.4 * scale * wsz, th = 7.5 * scale * wsz;
+      ctx.fillStyle = '#080b12'; ctx.beginPath(); ctx.ellipse(wx, wy, tw, th, 0, 0, Math.PI * 2); ctx.fill();
+      // sidewall shoulder, so a bigger wheel reads as a thinner tyre rather than a bigger blob
+      ctx.strokeStyle = 'rgba(148,163,184,.25)'; ctx.lineWidth = Math.max(.6, .6 * scale);
+      ctx.beginPath(); ctx.ellipse(wx, wy, tw * .82, th * .82, 0, 0, Math.PI * 2); ctx.stroke();
+      const rimR = (style === 'deep' ? 3.9 : 3.4) * scale * wsz;
+      ctx.fillStyle = wcol; ctx.beginPath(); ctx.arc(wx, wy, rimR, 0, Math.PI * 2); ctx.fill();
+      // a polished lip on the light finishes, a dull one on black
+      ctx.strokeStyle = o.wheelColor === 'black' ? 'rgba(148,163,184,.5)' : 'rgba(255,255,255,.75)';
+      ctx.lineWidth = Math.max(.7, .8 * scale); ctx.beginPath(); ctx.arc(wx, wy, rimR * .94, 0, Math.PI * 2); ctx.stroke();
+      ctx.save(); ctx.beginPath(); ctx.arc(wx, wy, rimR * .9, 0, Math.PI * 2); ctx.clip();
+      if (style === 'steel') {
+        ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.arc(wx, wy, rimR * .78, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = gameShade(wcol, -30);
+        for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2; ctx.beginPath(); ctx.arc(wx + Math.cos(a) * rimR * .45, wy + Math.sin(a) * rimR * .45, rimR * .16, 0, Math.PI * 2); ctx.fill(); }
+      } else if (style === 'mesh') {
+        ctx.strokeStyle = gameShade(wcol, -45); ctx.lineWidth = Math.max(.6, .55 * scale);
+        for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; ctx.beginPath(); ctx.moveTo(wx + Math.cos(a) * rimR * .2, wy + Math.sin(a) * rimR * .2); ctx.lineTo(wx + Math.cos(a + .5) * rimR * .9, wy + Math.sin(a + .5) * rimR * .9); ctx.stroke(); }
+      } else if (style === 'deep') {
+        ctx.fillStyle = gameShade(wcol, -55); ctx.beginPath(); ctx.arc(wx, wy, rimR * .62, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = wcol;
+        for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; ctx.beginPath(); ctx.moveTo(wx, wy); ctx.arc(wx, wy, rimR * .6, a - .18, a + .18); ctx.closePath(); ctx.fill(); }
+      } else {
+        ctx.strokeStyle = gameShade(wcol, -50); ctx.lineWidth = Math.max(.9, .95 * scale); ctx.lineCap = 'round';
+        for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2 - Math.PI / 2; ctx.beginPath(); ctx.moveTo(wx, wy); ctx.lineTo(wx + Math.cos(a) * rimR * .82, wy + Math.sin(a) * rimR * .82); ctx.stroke(); }
+      }
+      ctx.restore();
+      ctx.fillStyle = gameShade(wcol, -62); ctx.beginPath(); ctx.arc(wx, wy, rimR * .2, 0, Math.PI * 2); ctx.fill();
+      // brake disc glow behind the spokes when the brakes are on
+      if (o.brake) { ctx.save(); ctx.globalAlpha = .5; ctx.fillStyle = '#f97316'; ctx.beginPath(); ctx.arc(wx, wy, rimR * .5, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
     }
     // Body silhouette driven by the car's style, not one shared wedge.
     const prof = REAR_PROFILES[sh.style] || REAR_PROFILES.curve;
@@ -8845,7 +8879,21 @@ class NeonRacing {
     ctx.strokeStyle = 'rgba(226,232,240,.72)'; ctx.lineWidth = Math.max(1, 1.2 * scale); ctx.stroke();
     ctx.fillStyle = 'rgba(15,23,42,.35)'; ctx.fillRect(-1 * scale, topY - cabH + 2 * scale, 2 * scale, cabH);
     ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillRect(-pw(2) * .86, beltY - 2 * scale, 8 * scale, 3 * scale); ctx.fillRect(pw(2) * .6, beltY + scale, 5 * scale, 3 * scale);
-    if (o.spoiler && o.spoiler !== 'none') { ctx.fillStyle = gameShade(base, -38); ctx.fillRect(-Wd * .58, -30 * scale, Wd * 1.16, 2.7 * scale); ctx.fillRect(-Wd * .4, -30 * scale, 2 * scale, 6 * scale); ctx.fillRect(Wd * .38, -30 * scale, 2 * scale, 6 * scale); }
+    // Wing: lip, ducktail and GT are three different shapes, not one bar.
+    const wing = o.wing || o.spoiler;
+    if (wing && wing !== 'none') {
+      ctx.fillStyle = gameShade(base, -38);
+      if (wing === 'lip') { rrPath(ctx, -Wd * .46, -26.5 * scale, Wd * .92, 2 * scale, scale); ctx.fill(); }
+      else if (wing === 'duck') {
+        ctx.beginPath(); ctx.moveTo(-Wd * .46, -25 * scale); ctx.quadraticCurveTo(0, -30.5 * scale, Wd * .46, -25 * scale);
+        ctx.lineTo(Wd * .44, -23 * scale); ctx.quadraticCurveTo(0, -27.5 * scale, -Wd * .44, -23 * scale); ctx.closePath(); ctx.fill();
+      } else {
+        ctx.fillRect(-Wd * .58, -33 * scale, Wd * 1.16, 2.7 * scale);
+        ctx.fillStyle = gameShade(base, -52);
+        ctx.fillRect(-Wd * .4, -33 * scale, 2.2 * scale, 7 * scale); ctx.fillRect(Wd * .38, -33 * scale, 2.2 * scale, 7 * scale);
+        ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(-Wd * .58, -33 * scale, Wd * 1.16, .8 * scale);
+      }
+    }
     if (o.decal === 'stripes') { ctx.fillStyle = 'rgba(255,255,255,.72)'; ctx.fillRect(-1.6 * scale, -42 * scale, 3.2 * scale, 38 * scale); }
     // Lamps, plate, bumper, and exhaust provide recognizable rear detail.
     // ---- rear light signature (same vocabulary as the sprite and the 3D car) --
@@ -8902,9 +8950,44 @@ class NeonRacing {
     }
     ctx.fillStyle = '#e2e8f0'; rrPath(ctx, -7 * scale, -11 * scale, 14 * scale, 6 * scale, scale); ctx.fill();
     ctx.fillStyle = '#1e293b'; ctx.font = '700 ' + Math.max(5, Math.round(5 * scale)) + 'px ui-monospace, monospace'; ctx.textAlign = 'center'; ctx.fillText(o.number ? String(o.number) : 'FUN', 0, -7.5 * scale); ctx.textAlign = 'start';
+    // ---- bumper / diffuser: the kit bought in the garage decides the fascia ----
+    const kit = o.bumper && o.bumper !== 'stock' ? o.bumper : o.kit || 'stock';
     ctx.fillStyle = '#0f172a'; ctx.fillRect(-Wd * .5, -5 * scale, Wd, 3 * scale);
-    ctx.fillStyle = '#111827'; ctx.beginPath(); ctx.moveTo(-Wd * .28, -5 * scale); ctx.lineTo(Wd * .28, -5 * scale); ctx.lineTo(Wd * .2, -1.5 * scale); ctx.lineTo(-Wd * .2, -1.5 * scale); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#64748b'; ctx.beginPath(); ctx.ellipse(Wd * .34, -1.5 * scale, 3 * scale, 1.5 * scale, 0, 0, Math.PI * 2); ctx.fill();
+    if (kit === 'wide') {
+      // deep diffuser with strakes and a wide valance
+      ctx.fillStyle = '#0b1120'; ctx.beginPath();
+      ctx.moveTo(-Wd * .44, -5 * scale); ctx.lineTo(Wd * .44, -5 * scale);
+      ctx.lineTo(Wd * .36, -0.5 * scale); ctx.lineTo(-Wd * .36, -0.5 * scale); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#334155'; ctx.lineWidth = Math.max(.7, .8 * scale);
+      [-.24, -.08, .08, .24].forEach((f) => { ctx.beginPath(); ctx.moveTo(Wd * f, -4.6 * scale); ctx.lineTo(Wd * f * .86, -0.8 * scale); ctx.stroke(); });
+      ctx.fillStyle = gameShade(base, -46); ctx.fillRect(-Wd * .52, -6.4 * scale, Wd * .07, 5 * scale); ctx.fillRect(Wd * .45, -6.4 * scale, Wd * .07, 5 * scale);
+    } else if (kit === 'street') {
+      ctx.fillStyle = '#111827'; ctx.beginPath();
+      ctx.moveTo(-Wd * .33, -5 * scale); ctx.lineTo(Wd * .33, -5 * scale);
+      ctx.lineTo(Wd * .26, -1.2 * scale); ctx.lineTo(-Wd * .26, -1.2 * scale); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#334155'; ctx.lineWidth = Math.max(.6, .7 * scale);
+      [-.12, .12].forEach((f) => { ctx.beginPath(); ctx.moveTo(Wd * f, -4.6 * scale); ctx.lineTo(Wd * f, -1.5 * scale); ctx.stroke(); });
+    } else {
+      ctx.fillStyle = '#111827'; ctx.beginPath(); ctx.moveTo(-Wd * .28, -5 * scale); ctx.lineTo(Wd * .28, -5 * scale); ctx.lineTo(Wd * .2, -1.5 * scale); ctx.lineTo(-Wd * .2, -1.5 * scale); ctx.closePath(); ctx.fill();
+    }
+    // ---- exhaust: single tip stock, twin on street, quad on widebody ----
+    const tips = kit === 'wide' ? [-.38, -.28, .28, .38] : kit === 'street' ? [-.32, .32] : [.34];
+    tips.forEach((f) => {
+      ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.ellipse(Wd * f, -1.5 * scale, 2.6 * scale, 1.4 * scale, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#0b1120'; ctx.beginPath(); ctx.ellipse(Wd * f, -1.5 * scale, 1.5 * scale, .8 * scale, 0, 0, Math.PI * 2); ctx.fill();
+    });
+    // ---- small things that read as a real car ----
+    // shutline down the boot, badge, high-level brake light, mirrors at the shoulder
+    ctx.strokeStyle = 'rgba(0,0,0,.28)'; ctx.lineWidth = Math.max(.5, .5 * scale);
+    ctx.beginPath(); ctx.moveTo(-pw(2) * .9, beltY + 6 * scale); ctx.lineTo(pw(2) * .9, beltY + 6 * scale); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-Wd * .5, -12.4 * scale); ctx.lineTo(Wd * .5, -12.4 * scale); ctx.stroke();
+    ctx.fillStyle = 'rgba(226,232,240,.85)'; ctx.beginPath(); ctx.ellipse(0, -13.8 * scale, 2.6 * scale, 1.5 * scale, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = o.brake ? '#ff3b30' : '#7f1d1d'; rrPath(ctx, -topW * .3, topY - cabH + .5 * scale, topW * .6, 1.4 * scale, .6 * scale); ctx.fill();
+    ctx.fillStyle = gameShade(base, -40);
+    for (const sd of [-1, 1]) { ctx.beginPath(); ctx.ellipse(sd * (topW + 2.5 * scale), topY - cabH * .62, 1.8 * scale, 1.1 * scale, 0, 0, Math.PI * 2); ctx.fill(); }
+    // number-plate lamps wash the plate from above
+    ctx.save(); ctx.globalAlpha = .16; ctx.fillStyle = '#fef9c3';
+    ctx.beginPath(); ctx.ellipse(0, -12 * scale, 9 * scale, 2 * scale, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
     ctx.restore();
   }
   drawSceneryProp(ctx, prop, seg, scale, screenX, screenY, roadW) {
@@ -9037,7 +9120,7 @@ class NeonRacing {
     // Keep the player's large rear sprite for the classic chase-camera look.
     const neonCol = !g.neon || g.neon === 'none' ? null : (String(g.neon)[0] === '#' ? g.neon : ({ mint: '#5ef0b0', cyan: '#22d3ee', pink: '#f472b6', gold: '#fbbf24' }[g.neon] || null));
     const playerScale = (g.cam === 'far' ? 1.52 : 1.85) + (this.speed / R.maxSpeed) * .1;
-    this.drawCarRear(ctx, W / 2 + (Math.random() - .5) * this.shake * .3, H * .96, playerScale, g.paint, { finish: g.finish, wheelColor: g.wheelColor, spoiler: g.spoiler, decal: g.decal, number: g.number, neon: neonCol, shape: this.car().shape, brake: this.control('down', this.arcade._heldKeys || {}), yaw: -this.steerSmoothed * .025 });
+    this.drawCarRear(ctx, W / 2 + (Math.random() - .5) * this.shake * .3, H * .96, playerScale, g.paint, DriftCircuit.renderOpts({ neon: neonCol, shape: this.car().shape, brake: this.control('down', this.arcade._heldKeys || {}), yaw: -this.steerSmoothed * .025, t: this.now }));
     return true;
   }
   draw(ctx) {
@@ -9071,11 +9154,11 @@ class NeonRacing {
       if (i > 5 && i % 9 === 0) { const postH = Math.max(4, a.half * .14); ctx.fillStyle = '#dbeafe'; ctx.fillRect(a.x - a.half - 7, a.y - postH, 3, postH); ctx.fillRect(a.x + a.half + 4, a.y - postH, 3, postH); ctx.fillStyle = theme.accent; ctx.fillRect(a.x - a.half - 10, a.y - postH, 9, 3); ctx.fillRect(a.x + a.half + 1, a.y - postH, 9, 3); }
     }
     const cars = (this.mode() === 'circuit' ? this.ai : this.traffic).filter((c) => c.z - this.playerZ > R.segLen && c.z - this.playerZ < R.segLen * 100).sort((a, b) => b.z - a.z);
-    cars.forEach((c) => { const rz = Number.isFinite(c.renderZ) ? c.renderZ : c.z, rx = Number.isFinite(c.renderX) ? c.renderX : c.x, depth = clamp((rz - this.playerZ) / (R.segLen * 100), .02, .99), idx = Math.min(count - 1, Math.round(Math.pow(depth, .645) * (count - 1))), n = nodes[idx], close = 1 - depth; this.drawCarRear(ctx, n.x + rx * n.half * .68, n.y, .13 + close * 1.16, c.paint, { shape: (DriftCircuit.CARS[c.carKey] || DriftCircuit.CARS.sport).shape, finish: 'metallic', wheelColor: c.wheelColor || 'silver', spoiler: c.wing || 'none', decal: c.decal || 'none', number: c.number || '', neon: 'none' }); });
+    cars.forEach((c) => { const rz = Number.isFinite(c.renderZ) ? c.renderZ : c.z, rx = Number.isFinite(c.renderX) ? c.renderX : c.x, depth = clamp((rz - this.playerZ) / (R.segLen * 100), .02, .99), idx = Math.min(count - 1, Math.round(Math.pow(depth, .645) * (count - 1))), n = nodes[idx], close = 1 - depth; this.drawCarRear(ctx, n.x + rx * n.half * .68, n.y, .13 + close * 1.16, c.paint, { shape: (DriftCircuit.CARS[c.carKey] || DriftCircuit.CARS.sport).shape, finish: c.finish || 'metallic', wheelColor: c.wheelColor || 'silver', wheelStyle: c.wheelStyle || 'sport', wheelSize: 1, kit: c.kit || 'stock', bumper: c.bumper || 'stock', spoiler: c.wing || 'none', wing: c.wing || 'none', decal: c.decal || 'none', number: c.number || '', neon: 'none' }); });
     // player car (rear view)
     const speedRatio = this.speed / R.maxSpeed;
     const carScale = (g.cam === 'far' ? 1.58 : 1.95) + speedRatio * .08;
-    this.drawCarRear(ctx, W / 2 + (Math.random() - .5) * this.shake * .3, H * .96, carScale, g.paint, { finish: g.finish, wheelColor: g.wheelColor, spoiler: g.spoiler, decal: g.decal, number: g.number, neon: g.neon, brake: this.control('down', this.arcade._heldKeys || {}) });
+    this.drawCarRear(ctx, W / 2 + (Math.random() - .5) * this.shake * .3, H * .96, carScale, g.paint, DriftCircuit.renderOpts({ shape: this.car().shape, brake: this.control('down', this.arcade._heldKeys || {}), t: this.now }));
     if (speedRatio > .55) { ctx.strokeStyle = 'rgba(255,255,255,.18)'; for (let i = 0; i < 8; i++) { const sy = H * (.35 + i * .07); ctx.beginPath(); ctx.moveTo(0, sy); ctx.lineTo(30 + Math.random() * 20, sy); ctx.stroke(); ctx.beginPath(); ctx.moveTo(W, sy); ctx.lineTo(W - 30 - Math.random() * 20, sy); ctx.stroke(); } }
     }
     ctx.restore();
@@ -9210,7 +9293,16 @@ class DriftCircuit {
     engine: 520, brake: 700, drag: 0.35, rolling: 26, maxSpeed: 880,
     steerBase: 1.1, steerSpeed: 1.9, gripRoad: 7.8, gripGrass: 3.2, gripHandbrake: 1.4,
     handbrakeDrag: 0.55, slideYaw: 0.0009, collisionCooldown: 0.8, damageLimit: 8,
-    smokeMax: 140, skidMax: 360, minDriftSpeed: 85, minDriftSlip: 0.12
+    smokeMax: 140, skidMax: 360, minDriftSpeed: 85, minDriftSlip: 0.12,
+    // --- feel ---
+    // Steering is rate-limited rather than snapping to full lock, so the car has to be
+    // turned in and caught. Weight transfer trades front grip for rear grip under
+    // braking and acceleration, which is what makes lift-off rotate the car and
+    // throttle push it wide. Power-on at an angle breaks the rear loose.
+    steerRate: 5.2, steerReturn: 8.5, steerSpeedFalloff: 0.55,
+    transferRate: 3.2, transferBrake: 0.42, transferThrottle: -0.3,
+    gripFrontBias: 0.55, powerSlide: 0.9, counterAssist: 0.5,
+    reverseSpeed: 0.3, reverseEngine: 0.42, stopThreshold: 18
   };
   static garage() {
     if (!profile.garage || typeof profile.garage !== "object") profile.garage = {};
@@ -9237,6 +9329,18 @@ class DriftCircuit {
     return g;
   }
   static carFor(gameKey) { const g = DriftCircuit.garage(); return DriftCircuit.CARS[(gameKey === "racing" ? g.raceCar : g.car)] || DriftCircuit.CARS.sport; }
+  /* Every draw of the player's car goes through here. Call sites used to hand-pick a few
+     keys each, so wheels, kit, hood and bumper silently never reached the renderer and
+     those purchases had no visible effect. Pass extras to override. */
+  static renderOpts(extra) {
+    const g = DriftCircuit.garage();
+    return Object.assign({
+      finish: g.finish, kit: g.kit, hood: g.hood, bumper: g.bumper,
+      wing: g.spoiler, spoiler: g.spoiler,
+      wheelStyle: g.wheels, wheelColor: g.wheelColor, wheelSize: g.wheelSize,
+      decal: g.decal, number: g.number, neon: g.neon, neonMode: g.neonMode
+    }, extra || {});
+  }
   constructor(canvas, arcade) { this.canvas = canvas; this.arcade = arcade; this.ctx = canvas.getContext('2d'); this.name = 'Drift Circuit'; this.key = 'drift'; this.W = 760; this.H = 460; this.smooth = true; this.reset(); }
   static GL_SCALE = 0.08;
   car() { return DriftCircuit.carFor('drift'); }
@@ -9444,7 +9548,12 @@ class DriftCircuit {
     const brake = this.control('down', k) ? 1 : 0;
     this.handbrake = this.control('drift', k) || this.touch.drift > 0;
     const steerInput = (this.control('right', k) ? 1 : 0) - (this.control('left', k) ? 1 : 0);
-    this.steer += (steerInput - this.steer) * Math.min(1, dt * 9);
+    // Rate-limited steering: turning in takes time and the wheel self-centres faster than
+    // it turns, so the car has to be caught rather than flicked.
+    {
+      const toward = steerInput === 0 ? P.steerReturn : (Math.sign(steerInput) !== Math.sign(this.steer) && this.steer !== 0 ? P.steerRate * 1.6 : P.steerRate);
+      this.steer += clamp(steerInput - this.steer, -toward * dt, toward * dt);
+    }
     const near = this.sandbox ? { i: 0, p: this.path[0], lateral: 0, signed: 0 } : this.nearestOnPath();
     const onRoad = this.sandbox ? true : near.lateral < this.halfWidth;
     const power = (car.power || 1) * (g.tune.power || 1) / ((car.weight || 1) * (g.tune.weight || 1));
@@ -9453,9 +9562,15 @@ class DriftCircuit {
     let vf = this.vx * cos + this.vy * sin;
     let vl = -this.vx * sin + this.vy * cos;
     const speed = Math.hypot(vf, vl);
-    // Speed-sensitive steering
-    const steerAuthority = P.steerBase + P.steerSpeed * clamp(speed / P.maxSpeed, 0, 1);
-    this.a += this.steer * steerAuthority * dt * (this.handbrake ? 1.25 : 1);
+    // Weight transfer: braking loads the front axle, throttle unloads it. Tracked as a
+    // smoothed value so a stab of brake rotates the car a moment later, not instantly.
+    const targetTransfer = (brake ? P.transferBrake : 0) + (throttle ? P.transferThrottle : 0);
+    this.transfer = (this.transfer || 0) + (targetTransfer - (this.transfer || 0)) * Math.min(1, dt * P.transferRate);
+    // Speed-sensitive steering. Lock falls away with speed and the loaded front axle bites
+    // harder, so trail-braking into a corner actually turns the car in.
+    const sp01 = clamp(speed / P.maxSpeed, 0, 1);
+    const steerAuthority = (P.steerBase + P.steerSpeed * sp01) * (1 - P.steerSpeedFalloff * sp01 * sp01) * (1 + this.transfer * P.gripFrontBias);
+    this.a += this.steer * steerAuthority * dt * (this.handbrake ? 1.25 : 1) * (vf < 0 ? -1 : 1);
     // Weight transfer: with the handbrake pulled, lateral slip turns the car further so a
     // drift can be held. Without it, the effect is small so the car does not spin out.
     this.a += -vl * P.slideYaw * clamp(speed / 160, 0, 1) * dt * 60 * (0.4 + (g.handling || 0) * 0.9) * (this.handbrake ? 1 : 0.3);
@@ -9468,15 +9583,31 @@ class DriftCircuit {
     }
     this.throttle = throttle; this.brake = brake;
     if (throttle) vf += P.engine * power * dt;
-    if (brake) vf -= (vf > 0 ? P.brake : P.brake * .6) * dt;
+    // Brake pedal doubles as reverse: it stops the car, then backs it up once stopped.
+    // Holding it at a standstill creeps backwards instead of doing nothing.
+    if (brake) {
+      if (vf > P.stopThreshold * .2) vf -= P.brake * dt;
+      else if (vf > -P.maxSpeed * P.reverseSpeed) vf -= P.engine * power * P.reverseEngine * dt;
+      this.reversing = vf < -2;
+    } else this.reversing = false;
     vf -= vf * P.drag * dt;
     vf -= Math.sign(vf) * P.rolling * dt;
     if (this.handbrake) vf -= Math.sign(vf) * P.handbrakeDrag * 60 * dt / (g.tune.handbrake || 1);
-    vf = clamp(vf, -P.maxSpeed * .35, P.maxSpeed * power);
-    // Lateral grip: strong on road, weak on grass, weakest with the handbrake
+    vf = clamp(vf, -P.maxSpeed * P.reverseSpeed, P.maxSpeed * power);
+    // Lateral grip: strong on road, weak on grass, weakest with the handbrake.
+    // The rear axle loses grip as weight moves forward (braking) and as power goes down
+    // at an angle, so a boot of throttle mid-corner steps the back out and lifting
+    // hooks it back up. That is the part that was missing: grip used to be one number.
     const surfaceGrip = onRoad ? P.gripRoad : P.gripGrass;
-    const grip = (this.handbrake ? P.gripHandbrake : surfaceGrip) * (car.grip || 1) * (g.tune.grip || 1);
+    const powerOn = throttle ? clamp(Math.abs(vl) / 90, 0, 1) * P.powerSlide * power : 0;
+    const rearLoad = clamp(1 - this.transfer - powerOn, 0.25, 1.6);
+    const grip = (this.handbrake ? P.gripHandbrake : surfaceGrip * rearLoad) * (car.grip || 1) * (g.tune.grip || 1);
     vl *= Math.exp(-grip * dt);
+    // Countersteer assist: steering into the slide recovers grip, so a caught slide is
+    // rewarded and a lazy one still spins.
+    if (!this.handbrake && Math.sign(this.steer) === -Math.sign(vl) && Math.abs(vl) > 20) {
+      vl *= Math.exp(-P.counterAssist * Math.abs(this.steer) * dt * 4);
+    }
     this.vx = cos * vf - sin * vl; this.vy = sin * vf + cos * vl;
     this.x += this.vx * dt; this.y += this.vy * dt;
     this.slip = Math.abs(vl); this.speedNow = Math.hypot(vf, vl);
@@ -9791,7 +9922,7 @@ class DriftCircuit {
       const scale = Math.max(.16, Math.min(2.4, (this.cam.focal / carP.z) * 1.05));
       ctx.save(); ctx.globalAlpha = .35; ctx.fillStyle = '#000';
       ctx.beginPath(); ctx.ellipse(carP.x, carP.y + 6 * scale, 24 * scale, 12 * scale, rot, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-      drawCustomCar(ctx, carP.x, carP.y, rot + Math.PI / 2, scale, g.paint, g.wheels, { finish: g.finish, kit: g.kit, hood: g.hood, bumper: g.bumper, wing: g.spoiler, wheelStyle: g.wheels, wheelColor: g.wheelColor, wheelSize: g.wheelSize, decal: g.decal, number: g.number, neon: g.neon, neonMode: g.neonMode, t: this.now, shape: this.car().shape });
+      drawCustomCar(ctx, carP.x, carP.y, rot + Math.PI / 2, scale, g.paint, g.wheels, DriftCircuit.renderOpts({ t: this.now, shape: this.car().shape }));
       if (this.handbrake && this.speedNow > 40) { ctx.fillStyle = 'rgba(255,60,60,.9)'; ctx.beginPath(); ctx.arc(carP.x, carP.y + 10 * scale, 3.4 * scale, 0, Math.PI * 2); ctx.fill(); }
     } else if (g.cam === 'hood') {
       this.drawCockpit(ctx, W, H, g);

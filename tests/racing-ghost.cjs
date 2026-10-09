@@ -26,7 +26,11 @@ function inputAt(tick) {
 }
 
 function recordRun(ticks = 600, meta = META) {
-  const car = Cars.get(meta.carId);
+  // The live run drives the car the meta claims, tune included, exactly as
+  // replay() does. Without this the recording is honest while the meta lies,
+  // which is a different case and not the one under test.
+  let car = Cars.get(meta.carId);
+  if (meta.tune) car = Object.assign({}, car, { tune: meta.tune });
   const state = Physics.createState(car);
   const env = { difficulty: meta.difficulty, weather: meta.weather };
   const rec = Ghost.record(meta);
@@ -196,6 +200,49 @@ test("non-numeric and fractional values are rejected before they reach the physi
   g2.checkpoints = [];
   g2.chain = Ghost.hash("x");
   assert.match(Ghost.verify(g2, Cars).reason, /non-numeric/, "validation must run before replay");
+});
+
+test("a forged car setup is refused before it is ever simulated", () => {
+  // Found by the economy agent's review, and worse than it looked: a ghost
+  // claiming tune {power:50, grip:50} replays PERFECTLY self-consistently --
+  // every checkpoint matches and the hash chain is intact -- while covering
+  // 3,335m in ten seconds at 1,124 km/h. Re-simulation only proves a run is
+  // consistent with its inputs and the car it claims. The claimed car is a
+  // separate assertion and has to be checked on its own.
+  const cheatMeta = Object.assign({}, META, { tune: { power: 50, grip: 50, weight: 0.2, handbrake: 1 } });
+  const { ghost: forged, state } = recordRun(600, cheatMeta);
+  const honest = recordRun(600, META);
+  assert.ok(state.distance > honest.state.distance * 3,
+    `the forged tune should cover far more ground: ${state.distance.toFixed(0)}m vs an honest ${honest.state.distance.toFixed(0)}m`);
+  const v = Ghost.verify(forged, Cars);
+  assert.equal(v.ok, false, "a ghost with an impossible tune must not verify");
+  assert.match(v.reason, /tune out of range/);
+
+  // The legitimate range the garage can actually produce still passes.
+  const legit = recordRun(120, Object.assign({}, META, { tune: { power: 1.4, grip: 0.7, weight: 1.2, handbrake: 1 } }));
+  assert.equal(Ghost.verify(legit.ghost, Cars).ok, true, "a legal tune must still verify");
+
+  const edge = (tune) => Ghost.verify(recordRun(120, Object.assign({}, META, { tune })).ghost, Cars);
+  assert.equal(edge({ power: 1.41 }).ok, false, "just over the limit must be refused");
+  assert.equal(edge({ power: 0.69 }).ok, false, "just under the limit must be refused");
+  assert.match(edge({ nitrous: 1 }).reason, /unknown tune field/);
+  assert.match(edge({ power: "1.2" }).reason, /non-numeric tune/);
+  assert.match(edge({ power: NaN }).reason, /non-numeric tune/);
+
+  // And the rejection must come from validation, not from replay noticing later.
+  const noCheckpoints = JSON.parse(JSON.stringify(forged));
+  noCheckpoints.checkpoints = [];
+  noCheckpoints.chain = Ghost.hash("x");
+  assert.match(Ghost.verify(noCheckpoints, Cars).reason, /tune out of range/, "validation must run before replay");
+});
+
+test("a malformed meta is refused", () => {
+  const { ghost } = recordRun();
+  const bad = (mutate) => { const g = JSON.parse(JSON.stringify(ghost)); mutate(g); return Ghost.verify(g, Cars); };
+  assert.match(bad((g) => { g.meta.carId = 42; }).reason, /malformed meta/);
+  assert.match(bad((g) => { g.meta.weather = null; }).reason, /malformed meta/);
+  assert.match(bad((g) => { g.meta.tune = []; }).reason, /malformed tune/);
+  assert.match(bad((g) => { g.meta.tune = "fast"; }).reason, /malformed tune/);
 });
 
 test("playback can be stopped partway for a live ghost car", () => {

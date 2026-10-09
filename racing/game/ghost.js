@@ -30,6 +30,15 @@
   var CHECKPOINT_EVERY = 60;   // one per simulated second
   var QUANT = 100;             // inputs stored to 1/100, which is finer than any player
   var MAX_TICKS = 60 * 60 * 10; // ten minutes; longer is rejected rather than stored
+  // The tuning the garage can actually produce. `replay()` feeds meta.tune
+  // straight into the physics, so a recording that claims a tune outside this
+  // range replays perfectly self-consistently -- every checkpoint matches and
+  // the hash chain is intact -- while doing 1100 km/h. Re-simulation proves a
+  // run is consistent with its inputs AND the car it claims; the claimed car
+  // has to be checked separately.
+  var TUNE_KEYS = ["power", "grip", "weight", "handbrake"];
+  var TUNE_MIN = 0.7;
+  var TUNE_MAX = 1.4;
 
   function q(v) { return Math.round((v || 0) * QUANT) / QUANT; }
 
@@ -176,6 +185,23 @@
       return { ok: false, reason: "implausible length" };
     }
     if (!Array.isArray(ghost.inputs) || !Array.isArray(ghost.checkpoints)) return { ok: false, reason: "malformed" };
+
+    // The claimed car setup, before anything is simulated with it.
+    if (ghost.meta.tune != null) {
+      var tune = ghost.meta.tune;
+      if (typeof tune !== "object" || Array.isArray(tune)) return { ok: false, reason: "malformed tune" };
+      var keys = Object.keys(tune);
+      for (var t = 0; t < keys.length; t++) {
+        if (TUNE_KEYS.indexOf(keys[t]) < 0) return { ok: false, reason: "unknown tune field: " + keys[t] };
+        var val = tune[keys[t]];
+        if (typeof val !== "number" || !isFinite(val)) return { ok: false, reason: "non-numeric tune value" };
+        if (val < TUNE_MIN || val > TUNE_MAX) return { ok: false, reason: "tune out of range: " + keys[t] };
+      }
+    }
+    if (typeof ghost.meta.carId !== "string" || typeof ghost.meta.difficulty !== "string" ||
+        typeof ghost.meta.weather !== "string") {
+      return { ok: false, reason: "malformed meta" };
+    }
 
     // Ticks must be whole, strictly increasing and inside the run; every value
     // must be a finite number. Range comparisons alone are not enough, because

@@ -7,6 +7,13 @@
 name: College photo refresh
 
 on:
+  # A push of this workflow file itself starts the crawl, because
+  # workflow_dispatch only resolves workflows that exist on the default branch.
+  push:
+    branches:
+      - college-photo-refresh
+    paths:
+      - ".github/workflows/college-photo-refresh.yml"
   workflow_dispatch:
     inputs:
       only:

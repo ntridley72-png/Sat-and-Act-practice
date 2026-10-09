@@ -33,6 +33,11 @@ DATA_PAGE = "https://collegescorecard.ed.gov/data/"
 BEA_RPP_ZIP = "https://apps.bea.gov/regional/zip/SARPP.zip"
 API = "https://api.data.gov/ed/collegescorecard/v1/schools?api_key=DEMO_KEY"
 UA = {"User-Agent": "funsat.bid college data build script (educational; contact: funsat.bid)"}
+# Wikimedia's anonymous limit for search queries is tight; pace every API call
+# globally and honour Retry-After instead of blind exponential backoff.
+THROTTLE_LOCK = threading.Lock()
+THROTTLE = float(os.environ.get("WIKI_THROTTLE", "1.8"))
+LAST_CALL = [0.0]
 
 SELECTIVE_ADMIT = 0.55
 LARGEST_N = 150
@@ -277,20 +282,29 @@ def fetch_majors(colleges):
         e["maj"] = [[label, round(count / total * 100)] for label, count in fields] if total else []
 
 
-def wiki_get(url, tries=6):
-    # Commons throttles bursts hard. Back off with jitter and report so a long
-    # crawl looks busy rather than hung.
-    delay = 8
+def wiki_get(url, tries=8):
+    delay = 5
     for attempt in range(tries):
+        with THROTTLE_LOCK:
+            gap = LAST_CALL[0] + THROTTLE - time.time()
+            if gap > 0:
+                time.sleep(gap)
+            LAST_CALL[0] = time.time()
         try:
             return json.loads(get(url, timeout=45))
         except urllib.error.HTTPError as exc:
             if exc.code != 429:
                 raise
-            wait = min(delay, 75) * (1 + random.random() * .4)
+            retry = None
+            try:
+                retry = float(exc.headers.get("Retry-After")) if exc.headers else None
+            except (TypeError, ValueError):
+                retry = None
+            wait = min(max(delay, (retry + 1) if retry else delay), 90)
+            wait *= 1 + random.random() * 0.2
             print("commons rate limit: waiting %.0fs (attempt %d/%d)" % (wait, attempt + 1, tries), flush=True)
             time.sleep(wait)
-            delay *= 1.8
+            delay = min(delay * 1.6, 60)
     raise urllib.error.HTTPError(url, 429, "rate limited", None, None)
 
 
@@ -331,7 +345,7 @@ def photo_kind(text):
 
 
 PRIORITY_NAMES = {"university of san diego", "university of california-san diego", "harvard university",
-                  "university of alabama", "auburn university"}
+                  "the university of alabama", "university of alabama", "auburn university"}
 LEGACY_REJECT = ("logo", "seal", "crest", "coat of arms", "coat_of_arms", "wordmark", "bookplate",
                  "contact sheet", "map", "flag", "strike", "protest", "rally", "demonstration",
                  "headshot", "portrait", "award ceremony", "commencement speaker", "lathe",
@@ -584,7 +598,7 @@ def fetch_photos(colleges):
                 e.update({"img": keep[0]["u"], "imgA": keep[0].get("a") or keep[0]["credit"], "imgL": keep[0]["l"]})
         tick()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
         list(pool.map(crawl, todo))
     with lock:
         json.dump(cache, open(cache_path, "w"))

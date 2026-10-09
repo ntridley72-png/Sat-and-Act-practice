@@ -25,6 +25,20 @@
     hard:   { speed: 0.98, look: 2.1, react: 10.0, offset: 0.85, mistake: 0.001 }
   };
 
+  // Allowance for tyre slip: the road-wheel angle a real corner needs is larger
+  // than the geometric kappa*wheelbase, because both axles are running a slip
+  // angle. Measured against the model's own steady-state cornering.
+  var UNDERSTEER = 1.6;
+  var GAIN = 2.6;          // correction gain on the remaining heading error
+  // How much of the tyres' capability the AI budgets for braking. Under 1 so a
+  // car that is also cornering is not planning to spend grip it has not got.
+  var BRAKE_FRACTION = 0.70;
+  // The share of the tyres' peak lateral grip that actually shows up as path
+  // curvature. Both axles run a slip angle in a steady corner, so the circle the
+  // car describes is wider than the one its steering geometry implies.
+  var PATH_EFFICIENCY = 0.70;
+  var HORIZON_SAMPLES = 20;
+
   function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
   function angleDiff(a, b) {
     var d = (a - b) % (Math.PI * 2);
@@ -99,19 +113,75 @@
     this.offset += (this.targetOffset - this.offset) * clamp(sk.react * dt, 0, 1);
     this.offset = clamp(this.offset, -0.92, 0.92);
 
-    // ---- steering toward the aim point ------------------------------------
+    // ---- steering: feed-forward on curvature, plus error correction --------
+    // Pure pursuit alone does not work against this physics model. The rack is
+    // grip limited (see docs/RACING_PHYSICS.md): a command of 1.0 buys only
+    // `steerAuthority * steerMargin` g of lateral acceleration, so the mapping
+    // from command to road-wheel angle shrinks as the square of speed. A pure
+    // heading-error controller therefore needs a large error before it asks for
+    // the angle a fast corner actually requires, and it only ever gets that
+    // error by already having run wide. The result was a steady-state
+    // understeer that grew through every corner until the car left the road --
+    // and it grew faster with the Standard assists on, which trim steering
+    // further. The AI looked competent only on a circuit gentle enough that no
+    // corner came near the tyres' limit.
+    //
+    // So the angle the corner needs is computed directly and commanded, and the
+    // error term only corrects what is left over.
     var half = ahead.half == null ? 6 : ahead.half;
     var aimX = ahead.x - Math.sin(ahead.heading) * this.offset * half;
     var aimY = ahead.y + Math.cos(ahead.heading) * this.offset * half;
     var want = Math.atan2(aimY - state.y, aimX - state.x);
     var err = angleDiff(want, state.heading);
-    var steer = clamp(err * 1.9, -1, 1);
 
-    // ---- speed target from the curvature ahead ----------------------------
-    var curve = Math.max(Math.abs(ahead.curvature || 0), Math.abs(further.curvature || 0));
-    // v = sqrt(a / k): the fastest a given lateral capability can take a bend.
-    var capable = this.car.steerAuthority * Physics.G * sk.speed;
-    var target = curve > 1e-5 ? Math.sqrt(capable / curve) : 999;
+    // How much road-wheel angle a command of 1.0 is worth right now. This
+    // mirrors the limiter in Physics.step; it is the same published car data,
+    // not a peek at simulation internals.
+    var avail = Math.min(
+      this.car.maxSteer,
+      (this.car.steerAuthority * Physics.G * this.car.wheelbase) / Math.max(speed * speed, 1) * this.car.steerMargin
+    ) / (1 + speed * this.car.steerFalloff * 0.25);
+
+    // The curvature the car is about to be in, rather than the one it is
+    // braking for: feeding forward the distant corner's curvature turns in far
+    // too early.
+    var near = line.at((here + clamp(speed * 0.5, 3, 30)) % line.length);
+    // delta = kappa * wheelbase for a neutral car; tyre slip means the real
+    // angle is larger, and UNDERSTEER is that allowance.
+    var ff = avail > 1e-6 ? clamp((near.curvature || 0) * this.car.wheelbase * UNDERSTEER / avail, -1, 1) : 0;
+
+    // Yaw damping on the controller's own output, so the feed-forward step at a
+    // corner entry does not set up an oscillation.
+    var damp = speed > 4 ? clamp(state.yawRate * 0.35 - (near.curvature || 0) * speed * 0.35, -0.5, 0.5) : 0;
+    var steer = clamp(ff + err * GAIN - damp, -1, 1);
+
+    // ---- speed target: a braking plan, not a lookahead ---------------------
+    // Sampling the curvature at one or two fixed points ahead cannot work. The
+    // distance needed to slow from 200 km/h to a 70 km/h corner is about 180 m,
+    // and the old lookahead was capped at 90 m, so the car arrived at every
+    // fast corner already far too quick, understeered off, and finished the lap
+    // in the scenery. It only looked adequate on a gentle test oval where no
+    // corner ever demanded a real brake.
+    //
+    // Instead: walk a horizon as long as the car's own stopping distance, and at
+    // each point ask what speed HERE would let it still be slow enough THERE.
+    // v_allowed = sqrt(v_corner^2 + 2*a*d) is that, and taking the minimum over
+    // the horizon finds the corner that is braking-critical right now, however
+    // far away it is.
+    var capable = this.car.steerAuthority * Physics.G * PATH_EFFICIENCY * sk.speed;
+    var aBrake = this.car.steerAuthority * Physics.G * BRAKE_FRACTION;
+    var horizon = clamp(speed * speed / (2 * aBrake) + 15, 25, 400);
+    var target = 999;
+    for (var h = 1; h <= HORIZON_SAMPLES; h++) {
+      var d = horizon * h / HORIZON_SAMPLES;
+      var kk = Math.abs(line.at((here + d) % line.length).curvature || 0);
+      var corner = kk > 1e-5 ? Math.sqrt(capable / kk) : 999;
+      var allow = Math.sqrt(corner * corner + 2 * aBrake * d);
+      if (allow < target) target = allow;
+    }
+    // And the corner the car is in, which no lookahead point covers.
+    var kNow = Math.abs(near.curvature || 0);
+    if (kNow > 1e-5) target = Math.min(target, Math.sqrt(capable / kNow));
     target = clamp(target, 4, 150);
 
     var throttle = 0, brake = 0;

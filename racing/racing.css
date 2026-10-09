@@ -24,3 +24,13 @@
 .workshop-chip{border:1px solid #294958!important;background:#0c202a!important;color:#bfd1d7!important;box-shadow:none!important}.workshop-chip.on{border-color:#4ad9e7!important;background:#10323e!important;color:#6eeaf2!important}.workshop-chip:disabled{opacity:.45!important}.workshop-mini button{border:1px solid #2a4c5b!important;background:#0e2230!important;color:#bdd2d9!important;box-shadow:none!important}.workshop-mini button.on{border-color:#4ad9e7!important;background:#10323e!important;color:#6eeaf2!important}.workshop-mini button:disabled{opacity:.45!important}.workshop-actions button{border:1px solid #2a5362!important;background:#0f2732!important;color:#d5e6ea!important;box-shadow:none!important}.workshop-actions button.primary{background:#42d5e3!important;color:#041215!important;border-color:#42d5e3!important}.workshop-swatches button{box-shadow:none!important}.workshop-swatches button.on{border-color:#fff!important}.workshop-back{background:#0c202a!important;color:#cfe2e8!important;border:1px solid #294958!important}.workshop-slider input[type=number]{background:#0c202a!important;color:#e8f4f6!important;border:1px solid #294958!important}
 
 .workshop-nav .play{display:flex;flex-direction:column;gap:2px;justify-content:center;padding:6px 8px}.workshop-nav .play small{font:700 9px Archivo,system-ui;opacity:.75;letter-spacing:.02em}.workshop-nav .play.scored{margin-top:4px;background:#0f2a35!important;color:#6eeaf2!important;border:1px solid #2f6a7c!important}.workshop-nav .play.scored:hover:not(:disabled){background:#143a49!important}.workshop-nav .play.scored:disabled{opacity:.45;cursor:not-allowed}@media(max-width:1050px){.workshop-nav .play small{display:none}}
+
+.workshop-trackmap{margin:0 0 12px;padding:10px;border:1px solid #274553;border-radius:8px;background:#0b1b24}
+.workshop-trackmap svg{display:block;width:100%;height:auto}
+.workshop-trackmap .tm-road{fill:none;stroke:var(--tm-road,#2c4550);stroke-width:16;stroke-linejoin:round;stroke-linecap:round}
+.workshop-trackmap .tm-road.tm-open{stroke-width:18}
+.workshop-trackmap .tm-line{fill:none;stroke:var(--tm-accent,#6eeaf2);stroke-width:1.6;stroke-dasharray:5 6;opacity:.85}
+.workshop-trackmap .tm-arrow{fill:var(--tm-arrow,#f7c95d);stroke:#08131c;stroke-width:1.5;stroke-linejoin:round}
+.workshop-trackmap figcaption{display:flex;justify-content:space-between;gap:8px;margin-top:8px;color:#eaf7f9;font:800 12px Archivo,system-ui}
+.workshop-trackmap figcaption span{color:#8ea7b0;font:600 11px IBM Plex Mono,monospace}
+.workshop-trackmap .workshop-note{margin:6px 0 0}

@@ -3149,7 +3149,13 @@ const cloud = {
     const j = await this.api(mode === "in" ? "login" : "signup", { method: "POST", body: JSON.stringify({ email, password }) });
     this.token = j.token; this.user = { email: j.email };
     try { localStorage.setItem(TOKEN_KEY, JSON.stringify({ token: j.token, email: j.email })); } catch (e) {}
-    paintAccount(); await this.pull();
+    paintAccount();
+    // Pull brings down whatever the account already holds, then push sends up anything
+    // entered on this device before signing in, so a first sign-in on a new device does
+    // not quietly strand work that was done while signed out.
+    await this.pull();
+    profile.dirty = true;
+    await this.push();
   },
   async signOut() { await this.push(); try { await this.api("logout", { method: "POST" }); } catch (e) {} this.forget(); },
   // Merge attempt records even when a different device has newer progress.
@@ -7581,7 +7587,10 @@ class PressureWasher {
   };
   static preferences() {
     let prefs = { subject: 'car', paint: 'red', wheels: 'sport' };
+    // Account copy wins so these choices follow the user to another device; the
+    // localStorage copy is the fallback for a signed-out session on this one.
     try { const saved = JSON.parse(localStorage.getItem('funsatWashCustomize')); if (saved && typeof saved === 'object') prefs = Object.assign(prefs, saved); } catch (e) {}
+    try { if (profile && profile.washCustomize && typeof profile.washCustomize === 'object') prefs = Object.assign(prefs, profile.washCustomize); } catch (e) {}
     return prefs;
   }
   constructor(canvas, arcade) {
@@ -9989,6 +9998,7 @@ class DriftCircuit {
     el.addEventListener('change', () => {
       prefs[key] = el.value;
       try { localStorage.setItem('funsatWashCustomize', JSON.stringify(prefs)); } catch (e) {}
+      try { profile.washCustomize = Object.assign({}, prefs); saveProfile(); } catch (e) {}
       if (window.DriftCircuit) { const g = DriftCircuit.garage(); g.paint = prefs.paint; g.wheels = prefs.wheels; try { saveProfile(); } catch (e) {} }
       if ((arcade.game instanceof PressureWasher || (window.DriftCircuit && arcade.game instanceof DriftCircuit)) && arcade.mode === 'ready') { arcade.game.reset(); arcade.game.draw(arcade.ctx); }
     });

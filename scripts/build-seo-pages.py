@@ -861,7 +861,7 @@ def asset_version():
     import hashlib
     h = hashlib.sha1()
     for name in ("app.js", "redesign.css", "workspace.css", "ads.js",
-                 "guides/guide.css", "subjects.css", "college.js"):
+                 "guides/guide.css", "subjects.css", "college.js", "avatars.js"):
         f = ROOT / name
         if f.exists():
             h.update(f.read_bytes())

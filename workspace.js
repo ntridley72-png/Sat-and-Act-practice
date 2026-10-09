@@ -10,7 +10,13 @@
   };
   const icon = (name) => '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">'+icons[name]+'</svg>';
   let theme = 'exam';
-  try { const saved = localStorage.getItem('funsatWorkspaceTheme'); if (themes.includes(saved)) theme = saved; } catch(e) {}
+  // The chosen layout lives on the profile so it syncs with the account and follows the
+  // user to another device; localStorage is only the fallback before they sign in.
+  try {
+    const fromProfile = typeof profile === 'object' && profile ? profile.workspaceTheme : null;
+    const saved = themes.includes(fromProfile) ? fromProfile : localStorage.getItem('funsatWorkspaceTheme');
+    if (themes.includes(saved)) theme = saved;
+  } catch(e) {}
   let activeTab = 'tutor', lastQuestion = '', lastAnswer = null;
   const toolbar = $('toolsBar');
   const toolsHome = document.createElement('div'); toolsHome.className='workspace-tools-home';
@@ -25,7 +31,12 @@
   const badges=document.querySelector('.badges'),account=document.getElementById('btnAccount');badges.insertBefore(themeLabel,account);
   document.querySelector('.brand').innerHTML='Fun<span class="brand-sat">SAT</span>';
   const applyTheme=()=>{document.body.dataset.workspace=theme;document.documentElement.style.colorScheme=theme==='focus'?'dark':'light';};
-  select.onchange=()=>{theme=select.value;applyTheme();try{localStorage.setItem('funsatWorkspaceTheme',theme);}catch(e){}if(state.view==='test')renderQuestion();};
+  select.onchange=()=>{
+    theme=select.value;applyTheme();
+    try{localStorage.setItem('funsatWorkspaceTheme',theme);}catch(e){}
+    try{ if(typeof profile==='object'&&profile){ profile.workspaceTheme=theme; saveProfile(); } }catch(e){}
+    if(state.view==='test')renderQuestion();
+  };
   applyTheme();
   function selectLearningTab(name) {
     activeTab=name;

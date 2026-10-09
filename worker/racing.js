@@ -285,7 +285,7 @@ async function applyOperation(env, user, opId, plan) {
   for (let attempt = 0; attempt < 6; attempt++) {
     const garage = await ensureGarage(env, user);
     const decided = await plan(garage);
-    if (decided.error) return { status: decided.status || 400, body: { error: decided.error, cash: garage.cash, revision: garage.revision } };
+    if (decided.error) return { status: decided.status || 400, body: { error: decided.error, cash: garage.cash, revision: garage.revision, ...(decided.needed == null ? {} : { needed: decided.needed }) } };
 
     const amount = Math.round(Number(decided.amount) || 0);
     const next = garage.cash + amount;
@@ -370,7 +370,7 @@ async function purchase(env, user, body) {
       // purchase must produce one debit and one benign "you already own it".
       return { kind: "purchase", itemId, amount: 0, data: garage.data, result: { alreadyOwned: true, item: { kind, itemId, price } } };
     }
-    if (garage.cash < price) return { error: "Not enough garage cash.", status: 409 };
+    if (garage.cash < price) return { error: "Not enough garage cash.", status: 409, needed: price };
     const data = { ...garage.data, [listKey]: garage.data[listKey].concat(itemId) };
     return { kind: "purchase", itemId, amount: -price, data, result: { purchased: { kind, itemId, price } } };
   });

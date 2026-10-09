@@ -83,7 +83,12 @@ const BASE = 'http://localhost:8787/api/';
   console.log('PASS (part 1): honest run accepted and server-scored, ledger payout, single-use nonces, cross-account nonce refused, repeated identical evidence refused, auth required.');
 
   // ---- forgeries ---------------------------------------------------------
+  // A fresh account per case, deliberately: the submission rate limit is tight
+  // enough that running fifteen forgeries through one account trips it, which is
+  // the limiter working rather than a reason to loosen it.
   const reject = async (mutate, expectReason, label) => {
+    const who = await signup('racing-run-forge');
+    const F = api(who.token);
     const s = await F('POST', 'racing/nonce', {});
     assert.equal(s.status, 200, 'nonce: ' + JSON.stringify(s.body));
     const ghost = buildGhost(s.body.challenge, { ticks: 180 });

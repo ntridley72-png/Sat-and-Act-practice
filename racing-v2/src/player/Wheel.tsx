@@ -2,7 +2,7 @@
  * geometry. Upstream loaded wheel-draco.glb here; this project ships no
  * meshes, so the wheel is built by the same generator the bodies use.
  */
-import { forwardRef, useMemo } from 'react'
+import { forwardRef, useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import { useCompoundBody } from '@react-three/cannon'
 import type { CylinderProps } from '@react-three/cannon'
@@ -44,6 +44,15 @@ export const Wheel = forwardRef<Group, WheelProps>(({ leftSide, paint, ...props 
     const spec = { ...car.wheel, radius: wheelInfo.radius }
     return buildWheel(THREE, mats, spec, leftSide ? -1 : 1, { details: true })
   }, [leftSide, paint, env])
+
+  // Debug probe: is the wheel group's rotation changing as the car moves?
+  useEffect(() => {
+    const w = window as unknown as { __rv2wheel?: () => unknown }
+    w.__rv2wheel = () => {
+      const g = (ref as React.RefObject<Group>)?.current
+      return g ? { x: +g.rotation.x.toFixed(3), y: +g.rotation.y.toFixed(3), z: +g.rotation.z.toFixed(3) } : null
+    }
+  }, [ref])
 
   return (
     <group ref={ref} dispose={null}>

@@ -762,3 +762,9 @@ body[data-workspace] #screen-test #questionCard{scroll-padding-bottom:96px}
 .cf-social-snapshot{display:inline-flex;align-items:center;min-height:34px;padding:6px 10px;background:var(--ws-tint);color:var(--ws-accent);border:1px solid var(--ws-line);font-size:13px;white-space:nowrap}
 .college-photo{position:relative}
 .college-photo-label{position:absolute;z-index:1;top:8px;left:8px;padding:4px 7px;background:rgba(15,23,42,.82);color:#fff;border-radius:2px;font-size:11px;font-weight:700;letter-spacing:.02em}
+
+/* Split-bar colors (accept / waitlist / deny) per theme. */
+:root{--fx-accept:#6FD08C;--fx-waitlist:#7EA6F0;--fx-deny:#F08A80}
+body[data-workspace="exam"]{--fx-accept:#1D6B3F;--fx-waitlist:#1F4FA8;--fx-deny:#B4241F}
+body[data-workspace="notebook"]{--fx-accept:#1C6038;--fx-waitlist:#1E4C9E;--fx-deny:#A62420}
+body[data-workspace="focus"]{--fx-accept:#7FCF9A;--fx-waitlist:#9BB8F5;--fx-deny:#FF8F85}

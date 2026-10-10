@@ -13,14 +13,24 @@
  */
 import type { RacingLine } from './racingLine'
 
-/** Metres between rows. A car is 4.3 m, so this leaves a clear gap. */
-const ROW_GAP = 7.5
-/** Half-stagger applied to the right-hand car of each pair. */
-const STAGGER = 2.6
-/** Lateral offset from the centreline, metres. */
-const LATERAL = 2.3
-/** How far back from the start line the front row sits. */
-const FRONT_ROW_SETBACK = 6
+/** Formation geometry, now per-track data (see src/tracks/format.ts). The
+ *  values here are the constants this file shipped with, so every existing
+ *  call site keeps its exact behaviour. A car is 4.3 m long, so rowGap leaves
+ *  a clear gap even after the stagger. */
+export interface GridSpec {
+  /** Metres between rows. */
+  rowGap: number
+  /** Half-stagger applied to the right-hand car of each pair. */
+  stagger: number
+  /** Lateral offset from the centreline, metres. */
+  lateral: number
+  /** How far back from the start line the front row sits. */
+  setback: number
+  /** Rows the formation must cover; 2 slots per row. */
+  rows: number
+}
+
+export const DEFAULT_GRID: GridSpec = { rowGap: 7.5, stagger: 2.6, lateral: 2.3, setback: 6, rows: 7 }
 
 export interface GridSlot {
   /** Distance along the racing line, already wrapped. */
@@ -59,17 +69,17 @@ export function yawForZForward(heading: number): number {
 }
 
 /** Slot `index` on the grid. 0 is pole. */
-export function gridSlot(line: RacingLine, index: number): GridSlot {
+export function gridSlot(line: RacingLine, index: number, grid: GridSpec = DEFAULT_GRID): GridSlot {
   const row = Math.floor(index / 2)
   const onRight = index % 2 === 1
 
   // Measured BACKWARDS from the start line, then wrapped, so the grid sits
   // behind the line rather than on top of the first corner.
-  const back = FRONT_ROW_SETBACK + row * ROW_GAP + (onRight ? STAGGER : 0)
+  const back = grid.setback + row * grid.rowGap + (onRight ? grid.stagger : 0)
   const distance = (line.length - back + line.length) % line.length
 
   const p = line.at(distance)
-  const lateral = onRight ? -LATERAL : LATERAL
+  const lateral = onRight ? -grid.lateral : grid.lateral
   // Offset along the line's left normal.
   const nx = -Math.sin(p.heading)
   const nz = Math.cos(p.heading)

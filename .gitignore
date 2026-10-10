@@ -20,3 +20,6 @@ temporal/temporal-dev.db-shm
 temporal/temporal-dev.db-wal
 temporal/logs/
 .refs/
+
+# ECC memory vault: local agent state, not project source.
+.ecc/

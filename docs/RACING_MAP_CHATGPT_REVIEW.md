@@ -202,6 +202,19 @@ car implementation notes, and `DEEPSEEK-OPEN-QUESTIONS.md`.
 
 ## 10. Deployment
 
-**Not deployed.** The operator authorises deploys; the racingV2 flag still
-defaults OFF and the v1 fallback path is untouched (proven by
-`racing-v2-flag.cjs` and `racing-v2-arcade.cjs`).
+**Deployed** on 2026-10-10 under the operator's explicit authorisation, after
+their in-flight work (college links, question-bank expansion, the favicon set
+and the regenerated SEO pages) was brought to a test-green state and the
+required data steps were run (see the deployment note in
+`docs/DEEPSEEK-OPEN-QUESTIONS.md` §11).
+
+- Wrangler version `6472bb07-4470-4984-aead-295293f9b8b7`; `funsat.bid`,
+  `www.funsat.bid` and the workers.dev address all serving.
+- Canaries: `/`, `/colleges/`, `/racing-v2/racing-v2.js` (the six-track
+  bundle), `/favicon-192.png`, `/sitemap.xml` — all HTTP 200.
+- IndexNow: 663 sitemap URLs submitted in 7 batches, all HTTP 200.
+- `wrangler.toml` gained the four new favicon files in its build copy list;
+  without that the freshly stamped favicon links in every page would 404.
+- The racingV2 flag still defaults OFF and the v1 fallback path is untouched,
+  so the racing work is not reachable by students until the operator turns
+  the flag on.

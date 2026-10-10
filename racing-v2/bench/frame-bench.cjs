@@ -71,6 +71,8 @@ function stats(a) {
     await probe.close()
   }
 
+  const TRACK_Q = process.env.TRACK ? `&track=${encodeURIComponent(process.env.TRACK)}` : ''
+  console.log(`track: ${process.env.TRACK ?? '(default)'}`)
   console.log('grid   frames   mean ms   p50 ms   p95 ms   max ms   implied fps (p50)')
   const results = []
   for (const n of [0, 4, 8, 12]) {
@@ -78,18 +80,23 @@ function stats(a) {
     const errs = []
     page.on('pageerror', (e) => errs.push(String(e)))
     page.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()) })
-    await page.goto(`http://127.0.0.1:8901/?opponents=${n}`, { waitUntil: 'load' })
+    await page.goto(`http://127.0.0.1:8901/?opponents=${n}${TRACK_Q}`, { waitUntil: 'load' })
     await page.waitForFunction('window.__ready === true', { timeout: 20000 })
     // Discard the first second: shader compilation and the physics worker
     // spinning up are startup cost, not steady state.
     await page.waitForTimeout(1500)
-    await page.evaluate('window.__frames.length = 0')
+    await page.evaluate('window.__frames.length = 0; window.__skip = true')
     await page.waitForTimeout(5000)
     const frames = await page.evaluate('window.__frames')
     const s = stats(frames)
     results.push({ n, ...s, errs: errs.length })
+    // Locate any large frame within the window. A stall that happens once at
+    // a reproducible index is a startup compilation cost; one that wanders is
+    // something else, and the difference matters before calling it acceptable.
+    const bigIdx = frames.findIndex((v) => v > 80)
     console.log(
       `  ${String(n).padStart(2)}   ${String(s.n).padStart(6)}   ${s.mean.toFixed(2).padStart(7)}   ${s.p50.toFixed(2).padStart(6)}   ${s.p95.toFixed(2).padStart(6)}   ${s.max.toFixed(2).padStart(6)}   ${(1000 / s.p50).toFixed(1).padStart(8)}` +
+      (bigIdx >= 0 ? `   [big frame #${bigIdx}/${frames.length}]` : '') +
       (errs.length ? `   [${errs.length} page errors]` : ''),
     )
     if (errs.length) console.log('      first error:', errs[0].slice(0, 160))

@@ -13,7 +13,14 @@
   window.__frames = []
   let last = performance.now()
   function tick(t) {
-    window.__frames.push(t - last)
+    // After a measurement window is cleared (frame-bench sets __skip), the
+    // first delta would otherwise span from the last PRE-window frame to the
+    // first post-window one. On a scene whose first paint lands after the
+    // clear that boundary delta is seconds long and reads as a one-off stall;
+    // an independent rAF recorder in the same page sees no such stall. Skip
+    // one delta and re-baseline instead.
+    if (window.__skip) { window.__skip = false; last = t }
+    else window.__frames.push(t - last)
     last = t
     requestAnimationFrame(tick)
   }

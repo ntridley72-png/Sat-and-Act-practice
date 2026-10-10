@@ -535,7 +535,7 @@ def build_sat_rw():
         sat_rw("w3", 300 + n * 5, "Standard English Conventions", "Boundaries", d,
                f"The {role} recorded the observation carefully ___ the notes were later verified by a second reader.",
                ";", [(",", "A comma alone between two complete sentences creates a comma splice."),
-                     ("", "No punctuation leaves two independent clauses fused in a run-on."),
+                     ("No punctuation", "No punctuation leaves two independent clauses fused in a run-on."),
                      (": and", "A colon introduces an explanation or list; pairing it with 'and' misjoins the clauses.")],
                "Both sides are complete sentences, so a semicolon is the correct boundary; a comma or nothing makes a splice or run-on.", passage, "writing")
         n += 1
@@ -573,7 +573,7 @@ def build_rw_conventions():
         sat_rw("w4", 400 + n * 5, "Standard English Conventions", "Boundaries", d,
                f"The {who} completed the {work} ___ the supervisor then signed it.",
                ";", [(",", "A comma by itself between independent clauses creates a splice."),
-                     ("", "No punctuation joins two sentences in a run-on."),
+                     ("No punctuation", "No punctuation joins two sentences in a run-on."),
                      (", so", "'So' suggests a result; the two actions are merely sequential.")],
                "Both clauses stand alone, so the semicolon is the correct boundary.", "The office requires a second signature on every finished document.", "writing")
         n += 1

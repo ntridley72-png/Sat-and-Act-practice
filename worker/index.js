@@ -429,27 +429,15 @@ async function aiTutor(req, env) {
   const row = await env.DB.prepare("INSERT INTO ai_usage (ip, win, n) VALUES (?, ?, 1) ON CONFLICT(ip, win) DO UPDATE SET n = n + 1 RETURNING n").bind(ip, win).first();
   if (row && row.n > AI_PER_WINDOW) return json({ code: "app_rate_limited", retryAfter: Math.ceil(((win + 1) * AI_WINDOW_MIN * 60000 - Date.now()) / 1000) }, 429, req);
   if (Math.random() < 0.02) await env.DB.prepare("DELETE FROM ai_usage WHERE win < ?").bind(win - 1).run();
-  // Try every Groq model so a retired model or a per-model quota still resolves. A caller may
-  // pass a model hint (used by diagnostics) to try one model first, or onlyModel to prove it works.
-  // 1) Cloudflare Workers AI (primary). A reply that gives away an unanswered question's answer is
-  //    retried once with the rule repeated, then rejected.
-  if (env.AI) {
-    for (let tryNo = 0; tryNo < 2; tryNo++) {
-      const r = await workersAi(env, tryNo ? messages.concat({ role: "system", content: "Your previous reply revealed the answer. " + NO_REVEAL_RULE }) : messages, !!body.teaching, body.kind === "context" ? CONTEXT_SCHEMA : null);
-      if (r.content && noAnswer && revealsAnswer(r.content, correctLetter)) { console.log("AI tutor reply revealed the answer; retrying"); continue; }
-      if (r.content) return json({ content: r.content, provider: "cloudflare", model: r.model, usage: normalizeUsage(r.usage), requestId: makeRequestId() }, 200, req);
-      console.log("Workers AI failed", JSON.stringify(r.attempts));
-      break;
-    }
-    if (!env.GROQ_API_KEY) return json({ code: "upstream", retryAfter: 10 }, 502, req);
-  }
-  // 2) Groq, only if a key is still configured.
+  // 1) Groq is primary because its interactive latency is substantially lower. Try every model so
+  // a retired model or a per-model quota still resolves. A caller may pass a model hint (used by
+  // diagnostics) to try one model first, or onlyModel to prove that exact Groq model works.
   const hint = typeof body.model === "string" && GROQ_MODELS.includes(body.model) ? body.model : null;
   const order = hint ? [hint, ...GROQ_MODELS.filter((m) => m !== hint)] : GROQ_MODELS;
   const attempts = {};
   let lastStatus = 503, retryAfter = 60;
   const deadline = Date.now() + 40000;
-  for (const model of order) {
+  for (const model of env.GROQ_API_KEY ? order : []) {
     if (Date.now() > deadline) { attempts[model] = "deadline"; break; }
     try {
       const r = await fetch(env.GROQ_URL || "https://api.groq.com/openai/v1/chat/completions", {
@@ -458,7 +446,7 @@ async function aiTutor(req, env) {
         body: JSON.stringify({ model, messages, ...groqParams(model, !!body.teaching) })
       });
       lastStatus = r.status; attempts[model] = r.status;
-      if (r.status === 401) return json({ code: "server_key_invalid" }, 503, req);
+      if (r.status === 401) { attempts[model] = "server_key_invalid"; break; }
       if (!r.ok) { retryAfter = Math.max(1, Number(r.headers.get("retry-after")) || 60); continue; }
       const j = await r.json();
       const choice = j.choices && j.choices[0] || {};
@@ -472,8 +460,22 @@ async function aiTutor(req, env) {
     } catch (e) { lastStatus = 503; attempts[model] = "timeout"; }
     if (body.onlyModel) break;
   }
+  if (Object.keys(attempts).length) console.log("Groq failed; trying Workers AI", JSON.stringify(attempts));
+
+  // 2) Cloudflare Workers AI is the keyless fallback. A reply that gives away an unanswered
+  // question's answer is retried once with the rule repeated, then rejected.
+  if (env.AI && !body.onlyModel) {
+    for (let tryNo = 0; tryNo < 2; tryNo++) {
+      const r = await workersAi(env, tryNo ? messages.concat({ role: "system", content: "Your previous reply revealed the answer. " + NO_REVEAL_RULE }) : messages, !!body.teaching, body.kind === "context" ? CONTEXT_SCHEMA : null);
+      if (r.content && noAnswer && revealsAnswer(r.content, correctLetter)) { console.log("AI tutor reply revealed the answer; retrying"); continue; }
+      if (r.content) return json({ content: r.content, provider: "cloudflare", model: r.model, usage: normalizeUsage(r.usage), requestId: makeRequestId() }, 200, req);
+      console.log("Workers AI failed", JSON.stringify(r.attempts));
+      break;
+    }
+  }
   console.log("AI tutor failed", JSON.stringify(attempts)); // visible in `npx wrangler tail`
-  return json({ code: lastStatus === 429 ? "rate_limited" : "upstream", retryAfter, status: lastStatus, attempts }, lastStatus === 429 ? 429 : 502, req);
+  const invalidKey = Object.values(attempts).includes("server_key_invalid");
+  return json({ code: invalidKey ? "server_key_invalid" : lastStatus === 429 ? "rate_limited" : "upstream", retryAfter, status: lastStatus, attempts }, lastStatus === 429 ? 429 : 502, req);
 }
 
 async function saveHelpHistory(req, env, user) {

@@ -138,3 +138,14 @@ Useful sources:
 | 2026-10-08 14:06 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
 | 2026-10-08 14:08 EDT | OpenCode | `deepseek/deepseek-flash` | split | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
 | 2026-10-08 14:15 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-08 15:17 EDT | OpenCode | `deepseek/deepseek-flash` | split | timed_out | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-08 17:08 EDT | `q-20261008-170726` | codex | `gpt-5.6-sol` | reviewer | completed | 38311 | subscription/unavailable |
+| 2026-10-08 17:09 EDT | `q-20261008-170726` | opencode | `opencode/deepseek-v4.1-flash` | reviewer | failed | 0 | subscription/unavailable |
+| 2026-10-08 17:22 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-09 12:11 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-09 12:18 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | completed | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-09 12:19 EDT | OpenCode | `deepseek/deepseek-flash` | split | timed_out | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-09 12:35 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | timed_out | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-10 03:49 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | timed_out | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-10 15:43 EDT | `q-20261010-154331` | codex | `gpt-5.6-sol` | reviewer | failed | 0 | subscription/unavailable |
+| 2026-10-10 15:46 EDT | `q-20261010-154331` | opencode | `opencode/deepseek-v4.1-flash` | reviewer | failed | 0 | subscription/unavailable |

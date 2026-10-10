@@ -1,0 +1,1399 @@
+{
+ "reviewed": 920,
+ "ok": 642,
+ "fix": 278,
+ "drop": 0,
+ "skipped_batches": [],
+ "issues": [
+  {
+   "id": "m6908",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6909",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6910",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6911",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6912",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6913",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6914",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6915",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6916",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6917",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6918",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6919",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6920",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6921",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6922",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6923",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6924",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6925",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6926",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6927",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6928",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6929",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6930",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6931",
+   "verdict": "fix",
+   "issue": "Key is rounded to hundredths, but the question gives no rounding instruction."
+  },
+  {
+   "id": "m6977",
+   "verdict": "fix",
+   "issue": "Malformed distractor \u201c1/2 (no1)\u201d appears equivalent to the keyed answer."
+  },
+  {
+   "id": "m6978",
+   "verdict": "fix",
+   "issue": "Malformed distractor \u201c1/2 (no1)\u201d appears equivalent to the keyed answer."
+  },
+  {
+   "id": "m6979",
+   "verdict": "fix",
+   "issue": "Malformed distractor \u201c1/2 (no1)\u201d appears equivalent to the keyed answer."
+  },
+  {
+   "id": "m6980",
+   "verdict": "fix",
+   "issue": "Malformed distractor \u201c1/2 (no1)\u201d appears equivalent to the keyed answer."
+  },
+  {
+   "id": "m8735",
+   "verdict": "fix",
+   "issue": "Distractor explanations mislabel 4/1005 and 603/4 as cosine and tangent."
+  },
+  {
+   "id": "m8736",
+   "verdict": "fix",
+   "issue": "Distractor explanations mislabel 8/1010 and 606/8 as cosine and tangent."
+  },
+  {
+   "id": "m8737",
+   "verdict": "fix",
+   "issue": "Distractor explanations mislabel 12/1015 and 609/12 as cosine and tangent."
+  },
+  {
+   "id": "m8738",
+   "verdict": "fix",
+   "issue": "Distractor explanations mislabel 612/16 and 16/1020 as tangent and cosine."
+  },
+  {
+   "id": "m8756",
+   "verdict": "fix",
+   "issue": "Explanation incorrectly says the 3-4-5 scale factor is 1; it is 201."
+  },
+  {
+   "id": "m8757",
+   "verdict": "fix",
+   "issue": "Explanation's 3-4-5 scale factor should be 202, not 2."
+  },
+  {
+   "id": "m7100",
+   "verdict": "fix",
+   "issue": "Explanation is generic and does not show the required Pythagorean calculation."
+  },
+  {
+   "id": "m7101",
+   "verdict": "fix",
+   "issue": "Explanation is generic and does not show the required Pythagorean calculation."
+  },
+  {
+   "id": "m7102",
+   "verdict": "fix",
+   "issue": "Explanation is generic and does not show the required Pythagorean calculation."
+  },
+  {
+   "id": "m7103",
+   "verdict": "fix",
+   "issue": "Explanation is generic and does not show the required Pythagorean calculation."
+  },
+  {
+   "id": "m7104",
+   "verdict": "fix",
+   "issue": "Explanation is generic and does not show the required Pythagorean calculation."
+  },
+  {
+   "id": "m7105",
+   "verdict": "fix",
+   "issue": "Explanation is generic and does not show the required Pythagorean calculation."
+  },
+  {
+   "id": "m7106",
+   "verdict": "fix",
+   "issue": "Explanation is generic and does not show the required Pythagorean calculation."
+  },
+  {
+   "id": "m7107",
+   "verdict": "fix",
+   "issue": "Explanation is generic and does not show the required Pythagorean calculation."
+  },
+  {
+   "id": "m7108",
+   "verdict": "fix",
+   "issue": "Explanation is generic and does not show the required Pythagorean calculation."
+  },
+  {
+   "id": "m7109",
+   "verdict": "fix",
+   "issue": "Explanation is generic and does not show the required Pythagorean calculation."
+  },
+  {
+   "id": "w6754",
+   "verdict": "fix",
+   "issue": "Distractor \u201cit publishs\u201d is misspelled and implausible."
+  },
+  {
+   "id": "w6758",
+   "verdict": "fix",
+   "issue": "Distractor \u201cit publishs\u201d is misspelled and implausible."
+  },
+  {
+   "id": "w6762",
+   "verdict": "fix",
+   "issue": "Distractor \u201cit publishs\u201d is misspelled and implausible."
+  },
+  {
+   "id": "w6766",
+   "verdict": "fix",
+   "issue": "Distractor \u201cit publishs\u201d is misspelled and implausible."
+  },
+  {
+   "id": "w6770",
+   "verdict": "fix",
+   "issue": "Distractor \u201cit publishs\u201d is misspelled and implausible."
+  },
+  {
+   "id": "w6774",
+   "verdict": "fix",
+   "issue": "Distractor \u201cit publishs\u201d is misspelled and implausible."
+  },
+  {
+   "id": "w6802",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201cset list.\u201d"
+  },
+  {
+   "id": "w6803",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201cshift roster.\u201d"
+  },
+  {
+   "id": "w6804",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201creading guide.\u201d"
+  },
+  {
+   "id": "w6805",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201cexhibit plan.\u201d"
+  },
+  {
+   "id": "w6806",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201czoning note.\u201d"
+  },
+  {
+   "id": "w6807",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201crecords index.\u201d"
+  },
+  {
+   "id": "w6808",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201ctour schedule.\u201d"
+  },
+  {
+   "id": "w6809",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201crule book.\u201d"
+  },
+  {
+   "id": "w6810",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201crehearsal chart.\u201d"
+  },
+  {
+   "id": "w6811",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201cfield report.\u201d"
+  },
+  {
+   "id": "w6812",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201cquarterly review.\u201d"
+  },
+  {
+   "id": "w6813",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201cbudget memo.\u201d"
+  },
+  {
+   "id": "w6814",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201ctravel plan.\u201d"
+  },
+  {
+   "id": "w6815",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201creview sheet.\u201d"
+  },
+  {
+   "id": "w6816",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201cprogram note.\u201d"
+  },
+  {
+   "id": "w6817",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201csafety manual.\u201d"
+  },
+  {
+   "id": "w6818",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201cmaintenance log.\u201d"
+  },
+  {
+   "id": "w6819",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201cpolicy draft.\u201d"
+  },
+  {
+   "id": "w6820",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201ccourse list.\u201d"
+  },
+  {
+   "id": "w6821",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201cverdict form.\u201d"
+  },
+  {
+   "id": "w6822",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201cset list.\u201d"
+  },
+  {
+   "id": "w6823",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201cshift roster.\u201d"
+  },
+  {
+   "id": "w6824",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201creading guide.\u201d"
+  },
+  {
+   "id": "w6825",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201cexhibit plan.\u201d"
+  },
+  {
+   "id": "w6826",
+   "verdict": "fix",
+   "issue": "The first sentence needs an article before \u201czoning note.\u201d"
+  },
+  {
+   "id": "w6827",
+   "verdict": "fix",
+   "issue": "\u201cWhich is first of its kind\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6828",
+   "verdict": "fix",
+   "issue": "\u201cWhich is still under revision\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6829",
+   "verdict": "fix",
+   "issue": "\u201cWhich is shared by three offices\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6830",
+   "verdict": "fix",
+   "issue": "\u201cWhich is first of its kind\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6831",
+   "verdict": "fix",
+   "issue": "\u201cWhich is still under revision\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6832",
+   "verdict": "fix",
+   "issue": "\u201cWhich is shared by three offices\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6833",
+   "verdict": "fix",
+   "issue": "\u201cWhich is first of its kind\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6834",
+   "verdict": "fix",
+   "issue": "\u201cWhich is still under revision\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6835",
+   "verdict": "fix",
+   "issue": "\u201cWhich is shared by three offices\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6836",
+   "verdict": "fix",
+   "issue": "\u201cWhich is first of its kind\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6837",
+   "verdict": "fix",
+   "issue": "\u201cWhich is still under revision\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6838",
+   "verdict": "fix",
+   "issue": "\u201cWhich is shared by three offices\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6839",
+   "verdict": "fix",
+   "issue": "\u201cWhich is first of its kind\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6840",
+   "verdict": "fix",
+   "issue": "\u201cWhich is still under revision\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6841",
+   "verdict": "fix",
+   "issue": "\u201cWhich is shared by three offices\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6842",
+   "verdict": "fix",
+   "issue": "\u201cWhich is first of its kind\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6843",
+   "verdict": "fix",
+   "issue": "\u201cWhich is still under revision\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6844",
+   "verdict": "fix",
+   "issue": "\u201cWhich is shared by three offices\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6845",
+   "verdict": "fix",
+   "issue": "\u201cWhich is first of its kind\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6846",
+   "verdict": "fix",
+   "issue": "\u201cWhich is still under revision\u201d is also grammatically correct."
+  },
+  {
+   "id": "w6847",
+   "verdict": "fix",
+   "issue": "\u201c1 copies\u201d is ungrammatical; distractors are implausible invented forms."
+  },
+  {
+   "id": "w6848",
+   "verdict": "fix",
+   "issue": "Distractors are implausible misspellings and invented verb forms."
+  },
+  {
+   "id": "w6849",
+   "verdict": "fix",
+   "issue": "Distractors are implausible misspellings and poorly formed alternatives."
+  },
+  {
+   "id": "w6850",
+   "verdict": "fix",
+   "issue": "\u201c1 copies\u201d is ungrammatical; distractors are implausible invented forms."
+  },
+  {
+   "id": "w6851",
+   "verdict": "fix",
+   "issue": "Distractors are implausible misspellings and invented verb forms."
+  },
+  {
+   "id": "w6852",
+   "verdict": "fix",
+   "issue": "Distractors are implausible misspellings and invented verb forms."
+  },
+  {
+   "id": "w6853",
+   "verdict": "fix",
+   "issue": "\u201c1 copies\u201d is ungrammatical; distractors are implausible invented forms."
+  },
+  {
+   "id": "w6854",
+   "verdict": "fix",
+   "issue": "Distractors are implausible misspellings and invented verb forms."
+  },
+  {
+   "id": "w6855",
+   "verdict": "fix",
+   "issue": "Distractors are implausible misspellings and invented verb forms."
+  },
+  {
+   "id": "w6856",
+   "verdict": "fix",
+   "issue": "\u201c1 copies\u201d is ungrammatical; distractors are implausible invented forms."
+  },
+  {
+   "id": "w6857",
+   "verdict": "fix",
+   "issue": "Distractors are implausible misspellings and poorly formed alternatives."
+  },
+  {
+   "id": "w6858",
+   "verdict": "fix",
+   "issue": "Distractors are implausible misspellings and invented verb forms."
+  },
+  {
+   "id": "w6859",
+   "verdict": "fix",
+   "issue": "\u201c1 copies\u201d is ungrammatical; distractors are implausible invented forms."
+  },
+  {
+   "id": "w6860",
+   "verdict": "fix",
+   "issue": "Distractors are implausible misspellings and invented verb forms."
+  },
+  {
+   "id": "w6861",
+   "verdict": "fix",
+   "issue": "Distractors are implausible misspellings and poorly formed alternatives."
+  },
+  {
+   "id": "w6862",
+   "verdict": "fix",
+   "issue": "\u201c1 copies\u201d is ungrammatical; distractors are implausible invented forms."
+  },
+  {
+   "id": "w6863",
+   "verdict": "fix",
+   "issue": "Distractors are implausible misspellings and invented verb forms."
+  },
+  {
+   "id": "w6864",
+   "verdict": "fix",
+   "issue": "Distractors are implausible misspellings and invented verb forms."
+  },
+  {
+   "id": "w6865",
+   "verdict": "fix",
+   "issue": "\u201c1 copies\u201d is ungrammatical; distractors are implausible invented forms."
+  },
+  {
+   "id": "w6866",
+   "verdict": "fix",
+   "issue": "Distractors are implausible misspellings and invented verb forms."
+  },
+  {
+   "id": "w6867",
+   "verdict": "fix",
+   "issue": "Distractors are implausible misspellings and invented verb forms."
+  },
+  {
+   "id": "w6868",
+   "verdict": "fix",
+   "issue": "\u201c1 copies\u201d is ungrammatical; distractors are implausible invented forms."
+  },
+  {
+   "id": "w6869",
+   "verdict": "fix",
+   "issue": "Distractors are implausible misspellings and poorly formed alternatives."
+  },
+  {
+   "id": "w6870",
+   "verdict": "fix",
+   "issue": "Distractors are implausible misspellings and invented verb forms."
+  },
+  {
+   "id": "w6871",
+   "verdict": "fix",
+   "issue": "\u201c1 copies\u201d is ungrammatical; distractors are implausible invented forms."
+  },
+  {
+   "id": "w6872",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cdays earlier\u201d establishes the sequence."
+  },
+  {
+   "id": "w6873",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cdays earlier\u201d establishes the sequence."
+  },
+  {
+   "id": "w6874",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cdays earlier\u201d establishes the sequence."
+  },
+  {
+   "id": "w6875",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cdays earlier\u201d establishes the sequence."
+  },
+  {
+   "id": "w6876",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6877",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6878",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6879",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6880",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6881",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6882",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6883",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6884",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6885",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6886",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6887",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6888",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6889",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6890",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6891",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6892",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6893",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6894",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "w6895",
+   "verdict": "fix",
+   "issue": "Simple past is also grammatical because \u201cby the time\u201d and \u201cdays earlier\u201d establish the sequence."
+  },
+  {
+   "id": "r6701",
+   "verdict": "fix",
+   "issue": "Text 1 never establishes that single-year records are independently useful."
+  },
+  {
+   "id": "r6702",
+   "verdict": "fix",
+   "issue": "Text 1 never establishes that single-year records are independently useful."
+  },
+  {
+   "id": "r6703",
+   "verdict": "fix",
+   "issue": "Text 1 never establishes that single-year records are independently useful."
+  },
+  {
+   "id": "r6704",
+   "verdict": "fix",
+   "issue": "Text 1 never establishes that single-year records are independently useful."
+  },
+  {
+   "id": "r6705",
+   "verdict": "fix",
+   "issue": "Text 1 never establishes that single-year records are independently useful."
+  },
+  {
+   "id": "r6706",
+   "verdict": "fix",
+   "issue": "Text 1 never establishes that single-year records are independently useful."
+  },
+  {
+   "id": "r6707",
+   "verdict": "fix",
+   "issue": "Text 1 never establishes that single-year records are independently useful."
+  },
+  {
+   "id": "r6708",
+   "verdict": "fix",
+   "issue": "Text 1 never establishes that single-year records are independently useful."
+  },
+  {
+   "id": "r6709",
+   "verdict": "fix",
+   "issue": "Text 1 never establishes that single-year records are independently useful."
+  },
+  {
+   "id": "r6710",
+   "verdict": "fix",
+   "issue": "Text 1 never establishes that single-year records are independently useful."
+  },
+  {
+   "id": "r6711",
+   "verdict": "fix",
+   "issue": "Text 1 never establishes that single-year records are independently useful."
+  },
+  {
+   "id": "r6712",
+   "verdict": "fix",
+   "issue": "Text 1 never establishes that single-year records are independently useful."
+  },
+  {
+   "id": "r6713",
+   "verdict": "fix",
+   "issue": "Text 1 never establishes that single-year records are independently useful."
+  },
+  {
+   "id": "r6714",
+   "verdict": "fix",
+   "issue": "Text 1 never establishes that single-year records are independently useful."
+  },
+  {
+   "id": "r6715",
+   "verdict": "fix",
+   "issue": "Text 1 never establishes that single-year records are independently useful."
+  },
+  {
+   "id": "r6716",
+   "verdict": "fix",
+   "issue": "The keyed choice is corrupted and does not accurately describe the consequence."
+  },
+  {
+   "id": "r6717",
+   "verdict": "fix",
+   "issue": "The keyed choice is corrupted and omits the change\u2019s consequence."
+  },
+  {
+   "id": "r6719",
+   "verdict": "fix",
+   "issue": "The keyed choice is corrupted and incorrectly refers to summarizing an older practice."
+  },
+  {
+   "id": "r6720",
+   "verdict": "fix",
+   "issue": "The keyed choice is corrupted and omits the change\u2019s consequence."
+  },
+  {
+   "id": "r6722",
+   "verdict": "fix",
+   "issue": "The keyed choice is corrupted and incorrectly refers to summarizing an older practice."
+  },
+  {
+   "id": "r6723",
+   "verdict": "fix",
+   "issue": "The keyed choice is corrupted and omits the change\u2019s consequence."
+  },
+  {
+   "id": "r6725",
+   "verdict": "fix",
+   "issue": "The keyed choice is corrupted and incorrectly refers to summarizing an older practice."
+  },
+  {
+   "id": "r6762",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6763",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6764",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6765",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6766",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6767",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6768",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6769",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6770",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6771",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6772",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6773",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6774",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6775",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6776",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6777",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6778",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6779",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6780",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6781",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6782",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6783",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6784",
+   "verdict": "fix",
+   "issue": "Data support the longest average service per repair, not the longest service before every repair."
+  },
+  {
+   "id": "r6795",
+   "verdict": "fix",
+   "issue": "Keyed choice is malformed and redundantly says \u201cchange describing a change.\u201d"
+  },
+  {
+   "id": "r6797",
+   "verdict": "fix",
+   "issue": "Keyed choice contains garbled text and incorrectly says the ending summarizes the older practice."
+  },
+  {
+   "id": "r6798",
+   "verdict": "fix",
+   "issue": "Keyed choice is malformed and redundantly says \u201cchange describing a change.\u201d"
+  },
+  {
+   "id": "r6800",
+   "verdict": "fix",
+   "issue": "Keyed choice contains garbled text and incorrectly says the ending summarizes the older practice."
+  },
+  {
+   "id": "r6801",
+   "verdict": "fix",
+   "issue": "Keyed choice is malformed and redundantly says \u201cchange describing a change.\u201d"
+  },
+  {
+   "id": "r6803",
+   "verdict": "fix",
+   "issue": "Keyed choice contains garbled text and incorrectly says the ending summarizes the older practice."
+  },
+  {
+   "id": "r6804",
+   "verdict": "fix",
+   "issue": "Keyed choice is malformed and redundantly says \u201cchange describing a change.\u201d"
+  },
+  {
+   "id": "r8702",
+   "verdict": "fix",
+   "issue": "Keyed choice contains garbled text and incorrectly says the ending summarizes the older practice."
+  },
+  {
+   "id": "r8703",
+   "verdict": "fix",
+   "issue": "Keyed choice is malformed and redundantly says \u201cchange describing a change.\u201d"
+  },
+  {
+   "id": "r8705",
+   "verdict": "fix",
+   "issue": "Keyed choice contains garbled text and incorrectly says the ending summarizes the older practice."
+  },
+  {
+   "id": "r8706",
+   "verdict": "fix",
+   "issue": "Keyed choice is malformed and redundantly says \u201cchange describing a change.\u201d"
+  },
+  {
+   "id": "r8708",
+   "verdict": "fix",
+   "issue": "Keyed choice contains garbled text and incorrectly says the ending summarizes the older practice."
+  },
+  {
+   "id": "r8709",
+   "verdict": "fix",
+   "issue": "Keyed choice is malformed and redundantly says \u201cchange describing a change.\u201d"
+  },
+  {
+   "id": "r8711",
+   "verdict": "fix",
+   "issue": "Keyed choice contains garbled text and incorrectly says the ending summarizes the older practice."
+  },
+  {
+   "id": "r8712",
+   "verdict": "fix",
+   "issue": "Keyed choice is malformed and redundantly says \u201cchange describing a change.\u201d"
+  },
+  {
+   "id": "r8714",
+   "verdict": "fix",
+   "issue": "Keyed choice contains garbled text and incorrectly says the ending summarizes the older practice."
+  },
+  {
+   "id": "r8715",
+   "verdict": "fix",
+   "issue": "Keyed choice is malformed and redundantly says \u201cchange describing a change.\u201d"
+  },
+  {
+   "id": "r8717",
+   "verdict": "fix",
+   "issue": "Keyed choice contains garbled text and incorrectly says the ending summarizes the older practice."
+  },
+  {
+   "id": "r8718",
+   "verdict": "fix",
+   "issue": "Keyed choice is malformed and redundantly says \u201cchange describing a change.\u201d"
+  },
+  {
+   "id": "s6701",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6702",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6703",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6704",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6705",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6706",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6707",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6708",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6709",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6710",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6711",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6712",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6713",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6714",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6715",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6716",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6717",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6718",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6719",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6720",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6721",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6722",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6723",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6724",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6725",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6726",
+   "verdict": "fix",
+   "issue": "\u201cProportionally\u201d misdescribes constant increments; \u201cexceeds the previous step\u201d is ambiguous."
+  },
+  {
+   "id": "s6728",
+   "verdict": "fix",
+   "issue": "Reported cart speeds near 200 m/s are implausible for a laboratory ramp experiment."
+  },
+  {
+   "id": "s6730",
+   "verdict": "fix",
+   "issue": "Dissolved oxygen values near 200 mg/L are physically implausible for pond water."
+  },
+  {
+   "id": "s6738",
+   "verdict": "fix",
+   "issue": "Reported cart speeds above 200 m/s are implausible for a laboratory ramp experiment."
+  },
+  {
+   "id": "s6753",
+   "verdict": "fix",
+   "issue": "Single-table evidence item is not a Conflicting Viewpoints passage."
+  },
+  {
+   "id": "s6754",
+   "verdict": "fix",
+   "issue": "Single-table evidence item is not a Conflicting Viewpoints passage."
+  },
+  {
+   "id": "s6755",
+   "verdict": "fix",
+   "issue": "Single-table evidence item is not a Conflicting Viewpoints passage."
+  },
+  {
+   "id": "s6756",
+   "verdict": "fix",
+   "issue": "Single-table evidence item is not a Conflicting Viewpoints passage."
+  },
+  {
+   "id": "s6757",
+   "verdict": "fix",
+   "issue": "Single-table evidence item is not a Conflicting Viewpoints passage."
+  },
+  {
+   "id": "s6758",
+   "verdict": "fix",
+   "issue": "Single-table evidence item is not a Conflicting Viewpoints passage."
+  },
+  {
+   "id": "s6759",
+   "verdict": "fix",
+   "issue": "Single-table evidence item is not a Conflicting Viewpoints passage."
+  },
+  {
+   "id": "s6760",
+   "verdict": "fix",
+   "issue": "Single-table evidence item is not a Conflicting Viewpoints passage."
+  },
+  {
+   "id": "s6761",
+   "verdict": "fix",
+   "issue": "Single-table evidence item is not a Conflicting Viewpoints passage."
+  },
+  {
+   "id": "s6762",
+   "verdict": "fix",
+   "issue": "Single-table evidence item is not a Conflicting Viewpoints passage."
+  },
+  {
+   "id": "s6763",
+   "verdict": "fix",
+   "issue": "Single-table evidence item is not a Conflicting Viewpoints passage."
+  },
+  {
+   "id": "s6764",
+   "verdict": "fix",
+   "issue": "Single-table evidence item is not a Conflicting Viewpoints passage."
+  },
+  {
+   "id": "s6765",
+   "verdict": "fix",
+   "issue": "Single-table evidence item is not a Conflicting Viewpoints passage."
+  },
+  {
+   "id": "s6766",
+   "verdict": "fix",
+   "issue": "Single-table evidence item is not a Conflicting Viewpoints passage."
+  },
+  {
+   "id": "s6767",
+   "verdict": "fix",
+   "issue": "Single-table evidence item is not a Conflicting Viewpoints passage."
+  },
+  {
+   "id": "s6768",
+   "verdict": "fix",
+   "issue": "Single-table evidence item is not a Conflicting Viewpoints passage."
+  },
+  {
+   "id": "s6812",
+   "verdict": "fix",
+   "issue": "All three intervals change equally, so three choices are correct."
+  },
+  {
+   "id": "s6813",
+   "verdict": "fix",
+   "issue": "All three intervals change equally, so three choices are correct."
+  },
+  {
+   "id": "s6814",
+   "verdict": "fix",
+   "issue": "All three intervals change equally, so three choices are correct."
+  },
+  {
+   "id": "s6815",
+   "verdict": "fix",
+   "issue": "All three intervals change equally; explanation wrongly identifies one as largest."
+  },
+  {
+   "id": "s6816",
+   "verdict": "fix",
+   "issue": "All three intervals change equally, so three choices are correct."
+  },
+  {
+   "id": "s6817",
+   "verdict": "fix",
+   "issue": "All three intervals change equally, so three choices are correct."
+  },
+  {
+   "id": "s6818",
+   "verdict": "fix",
+   "issue": "All three intervals change equally, so three choices are correct."
+  },
+  {
+   "id": "s6819",
+   "verdict": "fix",
+   "issue": "All three intervals change equally; explanation wrongly identifies one as largest."
+  },
+  {
+   "id": "s6820",
+   "verdict": "fix",
+   "issue": "All three intervals change equally, so three choices are correct."
+  },
+  {
+   "id": "s6821",
+   "verdict": "fix",
+   "issue": "All three intervals change equally, so three choices are correct."
+  },
+  {
+   "id": "s6822",
+   "verdict": "fix",
+   "issue": "All three intervals change equally, so three choices are correct."
+  },
+  {
+   "id": "s6823",
+   "verdict": "fix",
+   "issue": "All three intervals change equally, so three choices are correct."
+  },
+  {
+   "id": "s6824",
+   "verdict": "fix",
+   "issue": "All three intervals change equally, so three choices are correct."
+  },
+  {
+   "id": "s6825",
+   "verdict": "fix",
+   "issue": "All three intervals change equally; explanation wrongly identifies one as largest."
+  },
+  {
+   "id": "s6826",
+   "verdict": "fix",
+   "issue": "All three intervals change equally, so three choices are correct."
+  },
+  {
+   "id": "s6827",
+   "verdict": "fix",
+   "issue": "All three intervals change equally, so three choices are correct."
+  },
+  {
+   "id": "s6828",
+   "verdict": "fix",
+   "issue": "All three intervals change equally, so three choices are correct."
+  },
+  {
+   "id": "s6829",
+   "verdict": "fix",
+   "issue": "All three intervals change equally; explanation wrongly identifies one as largest."
+  },
+  {
+   "id": "s6830",
+   "verdict": "fix",
+   "issue": "All consecutive runoff changes are equal, so three choices are correct."
+  },
+  {
+   "id": "s6831",
+   "verdict": "fix",
+   "issue": "All consecutive lift changes are equal, so three choices are correct."
+  },
+  {
+   "id": "s6832",
+   "verdict": "fix",
+   "issue": "All consecutive stretch changes are equal, so three choices are correct."
+  },
+  {
+   "id": "s6833",
+   "verdict": "fix",
+   "issue": "All consecutive speed changes are equal, so three choices are correct."
+  },
+  {
+   "id": "s6834",
+   "verdict": "fix",
+   "issue": "All consecutive height changes are equal, so three choices are correct."
+  },
+  {
+   "id": "s6835",
+   "verdict": "fix",
+   "issue": "All consecutive oxygen changes are equal, so three choices are correct."
+  },
+  {
+   "id": "s6836",
+   "verdict": "fix",
+   "issue": "All consecutive brightness changes are equal, so three choices are correct."
+  }
+ ]
+}

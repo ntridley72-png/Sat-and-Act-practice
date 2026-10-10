@@ -8,7 +8,9 @@ app.js). Degrades safely: a failed batch is recorded as skipped, never fatal.
 import json, os, re, subprocess, sys, time
 
 DUMP = sys.argv[1] if len(sys.argv) > 1 else "docs/question-bank-round2-items.json"
-OUT = "docs/question-bank-gpt-review.json"
+OUT = sys.argv[2] if len(sys.argv) > 2 else "docs/question-bank-gpt-review.json"
+HANDCHECK = sys.argv[3] if len(sys.argv) > 3 else "docs/question-bank-handcheck-40.json"
+DEEP_OUT = sys.argv[4] if len(sys.argv) > 4 else "docs/question-bank-gpt-deep40.json"
 BATCH = 90
 
 PROMPT = """You are the accuracy reviewer for a SAT/ACT practice bank. For EACH item in the JSON array below, verify:
@@ -99,24 +101,17 @@ def main():
         deep_check_40(dump)
         return
     src = open("app.js", encoding="utf8").read()
-    a = src.find("/*__QB2_START__*/")
-    b = src.find("/*__QB2_END__*/")
-    if a < 0 or b < 0:
-        print("QB2 block not found; withdrawals not applied")
-        return
-    block = src[a:b]
     applied = 0
     for vid, verdict in flagged.items():
         pattern = '{"id": "' + vid + '"'
-        idx = block.find(pattern)
+        idx = src.find(pattern)
         if idx < 0:
             continue
         insert_at = idx + len(pattern)
         add_fields = (', "withheld": true, "auditStatus": "withheld", '
                       '"auditReason": "GPT accuracy review: ' + verdict + '"')
-        block = block[:insert_at] + add_fields + block[insert_at:]
+        src = src[:insert_at] + add_fields + src[insert_at:]
         applied += 1
-    src = src[:a] + block + src[b:]
     open("app.js", "w", encoding="utf8").write(src)
     print("withdrawals applied:", applied)
     deep_check_40(dump)
@@ -124,7 +119,7 @@ def main():
 def deep_check_40(dump):
     """Second pass: GPT works the 40-item sample step by step and reports an
     error rate, satisfying the hand-check requirement with worked reasoning."""
-    sample_path = "docs/question-bank-handcheck-40.json"
+    sample_path = HANDCHECK
     if not os.path.exists(sample_path):
         print("deep-check skipped: no sample file")
         return
@@ -145,7 +140,7 @@ def deep_check_40(dump):
     )
     out = codex_call(prompt, timeout=2400)
     if out.startswith("__ERROR__"):
-        json.dump({"error": out}, open("docs/question-bank-gpt-deep40.json", "w"), indent=1)
+        json.dump({"error": out}, open(DEEP_OUT, "w"), indent=1)
         print("deep-check failed:", out)
         return
     arr = extract_verdicts(out)
@@ -161,7 +156,7 @@ def deep_check_40(dump):
                 arr = cand
                 break
     if arr is None:
-        json.dump({"error": "unparseable deep-check output"}, open("docs/question-bank-gpt-deep40.json", "w"), indent=1)
+        json.dump({"error": "unparseable deep-check output"}, open(DEEP_OUT, "w"), indent=1)
         print("deep-check unparseable")
         return
     wrong = [x for x in arr if str(x.get("verdict", "")).lower() == "wrong"]
@@ -169,7 +164,7 @@ def deep_check_40(dump):
     rate = len(wrong) / max(1, len(arr))
     result = {"checked": len(arr), "wrong": len(wrong), "ambiguous": len(ambiguous),
               "error_rate": round(rate, 4), "detail": arr}
-    json.dump(result, open("docs/question-bank-gpt-deep40.json", "w"), indent=1)
+    json.dump(result, open(DEEP_OUT, "w"), indent=1)
     print(f"deep-check: {len(arr)} items, wrong {len(wrong)}, ambiguous {len(ambiguous)}, error rate {rate:.1%}")
 
 if __name__ == "__main__":

@@ -144,9 +144,19 @@ const SHOTS = path.join(ROOT, "tests", "screenshots");
     const cap = fig ? (fig.querySelector("figcaption") || {}).textContent || "" : "";
     return { clubs, creditHref: a ? a.getAttribute("href") : "", caption: cap };
   });
-  if (links.clubs.length < 6) throw new Error("campus-life block needs its six official searches, saw " + links.clubs.length);
-  if (!links.clubs.every((h) => h.includes("site:auburn.edu"))) throw new Error("campus-life links must be restricted to the official host: " + JSON.stringify(links.clubs.slice(0, 2)));
+  if (links.clubs.length < 6) throw new Error("campus-life block needs its six official links, saw " + links.clubs.length);
+  // Every link must be either a verified page on the college's own domain or a
+  // search limited to it. Nothing else is allowed in this block.
+  const official = (h) => {
+    if (/google\./i.test(h)) return h.includes("site:auburn.edu");
+    try {
+      const host = new URL(h).hostname.replace(/^www\./, "");
+      return host === "auburn.edu" || host.endsWith(".auburn.edu");
+    } catch (e) { return false; }
+  };
+  if (!links.clubs.every(official)) throw new Error("campus-life links must stay on the official host: " + JSON.stringify(links.clubs.slice(0, 2)));
   if (links.clubs.some((h) => /niche|reddit|ratemyprofessors|unigo/i.test(h))) throw new Error("third-party link leaked into the campus-life block");
+  if (!links.clubs.some((h) => !/google\./i.test(h))) throw new Error("expected at least one verified direct official link for Auburn, got only searches");
   if (links.creditHref && !/^https:\/\/commons\.wikimedia\.org\//.test(links.creditHref)) {
     throw new Error("photo credit must link to the Commons file page, saw: " + links.creditHref);
   }

@@ -14,6 +14,13 @@ Key facts for planning:
 - Economy (cash, tokens, unlocks) is fully client-authoritative — a GPT-level security concern for any future leaderboard or ghost work.
 - `racing3d.js` (procedural car system) is the highest-value, most extractable asset for the redesign; car and garage rules below mark where OpenCode/DeepSeek can safely do bounded work.
 
+## Recorded decisions (product owner, Oct 8 2026)
+
+1. **Garage sync (corrects this audit's first draft).** The cloud pull path applies the remote `garage` through the `DEFAULT_PROFILE` key loop; the client code is correct and must not change. The *actual* concurrency gap is server-side (`worker/index.js`, PUT `/api/progress` merge, ~170–176): concurrent updates merge `tokens` (max), `highScores` (per-key max), `favorites` (union), and `skillStats` (shallow merge), but **nested garage state** (`cash`, `unlocked`, `ownedKits`, `ownedWings`, `tune`) has no merge policy. GPT owns the garage conflict and migration policy.
+2. **Vehicle policy.** Original fictional era/category archetypes only. Broad era/category inspiration is allowed; no manufacturer or model names, logos, badges, distinctive trade dress, exact body reproductions, protected liveries, or copied VDrift assets.
+3. **Font licenses (queued).** Archivo, IBM Plex Mono, and Space Grotesk require verified official OFL copyright/license notices committed in a clear third-party-license location. No generic or guessed notices: record exact source, version, and copyright holder.
+4. **Conversion order.** Do not transcribe all 15 cars. The trial package converts **one representative hero car** into GPT's schema; GPT validates it before authorizing the remaining mechanical conversions. The launch fleet is **ten cars**; legacy cars may need migration mappings but do not automatically belong to the launch fleet.
+
 ## 2. File map
 
 | Path | Key symbols / sections (approx. lines) | Owns | Safe to extract later? | Important dependencies |
@@ -120,7 +127,8 @@ Viewports: `gen-*`/`rear-*` are 1100×620; `three-*` 1240×700/1100×620; phase 
 - Garage defaults (~10410): `v:3, cash:0, car:"sport", raceCar:"sport", unlocked:["sport"], paint, finish, wheels, wheelColor, wheelSize, neon, neonMode, spoiler, decal, number, kit, hood, bumper, handling, engineVolume, tune{power:.70,grip:1.35,weight:1.20,handbrake:1.00}, track:"oval", theme:"sunset", raceMode:"traffic", cam:"chase", ownedKits:["stock"], ownedWings:["none","lip"]`.
 - Migrations present: v<3 legacy resets `tune`/`handling`; `spoiler` boolean → `"lip"/"none"`; `cam` whitelist (`chase/far/hood`). No other garage migrations.
 - Cloud: `cloud` (~4252) GET/PUT `/api/progress`; server tracks `updatedAt`/`baseAt` to detect clobber; client tracks `dirty`/`syncedAt`. History is merged via `mergeAttemptHistory` (~4243) on both pull and post-push.
-- **Flag for GPT review:** in the pull path (~4303), remote profile keys are copied only when absent from `DEFAULT_PROFILE`; `garage` *is* in `DEFAULT_PROFILE`, so remote garage is not merged on pull while local garage is pushed — verify intended behavior (fresh device may never receive garage).
+- **Correction (verified):** the pull path (~4299) applies every `DEFAULT_PROFILE` key from the remote profile, `garage` included, when the server copy is newer and the device has no unsaved edits. An earlier draft of this audit misread the second (custom-key) loop; that claim is withdrawn.
+- **Flag for GPT review (actual gap):** the server-side concurrent-write merge (`worker/index.js` ~170–176) special-cases `tokens`, `highScores`, `favorites`, and `skillStats`, but nested `garage` state has no merge policy, so simultaneous devices can clobber garage progress. GPT owns the conflict and migration policy.
 - **Security-sensitive:** cash, tokens, unlocks, and purchases are entirely client-side; future ghost/leaderboard work must not trust them.
 
 ## 9. Performance inventory
@@ -151,7 +159,7 @@ No racing assets are in a licensing gray zone except the three font families mis
 ## 11. Risks requiring GPT ownership
 
 1. Client-authoritative economy (`cash`, `tokens`, `unlocked`) — blocks on any leaderboard/ghost design.
-2. Garage cloud-sync asymmetry (§8) — could strand user progress across devices.
+2. Concurrent-write garage merge gap (§8): server merges tokens/highScores/favorites/skillStats but not nested garage state — simultaneous devices can clobber cash/unlocks/kits/tune. GPT owns the policy.
 3. Garage schema evolution (v4) — GPT must design migrations before OpenCode adds records.
 4. Physics/tuning changes invalidate `racing-behavior.cjs` expectations — GPT owns the new baseline.
 5. Three.js integration cost: `racing3d.js` + vendor is ~700 KB lazy payload; Chromebook perf policy needs GPU-tier decisions.
@@ -165,8 +173,8 @@ All packages assume GPT has landed the referenced architecture first.
 
 | # | Objective | Allowed files | Forbidden | Acceptance | Tests | Risk | Depends on |
 |---|---|---|---|---|---|---|---|
-| 1 | Transcribe the 15 existing cars into GPT's new car schema (data-only) | 1 new file GPT names (e.g., `car-data-v2.js`) | `app.js`, any CSS/tests | Schema validates; values byte-identical to §3 | New schema unit test if GPT provides one | Low | GPT schema |
-| 2 | Add N new car records after first is approved | Same data file only | Anything shared | Each record follows approved template | Schema test | Low | Package 1 |
+| 1 | **Trial:** convert ONE representative hero car (GPT-selected) into GPT's approved schema, data-only | 1 new file GPT names (e.g., `car-data-v2.js`) | `app.js`, CSS, tests | Schema validates; values byte-identical to §3 for that car | Trial validation by GPT before any further conversion | Low | GPT schema + approved visual direction |
+| 2 | **After GPT validates the trial:** mechanically convert the remaining launch-fleet cars (launch fleet = ten; legacy cars need migration mappings and are not automatically included) | Same data file only | Anything shared | GPT-validated template applied without deviation | Schema test | Low | Package 1 + GPT go-ahead |
 | 3 | Add aria-labels/`aria-pressed` to existing garage sliders/swatches | `app.js` (garage render fn only) OR new small JS if GPT extracts | CSS, tests | Sliders announce name+value; swatches have color names | `drift-ui.cjs` stays green | Low | None |
 | 4 | Implement repetitive garage cards from GPT's representative component | One component file GPT names | CSS unless GPT approves | Cards render in existing modal | Visual-pass shots at 390/1440 | Medium | GPT component |
 | 5 | Add track metadata records (name, theme default, laps, sandbox flag) | Data file only | Physics code | All 7 tracks listed; sandbox flagged | `racing-behavior` green | Low | None |
@@ -175,13 +183,14 @@ All packages assume GPT has landed the referenced architecture first.
 | 8 | Capture prescribed screenshots (chase/far/cockpit/garage at 390 & 1440) after GPT builds | none (writes only new PNGs to a GPT-named dir) | Existing screenshots | File set matches checklist | Visual-pass-shots harness pattern | Low | GPT build landed |
 | 9 | Write tests from GPT's exact requirements (e.g., "purchase with insufficient cash shows no unlock") | `tests/` (new file only) | Existing tests | Test fails before fix, passes after | Self | Low | GPT spec |
 | 10 | Update docs to reflect GPT's shipped behavior | `docs/` (GPT-named files) | Code | Docs match implementation | Manual | Low | GPT ship |
+| 11 | Commit verified OFL notices for Archivo, IBM Plex Mono, Space Grotesk (exact source, version, copyright holder) into a clear third-party-license location | The license location GPT names + read-only checks of `fonts/` | Guessing license text; editing font binaries | Each font has its official notice with provenance recorded | Manual review against upstream OFL files | Low | Confirmation of exact upstream source/version |
 
 ## 13. Exact files inspected
 
-Read (no modifications): `AGENTS.md`, `CLAUDE.md` (status only), `docs/QUESTION_BANK_IN_PROGRESS.md`, `app.js`, `racing3d.js`, `SAT & ACT Practice.html` (structure), `workspace.css`, `redesign.css`, `workspace.js` (symbols), `redesign.js` (symbols), `worker/index.js` (routes), `wrangler.toml`, `college-data.js`/`scholarships-data.js` (field checks), `vendor/three/LICENSE`, `fonts/` (listing), `docs/VISUAL_PASS_REPORT.md` (head), `mockups/` (listing), `docs/racing-shots/` (listing), `docs/screenshots/**` (listing), `tests/screenshots/` (listing), `tests/{racing-behavior,drift-ui,arcade-logic,arcade-ui,theme-routing,redesign-ui,workspace-layout,visual-pass-shots}.cjs` (line counts), `git status --short`.
+Read (no modifications): `AGENTS.md`, `CLAUDE.md` (status only), `docs/QUESTION_BANK_IN_PROGRESS.md`, `app.js`, `racing3d.js`, `SAT & ACT Practice.html` (structure), `workspace.css`, `redesign.css`, `workspace.js` (symbols), `redesign.js` (symbols), `worker/index.js` (routes + `/api/progress` concurrent-merge block ~155–180), `wrangler.toml`, `college-data.js`/`scholarships-data.js` (field checks), `vendor/three/LICENSE`, `fonts/` (listing), `docs/VISUAL_PASS_REPORT.md` (head), `mockups/` (listing), `docs/racing-shots/` (listing), `docs/screenshots/**` (listing), `tests/screenshots/` (listing), `tests/{racing-behavior,drift-ui,arcade-logic,arcade-ui,theme-routing,redesign-ui,workspace-layout,visual-pass-shots}.cjs` (line counts), `git status --short`.
 
 ## 14. Exact files changed
 
-- **Created:** `docs/DRIFT_RACING_SUPPORT_AUDIT.md` (this report).
+- **Created and subsequently amended (same file):** `docs/DRIFT_RACING_SUPPORT_AUDIT.md` — amendments record the four product-owner decisions and correct the first draft's garage-sync claim (verified against `app.js` pull ~4293–4315 and `worker/index.js` ~155–180).
 
 No existing file was modified, no test or build was run against the working tree, and no VDrift code or assets were copied, translated, compiled, or imported.

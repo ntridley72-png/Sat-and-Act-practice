@@ -148,3 +148,21 @@
   document.body.classList.toggle('workspace-practicing',state.view==='test'||state.view==='routing');
   if(state.view==='test')renderQuestion();
 })();
+
+(function adjustableAiPanels(){
+  const KEY='sat-act-panel-sizes';
+  const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return {}}};
+  const save=(k,v)=>{const o=load();o[k]=v;try{localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}};
+  const saved=load();
+  if(saved.chatH)document.documentElement.style.setProperty('--cmsgs-h',saved.chatH+'px');
+  const ro=new ResizeObserver((entries)=>{for(const en of entries){
+    const el=en.target;if(!el.offsetHeight)continue;
+    if(el.id==='cmsgs'){document.documentElement.style.setProperty('--cmsgs-h',el.offsetHeight+'px');save('chatH',el.offsetHeight);}
+    else if(el.classList.contains('auth-modal')){save('authW',el.offsetWidth);save('authH',el.offsetHeight);}
+  }});
+  const watch=(el)=>{if(el&&!el.__adj){el.__adj=1;ro.observe(el);}};
+  const modal=document.querySelector('.auth-modal');
+  if(modal){if(saved.authW)modal.style.width=saved.authW+'px';if(saved.authH)modal.style.height=saved.authH+'px';watch(modal);}
+  new MutationObserver(()=>watch(document.getElementById('cmsgs'))).observe(document.body,{childList:true,subtree:true});
+  watch(document.getElementById('cmsgs'));
+})();

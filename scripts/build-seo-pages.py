@@ -167,14 +167,22 @@ def social_life(c, name, state):
     def discover(label, terms):
         query = (("site:" + host + " ") if host else "") + name + " " + terms
         return f'<a href="https://www.google.com/search?q={urllib.parse.quote_plus(query)}" rel="noopener">{label}</a>'
+    # Verified official pages come from the links enrichment pass; anything we
+    # could not confirm falls back to a search limited to the official site.
+    official_links = c.get("links") or {}
+    def campus_link(cat, label, terms):
+        url = official_links.get(cat)
+        return f'<a href="{e(url)}" rel="noopener">{label}</a>' if url else discover(label, terms)
+    has_direct = bool(official_links)
     discovery = (f'<h3>Clubs &amp; campus life</h3><p class="sl-note">Club popularity changes every year, '
-                 f'so these searches are limited to the college&rsquo;s current official website.</p>'
-                 f'<div class="glinks">{discover("Student organizations", "student organizations clubs directory")}'
-                 f'{discover("Greek life", "fraternity sorority Greek life")}'
-                 f'{discover("Athletics & recreation", "athletics recreation intramural sports")}'
-                 f'{discover("Events & traditions", "student events campus traditions")}'
-                 f'{discover("Housing & dining", "student housing dining")}'
-                 f'{discover("Student newspaper", "student newspaper")}</div>')
+                 f'so these links stay inside the college&rsquo;s current official website'
+                 f'{" — pages we could confirm open directly, the rest open a site-limited search" if has_direct else ""}.</p>'
+                 f'<div class="glinks">{campus_link("clubs", "Student organizations", "student organizations clubs directory")}'
+                 f'{campus_link("greek", "Greek life", "fraternity sorority Greek life")}'
+                 f'{campus_link("athletics", "Athletics & recreation", "athletics recreation intramural sports")}'
+                 f'{campus_link("events", "Events & traditions", "student events campus traditions")}'
+                 f'{campus_link("housing", "Housing & dining", "student housing dining")}'
+                 f'{campus_link("paper", "Student newspaper", "student newspaper")}</div>')
 
     # A low spread figure at a college that serves one community is a description
     # of who it serves, not a shortcoming, and the page should say which it is.

@@ -60,6 +60,34 @@ for (const c of colleges) {
   }
 }
 
+// ---- verified official campus-life links
+const LINK_CATS = ["clubs", "greek", "athletics", "events", "housing", "paper"];
+const linkCoverage = {};
+LINK_CATS.forEach((k) => { linkCoverage[k] = 0; });
+let linksColleges = 0;
+for (const c of colleges) {
+  const links = c.links;
+  if (!links) continue;
+  linksColleges++;
+  let host = "";
+  try { host = new URL(/^https?:/.test(c.url) ? c.url : "https://" + c.url).hostname.replace(/^www\./, ""); } catch (e) {}
+  const reg = host.split(".").slice(-2).join(".");
+  for (const cat of LINK_CATS) {
+    const url = links[cat];
+    if (!url) continue;
+    linkCoverage[cat]++;
+    let lh = "";
+    try { lh = new URL(url).hostname.replace(/^www\./, ""); } catch (e) {}
+    if (!/^https:\/\//.test(url)) fail(c.n + ": link " + cat + " must be https, saw " + url);
+    if (!(lh === host || lh.endsWith("." + reg) || lh === reg || (host && lh.endsWith("." + host)))) {
+      fail(c.n + ": link " + cat + " leaves the official domain: " + url);
+    }
+  }
+}
+console.log("official links: %d colleges carry verified links", linksColleges);
+console.log("link coverage:", JSON.stringify(linkCoverage));
+if (linksColleges === 0) fail("no college carries verified links; run scripts/enrich-college-links.py");
+
 const zero = colleges.filter((c) => !(c.imgs || []).length);
 console.log("college images: %d colleges | %d with photos | %d with six | %d photos total",
   colleges.length, withImages, sixImage, total);

@@ -654,6 +654,16 @@
     const official = collegeUrl(college);
     let officialHost = ""; try { officialHost = new URL(official).hostname.replace(/^www\./, ""); } catch (e) {}
     const discover = (label, terms) => '<a class="cf-link" href="https://www.google.com/search?q=' + encodeURIComponent((officialHost ? "site:" + officialHost + " " : "") + college.n + " " + terms) + '" target="_blank" rel="noopener">' + label + "</a>";
+    // Prefer the official page our discovery pass verified for this college;
+    // fall back to a search limited to the official site when we could not
+    // confirm one.
+    const officialLinks = college.links || {};
+    const campusLink = (cat, label, terms) => {
+      const url = officialLinks[cat];
+      return url
+        ? '<a class="cf-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' + label + "</a>"
+        : discover(label, terms);
+    };
     const forum = (label, href) => '<a class="cf-link" href="' + href + '" target="_blank" rel="noopener">' + label + "</a>";
     return photo +
       '<div class="college-facts">' +
@@ -695,7 +705,8 @@
       '<div class="cf-line"><span>Students living on campus</span><b>Not reported</b></div>' +
       '<div class="cf-line"><span>Athletics division</span><b>Not reported</b></div>' +
       '<div class="cf-note">Retention is official College Scorecard data, not a satisfaction rating. Club popularity and campus traditions change, so use the current official directories below.</div>' +
-      '<h5 class="cf-subhead">Clubs & campus life</h5><div class="cf-links">' + discover("Student organizations", "student organizations clubs directory") + discover("Greek life", "fraternity sorority Greek life") + discover("Athletics & recreation", "athletics recreation intramural sports") + discover("Events & traditions", "student events campus traditions") + discover("Housing & dining", "student housing dining") + discover("Student newspaper", "student newspaper") + "</div>" +
+      '<h5 class="cf-subhead">Clubs & campus life</h5><div class="cf-links">' + campusLink("clubs", "Student organizations", "student organizations clubs directory") + campusLink("greek", "Greek life", "fraternity sorority Greek life") + campusLink("athletics", "Athletics & recreation", "athletics recreation intramural sports") + campusLink("events", "Events & traditions", "student events campus traditions") + campusLink("housing", "Housing & dining", "student housing dining") + campusLink("paper", "Student newspaper", "student newspaper") + "</div>" +
+      (Object.keys(officialLinks).length ? '<p class="cf-note">Links we could confirm open the college’s own official pages; the rest open a search limited to its official website.</p>' : "") +
       '<div class="cf-links">' + forum("Professor ratings", "https://www.ratemyprofessors.com/search/professors?q=" + encodeURIComponent(college.n)) + forum("Student reviews", "https://www.niche.com/search/?q=" + encodeURIComponent(college.n)) + forum("Student discussions", "https://www.reddit.com/search/?q=" + encodeURIComponent(college.n + " student experience")) + "</div></section>" +
       "</div>";
   }

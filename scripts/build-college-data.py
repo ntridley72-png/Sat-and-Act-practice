@@ -36,7 +36,7 @@ UA = {"User-Agent": "funsat.bid college data build script (educational; contact:
 # Wikimedia's anonymous limit for search queries is tight; pace every API call
 # globally and honour Retry-After instead of blind exponential backoff.
 THROTTLE_LOCK = threading.Lock()
-THROTTLE = float(os.environ.get("WIKI_THROTTLE", "1.8"))
+THROTTLE = float(os.environ.get("WIKI_THROTTLE") or "1.8")
 LAST_CALL = [0.0]
 
 SELECTIVE_ADMIT = 0.55
@@ -407,6 +407,18 @@ def legacy_ok(p):
     return not any(bad in text for bad in LEGACY_REJECT)
 
 
+def recent_enough(*texts, years=15):
+    """Greek-life photos must come from the last ~15 years, not archive scans.
+    A year of 2011+ anywhere in the date/title keeps the photo; a photo with
+    only older years, or no year at all, is treated as history and skipped."""
+    limit = date.today().year - years
+    for text in texts:
+        for m in re.finditer(r"\b(19\d{2}|20\d{2})\b", str(text or "")):
+            if int(m.group(1)) >= limit:
+                return True
+    return False
+
+
 def photo_priority(e, cache):
     """Priority-first order: the four audited schools, then zero-image colleges,
     then entries whose cached photos fail the filters, then the rest."""
@@ -524,6 +536,11 @@ def fetch_photos(colleges):
                 bucket = photo_kind(subject)
                 if not bucket:
                     continue
+                if bucket == "greek":
+                    dates = " ".join(str((meta.get(k, {}) or {}).get("value", "")) for k in
+                                     ("DateTimeOriginal", "DateTime", "DateTimeDigitized"))
+                    if not recent_enough(title, description, dates):
+                        continue  # Greek life wants photos, not history
                 score = 3 * sum(2 if good in subject.lower() else 0 for good in
                                 ("campus", "stadium", "fraternity", "sorority", "hall", "library", "quad", "aerial"))
                 score += 2 * sum(1 for token in re.findall(r"[a-z0-9]+", e["n"].lower()) if len(token) > 3 and token in low)
@@ -644,6 +661,14 @@ def main():
                 e.update({"img": imgs[0]["u"], "imgA": imgs[0].get("a") or imgs[0]["credit"], "imgL": imgs[0]["l"]})
     except Exception:
         pass
+    try:
+        links_cache = json.load(open(os.path.join(CACHE, "college-links.json")))
+    except Exception:
+        links_cache = {}
+    for e in colleges:
+        info = links_cache.get(str(e["id"]))
+        if info and info.get("links"):
+            e["links"] = info["links"]
     rpp, rpp_year = load_rpp()
     for e in colleges:
         state = rpp.get(e["st"], {})

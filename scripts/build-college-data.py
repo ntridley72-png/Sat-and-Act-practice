@@ -36,7 +36,7 @@ UA = {"User-Agent": "funsat.bid college data build script (educational; contact:
 # Wikimedia's anonymous limit for search queries is tight; pace every API call
 # globally and honour Retry-After instead of blind exponential backoff.
 THROTTLE_LOCK = threading.Lock()
-THROTTLE = float(os.environ.get("WIKI_THROTTLE", "1.8"))
+THROTTLE = float(os.environ.get("WIKI_THROTTLE") or "1.8")
 LAST_CALL = [0.0]
 
 SELECTIVE_ADMIT = 0.55
@@ -351,7 +351,7 @@ LEGACY_REJECT = ("logo", "seal", "crest", "coat of arms", "coat_of_arms", "wordm
                  "headshot", "portrait", "award ceremony", "commencement speaker", "lathe",
                  "machinery", "machine shop", "equipment", "usmc", "marine corps", "u.s. navy",
                  "us navy", "midshipman", "first pitch", "change of command", "swearing in",
-                 "tractor", "aircraft", "weapons", "rifle", "magazine")
+                 "tractor", "aircraft", "weapons", "rifle", "magazine", "lccn", "bain news")
 
 
 FILLER_WORDS = {"file", "the", "of", "and", "at", "a", "an", "is", "in", "on", "for", "to", "with", "by"}
@@ -404,7 +404,68 @@ def legacy_ok(p):
     name = urllib.parse.unquote(raw.split("/wiki/")[-1] if "/wiki/" in raw else raw.rsplit("/", 1)[-1]).lower()
     if not re.search(r"\.(?:jpe?g|png|webp|tiff?)$", name):
         return False  # documents, audio, SVG diagrams are not gallery photos
-    return not any(bad in text for bad in LEGACY_REJECT)
+    if any(bad in text for bad in LEGACY_REJECT):
+        return False
+    if any(marker in text for marker in ACTION_MARKERS):
+        return False  # cached game action, dropped so the college is re-crawled
+    if photo_kind(text) == "athletics" and not any(word in text for word in VENUE_WORDS):
+        return False
+    return True
+
+
+HISTORY_MARKERS = ("lccn", "bain news", "library of congress", "national photo", "loc.gov", "archives")
+
+# Game action and people close-ups: a prospective student wants to see the
+# place, not a scrum of players. "vs."-style titles are also where another
+# school's venue sneaks in, since a road game is shot at the opponent's stadium.
+ACTION_MARKERS = (
+    " vs ", " vs. ", "vs.", "versus", "championship", "bowl game", "march madness",
+    "pre-game", "pregame", "halftime", "kickoff", "touchdown", "scrimmage", "tailgate",
+    "take the field", "entering field", "takes the field", "head coach", "offensive coordinator",
+    "defensive coordinator", "quarterback", "cheerleader", "cheerleading", "marching band",
+    "first pitch", "playing of the", "tipoff", "tip-off", "free throw", "home run",
+    "touchdown celebration", "fans ", "crowd ", "student section",
+)
+
+# A stadium photo has to actually show the venue.
+VENUE_WORDS = ("stadium", "arena", "ballpark", "coliseum", "fieldhouse", "field house",
+               "natatorium", "pavilion", "athletic complex", "athletics complex",
+               "sports complex", "track", "field")
+
+# The shots worth leading with: height, distance, whole-venue.
+WIDE_WORDS = ("aerial", "drone", "panorama", "panoramic", "overview", "from above",
+              "bird's eye", "birds eye", "skyline", "exterior", "overhead", "wide view")
+
+
+def athletics_photo_ok(title, description):
+    """Keep a stadium photo only when it shows the venue rather than a game.
+
+    The title carries the venue name; a description alone is too weak, because
+    Commons descriptions routinely name the stadium for an action shot taken
+    inside it."""
+    low_title = str(title or "").lower().replace("_", " ")
+    combined = (low_title + " " + str(description or "").lower())
+    if any(marker in combined for marker in ACTION_MARKERS):
+        return False
+    return any(word in low_title for word in VENUE_WORDS)
+
+
+def recent_enough(*texts, years=15):
+    """Greek-life photos must come from the last ~15 years, not archive scans.
+    Archive collection markers disqualify outright (an LCCN catalog number can
+    look like a 2014 date), and otherwise a real 2011+ year must appear."""
+    limit = date.today().year - years
+    for text in texts:
+        low = str(text or "").lower()
+        low = re.sub(r"\blccn[0-9]+\b", " ", low)  # catalog ids are not dates
+        if any(marker in low for marker in HISTORY_MARKERS):
+            return False
+    for text in texts:
+        low = re.sub(r"\blccn[0-9]+\b", " ", str(text or "").lower())
+        for m in re.finditer(r"\b(19\d{2}|20\d{2})\b", low):
+            if int(m.group(1)) >= limit:
+                return True
+    return False
 
 
 def photo_priority(e, cache):
@@ -415,7 +476,7 @@ def photo_priority(e, cache):
     named = 0 if e["n"].lower() in PRIORITY_NAMES else 1
     missing = 0 if not imgs else 1
     filtered = [p for p in imgs if legacy_ok(p)]
-    if len(filtered) >= 6 and info.get("v") == 7:
+    if len(filtered) >= 6 and info.get("v") in (7, 8):
         state = 2  # already good: crawl last
     elif imgs and len(filtered) == len(imgs):
         state = 1
@@ -464,7 +525,11 @@ def fetch_photos(colleges):
         # only survive if they pass today's reject filters, and they never
         # crowd out a fresh crawl.
         legacy = [normalize_photo(p) for p in (cached.get("imgs") or []) if legacy_ok(p)][:6]
-        photos = [normalize_photo(p) for p in (cached.get("imgs") or [])] if cached.get("v") == 7 else []
+        # v8 adds the action-shot and venue filters. A v7 entry is still usable,
+        # but every cached photo now has to clear today's filters, so a college
+        # holding game-action shots falls short of six and gets re-crawled.
+        photos = ([normalize_photo(p) for p in (cached.get("imgs") or []) if legacy_ok(p)]
+                  if cached.get("v") in (7, 8) else [])
         if len(photos) >= 6:
             e["imgs"] = photos
             if cached.get("img"):
@@ -516,7 +581,12 @@ def fetch_photos(colleges):
                                   if token not in ("the", "of", "and", "at"))
                 strict_name = e["n"].lower().startswith(("university of ", "college of ")) and len(identity) <= 2
                 exact_name = bool(re.search(r"\b" + re.escape(normalized_name) + r"\b(?!\s+at\b)", normalized_subject))
-                identified = exact_name or (len(acronym) >= 3 and acronym in normalized_subject.replace(" ", ""))
+                # The acronym has to stand as its own word. Matching it against
+                # the run-together subject let "usd" surface inside an unrelated
+                # phrase, which is how a Michigan Stadium game photo ended up
+                # filed under University of San Diego.
+                identified = exact_name or (len(acronym) >= 3
+                                            and re.search(r"\b" + re.escape(acronym) + r"\b", normalized_subject) is not None)
                 if not identified and not strict_name:
                     identified = bool(identity) and all(token in normalized_subject for token in identity)
                 if not identified:
@@ -524,8 +594,19 @@ def fetch_photos(colleges):
                 bucket = photo_kind(subject)
                 if not bucket:
                     continue
+                if bucket == "athletics" and not athletics_photo_ok(title, description):
+                    continue  # game action, not the stadium itself
+                if any(marker in subject.lower() for marker in ACTION_MARKERS):
+                    continue  # people close-ups read as someone else's team photo
+                if bucket == "greek":
+                    dates = " ".join(str((meta.get(k, {}) or {}).get("value", "")) for k in
+                                     ("DateTimeOriginal", "DateTime", "DateTimeDigitized"))
+                    if not recent_enough(title, description, dates):
+                        continue  # Greek life wants photos, not history
                 score = 3 * sum(2 if good in subject.lower() else 0 for good in
                                 ("campus", "stadium", "fraternity", "sorority", "hall", "library", "quad", "aerial"))
+                # Height and distance sell a campus; prefer them strongly.
+                score += 5 * sum(1 for word in WIDE_WORDS if word in subject.lower())
                 score += 2 * sum(1 for token in re.findall(r"[a-z0-9]+", e["n"].lower()) if len(token) > 3 and token in low)
                 if w and h:
                     score += min(w * h, 4_000_000) / 4_000_000 * 3  # larger originals look better
@@ -580,7 +661,7 @@ def fetch_photos(colleges):
             note_success()
         if len(photos) > prior:
             photos = photos[:6]
-            info = {"imgs": photos, "v": 7}
+            info = {"imgs": photos, "v": 8}
             info.update({"img": photos[0]["u"], "imgA": photos[0]["a"], "imgL": photos[0]["l"]})
             with lock:
                 cache[key] = info
@@ -644,6 +725,14 @@ def main():
                 e.update({"img": imgs[0]["u"], "imgA": imgs[0].get("a") or imgs[0]["credit"], "imgL": imgs[0]["l"]})
     except Exception:
         pass
+    try:
+        links_cache = json.load(open(os.path.join(CACHE, "college-links.json")))
+    except Exception:
+        links_cache = {}
+    for e in colleges:
+        info = links_cache.get(str(e["id"]))
+        if info and info.get("links"):
+            e["links"] = info["links"]
     rpp, rpp_year = load_rpp()
     for e in colleges:
         state = rpp.get(e["st"], {})

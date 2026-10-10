@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="FunSAT">
+  <title>FunSAT</title>
+  <rect width="200" height="200" rx="46" fill="#1D6FE0"/>
+  <rect x="44" y="116" width="28" height="42" rx="8" fill="#FFFFFF"/>
+  <rect x="86" y="88" width="28" height="70" rx="8" fill="#FFFFFF"/>
+  <rect x="128" y="56" width="28" height="102" rx="8" fill="#5EEAA4"/>
+  <path d="M142 30 l24 28 h-48 z" fill="#5EEAA4"/>
+</svg>

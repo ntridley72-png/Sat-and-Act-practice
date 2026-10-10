@@ -256,8 +256,12 @@ def page(*, path, title, description, body, schema, extra_head=""):
 <meta property="og:description" content="{e(description)}">
 <meta property="og:image" content="{ORIGIN}/social-card.png?v=2">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="/favicon.ico" sizes="32x32">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" href="/favicon.ico?v=3" sizes="32x32">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3">
+<link rel="icon" type="image/png" href="/favicon-48.png?v=3" sizes="48x48">
+<link rel="icon" type="image/png" href="/favicon-96.png?v=3" sizes="96x96">
+<link rel="icon" type="image/png" href="/favicon-192.png?v=3" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=3">
 {FONT_PRELOAD}
 <link rel="stylesheet" href="/workspace.css">
 <link rel="stylesheet" href="/guides/guide.css">

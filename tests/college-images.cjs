@@ -19,6 +19,21 @@ const LABELS = {
 const BAD = /logo|seal|crest|coat_of_arms|coat%20of%20arms|wordmark|bookplate|contact.?sheet|placeholder/i;
 const SOURCE = /^https:\/\/commons\.wikimedia\.org\/wiki\//;
 
+/* A prospective student wants to see the place, not a scrum of players, and a
+   road game is shot at the opponent's stadium — which is how another school's
+   venue used to end up on a college's own page. */
+const ACTION = /\bvs\.?\b|versus|championship|march madness|bowl game|pre-?game|halftime|kickoff|touchdown|scrimmage|tailgate|take[sn]? the field|entering field|head coach|offensive coordinator|defensive coordinator|quarterback|cheerlead|marching band|first pitch|playing of the|tip-?off|free throw|home run|student section/i;
+const VENUE = /stadium|arena|ballpark|coliseum|field ?house|natatorium|pavilion|athletics? complex|sports complex|track|field/i;
+
+/* The Commons file name, decoded and readable: "Kyle Field aerial.jpg". */
+const fileName = (im) => {
+  const raw = String(im.l || im.u || "");
+  const tail = raw.includes("/wiki/") ? raw.split("/wiki/").pop() : raw.split("/").pop();
+  let name = tail;
+  try { name = decodeURIComponent(tail); } catch (e) { /* a malformed escape keeps the raw tail */ }
+  return name.replace(/^File:?/i, "").replace(/_/g, " ");
+};
+
 const fails = [];
 const fail = (msg) => fails.push(msg);
 
@@ -54,11 +69,44 @@ for (const c of colleges) {
     if (!LABELS[im.kind]) fail(where + ": unknown category kind " + JSON.stringify(im.kind));
     if (im.label !== LABELS[im.kind]) fail(where + ": label must match its kind, saw " + JSON.stringify(im.label));
     if (BAD.test(im.l || "") || BAD.test(im.u || "")) fail(where + ": rejected subject (logo/seal/placeholder)");
+    const name = fileName(im);
+    if (ACTION.test(name)) fail(where + ": game action / people close-up, not a view of the school");
+    if (im.kind === "athletics" && !VENUE.test(name)) {
+      fail(where + ": filed as athletics but the file name names no venue");
+    }
     if (seen.has(im.u)) fail(where + ": duplicate photo inside the college");
     seen.add(im.u);
     if (LABELS[im.kind]) coverage[im.label]++;
   }
 }
+
+// ---- verified official campus-life links
+const LINK_CATS = ["clubs", "greek", "athletics", "events", "housing", "paper"];
+const linkCoverage = {};
+LINK_CATS.forEach((k) => { linkCoverage[k] = 0; });
+let linksColleges = 0;
+for (const c of colleges) {
+  const links = c.links;
+  if (!links) continue;
+  linksColleges++;
+  let host = "";
+  try { host = new URL(/^https?:/.test(c.url) ? c.url : "https://" + c.url).hostname.replace(/^www\./, ""); } catch (e) {}
+  const reg = host.split(".").slice(-2).join(".");
+  for (const cat of LINK_CATS) {
+    const url = links[cat];
+    if (!url) continue;
+    linkCoverage[cat]++;
+    let lh = "";
+    try { lh = new URL(url).hostname.replace(/^www\./, ""); } catch (e) {}
+    if (!/^https:\/\//.test(url)) fail(c.n + ": link " + cat + " must be https, saw " + url);
+    if (!(lh === host || lh.endsWith("." + reg) || lh === reg || (host && lh.endsWith("." + host)))) {
+      fail(c.n + ": link " + cat + " leaves the official domain: " + url);
+    }
+  }
+}
+console.log("official links: %d colleges carry verified links", linksColleges);
+console.log("link coverage:", JSON.stringify(linkCoverage));
+if (linksColleges === 0) fail("no college carries verified links; run scripts/enrich-college-links.py");
 
 const zero = colleges.filter((c) => !(c.imgs || []).length);
 console.log("college images: %d colleges | %d with photos | %d with six | %d photos total",

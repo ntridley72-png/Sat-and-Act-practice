@@ -11,12 +11,15 @@ Sources:
 Run: python3 scripts/build-college-data.py [path-to-institution-csv]
 Reruns reuse scripts/.cache for downloads and photos.
 """
+import concurrent.futures
 import csv
 import io
 import json
 import os
+import random
 import re
 import sys
+import threading
 import time
 import urllib.parse
 import urllib.request
@@ -30,6 +33,11 @@ DATA_PAGE = "https://collegescorecard.ed.gov/data/"
 BEA_RPP_ZIP = "https://apps.bea.gov/regional/zip/SARPP.zip"
 API = "https://api.data.gov/ed/collegescorecard/v1/schools?api_key=DEMO_KEY"
 UA = {"User-Agent": "funsat.bid college data build script (educational; contact: funsat.bid)"}
+# Wikimedia's anonymous limit for search queries is tight; pace every API call
+# globally and honour Retry-After instead of blind exponential backoff.
+THROTTLE_LOCK = threading.Lock()
+THROTTLE = float(os.environ.get("WIKI_THROTTLE", "1.8"))
+LAST_CALL = [0.0]
 
 SELECTIVE_ADMIT = 0.55
 LARGEST_N = 150
@@ -274,17 +282,146 @@ def fetch_majors(colleges):
         e["maj"] = [[label, round(count / total * 100)] for label, count in fields] if total else []
 
 
-def wiki_get(url, tries=4):
+def wiki_get(url, tries=8):
     delay = 5
     for attempt in range(tries):
+        with THROTTLE_LOCK:
+            gap = LAST_CALL[0] + THROTTLE - time.time()
+            if gap > 0:
+                time.sleep(gap)
+            LAST_CALL[0] = time.time()
         try:
-            return json.loads(get(url, timeout=30))
+            return json.loads(get(url, timeout=45))
         except urllib.error.HTTPError as exc:
             if exc.code != 429:
                 raise
-            time.sleep(delay)
-            delay *= 2
+            retry = None
+            try:
+                retry = float(exc.headers.get("Retry-After")) if exc.headers else None
+            except (TypeError, ValueError):
+                retry = None
+            wait = min(max(delay, (retry + 1) if retry else delay), 90)
+            wait *= 1 + random.random() * 0.2
+            print("commons rate limit: waiting %.0fs (attempt %d/%d)" % (wait, attempt + 1, tries), flush=True)
+            time.sleep(wait)
+            delay = min(delay * 1.6, 60)
     raise urllib.error.HTTPError(url, 429, "rate limited", None, None)
+
+
+PHOTO_LABELS = {
+    "athletics": "Stadium & athletics",
+    "greek": "Greek life",
+    "architecture": "Campus architecture",
+    "surroundings": "Campus surroundings",
+    "campus": "Campus life",
+    "social": "Student life & traditions",
+    "history": "School history",
+}
+
+
+def photo_kind(text):
+    """Classify only subjects that help a prospective student picture campus life."""
+    low = urllib.parse.unquote(str(text or "")).lower().replace("_", " ")
+    if any(k in low for k in ("fraternity", "sorority", "greek row", "greek village", "chapter house")):
+        return "greek"
+    if any(k in low for k in ("stadium", "arena", "fieldhouse", "field house", "ballpark", "coliseum",
+                              "athletic center", "athletics center", "football field", "basketball center",
+                              "baseball", "basketball", "football", "soccer", "lacrosse")):
+        return "athletics"
+    if any(k in low for k in ("aerial", "skyline", "panorama", "downtown", "overview", "bird's-eye",
+                              "mountain", "lake", "river", "beach", "arboretum", "botanical garden")):
+        return "surroundings"
+    if any(k in low for k in ("hall", "library", "chapel", "center", "building", "museum", "tower",
+                              "laboratory", "institute", "auditorium", "theatre", "theater", "architecture")):
+        return "architecture"
+    if any(k in low for k in ("historic", "historical", "archives", "school history", "founding", "old main")):
+        return "history"
+    if any(k in low for k in ("student life", "students", "homecoming", "tradition", "festival", "club fair",
+                              "orientation", "commencement", "graduation", "parade")):
+        return "social"
+    if any(k in low for k in ("campus", "quad", "quadrangle", "lawn", "mall", "gate", "entrance", "green")):
+        return "campus"
+    return None
+
+
+PRIORITY_NAMES = {"university of san diego", "university of california-san diego", "harvard university",
+                  "the university of alabama", "university of alabama", "auburn university"}
+LEGACY_REJECT = ("logo", "seal", "crest", "coat of arms", "coat_of_arms", "wordmark", "bookplate",
+                 "contact sheet", "map", "flag", "strike", "protest", "rally", "demonstration",
+                 "headshot", "portrait", "award ceremony", "commencement speaker", "lathe",
+                 "machinery", "machine shop", "equipment", "usmc", "marine corps", "u.s. navy",
+                 "us navy", "midshipman", "first pitch", "change of command", "swearing in",
+                 "tractor", "aircraft", "weapons", "rifle", "magazine")
+
+
+FILLER_WORDS = {"file", "the", "of", "and", "at", "a", "an", "is", "in", "on", "for", "to", "with", "by"}
+
+
+def photo_fingerprint(p):
+    """Near-duplicate key: the first six meaningful words of the file page name
+    (filler dropped), so three scans of the same building collapse to the first
+    one kept while different buildings at the same college stay distinct."""
+    raw = str(p.get("l") or p.get("u") or "")
+    name = urllib.parse.unquote(raw.split("/wiki/")[-1] if "/wiki/" in raw else raw.rsplit("/", 1)[-1])
+    words = [w for w in re.findall(r"[a-z]+", name.lower()) if w not in FILLER_WORDS]
+    return " ".join(words[:6]) or str(p.get("u"))
+
+
+def photo_only_filter():
+    raw = os.environ.get("PHOTO_ONLY", "").strip()
+    if not raw:
+        return None
+    return {name.strip().lower() for name in raw.split(",") if name.strip()}
+
+
+def normalize_photo(p):
+    """Guarantee credit, license, source page and category label on every image."""
+    u = str(p.get("u") or p.get("src") or "").strip()
+    page = str(p.get("l") or "").strip()
+    combined = str(p.get("a") or "")
+    credit = str(p.get("credit") or "").strip()
+    license_name = str(p.get("license") or "").strip()
+    if not credit:
+        credit = combined.rsplit(" · ", 1)[0].strip() if " · " in combined else (combined.strip() or "Wikimedia Commons")
+    if not license_name:
+        license_name = combined.rsplit(" · ", 1)[1].strip() if " · " in combined else "Wikimedia Commons"
+    kind = p.get("kind") or photo_kind(page or u) or "campus"
+    if re.match(r"^(public domain|cc[ -]|cc0|no restrictions|fair use|unknown)", credit.lower()):
+        credit = "Wikimedia Commons"
+    out = dict(p)
+    out.update({"u": u, "src": u, "l": page, "credit": credit or "Wikimedia Commons",
+                "license": license_name, "kind": kind, "label": PHOTO_LABELS.get(kind, PHOTO_LABELS["campus"])})
+    return out
+
+
+def legacy_ok(p):
+    """A cached photo from an older pipeline may only be reused if it would pass
+    today's reject filters and still points at a Commons-hosted file."""
+    raw = str(p.get("l") or p.get("u") or "")
+    text = urllib.parse.unquote(raw).lower().replace("_", " ")
+    if not text.startswith("https") or "wikimedia.org" not in text:
+        return False
+    name = urllib.parse.unquote(raw.split("/wiki/")[-1] if "/wiki/" in raw else raw.rsplit("/", 1)[-1]).lower()
+    if not re.search(r"\.(?:jpe?g|png|webp|tiff?)$", name):
+        return False  # documents, audio, SVG diagrams are not gallery photos
+    return not any(bad in text for bad in LEGACY_REJECT)
+
+
+def photo_priority(e, cache):
+    """Priority-first order: the four audited schools, then zero-image colleges,
+    then entries whose cached photos fail the filters, then the rest."""
+    info = cache.get(str(e["id"])) or {}
+    imgs = info.get("imgs") or []
+    named = 0 if e["n"].lower() in PRIORITY_NAMES else 1
+    missing = 0 if not imgs else 1
+    filtered = [p for p in imgs if legacy_ok(p)]
+    if len(filtered) >= 6 and info.get("v") == 7:
+        state = 2  # already good: crawl last
+    elif imgs and len(filtered) == len(imgs):
+        state = 1
+    else:
+        state = 0
+    return (named, missing, state)
 
 
 def fetch_photos(colleges):
@@ -292,27 +429,69 @@ def fetch_photos(colleges):
     os.makedirs(CACHE, exist_ok=True)
     cache = json.load(open(cache_path)) if os.path.exists(cache_path) else {}
     cache = {k: v for k, v in cache.items() if v.get("img") or v.get("imgs")}
-    for index, e in enumerate(colleges):
+    lock = threading.Lock()
+    only = photo_only_filter()
+    todo = [e for e in colleges if not only or e["n"].lower() in only]
+    todo.sort(key=lambda e: photo_priority(e, cache))
+    progress = {"done": 0, "total": len(todo)}
+    failures = {"n": 0}
+
+    def note_failure():
+        with lock:
+            failures["n"] += 1
+            if failures["n"] >= 8:
+                raise RuntimeError("Commons appears unreachable (%d colleges failed in a row); stopping so the cached legacy photos carry the site" % failures["n"])
+
+    def note_success():
+        with lock:
+            failures["n"] = 0
+
+    def tick():
+        # A modest pool talks to Commons one request at a time per worker, and
+        # wiki_get backs off on 429, so the pace stays polite without the old
+        # one-college-per-90-seconds crawl.
+        with lock:
+            progress["done"] += 1
+            if progress["done"] % 20 == 0:
+                print("photos: %d/%d colleges processed" % (progress["done"], progress["total"]), flush=True)
+                json.dump(cache, open(cache_path, "w"))
+
+    def crawl(e):
         key = str(e["id"])
         cached = cache.get(key, {})
-        photos = list(cached.get("imgs") or []) if cached.get("v") == 2 else []
-        if not photos and cached.get("img") and cached.get("v") == 2:
-            photos.append({"u": cached["img"], "a": cached.get("imgA", "Wikimedia Commons"), "l": cached.get("imgL", "")})
-        if len(photos) >= 3 and cached.get("v") == 2:
-            e.update(cached)
-            continue
+        # v7 is the strict, branch-aware subject cache (v6 predates the duplicate
+        # fingerprint and object-photo filters). Older generic results
+        # only survive if they pass today's reject filters, and they never
+        # crowd out a fresh crawl.
+        legacy = [normalize_photo(p) for p in (cached.get("imgs") or []) if legacy_ok(p)][:6]
+        photos = [normalize_photo(p) for p in (cached.get("imgs") or [])] if cached.get("v") == 7 else []
+        if len(photos) >= 6:
+            e["imgs"] = photos
+            if cached.get("img"):
+                e.update({k: cached[k] for k in ("img", "imgA", "imgL") if cached.get(k)})
+            note_success()
+            tick()
+            return
+        prior = len(photos)
+        fetch_failed = False
         try:
-            params = {
-                "action": "query", "generator": "search", "gsrsearch": 'intitle:"' + e["n"] + '" campus OR university',
-                "gsrnamespace": 6, "gsrlimit": 18, "prop": "imageinfo", "iiprop": "url|extmetadata",
-                "iiurlwidth": 960, "format": "json", "origin": "*",
-            }
-            data = wiki_get("https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode(params))
+            searches = ['"' + e["n"] + '" ' + term for term in
+                        ("stadium", "fraternity sorority", "student life history", "campus", "hall library", "aerial")]
+            pages = {}
+            for search in searches:
+                params = {
+                    "action": "query", "generator": "search", "gsrsearch": search,
+                    "gsrnamespace": 6, "gsrlimit": 16, "prop": "imageinfo", "iiprop": "url|extmetadata",
+                    "iiurlwidth": 960, "format": "json", "origin": "*",
+                }
+                data = wiki_get("https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode(params))
+                pages.update(data.get("query", {}).get("pages", {}))
             candidates = []
-            for page in data.get("query", {}).get("pages", {}).values():
+            for page in pages.values():
                 title = page.get("title", "")
                 low = title.lower()
-                if low.endswith(".svg") or any(bad in low for bad in ("logo", "seal", "crest", "coat_of_arms", "wordmark", "map", "flag", "athletics")):
+                if not re.search(r"\.(?:jpe?g|png|webp|tiff?)$", low) or any(bad in low for bad in
+                    ("logo", "seal", "crest", "coat_of_arms", "wordmark", "map", "flag", "bookplate", "contact sheet")):
                     continue
                 ii = (page.get("imageinfo") or [{}])[0]
                 meta = ii.get("extmetadata", {})
@@ -327,14 +506,26 @@ def fetch_photos(colleges):
                 if w and w < 800:
                     continue  # small/thumbnail-quality only
                 artist = re.sub(r"<[^>]+>", "", (meta.get("Artist", {}) or {}).get("value", "") or "").strip()[:120]
-                bucket = "other"
-                if any(k in low for k in ("aerial", "skyline", "panorama", "downtown", "overview", "bird")):
-                    bucket = "aerial"
-                elif any(k in low for k in ("hall", "library", "chapel", "center", "building", "museum", "tower", "house", "laboratory", "institute")):
-                    bucket = "building"
-                elif any(k in low for k in ("campus", "quad", "lawn", "mall", "gate", "entrance", "field", "green", "students")):
-                    bucket = "campus"
-                score = 3 * sum(2 if good in low else 0 for good in ("campus", "hall", "library", "quad", "building", "aerial"))
+                description = re.sub(r"<[^>]+>", " ", (meta.get("ImageDescription", {}) or {}).get("value", "") or "")
+                subject = title + " " + description
+                normalized_subject = " ".join(re.findall(r"[a-z0-9]+", subject.lower()))
+                normalized_name = " ".join(re.findall(r"[a-z0-9]+", e["n"].lower()))
+                identity = [token for token in re.findall(r"[a-z0-9]+", e["n"].lower())
+                            if len(token) > 2 and token not in ("university", "college", "institute", "school", "the", "of")]
+                acronym = "".join(token[0] for token in re.findall(r"[a-z0-9]+", e["n"].lower())
+                                  if token not in ("the", "of", "and", "at"))
+                strict_name = e["n"].lower().startswith(("university of ", "college of ")) and len(identity) <= 2
+                exact_name = bool(re.search(r"\b" + re.escape(normalized_name) + r"\b(?!\s+at\b)", normalized_subject))
+                identified = exact_name or (len(acronym) >= 3 and acronym in normalized_subject.replace(" ", ""))
+                if not identified and not strict_name:
+                    identified = bool(identity) and all(token in normalized_subject for token in identity)
+                if not identified:
+                    continue
+                bucket = photo_kind(subject)
+                if not bucket:
+                    continue
+                score = 3 * sum(2 if good in subject.lower() else 0 for good in
+                                ("campus", "stadium", "fraternity", "sorority", "hall", "library", "quad", "aerial"))
                 score += 2 * sum(1 for token in re.findall(r"[a-z0-9]+", e["n"].lower()) if len(token) > 3 and token in low)
                 if w and h:
                     score += min(w * h, 4_000_000) / 4_000_000 * 3  # larger originals look better
@@ -344,51 +535,73 @@ def fetch_photos(colleges):
                         score -= 1.5
                 if "logo" in low or "map" in low or "flag" in low:
                     score -= 6
+                if any(bad in subject.lower() for bad in ("strike", "protest", "rally", "demonstration", "headshot",
+                                                          "portrait", "award ceremony", "commencement speaker",
+                                                          "contact sheet", "bookplate", "lathe", "machinery",
+                                                          "machine shop", "equipment", "usmc", "marine corps",
+                                                          "u.s. navy", "us navy", "midshipman", "first pitch",
+                                                          "change of command", "swearing in", "tractor", "aircraft",
+                                                          "weapons", "rifle")):
+                    continue
+                # Three scans of the same building (the Highsmith collection
+                # alone has several) must not fill the gallery. The selection
+                # step keeps only the best-scoring variant per fingerprint.
+                fingerprint = photo_fingerprint({"l": title})
                 candidates.append((score, bucket, {
                     "u": url,
                     "a": ((artist + " · ") if artist else "") + (license_name or "Wikimedia Commons"),
                     "l": "https://commons.wikimedia.org/wiki/" + urllib.parse.quote(title.replace(" ", "_")),
+                    "src": url,
+                    "credit": artist or "Wikimedia Commons",
+                    "license": license_name or "Wikimedia Commons",
+                    "kind": bucket,
+                    "label": PHOTO_LABELS[bucket],
+                    "fp": fingerprint,
                 }))
             known = {p.get("u") for p in photos}
             ranked = sorted(candidates, key=lambda item: -item[0])
-            # one from each subject bucket first (aerial / building / campus), then fill by score
-            chosen = set()
-            for want in ("aerial", "building", "campus"):
+            # Socially useful variety first; unavailable subjects are simply omitted.
+            chosen, chosen_fp = set(), set()
+            for want in ("athletics", "greek", "social", "history", "architecture", "surroundings", "campus"):
                 for score, bucket, photo in ranked:
-                    if bucket == want and photo["u"] not in known and photo["u"] not in chosen:
-                        photos.append(photo); known.add(photo["u"]); chosen.add(photo["u"]); break
-                if len(photos) >= 3: break
+                    if bucket == want and photo["u"] not in known and photo["u"] not in chosen and photo.get("fp") not in chosen_fp:
+                        photos.append(photo); known.add(photo["u"]); chosen.add(photo["u"]); chosen_fp.add(photo.get("fp")); break
+                if len(photos) >= 6: break
             for score, bucket, photo in ranked:
-                if len(photos) >= 3: break
-                if photo["u"] in known: continue
-                photos.append(photo); known.add(photo["u"])
+                if len(photos) >= 6: break
+                if photo["u"] in known or photo.get("fp") in chosen_fp: continue
+                photos.append(photo); known.add(photo["u"]); chosen_fp.add(photo.get("fp"))
         except Exception:
-            pass
-        info = {"imgs": photos[:3], "v": 2}
-        if photos:
+            fetch_failed = True
+            photos = []
+        if fetch_failed:
+            note_failure()
+        else:
+            note_success()
+        if len(photos) > prior:
+            photos = photos[:6]
+            info = {"imgs": photos, "v": 7}
             info.update({"img": photos[0]["u"], "imgA": photos[0]["a"], "imgL": photos[0]["l"]})
-            cache[key] = info
+            with lock:
+                cache[key] = info
             e.update(info)
-        if index % 20 == 0:
-            json.dump(cache, open(cache_path, "w"))
-        time.sleep(1.5)
-    json.dump(cache, open(cache_path, "w"))
+            e["imgs"] = photos
+        else:
+            # Commons gave nothing usable for this college. Keep whatever fresh
+            # partials exist, otherwise the filtered legacy set, and do not
+            # cache the fallback as a successful crawl so a later run retries.
+            keep = photos or legacy
+            e["imgs"] = keep
+            for k in ("img", "imgA", "imgL"):
+                e.pop(k, None)
+            if keep:
+                e.update({"img": keep[0]["u"], "imgA": keep[0].get("a") or keep[0]["credit"], "imgL": keep[0]["l"]})
+        tick()
 
-
-def social_grade(e):
-    """App estimate from official facts: size, retention, diversity, location. Not a rating."""
-    score = 50
-    if e.get("enr"):
-        score += 12 if e["enr"] >= 15000 else 8 if e["enr"] >= 7000 else 4 if e["enr"] >= 2500 else -2
-    if e.get("ret") is not None:
-        score += 14 if e["ret"] >= 90 else 8 if e["ret"] >= 80 else 0 if e["ret"] >= 70 else -6
-    if e.get("div") is not None:
-        score += 8 if e["div"] >= 60 else 4 if e["div"] >= 45 else 0
-    score += {"city": 8, "suburb": 5, "town": 2, "rural": 0}.get(e.get("loc"), 2)
-    if e.get("gr") is not None and e["gr"] >= 85:
-        score += 4
-    score = max(35, min(95, score))
-    return "A" if score >= 85 else "B" if score >= 72 else "C" if score >= 60 else "D"
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+        list(pool.map(crawl, todo))
+    with lock:
+        json.dump(cache, open(cache_path, "w"))
 
 
 def main():
@@ -400,7 +613,7 @@ def main():
     except Exception as exc:
         print('Majors fetch failed:', exc)
     if os.environ.get("SKIP_PHOTOS") == "1":
-        photos_ok = False
+        photos_ok = True  # a cache-only rebake still ships the cached photos
         print("Photos skipped (SKIP_PHOTOS=1); using cached images only.")
     else:
         try:
@@ -413,8 +626,22 @@ def main():
         cached_photos = json.load(open(os.path.join(CACHE, "photos.json")))
         for e in colleges:
             info = cached_photos.get(str(e["id"]))
-            if info and info.get("img"):
-                e.update(info)
+            if not info:
+                continue
+            seen_fp = set()
+            imgs = []
+            for p in (info.get("imgs") or []):
+                if not legacy_ok(p):
+                    continue
+                fp = photo_fingerprint(p)
+                if fp in seen_fp:
+                    continue
+                seen_fp.add(fp)
+                imgs.append(normalize_photo(p))
+            imgs = imgs[:6]
+            if imgs:
+                e["imgs"] = imgs
+                e.update({"img": imgs[0]["u"], "imgA": imgs[0].get("a") or imgs[0]["credit"], "imgL": imgs[0]["l"]})
     except Exception:
         pass
     rpp, rpp_year = load_rpp()
@@ -422,7 +649,6 @@ def main():
         state = rpp.get(e["st"], {})
         e["rpp"] = state.get("all")
         e["rpph"] = state.get("rents")
-        e["sg"] = social_grade(e)
         e["net"] = e.get("np")
         e["tuIn"] = e.get("ti")
         e["tuOut"] = e.get("to")
@@ -441,8 +667,8 @@ def main():
                 "Outcomes: Scorecard graduation rate (C150_4), first-year retention (RET_FT4), median earnings 10 years after entry (MD_EARN_WNE_P10).",
                 "Diversity/first-gen: Scorecard enrollment race shares and parent-education percentages.",
                 "Living costs: BEA Regional Price Parities by state (" + rpp_year + "), all items and housing rents, U.S. = 100.",
-                "Photos: up to three curated Wikimedia Commons images per college, free-license images only, with per-image attribution.",
-                "Social-life letter grade: app estimate from official size, retention, diversity, and location data — not a student survey.",
+                "Photos: up to six curated Wikimedia Commons images per college, prioritizing athletics, Greek life, architecture, campus life, and surroundings; free-license images only, with per-image attribution.",
+                "Campus context: enrollment size and locale classification from IPEDS, described as context — not a student survey or a social-life rating.",
             ],
             "note": ("SAT and ACT ranges describe enrolled students, not admitted students. Values are the most recent each "
                      "college reported to the U.S. Department of Education. Verify current testing policies and costs with each college."),

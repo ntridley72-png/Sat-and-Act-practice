@@ -281,7 +281,7 @@
     "10": { mean: 904, test: "PSAT 10", note: "2024–25 PSAT 10 takers" },
     "9": { mean: 829, test: "PSAT 8/9", note: "2024–25 PSAT 8/9 takers" }
   };
-  const OUTCOME_COLORS = { accept: "#22c55e", waitlist: "#3b82f6", deny: "#ef4444" };
+  const OUTCOME_COLORS = { accept: "var(--fx-accept)", waitlist: "var(--fx-waitlist)", deny: "var(--fx-deny)" };
   // Reach / target / likely / safety from the estimated accept chance.
   function fitOf(p) {
     return p < 0.25 ? { key: "reach", label: "Reach" } : p < 0.55 ? { key: "target", label: "Target" } : p < 0.85 ? { key: "likely", label: "Likely" } : { key: "safety", label: "Safety" };
@@ -602,70 +602,10 @@
     return '<span class="college-position' + (above >= 0 ? " good" : below < 0 ? " low" : "") + '">' + escapeHtml(note) + "</span>";
   }
 
-  function savedPanelHtml() {
-    const c = cp();
-    const saved = (c.saved || []).map((id) => BY_ID.get(Number(id))).filter(Boolean);
-    if (!saved.length) return '<aside class="college-saved-panel" id="collegeSavedPanel"><h3>Saved colleges</h3><p class="small muted">No saved colleges yet. Search on the left and tap ☆ to add schools here for quick access and comparison.</p></aside>';
-    return '<aside class="college-saved-panel" id="collegeSavedPanel"><h3>Saved colleges <span class="small muted">(' + saved.length + ')</span></h3><ul class="college-saved-list">' +
-      saved.map((x) => {
-        const est = estimateCollege(x);
-        const where = est.range && est.score ? (est.score.value >= est.range.hi ? "above 75th" : est.score.value <= est.range.lo ? "below 25th" : "mid 50%") : isTestBlind(x) ? "test-blind" : est.score ? "no range" : "add score";
-        const fit = fitOf(est.estimate);
-        return '<li class="cs-row"><button type="button" class="college-saved-item' + (x.id === selectedId ? " current" : "") + '" data-select="' + x.id + '" title="' + escapeHtml(x.n) + ": " + x.st + ", admits " + x.adm + "%, " + where + '">' +
-          '<span class="cs-name">' + escapeHtml(x.n) + '</span><span class="cs-meta">' + x.st + " · " + Math.round(x.adm) + "% admit · " + where + '</span>' +
-          '<span class="cs-est fit-' + fit.key + '">' + pct(est.estimate) + "</span></button>" +
-          '<button type="button" class="ghost cs-remove" data-save="' + x.id + '" title="Remove from saved" aria-label="Remove ' + escapeHtml(x.n) + '">✕</button></li>';
-      }).join("") + '</ul><p class="small muted">Also shown in the home comparison and the compare table below.</p></aside>';
-  }
-  function profileHtml() {
-    const c = cp();
-    const pred = (() => { try { return predictScores(); } catch (e) { return { sat: {}, act: {} }; } })();
-    const predSat = pred.sat && pred.sat.total ? pred.sat.total.point : null;
-    const predAct = pred.act && pred.act.composite ? pred.act.composite.point : null;
-    const activityRows = (c.activities || []).map((a, i) => '<div class="college-activity-row" data-i="' + i + '">' +
-      '<input type="text" data-act="name" placeholder="Activity (e.g., robotics team)" maxlength="80" value="' + escapeHtml(a.name || "") + '">' +
-      '<select data-act="type">' + ["", "Leadership", "Award", "Job", "Volunteer", "Family responsibility", "Club/Sport", "Other"].map((t) => '<option value="' + t + '"' + (a.type === t ? " selected" : "") + ">" + (t || "Type") + "</option>").join("") + "</select>" +
-      '<input type="number" data-act="years" min="0" max="7" step="1" placeholder="Yrs" value="' + (a.years != null ? a.years : "") + '">' +
-      '<input type="number" data-act="hours" min="0" max="80" step="1" placeholder="Hrs/wk" value="' + (a.hours != null ? a.hours : "") + '">' +
-      '<label class="college-check"><input type="checkbox" data-act="leadership"' + (a.leadership ? " checked" : "") + "> Lead</label>" +
-      '<button type="button" class="ghost" data-act="remove" aria-label="Remove activity">✕</button></div>').join("");
-    return '<details class="college-card college-profile" open>' +
-      '<summary><strong>Your profile</strong><span class="small muted"> ' + collegeSaveStatus() + "</span></summary>" +
-      '<div id="collegeProfileHero" class="college-hero"></div>' +
-      '<div class="college-profile-wrap"><div class="college-profile-grid">' +
-      '<fieldset class="college-band college-band-scores"><legend>Test scores</legend>' +
-      '<label>Primary test <select id="collegeTestType"><option value="sat"' + (c.testType === "sat" ? " selected" : "") + '>SAT</option><option value="act"' + (c.testType === "act" ? " selected" : "") + ">ACT</option></select></label>" +
-      '<label>SAT total (400–1600) <input type="number" id="collegeSat" min="400" max="1600" step="10" value="' + (c.sat != null ? c.sat : "") + '" placeholder="e.g., 1350"></label>' +
-      '<label>ACT composite (1–36) <input type="number" id="collegeAct" min="1" max="36" step="1" value="' + (c.act != null ? c.act : "") + '" placeholder="e.g., 30"></label>' +
-      (predSat || predAct ? '<button type="button" class="secondary" id="collegeUsePredicted">Use predicted' + (predSat ? " (SAT " + predSat + ")" : predAct ? " (ACT " + predAct + ")" : "") + "</button>" : "") +
-      '<p class="small muted">Enter your best official or practice score. Predicted scores come from your practice attempts and are estimates.</p></fieldset>' +
-      '<fieldset class="college-band college-band-acad"><legend>Academics</legend>' +
-      '<label>Grade level <select id="collegeGrade">' + [["9", "9th"], ["10", "10th"], ["11", "11th"], ["12", "12th"], ["gap", "Gap year / other"]].map(([v, t]) => '<option value="' + v + '"' + (c.grade === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label>" +
-      '<div class="college-gpa-pair">' +
-      '<label>GPA <input type="number" id="collegeGpa" min="0" max="100" step="0.01" value="' + (c.gpa != null ? c.gpa : "") + '" placeholder="e.g., 3.85"></label>' +
-      '<label>GPA scale <select id="collegeGpaScale">' + [["4uw", "4.0 unweighted"], ["4w", "4.0 weighted"], ["5w", "5.0 weighted"], ["100", "100-point"]].map(([v, t]) => '<option value="' + v + '"' + (c.gpaScale === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label>" +
-      '</div>' +
-      '<label>Class rank <select id="collegeClassRank">' + [["", "Not ranked / don't know"], ["top5", "Top 5%"], ["top10", "Top 10%"], ["top25", "Top 25%"], ["top50", "Top 50%"], ["below", "Lower half"]].map(([v, t]) => '<option value="' + v + '"' + ((c.classRank || "") === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label>" +
-      '<label>Home state <select id="collegeHomeState"><option value="">Choose…</option>' + "AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA PR RI SC SD TN TX UT VT VA WA WV WI WY".split(" ").map((s) => '<option value="' + s + '"' + (c.homeState === s ? " selected" : "") + ">" + s + "</option>").join("") + "</select></label>" +
-      '<label>Intended major <input type="text" id="collegeMajor" maxlength="80" value="' + escapeHtml(c.major || "") + '" placeholder="e.g., Computer science"></label>' +
-      '<label>Application plan <select id="collegeApplyPlan">' + [["regular", "Regular decision"], ["ea", "Early Action (non-binding)"], ["ed", "Early Decision (binding)"]].map(([v, t]) => '<option value="' + v + '"' + ((c.applyPlan === "early" ? "ea" : c.applyPlan || "regular") === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label>" +
-      '<label>Essays &amp; recs (self-rated) <select id="collegeAppStrength"><option value="strong"' + (c.appStrength === "strong" ? " selected" : "") + '>Strong</option><option value="average"' + (c.appStrength !== "strong" && c.appStrength !== "developing" ? " selected" : "") + '>Average</option><option value="developing"' + (c.appStrength === "developing" ? " selected" : "") + '>Still developing</option></select></label>' +
-      '<div class="college-rigor"><span>Course rigor (number of AP, IB, honors, dual-enrollment courses)</span>' +
-      ["ap", "ib", "honors", "dual"].map((k) => '<label>' + ({ ap: "AP", ib: "IB", honors: "Honors", dual: "Dual" })[k] + ' <input type="number" min="0" max="40" step="1" data-rigor="' + k + '" value="' + (Number(c.rigor[k]) || 0) + '"></label>').join("") + "</div></fieldset>" +
-      chancesHtml() +
-      '<fieldset class="college-wide"><legend>Activities and circumstances</legend>' +
-      '<div class="college-activities" id="collegeActivities">' + activityRows + "</div>" +
-      '<button type="button" class="secondary" id="collegeAddActivity">+ Add activity</button>' +
-      '<div class="college-checks">' +
-      '<label class="college-check"><input type="checkbox" id="collegeAthlete"' + (c.athlete ? " checked" : "") + "> Recruited athlete (a coach is supporting you)</label>" +
-      '<label class="college-check"><input type="checkbox" id="collegeLegacy"' + (c.legacy ? " checked" : "") + "> Parent attended (legacy)</label>" +
-      '<label class="college-check"><input type="checkbox" id="collegeFirstGen"' + (c.firstGen ? " checked" : "") + "> First-generation college student</label>" +
-      '<label class="college-check"><input type="checkbox" id="collegeHardship"' + (c.hardship ? " checked" : "") + "> Financial hardship</label>" +
-      '<label class="college-check"><input type="checkbox" id="collegeWorking"' + (c.working ? " checked" : "") + "> Working during school</label>" +
-      '<label class="college-check"><input type="checkbox" id="collegeCaregiving"' + (c.caregiving ? " checked" : "") + "> Caregiving responsibilities</label></div>" +
-      '<label>Other context (optional) <textarea id="collegeOther" rows="2" maxlength="500" placeholder="Anything else colleges should know">' + escapeHtml(c.circumstanceOther || "") + "</textarea></label>" + contextReviewHtml() +
-      "</fieldset></div>" + savedPanelHtml() + "</div>" + unansweredReminder() + "</details>";
-  }
+  /* profileHtml() and savedPanelHtml() are gone with the stacked second copy of
+     this screen: the rail holds the profile, and the comparison list is itself
+     the list of saved colleges, so a sidebar repeating it was a worse duplicate
+     of the thing sitting beside it. */
 
   function resultsHtml() {
     const c = cp();
@@ -690,7 +630,7 @@
     const money = (n) => n == null ? "—" : "$" + Number(n).toLocaleString();
     const race = college.race || {};
     const raceOrder = [["w", "White"], ["h", "Hispanic"], ["a", "Asian"], ["b", "Black"], ["n", "International"], ["m", "Two or more"]];
-    const raceColors = { w: "#93c5fd", h: "#fbbf24", a: "#f472b6", b: "#a78bfa", n: "#34d399", m: "#94a3b8" };
+    const raceColors = { w: "var(--fx-cat-1)", h: "var(--fx-cat-2)", a: "var(--fx-cat-3)", b: "var(--fx-cat-4)", n: "var(--fx-cat-5)", m: "var(--fx-cat-6)" };
     const raceBar = Object.keys(race).length ? '<div class="div-bar">' + raceOrder.filter(([k]) => race[k] != null).map(([k, label]) =>
       '<span style="width:' + race[k] + '%;background:' + raceColors[k] + '" title="' + label + " " + race[k] + '%"></span>').join("") + '</div><div class="cf-note">' +
       raceOrder.filter(([k]) => race[k] != null).map(([k, label]) => label + " " + race[k] + "%").join(" · ") + "</div>" : '<div class="cf-note">Not reported</div>';
@@ -700,8 +640,20 @@
     const totalIn = college.ti != null && adj != null ? college.ti + adj : null;
     const totalOut = college.to != null && adj != null ? college.to + adj : null;
     const photos = Array.isArray(college.imgs) && college.imgs.length ? college.imgs : (college.img ? [{ u: college.img, a: college.imgA, l: college.imgL }] : []);
-    const photo = photos.length ? '<section class="college-gallery" aria-label="Campus photos of ' + escapeHtml(college.n) + '">' + photos.slice(0, 3).map((img, index) =>
-      '<figure class="college-photo"><img src="' + escapeHtml(img.u || "") + '" alt="Campus photo ' + (index + 1) + ' of ' + escapeHtml(college.n) + '" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.closest(\'figure\').hidden=true"><figcaption>Photo: ' + escapeHtml(img.a || "Wikimedia Commons") + (img.l ? ' · <a href="' + escapeHtml(img.l) + '" target="_blank" rel="noopener">source</a>' : "") + "</figcaption></figure>").join("") + "</section>" : "";
+    const photo = photos.length ? '<section class="college-gallery" aria-label="Campus life photos of ' + escapeHtml(college.n) + '">' + photos.slice(0, 6).map((img, index) => {
+      const creditText = (img.credit || img.a || "Wikimedia Commons") + (img.license ? " · " + img.license : "");
+      const source = img.source || img.l || "";
+      const caption = source
+        ? '<a href="' + escapeHtml(source) + '" target="_blank" rel="noopener nofollow">' + escapeHtml(creditText) + "</a>"
+        : escapeHtml(creditText);
+      return '<figure class="college-photo"><span class="college-photo-label">' + escapeHtml(img.label || "Campus life") + '</span><img src="' + escapeHtml(img.u || img.src || "") + '" alt="' + escapeHtml(img.label || "Campus life") + ' at ' + escapeHtml(college.n) + '" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.closest(\'figure\').hidden=true"><figcaption>' + caption + "</figcaption></figure>";
+    }).join("") + "</section>" : "";
+    const setting = ({ city: "City", suburb: "Suburban", town: "College-town", rural: "Rural" }[college.loc] || "Campus");
+    const size = college.enr >= 25000 ? "Very large" : college.enr >= 12000 ? "Large" : college.enr >= 4000 ? "Mid-sized" : college.enr >= 1200 ? "Small" : "Very small";
+    const socialSnapshot = size + " · " + setting.toLowerCase();
+    const official = collegeUrl(college);
+    let officialHost = ""; try { officialHost = new URL(official).hostname.replace(/^www\./, ""); } catch (e) {}
+    const discover = (label, terms) => '<a class="cf-link" href="https://www.google.com/search?q=' + encodeURIComponent((officialHost ? "site:" + officialHost + " " : "") + college.n + " " + terms) + '" target="_blank" rel="noopener">' + label + "</a>";
     const forum = (label, href) => '<a class="cf-link" href="' + href + '" target="_blank" rel="noopener">' + label + "</a>";
     return photo +
       '<div class="college-facts">' +
@@ -737,13 +689,14 @@
       '<div class="cf-line"><span>Average faculty salary</span><b>' + money(college.fsal) + "</b></div>" +
       '<div class="cf-note">Median family income, federal loan share, median debt at graduation, cohort default rate, age mix, and average faculty salary are the college’s most recent federal reporting (College Scorecard). The Pell graduation rate compares completion for Pell Grant recipients.</div></section>' +
       '<section class="cf-card"><h4>Student experience</h4>' +
-      '<div class="cf-social"><span class="cf-grade">' + escapeHtml(college.sg || "—") + '</span><span class="cf-note">App estimate (A–D) from size, retention, diversity, and location — not a student survey.</span></div>' +
+      '<div class="cf-social"><strong class="cf-social-snapshot">' + escapeHtml(socialSnapshot) + '</strong><span class="cf-note">Campus context from enrollment and setting—not a student-opinion score.</span></div>' +
       '<div class="cf-line"><span>Students returning after year one</span><b>' + (college.ret != null ? college.ret + "%" : "—") + '</b></div>' +
       '<div class="cf-line"><span>Setting</span><b>' + ({ city: "City", suburb: "Suburban", town: "Small town", rural: "Rural" }[college.loc] || "—") + " · " + escapeHtml(college.city) + ", " + college.st + "</b></div>" +
       '<div class="cf-line"><span>Students living on campus</span><b>Not reported</b></div>' +
       '<div class="cf-line"><span>Athletics division</span><b>Not reported</b></div>' +
-      '<div class="cf-note">Retention is official College Scorecard data, not a satisfaction rating. Professor and student-review sites change frequently, so open the current source before deciding.</div>' +
-      '<div class="cf-links">' + forum("Professor ratings on Rate My Professors", "https://www.ratemyprofessors.com/search/professors?q=" + encodeURIComponent(college.n)) + forum("Student reviews on Niche", "https://www.niche.com/search/?q=" + encodeURIComponent(college.n)) + forum("Student opinions on Reddit", "https://www.reddit.com/search/?q=" + encodeURIComponent(college.n + " student experience")) + "</div></section>" +
+      '<div class="cf-note">Retention is official College Scorecard data, not a satisfaction rating. Club popularity and campus traditions change, so use the current official directories below.</div>' +
+      '<h5 class="cf-subhead">Clubs & campus life</h5><div class="cf-links">' + discover("Student organizations", "student organizations clubs directory") + discover("Greek life", "fraternity sorority Greek life") + discover("Athletics & recreation", "athletics recreation intramural sports") + discover("Events & traditions", "student events campus traditions") + discover("Housing & dining", "student housing dining") + discover("Student newspaper", "student newspaper") + "</div>" +
+      '<div class="cf-links">' + forum("Professor ratings", "https://www.ratemyprofessors.com/search/professors?q=" + encodeURIComponent(college.n)) + forum("Student reviews", "https://www.niche.com/search/?q=" + encodeURIComponent(college.n)) + forum("Student discussions", "https://www.reddit.com/search/?q=" + encodeURIComponent(college.n + " student experience")) + "</div></section>" +
       "</div>";
   }
 
@@ -822,7 +775,7 @@
   }
 
   // ---- Comparison screen (Oct 2026 mockup): score rail + card list ---- //
-  const ccState = { fit: "all", inState: false, publicOnly: false, testOpt: false, sort: "fit", drawerOpen: false };
+  const ccState = { fit: "all", inState: false, publicOnly: false, testOpt: false, sort: "fit", drawerOpen: false, moreOpen: false };
   const SLUGS = (() => {
     const slugifyClient = (t) => String(t).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase().replace(/-{2,}/g, "-");
     const counts = {};
@@ -868,7 +821,9 @@
     const sub = [college.st, college.ctrl === "public" ? "public" : "private", college.adm != null ? Math.round(college.adm) + "% admit rate" : null].filter(Boolean).join(" · ");
     return '<div class="cc-card" data-cc-id="' + college.id + '">' +
       '<a class="cc-link" href="/colleges/' + SLUGS.get(college.id) + '/" aria-label="' + escapeHtml(college.n) + ' info page">' +
-      '<div class="cc-card-head"><h3>' + escapeHtml(college.n) + '</h3><span class="cc-verdict v-' + v.key + '">' + v.label + "</span></div>" +
+      '<div class="cc-card-head"><h3>' + escapeHtml(college.n) + '</h3>' +
+      '<span class="cc-fitgroup"><span class="cc-fitpct">' + Math.round(est.estimate * 100) + '% fit</span>' +
+      '<span class="cc-verdict v-' + v.key + '">' + v.label + "</span></span></div>" +
       '<p class="cc-sub">' + escapeHtml(sub) + "</p>" +
       ccBarHtml(r ? r.lo : null, r ? r.hi : null, you, college.n + " " + (est.testType === "act" ? "ACT" : "SAT") + " range " + (r ? r.lo + " to " + r.hi : "not reported") + (you != null ? ", you " + you : "")) +
       '<div class="cc-where"><span>' + (r ? "middle 50%: " + r.lo + "–" + r.hi : "range not reported") + (you != null ? " · you: " + you : "") + '</span><span>' + escapeHtml(where) + (gap != null ? " · " + gap + " points (~" + Math.max(2, Math.round(gap / 20) * 10) + " per section)" : "") + "</span></div></a>" +
@@ -888,35 +843,87 @@
       (you != null ? '<span class="cc-marker" style="left:' + at(you).toFixed(1) + '%"><b>you: ' + you + "</b></span>" : "") + "</div>" +
       '<div class="cc-scale"><span>' + min + "</span><span>" + max + "</span></div></div>";
   }
+  /* Option B: the rail is the single home for everything about you — the ring,
+     the four figures that drive the estimate, and the rest behind one
+     disclosure. Nothing about the list lives here; the filters sit over the
+     list where they belong. Every field keeps the id its existing handler is
+     bound to, so editing anything still re-renders and re-sorts the list. */
   function ccRailHtml() {
     const c = cp();
     const you = ccYou();
     const pct = you != null && window.FunSATRedesign ? FunSATRedesign.satPercentile(you) : null;
     const pred = (() => { try { const pr = predictScores(); return pr.sat && pr.sat.total ? pr.sat.total.point : null; } catch (e) { return null; } })();
-    const ring = (() => {
-      const size = 96, stroke = 7, r = (size - stroke * 1.6) / 2, circ = 2 * Math.PI * r;
-      const off = circ * (1 - (pct == null ? 0 : pct) / 100);
-      return '<div class="cc-ring"><svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + " " + size + '" role="img" aria-label="' + (pct == null ? "No score yet" : "estimated " + pct + "th percentile") + '"><circle class="cc-ring-track" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" stroke-width="1.6"/><circle class="cc-ring-prog" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" stroke-width="' + stroke + '" stroke-dasharray="' + circ.toFixed(1) + '" stroke-dashoffset="' + circ.toFixed(1) + '" data-cc-off="' + off.toFixed(1) + '"/></svg>' +
-        '<span class="cc-ring-lbl"><b>' + (pct == null ? "—" : pct) + "</b><i>pctl</i></span></div>";
-    })();
-    const states = ["", "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
-    return '<aside class="cc-rail">' +
-      '<div class="cc-score-card"><div class="cc-score-top">' + ring +
-      '<div class="cc-score-num"><b>' + (you != null ? you : "—") + '</b><span>' + (pct != null ? "SAT total · ahead of " + pct + "%" : "Add an SAT or ACT score") + "</span></div></div>" +
+    const ring = window.FunSATRedesign && FunSATRedesign.ringHtml
+      ? FunSATRedesign.ringHtml(pct, "", 76)
+      : "";
+    const states = ["", "AL","AK","AZ","AR","CA","CO","CT","DE","DC","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","PR","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
+    const sel = (v, want) => (String(v) === String(want) ? " selected" : "");
+    const opts = (pairs, current) => pairs.map(([v, t]) => '<option value="' + v + '"' + sel(current, v) + ">" + t + "</option>").join("");
+    const activityRows = (c.activities || []).map((a, i) => '<div class="college-activity-row" data-i="' + i + '">' +
+      '<input type="text" data-act="name" placeholder="Activity (e.g., robotics team)" maxlength="80" value="' + escapeHtml(a.name || "") + '">' +
+      '<select data-act="type">' + ["", "Leadership", "Award", "Job", "Volunteer", "Family responsibility", "Club/Sport", "Other"].map((t) => '<option value="' + t + '"' + (a.type === t ? " selected" : "") + ">" + (t || "Type") + "</option>").join("") + "</select>" +
+      '<input type="number" data-act="years" min="0" max="7" step="1" placeholder="Yrs" value="' + (a.years != null ? a.years : "") + '">' +
+      '<input type="number" data-act="hours" min="0" max="80" step="1" placeholder="Hrs/wk" value="' + (a.hours != null ? a.hours : "") + '">' +
+      '<label class="college-check"><input type="checkbox" data-act="leadership"' + (a.leadership ? " checked" : "") + "> Lead</label>" +
+      '<button type="button" class="ghost" data-act="remove" aria-label="Remove activity">✕</button></div>').join("");
+
+    return '<aside class="cc-rail" aria-label="Your profile">' +
+      '<div class="cc-score-card">' +
+      '<div class="cc-score-top">' + ring +
+      '<div class="cc-score-num"><b>' + (you != null ? you : "—") + '</b><span>' +
+      (pct != null ? "SAT total · " + FunSATRedesign.ordinal(pct) + " percentile" : "Add an SAT or ACT score") + "</span></div></div>" +
+
       '<label class="cc-field">SAT total (400–1600)<input type="number" id="ccSat" min="400" max="1600" step="10" value="' + (c.sat != null ? c.sat : "") + '" placeholder="e.g., 1350"></label>' +
-      '<div class="cc-field-row"><label class="cc-field">GPA<input type="number" id="ccGpa" min="0" max="5" step="0.01" value="' + (c.gpa != null ? c.gpa : "") + '" placeholder="3.8"></label>' +
-      '<label class="cc-field">Grade<select id="ccGrade">' + ["9","10","11","12"].map((g) => '<option value="' + g + '"' + (String(c.grade) === g ? " selected" : "") + ">" + g + "</option>").join("") + "</select></label></div>" +
+      '<div class="cc-field-row">' +
+      '<label class="cc-field">GPA<input type="number" id="ccGpa" min="0" max="100" step="0.01" value="' + (c.gpa != null ? c.gpa : "") + '" placeholder="3.8"></label>' +
+      '<label class="cc-field">Scale<select id="collegeGpaScale">' + opts([["4uw", "4.0 unweighted"], ["4w", "4.0 weighted"], ["5w", "5.0 weighted"], ["100", "100-point"]], c.gpaScale || "4uw") + "</select></label></div>" +
+      '<div class="cc-field-row">' +
+      '<label class="cc-field">Grade<select id="ccGrade">' + opts([["9", "9th"], ["10", "10th"], ["11", "11th"], ["12", "12th"], ["gap", "Gap year"]], c.grade) + "</select></label>" +
+      '<label class="cc-field">Home state<select id="ccHomeState" aria-label="Your home state">' + states.map((st) => '<option value="' + st + '"' + sel(c.homeState, st) + ">" + (st || "Choose") + "</option>").join("") + "</select></label></div>" +
       (pred != null ? '<button type="button" class="cc-pred" id="ccUsePredicted">Use my predicted score (' + pred + ")</button>" : "") +
-      "</div>" +
-      '<div class="cc-narrow"><h3>Narrow the list</h3>' +
-      '<p class="cc-narrow-lbl">Fit</p><div class="cc-fit-chips" role="group" aria-label="Filter by fit">' +
-      ["all", "reach", "target", "likely"].map((k) => '<button type="button" class="cc-fitb' + (ccState.fit === k ? " on" : "") + '" data-cc-fit="' + k + '" aria-pressed="' + (ccState.fit === k) + '">' + (k === "all" ? "All" : k.charAt(0).toUpperCase() + k.slice(1)) + "</button>").join("") + "</div>" +
-      '<p class="cc-narrow-lbl">State</p>' +
-      '<label class="cc-check"><input type="checkbox" data-cc-state="inState"' + (ccState.inState ? " checked" : "") + "><span>In-state only</span></label>" +
-      '<label class="cc-field cc-home"><span class="visually-hidden">Your state</span><select id="ccHomeState" aria-label="Your home state">' + states.map((st) => '<option value="' + st + '"' + (c.homeState === st ? " selected" : "") + ">" + (st || "Choose state") + "</option>").join("") + "</select></label>" +
+
+      '<details class="cc-more" id="ccMore"' + (ccState.moreOpen ? " open" : "") + '>' +
+      '<summary>More about you</summary>' +
+      '<div class="cc-more-body">' +
+      '<div class="cc-field-row">' +
+      '<label class="cc-field">Primary test<select id="collegeTestType">' + opts([["sat", "SAT"], ["act", "ACT"]], c.testType || "sat") + "</select></label>" +
+      '<label class="cc-field">ACT (1–36)<input type="number" id="collegeAct" min="1" max="36" step="1" value="' + (c.act != null ? c.act : "") + '" placeholder="30"></label></div>' +
+      '<label class="cc-field">Class rank<select id="collegeClassRank">' + opts([["", "Not ranked / don\u2019t know"], ["top5", "Top 5%"], ["top10", "Top 10%"], ["top25", "Top 25%"], ["top50", "Top 50%"], ["below", "Lower half"]], c.classRank || "") + "</select></label>" +
+      '<label class="cc-field">Intended major<input type="text" id="collegeMajor" maxlength="80" value="' + escapeHtml(c.major || "") + '" placeholder="e.g., Computer science"></label>' +
+      '<div class="cc-field-row">' +
+      '<label class="cc-field">Application plan<select id="collegeApplyPlan">' + opts([["regular", "Regular"], ["ea", "Early Action"], ["ed", "Early Decision"]], c.applyPlan === "early" ? "ea" : (c.applyPlan || "regular")) + "</select></label>" +
+      '<label class="cc-field">Essays &amp; recs<select id="collegeAppStrength">' + opts([["strong", "Strong"], ["average", "Average"], ["developing", "Still developing"]], c.appStrength === "strong" ? "strong" : c.appStrength === "developing" ? "developing" : "average") + "</select></label></div>" +
+      '<div class="cc-rigor"><span class="cc-more-lbl">Course rigor (AP, IB, honors, dual-enrollment)</span>' +
+      '<div class="cc-rigor-row">' + ["ap", "ib", "honors", "dual"].map((k) => '<label class="cc-field"><span>' + ({ ap: "AP", ib: "IB", honors: "Honors", dual: "Dual" })[k] + '</span><input type="number" min="0" max="40" step="1" data-rigor="' + k + '" value="' + (Number(c.rigor[k]) || 0) + '"></label>').join("") + "</div></div>" +
+      '<div class="cc-more-sec"><span class="cc-more-lbl">Activities</span>' +
+      '<div class="college-activities" id="collegeActivities">' + activityRows + "</div>" +
+      '<button type="button" class="secondary" id="collegeAddActivity">+ Add activity</button></div>' +
+      '<div class="cc-more-sec"><span class="cc-more-lbl">Circumstances</span><div class="college-checks">' +
+      '<label class="college-check"><input type="checkbox" id="collegeAthlete"' + (c.athlete ? " checked" : "") + "> Recruited athlete</label>" +
+      '<label class="college-check"><input type="checkbox" id="collegeLegacy"' + (c.legacy ? " checked" : "") + "> Parent attended (legacy)</label>" +
+      '<label class="college-check"><input type="checkbox" id="collegeFirstGen"' + (c.firstGen ? " checked" : "") + "> First-generation student</label>" +
+      '<label class="college-check"><input type="checkbox" id="collegeHardship"' + (c.hardship ? " checked" : "") + "> Financial hardship</label>" +
+      '<label class="college-check"><input type="checkbox" id="collegeWorking"' + (c.working ? " checked" : "") + "> Working during school</label>" +
+      '<label class="college-check"><input type="checkbox" id="collegeCaregiving"' + (c.caregiving ? " checked" : "") + "> Caregiving responsibilities</label></div></div>" +
+      '<label class="cc-field">Other context (optional)<textarea id="collegeOther" rows="2" maxlength="500" placeholder="Anything else colleges should know">' + escapeHtml(c.circumstanceOther || "") + "</textarea></label>" +
+      contextReviewHtml() +
+      "</div></details>" +
+      '<p class="cc-savestatus small muted">' + collegeSaveStatus() + "</p>" +
+      "</div></aside>";
+  }
+
+  /* The filters describe the list, not the student, so they sit over the list
+     rather than inside the profile rail. */
+  function ccFilterBarHtml() {
+    return '<div class="cc-filterbar" role="group" aria-label="Narrow your list">' +
+      '<span class="cc-filter-lbl">Fit</span>' +
+      ["all", "reach", "target", "likely"].map((k) => '<button type="button" class="cc-fitb' + (ccState.fit === k ? " on" : "") + '" data-cc-fit="' + k + '" aria-pressed="' + (ccState.fit === k) + '">' + (k === "all" ? "All" : k.charAt(0).toUpperCase() + k.slice(1)) + "</button>").join("") +
+      '<span class="cc-filter-sep" aria-hidden="true"></span>' +
+      '<span class="cc-filter-lbl">Only</span>' +
+      '<label class="cc-check"><input type="checkbox" data-cc-state="inState"' + (ccState.inState ? " checked" : "") + "><span>In-state" + (cp().homeState ? " (" + escapeHtml(cp().homeState) + ")" : "") + "</span></label>" +
       '<label class="cc-check"><input type="checkbox" data-cc-state="publicOnly"' + (ccState.publicOnly ? " checked" : "") + "><span>Public</span></label>" +
       '<label class="cc-check"><input type="checkbox" data-cc-state="testOpt"' + (ccState.testOpt ? " checked" : "") + "><span>Test-optional</span></label>" +
-      "</div></aside>";
+      "</div>";
   }
   function ccRows() {
     const c = cp();
@@ -947,16 +954,19 @@
       '<div class="cc-list-head"><span class="cc-count">Your list · ' + rows.length + " college" + (rows.length === 1 ? "" : "s") + "</span>" +
       '<label class="cc-sort">Sort<select id="ccSort"><option value="fit"' + (ccState.sort === "fit" ? " selected" : "") + '>best fit</option><option value="name"' + (ccState.sort === "name" ? " selected" : "") + '>name</option><option value="admit"' + (ccState.sort === "admit" ? " selected" : "") + '>admit rate</option></select></label>' +
       '<button type="button" class="cc-add" id="ccAdd">Add a college</button></div>' +
+      (cp().saved.length ? ccFilterBarHtml() : "") +
       (rows.length
         ? ccSummaryHtml(rows, you) + '<div class="cc-cards">' + rows.map(ccCardHtml).join("") + "</div>"
-        : '<div class="schl-empty"><h3>Your list is empty</h3><p class="small muted">Add colleges to compare their reported ranges with your score.</p><button type="button" class="secondary" id="ccAddEmpty">Add a college</button></div>') +
+        : cp().saved.length
+          ? '<div class="schl-empty"><h3>No college on your list matches these filters</h3><p class="small muted">Clear a filter above to see the rest of your list.</p></div>'
+          : '<div class="schl-empty"><h3>Your list is empty</h3><p class="small muted">Add colleges to compare their reported ranges with your score.</p><button type="button" class="secondary" id="ccAddEmpty">Add a college</button></div>') +
       "</section></div>" +
       '<div class="cc-drawer" id="ccSearchDrawer"' + (ccState.drawerOpen ? "" : " hidden") + '>' +
       '<section class="college-find"><h3>Find colleges</h3>' +
       '<div class="college-search"><label for="collegeQuery">Search by name, abbreviation, or state</label><input type="search" id="collegeQuery" value="' + escapeHtml(c.query || "") + '" placeholder="e.g., UCLA, engineering, or Ohio" autocomplete="off"></div>' +
       '<div id="collegeResults">' + resultsHtml() + "</div></section></div>" +
       '<div id="collegeDetailHost"' + (selectedCollege() ? ' class="as-popup" role="dialog" aria-modal="true" aria-label="' + escapeHtml(selectedCollege().n) + '"><div class="cpop-box"><button type="button" class="cpop-close" data-close-detail aria-label="Close">✕</button>' + detailHtml() + "</div>" : ">") + "</div>" +
-      '<div class="cc-profilewrap">' + profileHtml() + "</div>" +
+      '<div class="cc-chanceswrap">' + chancesHtml() + unansweredReminder() + "</div>" +
       '<p class="small muted college-foot">Source: <a href="' + escapeHtml(CD.meta.sourceUrl || "https://collegescorecard.ed.gov/data/") + '" target="_blank" rel="noopener">U.S. Department of Education, College Scorecard</a> · ' + escapeHtml(CD.meta.release || "") + ". " + escapeHtml(CD.meta.note || "") + " Verify current figures with each college before relying on them. Fit labels are an original app estimate, not admission predictions, and are not affiliated with any college. <a href=\"https://www.act.org/content/act/en/products-and-services/the-act/scores/act-sat-concordance.html\" target=\"_blank\" rel=\"noopener\">Official ACT/SAT concordance</a>.</p>";
     wireCollege();
     applyPanelSize();
@@ -995,7 +1005,9 @@
 
   function wireCollege() {
     const c = cp();
-    if (typeof renderProfileHero === "function") { try { renderProfileHero(); } catch (e) {} }
+    // The score rail's ring animates from empty, so its offset has to be applied
+    // after the screen is in the document.
+    if (window.FunSATRedesign && FunSATRedesign.paintRings) { try { FunSATRedesign.paintRings($("screen-college") || document); } catch (e) {} }
     const q = $("collegeQuery");
     if (q) {
       let timer;
@@ -1112,13 +1124,25 @@
   document.addEventListener("change", (e) => {
     if (!e.target || !e.target.closest || !e.target.closest("#screen-college")) return;
     if (e.target.id === "ccSat") { const v = Number(e.target.value); cp().sat = (v >= 400 && v <= 1600 && e.target.value !== "") ? v : null; saveCollege(); renderCollegeScreen(); return; }
-    if (e.target.id === "ccGpa") { const v = Number(e.target.value); cp().gpa = (e.target.value !== "" && v >= 0 && v <= 5) ? v : null; cp().gpaScale = "4uw"; saveCollege(); renderCollegeScreen(); return; }
+    if (e.target.id === "ccGpa") {
+      // The scale lives beside this field now, so entering a GPA must not
+      // overwrite it — a 4.4 on a 5.0 scale was being re-read as 4.0 unweighted.
+      const v = Number(e.target.value);
+      const max = cp().gpaScale === "100" ? 100 : 5;
+      cp().gpa = (e.target.value !== "" && v >= 0 && v <= max) ? v : null;
+      saveCollege(); renderCollegeScreen(); return;
+    }
     if (e.target.id === "ccGrade") { cp().grade = e.target.value; saveCollege(); renderCollegeScreen(); return; }
     if (e.target.id === "ccHomeState") { cp().homeState = e.target.value; saveCollege(); renderCollegeScreen(); return; }
     if (e.target.id === "ccSort") { ccState.sort = e.target.value; renderCollegeScreen(); return; }
     const st = e.target.closest("[data-cc-state]");
     if (st) { ccState[st.dataset.ccState] = !!st.checked; renderCollegeScreen(); return; }
   });
+  // Editing a field re-renders the screen, so the disclosure has to remember
+  // whether it was open.
+  document.addEventListener("toggle", (e) => {
+    if (e.target && e.target.id === "ccMore") ccState.moreOpen = e.target.open;
+  }, true);
   document.addEventListener("click", (e) => {
     if (!e.target || !e.target.closest || !e.target.closest("#screen-college")) return;
     const rm = e.target.closest("[data-cc-remove]");

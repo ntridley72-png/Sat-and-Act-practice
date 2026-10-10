@@ -105,25 +105,33 @@
   function compareToggleHtml(enabled) {
     return '<label class="hsc-chk-row" for="hscCompareChk"><input type="checkbox" id="hscCompareChk" aria-controls="hscComparison"' + (enabled ? " checked" : "") + '><span>Show score comparisons</span></label>';
   }
-  let ringGradSeq = 0;
+  /* One ring, used in two places: the college score rail at 76px and the top of
+     the progress card at 120px. Track + value arc, offset painted from empty so
+     the sweep animates in and a low value reads as a stub. */
   function ringHtml(percent, label, size) {
-    size = size || 150;
-    const stroke = Math.max(7, Math.round(size * 0.052)), r = (size - stroke * 1.6) / 2, c = 2 * Math.PI * r;
+    size = Math.round(size || 120);
     const pct = percent == null ? null : Math.max(0, Math.min(100, Math.round(percent)));
-    const gid = "ringGrad" + (++ringGradSeq);
+    const stroke = size >= 110 ? 10 : size >= 92 ? 8 : 7;
+    const r = (size - stroke) / 2 - 1;
+    const c = 2 * Math.PI * r;
     const off = c * (1 - (pct == null ? 0 : pct) / 100);
-    return '<div class="ring-wrap"><div class="ring" style="width:' + size + "px;height:" + size + 'px"><svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + " " + size + '" role="img" aria-label="' + (pct == null ? "No score yet" : pct + "th percentile") + '">' +
-      '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--mint)"/><stop offset="1" class="ring-stop-2"/></linearGradient>' +
-      '<stop offset="1" class="ring-stop-2"/></linearGradient>' +
-      '<filter id="' + gid + 'Glow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="0" stdDeviation="' + Math.round(stroke * .55) + '" flood-color="var(--mint)" flood-opacity=".38"/></filter></defs>' +
-      '<circle class="ring-track" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" stroke-width="1.5"></circle>' +
-      '<circle class="ring-progress" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" stroke-width="' + stroke + '" stroke="url(#' + gid + ')" filter="url(#' + gid + 'Glow)" stroke-dasharray="' + c.toFixed(1) + '" stroke-dashoffset="' + c.toFixed(1) + '" data-ring-offset="' + off.toFixed(1) + '"></circle></svg>' +
-      '<div class="ring-val"><span class="ring-num" style="font-size:' + Math.round(size * (pct != null && pct >= 10 ? 0.24 : 0.3)) + 'px">' + (pct == null ? "—" : ordinal(pct)) + "</span></div></div>" +
-      '<div class="ring-caption">' + esc(label) + "</div></div>";
+    const aria = pct == null ? "No percentile yet" : ordinal(pct) + " percentile";
+    const num = Math.max(18, Math.round(size * 0.29));
+    const sub = Math.max(9, Math.round(size * 0.12));
+    return '<div class="ring-wrap"><div class="fxring"' + (pct == null ? ' data-empty="1"' : "") +
+      ' style="--fxring-size:' + size + "px;--fxring-num:" + num + "px;--fxring-sub:" + sub + 'px">' +
+      '<svg viewBox="0 0 ' + size + " " + size + '" role="img" aria-label="' + aria + '">' +
+      '<circle class="fxring-track" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r.toFixed(2) + '" stroke-width="' + stroke + '"></circle>' +
+      '<circle class="fxring-arc" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r.toFixed(2) + '" stroke-width="' + stroke + '"' +
+      ' stroke-dasharray="' + c.toFixed(1) + '" stroke-dashoffset="' + c.toFixed(1) + '" data-ring-offset="' + off.toFixed(1) + '"></circle></svg>' +
+      '<span class="fxring-val"><b class="ring-num">' + (pct == null ? "\u2014" : pct) + '</b><i class="fxring-sub">PCTL</i></span>' +
+      "</div>" + (label ? '<div class="ring-caption">' + esc(label) + "</div>" : "") + "</div>";
   }
   function paintRings(scope) {
-    (scope || document).querySelectorAll(".ring-progress").forEach((el) => {
+    const still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    (scope || document).querySelectorAll(".fxring-arc").forEach((el) => {
       const target = el.dataset.ringOffset;
+      if (still) { el.style.strokeDashoffset = target; return; }
       requestAnimationFrame(() => requestAnimationFrame(() => { el.style.strokeDashoffset = target; }));
     });
   }
@@ -158,7 +166,7 @@
     let expand = "";
     if (hsc.open) {
       if (!avg.score) {
-        expand = '<div class="hsc-expand" style="display:block"><p class="hsc-sub">Finish a practice test to see how your average compares with each college\'s admitted class.</p><button type="button" class="hsc-cta" id="hscStartPractice">Start a practice test</button></div>';
+        expand = '<div class="hsc-expand" style="display:block"><p class="hsc-sub">Finish a practice test to see how your average compares with each college\'s admitted class. Set one up below.</p></div>';
       } else if (!college) {
         expand = '<div class="hsc-expand" style="display:block"><p class="hsc-sub">Save colleges in the College tab and they will appear here as comparison tabs.</p><button type="button" class="hsc-cta" id="hscOpenCollege">Open College Score Goals</button></div>';
       } else {
@@ -190,7 +198,7 @@
           gradeTile +
           pointsTile +
           "</div>" +
-          (window.collegeFeature && collegeFeature.estimateCollege ? (() => { const e2 = collegeFeature.estimateCollege(college); return '<div class="college-split" aria-label="Estimated accept, waitlist, deny"><span style="width:' + Math.round(e2.estimate * 100) + '%;background:#22c55e"></span><span style="width:' + Math.round(e2.waitlist * 100) + '%;background:#3b82f6"></span><span style="width:' + Math.round(e2.deny * 100) + '%;background:#ef4444"></span></div><div class="hsc-scale-labels"><span>Accept ' + Math.round(e2.estimate * 100) + '%</span><span>Waitlist ' + Math.round(e2.waitlist * 100) + '%</span><span>Deny ' + Math.round(e2.deny * 100) + "%</span></div>"; })() : "") +
+          (window.collegeFeature && collegeFeature.estimateCollege ? (() => { const e2 = collegeFeature.estimateCollege(college); return '<div class="college-split" aria-label="Estimated accept, waitlist, deny"><span style="width:' + Math.round(e2.estimate * 100) + '%;background:var(--fx-accept)"></span><span style="width:' + Math.round(e2.waitlist * 100) + '%;background:var(--fx-waitlist)"></span><span style="width:' + Math.round(e2.deny * 100) + '%;background:var(--fx-deny)"></span></div><div class="hsc-scale-labels"><span>Accept ' + Math.round(e2.estimate * 100) + '%</span><span>Waitlist ' + Math.round(e2.waitlist * 100) + '%</span><span>Deny ' + Math.round(e2.deny * 100) + "%</span></div>"; })() : "") +
           '<div class="hsc-tabs" role="tablist" aria-label="Saved colleges">' + saved.map((x) => '<button type="button" role="tab" aria-selected="' + (x.id === hsc.selected) + '" class="hsc-tab' + (x.id === hsc.selected ? " active" : "") + '" data-college-tab="' + x.id + '">' + esc(x.n) + "</button>").join("") + "</div>" +
           '<p class="hsc-note">Percentiles use an estimate from the college\'s reported enrolled range. Same-grade comparison is computed on FunSAT\'s server and hidden until enough users share your grade.</p>' +
           "</div>";
@@ -200,7 +208,7 @@
     host.style.display = "block";
     host.classList.toggle("open", hsc.open);
     host.innerHTML =
-      '<div class="hsc-top">' + ringHtml(pct, "Estimated percentile") +
+      '<div class="hsc-top">' + ringHtml(pct, "Estimated percentile", 120) +
       '<div class="hsc-summary"><div class="hsc-title">Your average score</div>' +
       (avg.score
         ? '<div class="hsc-average">' + avg.score + (avg.source === "act" ? " SAT-equivalent (ACT " + avg.act + ")" : "") + "<small>About the " + pct + "th percentile nationally · based on your last " + avg.count + " test" + (avg.count === 1 ? "" : "s") + (hsc.open ? "" : " · tap for college comparison") + "</small></div>"
@@ -240,29 +248,14 @@
         return;
       }
       if (e.target.closest("#hscOpenCollege")) { if (window.collegeFeature && collegeFeature.open) collegeFeature.open(); return; }
-      if (e.target.closest("#hscStartPractice")) { document.getElementById("btnStart").click(); return; }
       if (e.target.closest(".hsc-tab") || e.target.closest(".hsc-tiles") || e.target.closest(".hsc-scale") || e.target.closest(".hsc-compare")) return;
       hsc.open = !hsc.open;
       renderHomeScoreCard();
     });
   }
 
-  // ---- Profile hero (college screen) ----
-  function renderProfileHero() {
-    const host = document.getElementById("collegeProfileHero");
-    if (!host) return;
-    const c = ensureCollege();
-    const sat = profileSatScore(c);
-    const pct = sat ? satPercentile(sat) : null;
-    const target = c.targetMode === "custom" && c.customTarget ? "Custom " + c.customTarget : c.targetMode === "mid" ? "Above midrange" : "75th percentile";
-    const scale = { "4uw": "4.0 uw", "4w": "4.0 w", "5w": "5.0 w", "100": "100-pt" }[c.gpaScale] || c.gpaScale;
-    host.innerHTML = ringHtml(pct, "SAT percentile", 150) +
-      '<div><h3>Your profile</h3><p class="hero-line">' + (sat ? "SAT " + sat + " puts you ahead of about " + pct + "% of test takers." : "Add an SAT or ACT score to see your percentile.") + "</p>" +
-      '<div class="hero-chips">' + "<span class=\"hero-chip\">Grade <b>" + esc(c.grade || "—") + "</b></span>" +
-      "<span class=\"hero-chip\">GPA <b>" + (c.gpa != null ? esc(c.gpa) + " (" + esc(scale) + ")" : "—") + "</b></span>" +
-      "<span class=\"hero-chip\">Target <b>" + esc(target) + "</b></span></div></div>";
-    paintRings(host);
-  }
+  // The college screen's profile hero is gone: that screen now carries one
+  // percentile ring, in the score rail, and states the figure there.
 
   // ---- Coin-in-cabinet effects ----
   function cabinetHtml() {
@@ -483,8 +476,7 @@
     renderHomeScoreCard();
   }
 
-  window.renderProfileHero = renderProfileHero;
   window.renderHomeScoreCard = renderHomeScoreCard;
-  window.FunSATRedesign = { satPercentile, homeAverage, renderHomeScoreCard, renderProfileHero, playCoinFx, resetCurrentGame };
+  window.FunSATRedesign = { satPercentile, homeAverage, renderHomeScoreCard, playCoinFx, resetCurrentGame, ringHtml, paintRings, ordinal };
   init();
 })();

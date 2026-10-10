@@ -1,5 +1,6 @@
 /* FunSAT redesign: Swiss Lab dark chrome, orange signal, arcade coin + zoom, home score ring. */
 :root {
+  --fx-accept:#6FD08C; --fx-waitlist:#7EA6F0; --fx-deny:#F08A80;
   --bg: #121210; --panel: #1b1b18; --line: #34332d; --text: #ecebe4; --muted: #9d9a90;
   --mint: #ff7a3d; --mint2: #d85a1f; --violet: #c0b8a4; --gold: #e8bb5e; --gold2: #c2923a;
   --red: #ff8f85; --blue: #ff7a3d;
@@ -217,8 +218,9 @@ body[data-workspace] .home-score-card .hsc-sub,body[data-workspace] .hsc-tile .t
 body[data-workspace] .hsc-scale-track{background:var(--ws-soft)!important;border-color:var(--ws-line)!important}
 body[data-workspace] #screen-college .college-profile fieldset{background:var(--ws-surface)!important;border-color:var(--ws-line)!important}
 body[data-workspace] #screen-college .college-profile input,body[data-workspace] #screen-college .college-profile select,body[data-workspace] #screen-college .college-profile textarea{background:var(--ws-surface)!important;color:var(--ws-ink)!important;border-color:var(--ws-line)!important}
-body[data-workspace="exam"] #screen-college,body[data-workspace="exam"] #collegeDetailHost{--ws-bg:#fff;--ws-surface:#fff;--ws-soft:#f4f4f2;--ws-ink:#1a1a1a;--ws-muted:#6b6b66;--ws-line:#dcdcd8;--ws-tint:#fdf0ea;--ws-accent:#c43b00;--text:#1a1a1a;--muted:#6b6b66;--line:#dcdcd8}
-body[data-workspace="notebook"] #screen-college,body[data-workspace="notebook"] #collegeDetailHost{--ws-bg:#f4f1e8;--ws-surface:#fbf9f3;--ws-soft:#ebe7db;--ws-ink:#1f1e1a;--ws-muted:#6a665c;--ws-line:#d5d0c2;--ws-tint:#f6e9e0;--ws-accent:#a8420b;--text:#1f1e1a;--muted:#6a665c;--line:#d5d0c2}
+body[data-workspace="exam"] #screen-college,body[data-workspace="exam"] #collegeDetailHost{--ws-bg:#fff;--ws-surface:#fff;--ws-soft:#f4f4f2;--ws-ink:#1a1a1a;--ws-muted:#6b6b66;--ws-line:#dcdcd8;--ws-tint:#fdf0ea;--ws-accent:#c43b00;--text:#1a1a1a;--muted:#6b6b66;--line:#dcdcd8--fx-accept:#1D6B3F;--fx-waitlist:#1F4FA8;--fx-deny:#B4241F;}
+body[data-workspace="notebook"] #screen-college,body[data-workspace="notebook"] #collegeDetailHost{--ws-bg:#f4f1e8;--ws-surface:#fbf9f3;--ws-soft:#ebe7db;--ws-ink:#1f1e1a;--ws-muted:#6a665c;--ws-line:#d5d0c2;--ws-tint:#f6e9e0;--ws-accent:#a8420b;--text:#1f1e1a;--muted:#6a665c;--line:#d5d0c2--fx-accept:#1C6038;--fx-waitlist:#1E4C9E;--fx-deny:#A62420;}
+body[data-workspace="focus"] #screen-college,body[data-workspace="focus"] #collegeDetailHost{--fx-accept:#7FCF9A;--fx-waitlist:#9BB8F5;--fx-deny:#FF8F85}
 
 /* Concept C: an editorial toolbar with dividers and underlined active sections. */
 body[data-workspace] .topbar{padding:0!important;gap:0!important;min-height:58px;flex-wrap:nowrap!important;justify-content:flex-start;max-width:100%}

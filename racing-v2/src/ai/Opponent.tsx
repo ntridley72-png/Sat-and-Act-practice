@@ -37,6 +37,9 @@ import { mutation, rivalsFor } from './mutation'
  *  invalidates that measurement -- re-run tools/calibrate-corner-budget.mjs. */
 const DRIVER_CAR: DriverCar = { wheelbase: 2.65, maxSteer: 0.5, gripG: 1.4 }
 
+/** Collision box height; the mesh is offset down by half of it. */
+const BODY_HEIGHT = 1.1
+
 const MASS = 1500
 const ENGINE_FORCE = 7200       // N at full throttle, all wheels
 const BRAKE_FORCE = 23400       // N at full brake
@@ -70,12 +73,19 @@ export interface OpponentProps {
   paint: string
   /** Metres along the line at the start, i.e. grid slot. */
   startDistance: number
+  /** Lateral offset from the centreline at the start, metres. Positive is to
+   *  the left of travel. Grid rows use this to stand two cars abreast. */
+  lateral?: number
   /** Distant cars update less often. §7.5: degrade before cutting grid size. */
   detailed?: boolean
 }
 
-export function Opponent({ index, line, skill, seed, archetype, paint, startDistance, detailed = true }: OpponentProps) {
+export function Opponent({ index, line, skill, seed, archetype, paint, startDistance, lateral = 0 }: OpponentProps) {
   const start = line.at(startDistance)
+  // Offset along the line's left normal, so a grid row sits across the track
+  // rather than along it.
+  const startX = start.x + -Math.sin(start.heading) * lateral
+  const startZ = start.y + Math.cos(start.heading) * lateral
 
   const [ref, api] = useBox(() => ({
     mass: MASS,
@@ -86,8 +96,8 @@ export function Opponent({ index, line, skill, seed, archetype, paint, startDist
     // orientation set below. Sized to the car's long axis, not its width --
     // swapping these gives every opponent a hull turned 90 degrees to its
     // bodywork, which reads as cars bouncing off thin air.
-    args: [4.3, 1.1, 1.8] as Triplet,
-    position: [start.x, 0.6, start.y],
+    args: [4.3, BODY_HEIGHT, 1.8] as Triplet,
+    position: [startX, 0.8, startZ],
     rotation: [0, -start.heading, 0],
     angularDamping: 0.6,
     linearDamping: 0.02,
@@ -98,7 +108,7 @@ export function Opponent({ index, line, skill, seed, archetype, paint, startDist
   /* Body state is read through cannon's subscriptions into plain refs, never
      into React state: these change every frame and a setState here would
      re-render the whole grid 60 times a second. */
-  const pos = useRef<Triplet>([start.x, 0.6, start.y])
+  const pos = useRef<Triplet>([startX, 0.8, startZ])
   const vel = useRef<Triplet>([0, 0, 0])
   const rot = useRef<Triplet>([0, -start.heading, 0])
   const angVel = useRef<Triplet>([0, 0, 0])
@@ -253,15 +263,17 @@ export function Opponent({ index, line, skill, seed, archetype, paint, startDist
 
   return (
     <group ref={ref as never}>
-      {/* ORIENTATION, and it is load-bearing. racing3d.js lofts a car along Z
-          with the nose at NEGATIVE z, so the mesh's local forward is -Z. All
-          the force and heading maths above assumes local +X is forward
-          (applyLocalForce([fForward,0,0]), heading = -yaw). Rotating the mesh
-          by -90 degrees about Y maps its -Z nose onto +X, which makes that
-          assumption true instead of patching trigonometry in two places.
-          Without this the cars accelerate sideways relative to their bodywork. */}
-      <group rotation={[0, -Math.PI / 2, 0]}>
-        <ProceduralCar archetype={archetype} paint={paint} detailed={detailed} />
+      {/* ORIENTATION, and it is load-bearing. ProceduralCar hands back a car
+          facing +Z (see its comment). The force model here works in local +X
+          -- applyLocalForce([fForward,0,0]) with heading = -yaw -- so the mesh
+          is turned 90 degrees to put its nose on +X. Rotation about Y by +90
+          maps (0,0,1) to (1,0,0). Without this the cars accelerate
+          perpendicular to their own bodywork. */}
+      {/* y offset for the same reason as the player car: racing3d.js builds
+          a car whose origin is GROUND LEVEL, while a cannon box is centred on
+          its origin, so without this the bodywork floats half a box up. */}
+      <group rotation={[0, Math.PI / 2, 0]} position={[0, -BODY_HEIGHT / 2, 0]}>
+        <ProceduralCar archetype={archetype} paint={paint} />
       </group>
     </group>
   )

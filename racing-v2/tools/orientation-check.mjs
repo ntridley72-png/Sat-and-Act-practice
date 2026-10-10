@@ -34,13 +34,23 @@ for (const heading of [0, 0.3, Math.PI / 2, 2.1, -1.4, Math.PI]) {
   check(`heading rt @h=${heading.toFixed(2)}`, -theta, heading)
 }
 
-// Mesh orientation: rotating local (0,0,-1) by -90deg about Y must give +X.
+/* Mesh orientation, in two stages, because ProceduralCar normalises once and
+ * the opponent turns it again:
+ *   1. racing3d.js nose is -Z; ProceduralCar rotates by PI so the car faces +Z
+ *      (upstream's vehicle convention, front axle at +1.35).
+ *   2. Opponent rotates that +Z by +90deg about Y to reach local +X, which is
+ *      the axis its force model drives along. */
 {
-  const phi = -Math.PI / 2
-  const nx = -Math.sin(phi)
-  const nz = -Math.cos(phi)
-  check('mesh nose -> +X (x)', nx, 1)
-  check('mesh nose -> +X (z)', nz, 0)
+  // Stage 1: rotating (0,0,-1) by PI about Y must give (0,0,+1).
+  const phi = Math.PI
+  check('nose -Z -> +Z (x)', -Math.sin(phi) * -1 + 0, 0)
+  check('nose -Z -> +Z (z)', -Math.cos(phi), 1)
+}
+{
+  // Stage 2: rotating (0,0,1) by +90deg about Y must give (1,0,0).
+  const phi = Math.PI / 2
+  check('facing +Z -> +X (x)', Math.sin(phi), 1)
+  check('facing +Z -> +X (z)', Math.cos(phi), 0)
 }
 
 // Torque sign: driver yawRate = -angVel.y, so to RAISE driver yawRate the

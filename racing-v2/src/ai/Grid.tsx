@@ -45,8 +45,16 @@ export function Grid({ line, count, raceSeed, skill = 'medium' }: GridProps) {
       archetype: rng.pick(ARCHETYPES),
       paint: PALETTE[i % PALETTE.length],
       skill: Array.isArray(skill) ? (skill[i % skill.length] as SkillName) : (skill as SkillName),
-      // Staggered grid slots behind the line, two abreast.
-      startDistance: line.length - 8 - Math.floor(i / 2) * 7 - (i % 2) * 0.5,
+      /* Grid slots: rows of two, 7 m apart along the line, and separated
+       * LATERALLY rather than by a token 0.5 m along it.
+       *
+       * The first version offset the second car of each pair by 0.5 m of
+       * track distance at the same lateral position, so the two bodies
+       * spawned inside one another. cannon resolved the penetration the only
+       * way it can -- explosively -- and the pair cartwheeled off the line
+       * before the race began. Two abreast means two abreast. */
+      startDistance: line.length - 8 - Math.floor(i / 2) * 7,
+      lateral: i % 2 === 0 ? -2.2 : 2.2,
     }))
   }, [line, count, raceSeed, skill])
 
@@ -62,6 +70,7 @@ export function Grid({ line, count, raceSeed, skill = 'medium' }: GridProps) {
           archetype={c.archetype}
           paint={c.paint}
           startDistance={c.startDistance}
+          lateral={c.lateral}
         />
       ))}
     </>

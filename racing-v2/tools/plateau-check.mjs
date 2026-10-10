@@ -2,8 +2,8 @@
  * at() must advance monotonically; a bucket whose candidate segment does not
  * contain d used to clamp t to 1 and return the segment END, so metres of
  * distance mapped to one frozen point. */
-import { buildRacingLine, APEX_FLATS } from '../src/ai/racingLine'
-const L = buildRacingLine(APEX_FLATS)
+import { trackById, buildTrackLine, DEFAULT_TRACK_ID } from '../src/tracks/catalog'
+const L = buildTrackLine(trackById(process.env.TRACK))
 let plateaus = 0, longest = 0, run = 0, example = null
 let prev = L.at(0)
 for (let d = 0.02; d < L.length; d += 0.02) {

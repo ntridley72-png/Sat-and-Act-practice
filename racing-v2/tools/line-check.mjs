@@ -2,9 +2,9 @@
  * Catches a circuit that does not close, a corner tighter than the cars can
  * physically take, or a half-width that went negative through a spline
  * overshoot -- all of which look fine on a map and ruin a race. */
-import { buildRacingLine, APEX_FLATS } from '../src/ai/racingLine'
+import { trackById, buildTrackLine, DEFAULT_TRACK_ID } from '../src/tracks/catalog'
 
-const L = buildRacingLine(APEX_FLATS)
+const L = buildTrackLine(trackById(process.env.TRACK))
 console.log('circuit length:      ', L.length.toFixed(1), 'm')
 
 let maxK = 0

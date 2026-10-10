@@ -16,7 +16,8 @@ import {
   FORMAT_TAG,
   FORMAT_VERSION,
 } from '../src/tracks/format'
-import { TRACKS, DEFAULT_TRACK_ID } from '../src/tracks/catalog'
+import { TRACKS, DEFAULT_TRACK_ID, buildTrackLine, trackGates } from '../src/tracks/catalog'
+import { gridSlot } from '../src/ai/gridSlots'
 
 let failures = 0
 function ok(name) {
@@ -246,6 +247,79 @@ if (TRACKS.length === 0) {
     const r = parseTrack(JSON.parse(JSON.stringify(t)))
     if (r.ok) ok(`${t.id} survives JSON round trip`)
     else fail(`${t.id} JSON round trip`, r.errors.join('\n'))
+  }
+}
+
+/* ---- APEX_FLATS migration pin -------------------------------------------
+ * These numbers were recorded from the code as it stood BEFORE the circuit
+ * moved out of src/ai/racingLine.ts into the v1 format. The move was proven
+ * exact: a temporary verifier built the HEAD version of APEX_FLATS and the
+ * catalog definition side by side and sampled both 4096 times at the
+ * runtime's default 24 samples per segment -- the maximum difference in x,
+ * y, half, heading and curvature was 0. If the format could not carry the
+ * existing circuit unchanged, that comparison would have shown it.
+ *
+ * The pin stays afterwards as a regression guard: any edit to the circuit
+ * geometry must consciously update these constants.
+ *
+ * The digests cover 4096 stations of (x, y, half, heading, curvature) and
+ * the 13 grid slots' (x, z, heading), rounded to 6 decimals.
+ */
+const APEX_PIN = {
+  length: 594.738192324785,
+  tightestRadius: 13.213900980374426,
+  minHalf: 4.718144328147438,
+  sampleDigest: '07b9df41a4e2ecf83dd657f67554880721ff9e8fd1d3d0f3b012a2da0c8bb6b9',
+  gridDigest: '8b21ba6a596d32eb35e31d2ca0f171008383a19be1beba7dfde05f11d32c8f23',
+}
+{
+  const apex = TRACKS.find((t) => t.id === 'apex-flats')
+  if (!apex) {
+    fail('APEX_FLATS pin', 'apex-flats is not in the catalog')
+  } else {
+    const { createHash } = await import('node:crypto')
+    const L = buildTrackLine(apex)
+    const near = (a, b) => Math.abs(a - b) < 1e-9
+    if (near(L.length, APEX_PIN.length)) ok('APEX_FLATS length unchanged')
+    else fail('APEX_FLATS length', `${L.length} != pinned ${APEX_PIN.length}`)
+
+    let maxK = 0
+    let minHalf = Infinity
+    for (let d = 0; d < L.length; d += 0.5) {
+      const p = L.at(d)
+      maxK = Math.max(maxK, Math.abs(p.curvature))
+      minHalf = Math.min(minHalf, p.half)
+    }
+    const radius = 1 / maxK
+    if (near(radius, APEX_PIN.tightestRadius)) ok('APEX_FLATS tightest radius unchanged')
+    else fail('APEX_FLATS tightest radius', `${radius} != pinned ${APEX_PIN.tightestRadius}`)
+    if (near(minHalf, APEX_PIN.minHalf)) ok('APEX_FLATS min half-width unchanged')
+    else fail('APEX_FLATS min half-width', `${minHalf} != pinned ${APEX_PIN.minHalf}`)
+
+    const r = (v) => (Math.round(v * 1e6) / 1e6).toFixed(6)
+    const h = createHash('sha256')
+    for (let i = 0; i < 4096; i++) {
+      const p = L.at((i / 4096) * L.length)
+      h.update(`${r(p.x)},${r(p.y)},${r(p.half)},${r(p.heading)},${r(p.curvature)};`)
+    }
+    const dig = h.digest('hex')
+    if (dig === APEX_PIN.sampleDigest) ok('APEX_FLATS sampled line digest unchanged')
+    else fail('APEX_FLATS sampled digest', `${dig} != pinned ${APEX_PIN.sampleDigest}`)
+
+    const g = createHash('sha256')
+    for (let i = 0; i < 13; i++) {
+      const s = gridSlot(L, i, apex.grid)
+      g.update(`${r(s.x)},${r(s.z)},${r(s.heading)};`)
+    }
+    const gdig = g.digest('hex')
+    if (gdig === APEX_PIN.gridDigest) ok('APEX_FLATS grid slots unchanged')
+    else fail('APEX_FLATS grid digest', `${gdig} != pinned ${APEX_PIN.gridDigest}`)
+
+    // The adapter's gate conversion must be sorted metres.
+    const gates = trackGates(apex, L)
+    const sorted = gates.every((v, i) => i === 0 || v > gates[i - 1])
+    if (gates.length >= 2 && sorted && gates.every((v) => v > 0 && v < L.length)) ok('APEX_FLATS gates convert to sorted metres')
+    else fail('APEX_FLATS gates', JSON.stringify(gates))
   }
 }
 

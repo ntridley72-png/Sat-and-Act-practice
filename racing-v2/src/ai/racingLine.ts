@@ -171,35 +171,3 @@ export function buildRacingLine(controls: readonly ControlPoint[], samplesPerSeg
 
   return { length: total, at }
 }
-
-/* ORIGINAL CIRCUIT: "Apex Flats".
- *
- * An original layout, authored here rather than traced from anything. The
- * sequencing follows ideas that make a circuit fun -- which are ideas, not
- * protectable expression: a long straight to set up overtakes, a hairpin that
- * rewards late braking, a fast sweeper that punishes an early lift, and a
- * narrowing chicane where the road tightens so the AI's lateral-offset
- * avoidance actually has to commit.
- *
- * half-width varies deliberately: wide on the straight (easy side-by-side),
- * tight through the chicane (forces single file). */
-export const APEX_FLATS: readonly ControlPoint[] = [
-  { x: 0, y: 0, half: 9 },        // start/finish, wide
-  { x: 120, y: 0, half: 9 },      // end of the long straight
-  { x: 160, y: 18, half: 7 },     // turn-in
-  { x: 168, y: 56, half: 5.5 },   // hairpin apex, tight
-  { x: 140, y: 78, half: 6 },     // hairpin exit
-  { x: 96, y: 72, half: 7.5 },    // short link
-  { x: 62, y: 96, half: 5 },      // chicane left, narrow
-  { x: 28, y: 86, half: 5 },      // chicane right, narrow
-  { x: -14, y: 104, half: 7 },    // fast sweeper entry
-  { x: -58, y: 78, half: 8 },     // sweeper apex
-  { x: -62, y: 34, half: 8 },     // sweeper exit onto the straight
-  // Final corner sits at x=-46 rather than a tighter -30 for a measured
-  // reason: at -30 the spline's tightest radius came out at 8.6m, inside the
-  // driver's KMAX_DEMAND floor of 1/0.09 = 11.1m, so the AI could not take it
-  // on the line at any speed and understeered wide every single lap. Widening
-  // it moves the tightest point to the chicane at 13.2m, which is drivable.
-  // tools/tune-corner.mjs found this; tools/line-check.mjs guards it.
-  { x: -46, y: 0, half: 9 },      // final corner back to the line
-]

@@ -1,10 +1,10 @@
 /* Do different seeds actually produce different races?
  * determinism-check proves the CONTROL stream differs by seed. This asks the
  * question that matters to a player: does the seed change the OUTCOME. */
-import { buildRacingLine, APEX_FLATS } from '../src/ai/racingLine'
+import { trackById, buildTrackLine, DEFAULT_TRACK_ID } from '../src/tracks/catalog'
 import { createDriver } from '../src/ai/driver'
 
-const line = buildRacingLine(APEX_FLATS)
+const line = buildTrackLine(trackById(process.env.TRACK))
 const CAR = { wheelbase: 2.65, maxSteer: 0.5, gripG: 1.4 }
 const DT = 1 / 60
 

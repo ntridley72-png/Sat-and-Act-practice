@@ -15,7 +15,7 @@ import { Grid } from './ai/Grid'
 import { Vehicle } from './player/Vehicle'
 import { Hud } from './ui/Hud'
 import { Intro, Finished, Help } from './ui/Screens'
-import { buildRacingLine, APEX_FLATS } from './ai/racingLine'
+import { buildTrackLine, trackById, DEFAULT_TRACK_ID } from './tracks/catalog'
 import { gridSlot, yawForZForward } from './ai/gridSlots'
 import { mutation, resetOpponents } from './ai/mutation'
 import { playerMutation } from './player/config'
@@ -40,7 +40,7 @@ type Phase = 'intro' | 'racing' | 'finished'
 const RACE_LAPS = 2
 
 export function App({ opponents: initialOpponents, seed, skill = 'medium', paint: initialPaint, archetype: initialArchetype = 'sport', onQuit, assetBase }: AppProps) {
-  const line = useMemo(() => buildRacingLine(APEX_FLATS), [])
+  const line = useMemo(() => buildTrackLine(trackById(DEFAULT_TRACK_ID)), [])
 
   const [phase, setPhase] = useState<Phase>('intro')
   const [opponents, setOpponents] = useState(initialOpponents)

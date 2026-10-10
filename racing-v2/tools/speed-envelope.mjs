@@ -6,9 +6,9 @@
  * what happened. This derives the ceiling from the geometry instead of
  * guessing at it.
  */
-import { buildRacingLine, APEX_FLATS } from '../src/ai/racingLine'
+import { trackById, buildTrackLine, DEFAULT_TRACK_ID } from '../src/tracks/catalog'
 
-const line = buildRacingLine(APEX_FLATS)
+const line = buildTrackLine(trackById(process.env.TRACK))
 const GRIP_G = 1.4
 const G = 9.81
 const aLat = GRIP_G * G

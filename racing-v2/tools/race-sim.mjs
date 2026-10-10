@@ -10,10 +10,10 @@
  * not cannon -- stated plainly -- but it is the model the driver was tuned
  * against, and a skill ordering that failed here would fail there too.
  */
-import { buildRacingLine, APEX_FLATS } from '../src/ai/racingLine'
+import { trackById, buildTrackLine, DEFAULT_TRACK_ID } from '../src/tracks/catalog'
 import { createDriver, G } from '../src/ai/driver'
 
-const line = buildRacingLine(APEX_FLATS)
+const line = buildTrackLine(trackById(process.env.TRACK))
 const CAR = { wheelbase: 2.65, maxSteer: 0.5, gripG: 1.4 }
 const M = 1500, IZ = 2200, A = 1.35, B = 1.30, CF = 95000, CR = 110000
 const MU = CAR.gripG, HALF_W = 0.9, FORCE = 1800 * 4, MAX_BRAKE = 65 * 4 * 90

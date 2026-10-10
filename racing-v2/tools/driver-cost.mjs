@@ -11,10 +11,10 @@
  * cost of N drivers planning, which is pure CPU and independent of the GPU.
  * Against a 16.67 ms frame budget at 60 Hz, this says what share the AI takes.
  */
-import { buildRacingLine, APEX_FLATS } from '../src/ai/racingLine'
+import { trackById, buildTrackLine, DEFAULT_TRACK_ID } from '../src/tracks/catalog'
 import { createDriver } from '../src/ai/driver'
 
-const line = buildRacingLine(APEX_FLATS)
+const line = buildTrackLine(trackById(process.env.TRACK))
 const CAR = { wheelbase: 2.65, maxSteer: 0.5, gripG: 1.4 }
 const DT = 1 / 60
 const BUDGET_MS = 1000 / 60

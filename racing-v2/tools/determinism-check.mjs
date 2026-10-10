@@ -9,10 +9,10 @@
  * race. A "deterministic" driver that ignores its seed would pass the first
  * test trivially and be useless for a grid.
  */
-import { buildRacingLine, APEX_FLATS } from '../src/ai/racingLine'
+import { trackById, buildTrackLine, DEFAULT_TRACK_ID } from '../src/tracks/catalog'
 import { createDriver } from '../src/ai/driver'
 
-const line = buildRacingLine(APEX_FLATS)
+const line = buildTrackLine(trackById(process.env.TRACK))
 const CAR = { wheelbase: 2.65, maxSteer: 0.5, gripG: 1.4 }
 const FIXED_DT = 1 / 60
 

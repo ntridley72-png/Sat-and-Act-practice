@@ -12,10 +12,10 @@
  * starting value and an honest one; it is not a substitute for checking the
  * car on track once the raycast vehicle is wired in.
  */
-import { buildRacingLine, APEX_FLATS } from '../src/ai/racingLine'
+import { trackById, buildTrackLine, DEFAULT_TRACK_ID } from '../src/tracks/catalog'
 import { createDriver, G } from '../src/ai/driver'
 
-const line = buildRacingLine(APEX_FLATS)
+const line = buildTrackLine(trackById(process.env.TRACK))
 
 // Car: roughly upstream's vehicle, which is what the player will drive.
 const CAR = { wheelbase: 2.65, maxSteer: 0.5, gripG: 1.4 }

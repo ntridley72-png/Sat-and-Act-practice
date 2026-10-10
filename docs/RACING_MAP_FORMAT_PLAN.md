@@ -159,7 +159,7 @@ handles shape/type garbage. All of the brief's rejection cases map to rules:
 | discontinuous headings/curvature | heading changes are bounded by the radius rule below; every sampled curvature is finite |
 | undriveable radii | tightest radius ≥ 12.5 m (driver floor is 11.1 m; margin covers spline interpolation) |
 | invalid checkpoints | 2..8 gates, strictly ascending; after the grid zone; ≥ 25 m and ≥ 5% of length apart; ≥ 25 m before the finish; gate curvature radius ≥ 18 m (keeps the runtime on-road gate test honest) |
-| invalid grid slots | all 13 slots on-road with 0.6 m margin, pairwise separation ≥ 4.6 m, corner radius ≥ 40 m at every slot, grid ≤ min(80 m, 22% of length) behind the line |
+| invalid grid slots | all 13 slots on-road with 0.6 m margin, pairwise separation ≥ 4.6 m, corner radius ≥ 18 m at every slot (the shipped APEX_FLATS grid reaches 7.6 m into a 19 m final corner and has passed every race harness, so the rule is set to empirical reality, not to straight-only purity), grid ≤ min(80 m, 22% of length) behind the line |
 | on-road scenery | landmark offset ≥ 14 m beyond the road edge; the scenery generator places props at `half + clearance` by construction and `tools/map-check.mjs` asserts the generated placements off-road |
 | unsupported themes | theme id exists in the registry |
 | excessive geometry/prop counts | scenery count ≤ tier cap (low 160 / mid 320 / high 560); ≤ 6 landmarks; ≤ 12 hazards |

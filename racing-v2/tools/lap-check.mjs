@@ -6,10 +6,10 @@
  * to the finish-line oscillation that broke the old wrap-detection, which
  * scored two laps for one net crossing.
  */
-import { buildRacingLine, APEX_FLATS } from '../src/ai/racingLine'
+import { trackById, buildTrackLine, DEFAULT_TRACK_ID } from '../src/tracks/catalog'
 import { createDriver } from '../src/ai/driver'
 
-const line = buildRacingLine(APEX_FLATS)
+const line = buildTrackLine(trackById(process.env.TRACK))
 const CAR = { wheelbase: 2.65, maxSteer: 0.5, gripG: 1.4 }
 const st = (dist) => { const p = line.at(dist); return { x: p.x, y: p.y, heading: p.heading, vx: 20, vy: 0, yawRate: 0, slipR: 0 } }
 

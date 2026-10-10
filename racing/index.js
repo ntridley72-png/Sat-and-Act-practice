@@ -182,6 +182,68 @@
     });
   }
 
+  /* The one call a host page should use.
+   *
+   * Everything that can go wrong with the optional game is funnelled here, so
+   * a caller can write `if (!await RacingV2.startApp(el)) v1();` and be
+   * certain it will never see an exception. Three failure modes are covered:
+   *
+   *   1. the flag is off, or the bundle fails to download  -> ensureApp()
+   *   2. mount() throws synchronously (no WebGL, detached node)
+   *   3. the React tree throws AFTER mounting (cannon worker, geometry)
+   *
+   * (3) is the one that needed real work: it happens after this promise would
+   * already have resolved, so the module reports it through onError and the
+   * host's onFail runs then. Without that path, a late WebGL failure left a
+   * student staring at a blank canvas with their working game gone.
+   */
+  /* Does this device have WebGL at all.
+   *
+   * Mirrors racing3d.js:33, which v1 already checks before starting its own
+   * 3D renderer. Checking BEFORE mounting is better than catching the throw
+   * afterwards: on a device with no WebGL there is nothing to try, and
+   * downloading ~380 KB of renderer to then fail is pure waste on exactly the
+   * low-end hardware least able to afford it. */
+  function webglSupported() {
+    try {
+      var c = document.createElement("canvas");
+      return !!(c.getContext("webgl2") || c.getContext("webgl") || c.getContext("experimental-webgl"));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function startApp(container, opts) {
+    var options = opts || {};
+    if (!webglSupported()) {
+      try { console.warn("racing v2 needs WebGL, staying on v1"); } catch (e) {}
+      return Promise.resolve(false);
+    }
+    return ensureApp().then(function (mod) {
+      if (!mod) return false;
+      try {
+        mod.mount(container, {
+          opponents: options.opponents,
+          seed: options.seed,
+          onError: function () {
+            try { mod.unmount(); } catch (e) {}
+            try { if (typeof options.onFail === "function") options.onFail(); } catch (e) {}
+          }
+        });
+        return true;
+      } catch (err) {
+        try { console.warn("racing v2 failed to start, staying on v1:", err && err.message); } catch (e) {}
+        try { mod.unmount(); } catch (e) {}
+        return false;
+      }
+    });
+  }
+
+  function stopApp() {
+    if (!appModule) return;
+    try { appModule.unmount(); } catch (e) {}
+  }
+
   window.RacingV2 = {
     KEY: KEY,
     PARTS: PARTS,
@@ -192,6 +254,9 @@
     ensure: ensure,
     loadApp: loadApp,
     ensureApp: ensureApp,
+    startApp: startApp,
+    stopApp: stopApp,
+    webglSupported: webglSupported,
     appLoaded: function () { return !!appModule; },
     source: function () {
       if (fromQuery() !== null) return "query";

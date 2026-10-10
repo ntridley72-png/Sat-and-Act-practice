@@ -124,10 +124,31 @@ export function buildRacingLine(controls: readonly ControlPoint[], samplesPerSeg
   function at(distance: number): LinePoint {
     let d = distance % total
     if (d < 0) d += total
+
+    /* The uniform bucket gives a CANDIDATE segment, not the right one.
+     * Buckets are evenly spaced in distance while segments are not, so d can
+     * lie past the candidate's end -- and clamping t to 1 then returned the
+     * segment's END POINT for every d in the overshoot. The line froze for up
+     * to ~2 m at a time, 245 times per lap, which corrupted the road ribbon,
+     * nearest-point lookup, curvature feed-forward, braking samples and lap
+     * progress all at once, and did so silently because every consumer shared
+     * the same wrong implementation.
+     *
+     * So advance from the candidate until the segment really contains d. The
+     * bucket makes this O(1) amortised rather than a search; the guard on
+     * `steps` stops a malformed cumulative table spinning forever. */
     const k = Math.min(m - 1, Math.max(0, Math.floor(d / step)))
-    const i = byDistance[k]
+    let i = byDistance[k]
+    for (let steps = 0; steps < m; steps++) {
+      const next = (i + 1) % m
+      const end = next === 0 ? total : cum[next]
+      if (d < end || next === 0) break
+      i = next
+    }
+
     const iNext = (i + 1) % m
-    const segLen = Math.max(1e-6, (cum[iNext] || total) - cum[i])
+    const segEnd = iNext === 0 ? total : cum[iNext]
+    const segLen = Math.max(1e-6, segEnd - cum[i])
     const t = Math.min(1, Math.max(0, (d - cum[i]) / segLen))
 
     const a = pts[i]

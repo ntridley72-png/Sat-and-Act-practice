@@ -14,6 +14,7 @@
 import { StrictMode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { App } from './App'
+import { ErrorBoundary } from './ErrorBoundary'
 
 export type MountOptions = {
   /* Opponent count. Named rather than a bare number so the call site reads
@@ -23,6 +24,10 @@ export type MountOptions = {
      machine, so it is an explicit input rather than something generated
      inside the game. */
   seed?: string
+  /* Called if the game fails AFTER mounting. The host uses it to restore the
+     v1 game, which is why a post-mount failure must be reported rather than
+     merely logged. */
+  onError?: (error: Error) => void
 }
 
 let root: Root | null = null
@@ -45,11 +50,26 @@ export function mount(container: HTMLElement, options: MountOptions = {}): void 
     mountedOn = container
   }
 
-  root.render(
-    <StrictMode>
-      <App opponents={options.opponents ?? 0} seed={options.seed ?? 'default'} />
-    </StrictMode>,
-  )
+  /* Both createRoot and render are inside the try: createRoot can throw on a
+     detached container, and render can throw synchronously before the
+     boundary is live. mount() must never throw into the host page -- its
+     caller is a vanilla study site with a working game to protect. */
+  try {
+    root.render(
+      <StrictMode>
+        <ErrorBoundary onError={options.onError}>
+          <App opponents={options.opponents ?? 0} seed={options.seed ?? 'default'} />
+        </ErrorBoundary>
+      </StrictMode>,
+    )
+  } catch (error) {
+    try {
+      unmount()
+    } catch {
+      /* a failed teardown must not mask the original failure */
+    }
+    throw error instanceof Error ? error : new Error(String(error))
+  }
 }
 
 /* Tear the game down and release the WebGL context. The host page calls this

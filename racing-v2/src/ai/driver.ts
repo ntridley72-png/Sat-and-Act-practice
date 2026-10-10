@@ -192,6 +192,9 @@ export class Driver {
   private targetOffset = 0
   private steerState = 0
   progress: number
+  /** Unwrapped distance travelled. Laps derive from this rather than from
+   *  detecting a wrap, so reversing over the line cannot mint a lap. */
+  private travelled = 0
   lap = 0
   debug: DriverDebug | null = null
 
@@ -224,7 +227,20 @@ export class Driver {
         best = d
       }
     }
-    if (best < this.progress - line.length * 0.5) this.lap++
+    /* Laps from UNWRAPPED travel, not from a wrap test.
+     *
+     * The old test (`best < progress - length/2`) counted a lap on any
+     * forward wrap and had no inverse. A car that crossed the line, reversed
+     * back over it and crossed again scored two laps for one: the reverse
+     * moved progress 0 -> ~594 without decrementing anything. Accumulating a
+     * shortest-path delta makes reversing subtract, so the sequence
+     * forward/back/forward nets exactly one. */
+    const prev = this.progress
+    let delta = best - prev
+    if (delta > line.length * 0.5) delta -= line.length
+    else if (delta < -line.length * 0.5) delta += line.length
+    this.travelled += delta
+    this.lap = Math.floor(this.travelled / line.length)
     this.progress = best
     return best
   }

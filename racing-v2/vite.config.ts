@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 
 /* Build config for the lazily-loaded racing game.
  *
@@ -22,6 +23,14 @@ import { defineConfig } from 'vite'
  *      import can never take over the page.
  */
 export default defineConfig({
+  /* The React plugin is REQUIRED, not optional polish. Without it Vite falls
+   * back to esbuild's classic JSX transform, which emits React.createElement
+   * and expects React in lexical scope. These sources use the automatic
+   * runtime and import no React, so the bundle built and typechecked cleanly
+   * and then threw "React is not defined" on load. tsc cannot catch this: the
+   * jsx setting in tsconfig governs typechecking, not what Vite emits. */
+  plugins: [react()],
+
   // Served from /racing-v2/ because wrangler.toml's build step copies
   // racing-v2/dist to public/racing-v2. Asset URLs inside the bundle resolve
   // against this, so getting it wrong breaks chunk loading at runtime only.
@@ -63,13 +72,35 @@ export default defineConfig({
         chunkFileNames: 'chunks/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash][extname]',
 
-        // Split the heavy, rarely-changing renderer and physics away from game
-        // code. Game code churns; three.js at a pinned 0.139 does not, so a
-        // returning student re-downloads only the small chunk.
+        /* Split ONLY three.js, and the restriction is load-bearing.
+         *
+         * three is pure ESM, so moving it to its own chunk is safe. React is
+         * CommonJS, and Vite wraps it in an interop shim whose `exports`
+         * object is populated at module init. Putting React in a separate
+         * chunk from its consumers broke that ordering: the built entry
+         * emitted `R.exports.useMemo` where `R` was the shim, and `R.exports`
+         * was still undefined when the entry ran. The bundle BUILT, typechecked
+         * and then died on load with "Cannot read properties of undefined
+         * (reading 'exports')" -- a failure no amount of tsc or build output
+         * would have revealed.
+         *
+         * So React and the R3F/cannon layer stay with the entry. three.js is
+         * the big win anyway (606 KB of the 1.4 MB) and it is the part that
+         * never changes.
+         *
+         * NOTE on caching, because an earlier version of this comment was
+         * wrong: worker/index.js serves ALL .js as `no-cache,
+         * must-revalidate`, so the hashed chunks are revalidated every
+         * session and are NOT cached immutably. The split still saves
+         * re-downloading three.js on a 304, but it does not give the
+         * immutable caching the hash would normally buy. Changing that means
+         * changing the Worker's cache headers, which is out of scope here.
+         *
+         * If you add another manual chunk here, load the production bundle in
+         * a browser before believing it works.
+         */
         manualChunks(id) {
-          if (id.includes('node_modules/three')) return 'three'
-          if (id.includes('node_modules/@react-three') || id.includes('node_modules/cannon')) return 'physics'
-          if (id.includes('node_modules/react')) return 'react'
+          if (id.includes('node_modules/three/')) return 'three'
           return undefined
         },
       },

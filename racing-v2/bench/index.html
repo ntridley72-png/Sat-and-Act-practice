@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>racing-v2 frame bench</title>
+<style>html,body{margin:0;height:100%;background:#0f1216}#root{width:1280px;height:720px}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module">
+  // Loads the PRODUCTION bundle, not dev mode, exactly as the site would.
+  const mod = await import('/racing-v2/racing-v2.js')
+  const n = Number(new URLSearchParams(location.search).get('opponents') ?? 0)
+  window.__frames = []
+  let last = performance.now()
+  function tick(t) {
+    window.__frames.push(t - last)
+    last = t
+    requestAnimationFrame(tick)
+  }
+  mod.mount(document.getElementById('root'), { opponents: n, seed: 'bench' })
+  requestAnimationFrame(tick)
+  window.__ready = true
+</script>
+</body>
+</html>

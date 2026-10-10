@@ -55,6 +55,10 @@ const FIXED_DT = 1 / 60
 const MAX_CATCHUP_STEPS = 4
 /** Distant cars run their driver every Nth step. */
 const DISTANT_STRIDE = 3
+/** Beyond this many metres from the camera a car counts as distant. Chosen so
+ *  cars the player is racing (and can see mistakes in) always plan at full
+ *  rate; the pack further round the circuit is what gets degraded. */
+const DISTANT_RADIUS = 70
 
 export interface OpponentProps {
   index: number
@@ -130,8 +134,26 @@ export function Opponent({ index, line, skill, seed, archetype, paint, startDist
    */
   const accum = useRef(0)
   const tick = useRef(0)
+  /** Last control the driver produced. Forces are applied from this every
+   *  step, so a distant car still gets pushed on the steps it does not plan. */
+  const ctrlRef = useRef({ throttle: 0, brake: 0, steer: 0, handbrake: 0 })
+  /** Whether this car is far enough away to plan at a reduced rate. */
+  const farFromCamera = useRef(false)
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
+    /* Which cars are "distant" is decided HERE, per frame, from the camera.
+     *
+     * Previously this read a `detailed` prop that Grid never passed, so every
+     * car was always near and the whole degradation path was unreachable dead
+     * code -- §7.5 was satisfied on paper only. Measuring against the live
+     * camera makes it real, and it is recomputed rather than memoised because
+     * a car's distance is exactly the thing that changes during a race. */
+    const [cx, , cz] = pos.current
+    const cam = state.camera.position
+    const dx = cam.x - cx
+    const dz = cam.z - cz
+    farFromCamera.current = dx * dx + dz * dz > DISTANT_RADIUS * DISTANT_RADIUS
+
     // Cap the catch-up. After a tab switch delta can be seconds, and without
     // this the car would take a hundred steps in one frame and teleport.
     accum.current += Math.min(delta, 0.25)
@@ -142,16 +164,29 @@ export function Opponent({ index, line, skill, seed, archetype, paint, startDist
       steps++
       tick.current++
 
-      // §7.5: degrade distant cars BEFORE cutting grid size. A non-detailed
-      // car runs its driver every STRIDE-th step and is handed the longer dt,
-      // so its slew limit stays correct rather than being silently tightened.
-      const stride = detailed ? 1 : DISTANT_STRIDE
-      if (tick.current % stride !== 0) continue
-      drive(FIXED_DT * stride)
+      /* §7.5: degrade distant cars BEFORE cutting grid size -- but degrade the
+       * PLANNING only, never the physics.
+       *
+       * An earlier version skipped the whole step for a distant car, which
+       * also skipped applyLocalForce/applyTorque. cannon clears accumulated
+       * forces after every step, so the car received roughly one frame of
+       * propulsion, grip and steering torque in three: not the same car
+       * thinking less often, but a materially weaker car that could not keep
+       * up or hold a corner. Distant cars would quietly fall off the back of
+       * the field.
+       *
+       * So the driver is consulted every STRIDE-th step and its control is
+       * CACHED, while forces are applied on every single step from that cache.
+       */
+      const stride = farFromCamera.current ? DISTANT_STRIDE : 1
+      if (tick.current % stride === 0) plan(FIXED_DT * stride)
+      applyForces()
     }
   })
 
-  function drive(step: number) {
+  /** Read body state, update the shared slot, and ask the driver for a control.
+   *  Called every step for a near car, every STRIDE-th for a distant one. */
+  function plan(step: number) {
     const [px, , pz] = pos.current
     const [vxw, , vzw] = vel.current
     // Cannon yaw is about +Y; the driver's 2D heading runs the other way
@@ -180,11 +215,21 @@ export function Opponent({ index, line, skill, seed, archetype, paint, startDist
     slot.progress = driver.current.progress
     slot.lap = driver.current.lap
 
-    const ctrl = driver.current.control(slot, rivalsFor(index), step)
+    ctrlRef.current = driver.current.control(slot, rivalsFor(index), step)
+  }
 
-    // Longitudinal: engine and brake along the body's forward axis. Brake is
-    // applied against the direction of travel, not as reverse thrust, so a
-    // stationary car does not get shoved backwards.
+  /** Apply the cached control as forces. Called EVERY step, because cannon
+   *  clears forces between steps and a car that is not pushed is not driven. */
+  function applyForces() {
+    const ctrl = ctrlRef.current
+    const slot = mutation.opponents[index]
+    const vForward = slot.vx
+    const vLateral = slot.vy
+    const speed = Math.hypot(vForward, vLateral)
+
+    // Longitudinal: engine and brake along the body's forward axis. Brake acts
+    // against the direction of travel rather than as reverse thrust, so a
+    // stationary car is not shoved backwards.
     const drive = ctrl.throttle * ENGINE_FORCE
     const braking = ctrl.brake * BRAKE_FORCE * (vForward > 0.5 ? 1 : 0)
     const resist = DRAG * vForward * Math.abs(vForward) + (speed > 0.2 ? ROLL_RESIST : 0)
@@ -202,7 +247,7 @@ export function Opponent({ index, line, skill, seed, archetype, paint, startDist
     // which is both correct and stops the AI pirouetting on the grid.
     const steerAngle = ctrl.steer * DRIVER_CAR.maxSteer
     const yawDemand = (vForward * Math.tan(steerAngle)) / DRIVER_CAR.wheelbase
-    const yawError = yawDemand - yawRate
+    const yawError = yawDemand - mutation.opponents[index].yawRate
     api.applyTorque([0, -yawError * 2600, 0])
   }
 

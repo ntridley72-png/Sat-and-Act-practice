@@ -305,6 +305,18 @@ export class Driver {
     const slide = clamp((Math.abs(state.slipR) - SLIDE_LIMIT) / 0.22, 0, 1)
     if (slide > 0) raw = raw * (1 - slide) + clamp(state.slipR * 2.4, -1, 1) * slide
 
+    // Rare, small, seeded mistakes keep a field from driving in lockstep.
+    // This MUST happen before the slew limit consumes `raw`: an earlier
+    // version perturbed `raw` after `steer` had already been computed from it,
+    // so the steering half of every mistake was silently discarded and only
+    // the throttle lift survived. The cars still wobbled slightly via the
+    // offset jitter, which is exactly why the bug was not obvious.
+    let mistakeLift = 1
+    if (this.rng.chance(sk.mistake)) {
+      raw = clamp(raw + this.rng.float(-0.2, 0.2), -1, 1)
+      mistakeLift = 0.75
+    }
+
     // Finite hands: lock to lock in about half a second.
     const hop = SLEW * dt
     const steer = clamp(this.steerState + clamp(raw - this.steerState, -hop, hop), -1, 1)
@@ -339,11 +351,7 @@ export class Driver {
     throttle *= 1 - clamp(Math.abs(steer) * 0.45, 0, 0.55)
     throttle *= 1 - slide * 0.85
 
-    // Rare, small, seeded mistakes keep a field from driving in lockstep.
-    if (this.rng.chance(sk.mistake)) {
-      raw += this.rng.float(-0.2, 0.2)
-      throttle *= 0.75
-    }
+    throttle *= mistakeLift
 
     this.steerState = steer
     this.debug = { here, headErr, cross, crossErr, kDemand, target, horizon, slide }

@@ -55,7 +55,9 @@ export function App({ opponents, seed, skill = 'medium' }: AppProps) {
 
       {/* Gravity matches upstream so its vehicle tuning stays meaningful when
           the player car is wired in. */}
-      <Physics gravity={[0, -9.81, 0]} broadphase="SAP" allowSleep={false}>
+      {/* step is explicit and must match FIXED_DT in Opponent.tsx: the driver and
+          the solver have to advance together or a deterministic replay drifts. */}
+      <Physics gravity={[0, -9.81, 0]} broadphase="SAP" allowSleep={false} stepSize={1 / 60}>
         <TrackMesh line={line} />
         <Grid line={line} count={opponents} raceSeed={seed} skill={skill} />
       </Physics>

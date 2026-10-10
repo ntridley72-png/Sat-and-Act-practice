@@ -49,6 +49,13 @@ const ROLL_RESIST = 180         // N, constant
 const LATERAL_STIFFNESS = 9000
 const MAX_LATERAL = MASS * 9.81 * 1.4
 
+/** The driver's step. Matches <Physics step> so controller and solver agree. */
+const FIXED_DT = 1 / 60
+/** Most driver steps allowed in one frame, so a long stall cannot teleport a car. */
+const MAX_CATCHUP_STEPS = 4
+/** Distant cars run their driver every Nth step. */
+const DISTANT_STRIDE = 3
+
 export interface OpponentProps {
   index: number
   line: RacingLine
@@ -71,7 +78,11 @@ export function Opponent({ index, line, skill, seed, archetype, paint, startDist
     // A box is a crude hull for a car, but opponent-vs-opponent contact is
     // explicitly approximate, and a convex hull per car would cost more in
     // broadphase than the fidelity is worth here.
-    args: [1.8, 1.1, 4.3] as Triplet,
+    // [length, height, width]: the LONG axis is X, matching the mesh
+    // orientation set below. Sized to the car's long axis, not its width --
+    // swapping these gives every opponent a hull turned 90 degrees to its
+    // bodywork, which reads as cars bouncing off thin air.
+    args: [4.3, 1.1, 1.8] as Triplet,
     position: [start.x, 0.6, start.y],
     rotation: [0, -start.heading, 0],
     angularDamping: 0.6,
@@ -104,18 +115,43 @@ export function Opponent({ index, line, skill, seed, archetype, paint, startDist
     }
   }, [api, index])
 
-  // Distant cars are stepped at a lower rate. Accumulated rather than skipped
-  // so the driver still sees a correct dt and its slew limit stays meaningful.
+  /* FIXED TIMESTEP, and this is what makes replay possible at all.
+   *
+   * Feeding useFrame's wall-clock `delta` straight into the driver would make
+   * the control sequence depend on frame timing, so the same seed would
+   * produce a different race on every run -- even on the same machine, which
+   * is the determinism level this project actually promises. The driver's slew
+   * limit and offset pursuit are both per-second rates, so a jittery dt moves
+   * the car differently every time.
+   *
+   * So the driver is stepped at exactly FIXED_DT regardless of frame rate, and
+   * leftover real time accumulates. cannon is already fixed-step via
+   * <Physics step>, so the two now agree instead of drifting apart.
+   */
   const accum = useRef(0)
+  const tick = useRef(0)
 
   useFrame((_, delta) => {
-    const dt = Math.min(delta, 1 / 30)
-    const stride = detailed ? 1 : 3
-    accum.current += dt
-    if (accum.current < dt * stride) return
-    const step = accum.current
-    accum.current = 0
+    // Cap the catch-up. After a tab switch delta can be seconds, and without
+    // this the car would take a hundred steps in one frame and teleport.
+    accum.current += Math.min(delta, 0.25)
 
+    let steps = 0
+    while (accum.current >= FIXED_DT && steps < MAX_CATCHUP_STEPS) {
+      accum.current -= FIXED_DT
+      steps++
+      tick.current++
+
+      // §7.5: degrade distant cars BEFORE cutting grid size. A non-detailed
+      // car runs its driver every STRIDE-th step and is handed the longer dt,
+      // so its slew limit stays correct rather than being silently tightened.
+      const stride = detailed ? 1 : DISTANT_STRIDE
+      if (tick.current % stride !== 0) continue
+      drive(FIXED_DT * stride)
+    }
+  })
+
+  function drive(step: number) {
     const [px, , pz] = pos.current
     const [vxw, , vzw] = vel.current
     // Cannon yaw is about +Y; the driver's 2D heading runs the other way
@@ -168,11 +204,20 @@ export function Opponent({ index, line, skill, seed, archetype, paint, startDist
     const yawDemand = (vForward * Math.tan(steerAngle)) / DRIVER_CAR.wheelbase
     const yawError = yawDemand - yawRate
     api.applyTorque([0, -yawError * 2600, 0])
-  })
+  }
 
   return (
     <group ref={ref as never}>
-      <ProceduralCar archetype={archetype} paint={paint} detailed={detailed} />
+      {/* ORIENTATION, and it is load-bearing. racing3d.js lofts a car along Z
+          with the nose at NEGATIVE z, so the mesh's local forward is -Z. All
+          the force and heading maths above assumes local +X is forward
+          (applyLocalForce([fForward,0,0]), heading = -yaw). Rotating the mesh
+          by -90 degrees about Y maps its -Z nose onto +X, which makes that
+          assumption true instead of patching trigonometry in two places.
+          Without this the cars accelerate sideways relative to their bodywork. */}
+      <group rotation={[0, -Math.PI / 2, 0]}>
+        <ProceduralCar archetype={archetype} paint={paint} detailed={detailed} />
+      </group>
     </group>
   )
 }

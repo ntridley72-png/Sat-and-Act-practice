@@ -147,29 +147,26 @@
     if (appModule) return Promise.resolve(appModule);
     if (appLoading) return appLoading;
     var url = appBase() + APP_ENTRY;
-    /* import() is a syntax error in browsers that do not support it, so it is
-       reached through the Function constructor. This file is a classic script
-       loaded on every page view; a parse error here would take the whole page
-       down, not just the game. */
-    appLoading = new Promise(function (resolve, reject) {
-      var dynamicImport;
-      try {
-        dynamicImport = new Function("u", "return import(u)");
-      } catch (e) {
-        reject(new Error("this browser cannot load the v2 game (no dynamic import)"));
-        return;
-      }
-      dynamicImport(url).then(resolve, reject);
-    }).then(function (mod) {
-      if (!mod || typeof mod.mount !== "function") {
-        throw new Error("racing v2 app loaded but exports no mount()");
-      }
-      appModule = mod;
-      return mod;
-    }).catch(function (err) {
-      appLoading = null;
-      throw err;
-    });
+    /* A literal dynamic import, deliberately NOT new Function("return import(u)").
+       The Function constructor would need 'unsafe-eval' in any future
+       Content-Security-Policy: this site serves ads and adding a script-src
+       policy is a normal hardening step, which would then silently break the
+       game with no clue as to why. Dynamic import() has been supported by
+       every browser since 2018, so the parse-error risk that would have
+       justified the indirection no longer exists. */
+    appLoading = Promise.resolve()
+      .then(function () { return import(/* @vite-ignore */ url); })
+      .then(function (mod) {
+        if (!mod || typeof mod.mount !== "function") {
+          throw new Error("racing v2 app loaded but exports no mount()");
+        }
+        appModule = mod;
+        return mod;
+      })
+      .catch(function (err) {
+        appLoading = null;
+        throw err;
+      });
     return appLoading;
   }
 
@@ -196,12 +193,6 @@
     loadApp: loadApp,
     ensureApp: ensureApp,
     appLoaded: function () { return !!appModule; },
-    KEY: KEY,
-    PARTS: PARTS,
-    enabled: enabled,
-    setLocal: setLocal,
-    load: load,
-    ensure: ensure,
     source: function () {
       if (fromQuery() !== null) return "query";
       if (fromStorage() !== null) return "device";

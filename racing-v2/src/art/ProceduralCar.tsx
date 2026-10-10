@@ -68,9 +68,11 @@ export function useProceduralCar({ archetype = 'sport', paint, detailed = true }
       for (const side of [-1, 1] as const) {
         const wheel = buildWheel(THREE, mats, w, side, { details: detailed })
         wheel.position.set(side * w.track, w.y, z)
-        // Front wheels are index 1 here (z = +halfBase); naming them makes the
-        // steering code readable instead of indexing by magic number.
-        wheel.name = `wheel-${zi === 1 ? 'front' : 'rear'}-${side < 0 ? 'left' : 'right'}`
+        // The nose sits at NEGATIVE z (racing3d.js puts noseY at the most
+        // negative deckLine station), so the FRONT axle is z = -halfBase,
+        // which is index 0 here. Naming them beats indexing by magic number,
+        // and getting this backwards would put the steered wheels at the rear.
+        wheel.name = `wheel-${zi === 0 ? 'front' : 'rear'}-${side < 0 ? 'left' : 'right'}`
         group.add(wheel)
       }
     }

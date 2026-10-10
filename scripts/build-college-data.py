@@ -351,7 +351,7 @@ LEGACY_REJECT = ("logo", "seal", "crest", "coat of arms", "coat_of_arms", "wordm
                  "headshot", "portrait", "award ceremony", "commencement speaker", "lathe",
                  "machinery", "machine shop", "equipment", "usmc", "marine corps", "u.s. navy",
                  "us navy", "midshipman", "first pitch", "change of command", "swearing in",
-                 "tractor", "aircraft", "weapons", "rifle", "magazine")
+                 "tractor", "aircraft", "weapons", "rifle", "magazine", "lccn", "bain news")
 
 
 FILLER_WORDS = {"file", "the", "of", "and", "at", "a", "an", "is", "in", "on", "for", "to", "with", "by"}
@@ -407,13 +407,22 @@ def legacy_ok(p):
     return not any(bad in text for bad in LEGACY_REJECT)
 
 
+HISTORY_MARKERS = ("lccn", "bain news", "library of congress", "national photo", "loc.gov", "archives")
+
+
 def recent_enough(*texts, years=15):
     """Greek-life photos must come from the last ~15 years, not archive scans.
-    A year of 2011+ anywhere in the date/title keeps the photo; a photo with
-    only older years, or no year at all, is treated as history and skipped."""
+    Archive collection markers disqualify outright (an LCCN catalog number can
+    look like a 2014 date), and otherwise a real 2011+ year must appear."""
     limit = date.today().year - years
     for text in texts:
-        for m in re.finditer(r"\b(19\d{2}|20\d{2})\b", str(text or "")):
+        low = str(text or "").lower()
+        low = re.sub(r"\blccn[0-9]+\b", " ", low)  # catalog ids are not dates
+        if any(marker in low for marker in HISTORY_MARKERS):
+            return False
+    for text in texts:
+        low = re.sub(r"\blccn[0-9]+\b", " ", str(text or "").lower())
+        for m in re.finditer(r"\b(19\d{2}|20\d{2})\b", low):
             if int(m.group(1)) >= limit:
                 return True
     return False

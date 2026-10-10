@@ -40,6 +40,10 @@ const CAM_HEIGHT = 3.6
 const CAM_SIDE = 3.5
 const CAM_LOOK_AHEAD = 7
 
+/** Brake applied on all four wheels while off the racing surface. Enough to
+ *  make cutting a corner slower than taking it, not enough to feel punitive. */
+const OFF_TRACK_BRAKE = 22
+
 /* Boost. Drains while held and refills slowly when not, so it is a resource
  * to spend at the right moment rather than a second accelerator. The numbers
  * give roughly 3.3 s of boost from full and ~14 s to refill. */
@@ -98,6 +102,8 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
   })
 
   const audio = useRef<AudioRig | null>(null)
+  /** Whether the car is off the racing surface, for the grass penalty. */
+  const offTrack = useRef(false)
   /* World position and heading, republished each frame for the effects.
      Refs rather than state: these change every frame and the effects read
      them from their own useFrame, so nothing needs to re-render. */
@@ -187,7 +193,8 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
      * convention disagreeing with it. */
     for (const i of [2, 3]) api.applyEngineForce(-s.engineValue, i)
     for (const i of [0, 1]) api.setSteeringValue(s.steeringValue, i)
-    for (const i of [0, 1, 2, 3]) api.setBrake(c.brake ? maxBrake : 0, i)
+    const offRoadBrake = offTrack.current ? OFF_TRACK_BRAKE : 0
+    for (const i of [0, 1, 2, 3]) api.setBrake(Math.max(c.brake ? maxBrake : 0, offRoadBrake), i)
 
     /* The camera sway. Upstream computes a target from steering and speed and
        lerps toward it; this is a large part of why their game feels quick even
@@ -230,6 +237,17 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
       // Publish the player's progress so the AI avoids it and the leaderboard
       // can rank it against the field on the same scale.
       const lap = laps.update(v.x, v.z)
+
+      /* OFF-TRACK PENALTY.
+       *
+       * The physics ground is a single infinite plane, so grass was exactly
+       * as fast as tarmac and there was no reason to stay on the road at all
+       * -- cutting every corner across the infield was strictly quicker.
+       * Braking all four wheels off-track makes the verge cost something
+       * without the frustration of an instant reset. */
+      const lp = line.at(laps.progress)
+      const cross = Math.abs((v.x - lp.x) * -Math.sin(lp.heading) + (v.z - lp.y) * Math.cos(lp.heading))
+      offTrack.current = cross > lp.half + 0.3
       mutation.player.progress = laps.progress
       mutation.player.lap = lap
       if (lap > lastLap.current) {

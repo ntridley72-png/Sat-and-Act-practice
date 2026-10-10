@@ -9,8 +9,12 @@ import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { playerMutation } from '../player/config'
 
-const MAX = 90
-const LIFE = 0.85
+const MAX = 70
+const LIFE = 0.7
+/* Dust was far too large and too opaque -- it rendered as grey beach balls
+ * following the car. Real tyre smoke is a faint haze: small, short-lived and
+ * barely there until there is a lot of it. */
+const SIZE = 0.42
 
 interface Particle {
   pos: THREE.Vector3
@@ -47,7 +51,7 @@ export function Dust({ target }: DustProps) {
       // Deterministic-ish spread is fine here: dust is cosmetic and is NOT
       // part of the seeded simulation, so Math.random is acceptable in this
       // one place. It must never leak into driver or physics code.
-      p.vel.set((Math.random() - 0.5) * 2.2, 0.8 + Math.random() * 0.9, (Math.random() - 0.5) * 2.2)
+      p.vel.set((Math.random() - 0.5) * 1.4, 0.5 + Math.random() * 0.6, (Math.random() - 0.5) * 1.4)
       p.age = 0
     }
 
@@ -61,7 +65,7 @@ export function Dust({ target }: DustProps) {
         p.vel.multiplyScalar(1 - 1.8 * dt)
         const t = p.age / LIFE
         dummy.position.copy(p.pos)
-        dummy.scale.setScalar((0.25 + t * 0.7) * (1 - t))
+        dummy.scale.setScalar(SIZE * (0.3 + t * 1.1) * (1 - t))
       }
       dummy.updateMatrix()
       m.setMatrixAt(i, dummy.matrix)
@@ -72,7 +76,18 @@ export function Dust({ target }: DustProps) {
   return (
     <instancedMesh ref={mesh} args={[undefined, undefined, MAX]} frustumCulled={false}>
       <sphereGeometry args={[1, 6, 5]} />
-      <meshBasicMaterial color="#8d8a80" transparent opacity={0.22} depthWrite={false} />
+      {/* Additive and very faint, so overlapping puffs build into haze rather
+          than stacking into solid grey spheres. toneMapped={false} keeps it
+          from being lifted by ACES into something far more visible than
+          intended. */}
+      <meshBasicMaterial
+        color="#6d675c"
+        transparent
+        opacity={0.1}
+        depthWrite={false}
+        toneMapped={false}
+        blending={THREE.AdditiveBlending}
+      />
     </instancedMesh>
   )
 }

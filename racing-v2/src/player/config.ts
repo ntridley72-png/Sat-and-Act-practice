@@ -18,7 +18,23 @@ export const vehicleConfig = {
   steer: 0.3,
   force: 1800,
   maxBrake: 65,
-  maxSpeed: 88,
+  /* RETUNED, and this is the one upstream value deliberately changed.
+   *
+   * Upstream's 88 m/s is 317 km/h, tuned for their much larger circuit. Apex
+   * Flats is 595 m with a 13.2 m hairpin and a 111 m longest straight.
+   * tools/speed-envelope.mjs derives what the geometry actually supports:
+   *   slowest corner   48 km/h at full 1.4g
+   *   peak on straight 106 km/h accelerating then braking back down
+   * At 317 km/h the car cannot take any corner on the circuit -- it simply
+   * left the road every lap, which is precisely what it did. 32 m/s is 8%
+   * over the straight-line peak, so the limiter shapes the top end without
+   * the player hitting it constantly, and it sits right where the AI already
+   * tops out (120-123 km/h), which keeps the field competitive.
+   *
+   * §6 anticipated this: keep the tuning intact INITIALLY, revisit once the
+   * cars and track are original. They are. Re-run speed-envelope.mjs if the
+   * circuit changes. */
+  maxSpeed: 32,
 } as const
 
 export const wheelInfo = {

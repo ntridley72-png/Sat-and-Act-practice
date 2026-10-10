@@ -141,6 +141,9 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
           castShadow
           shadow-mapSize={[2048, 2048]}
           shadow-bias={-0.0004}
+          // Softer PCF edge. A hard-edged shadow under a car reads as a
+          // sticker; a little penumbra is what makes it sit on the road.
+          shadow-radius={2.5}
           shadow-camera-left={-120}
           shadow-camera-right={120}
           shadow-camera-top={120}

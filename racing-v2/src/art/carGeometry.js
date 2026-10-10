@@ -278,7 +278,14 @@ function addDetails(THREE, car, group, M, spec) {
     else add(widR * 1.8, .13, .22, 0, .3, tail + .02, M.dark);
     // diffuser per car
     const diff = (w, d, y) => add(widR * w, .1, d, 0, y == null ? .2 : y, tail - .02, M.trim);
-    if (key === 'sport') { diff(.9, .18); [-1, 1].forEach((sd) => add(.03, .09, .16, sd * widR * .22, .22, tail + .04, M.trim)); }
+    if (key === 'sport') {
+      /* HERO REAR PASS: four strakes and a deeper tray edge, so the car does
+       * not read as floating when the chase camera drops under braking
+       * (review point 7). */
+      diff(.9, .2);
+      [-1, -.33, .33, 1].forEach((sd) => add(.028, .1, .18, sd * widR * .26, .22, tail + .04, M.trim));
+      add(widR * 1.3, .022, .2, 0, .13, tail - .04, M.dark);
+    }
     else if (key === 'muscle') { diff(.86, .18); [-1, 1].forEach((sd) => add(.03, .09, .16, sd * widR * .24, .22, tail + .04, M.trim)); }
     else if (key === 'rally') { diff(.86, .18); [-1, 0, 1].forEach((i) => add(.03, .11, .18, i * widR * .26, .24, tail + .05, M.trim)); }
     else if (key === 'supercar' || key === 'hyper') {
@@ -314,8 +321,34 @@ function addDetails(THREE, car, group, M, spec) {
       [-1, 1].forEach((sd) => { for (let i = 0; i < 3; i++) lamp(w, h, sd * widR * (s0 + i * s1), tY); });
       if (key === 'muscle') add(widR * .9, .03, .02, 0, tY - .02, tZ + .02, M.chrome);
     } else if (sig === 'twin') {
-      [-1, 1].forEach((sd) => lamp(widR * .75, .1, sd * widR * .42, tY));
-      [-1, 1].forEach((sd) => add(widR * .3, .035, .03, sd * widR * .42, tY + .08, tZ, M.dark));
+      /* HERO REAR PASS (sport). Three approaches were tried against the chase
+       * camera and two were rejected -- the reasons matter more than the
+       * code:
+       *
+       *   1. Lamps raised to the deck crease (tailY-0.14): from the chase
+       *      camera, which looks DOWN at the car, they hid under the rear
+       *      glass. Rejected by screenshot.
+       *   2. A "recessed" lens set behind a solid dark bezel box: a box has
+       *      no hole, so the bezel's front face simply covered the lens and
+       *      the lamps stopped glowing. Rejected by screenshot.
+       *   3. Proud paint creases across the tail: metallic slivers reflecting
+       *      a near-black environment rendered as black tape. Rejected.
+       *
+       * What survived: the original lamp layering (lens proud of bezel --
+       * that IS the frame), a slightly taller lens, and a chrome light
+       * catcher under each lamp so the tail has a lit lower edge from above.
+       * The diffuser depth and ducktail end caps (elsewhere in this file)
+       * also survived review. */
+      if (key === 'sport') {
+        [-1, 1].forEach((sd) => {
+          const x = sd * widR * .42
+          lamp(widR * .75, .11, x, tY)
+          add(widR * .66, .016, .02, x, tY - .082, tZ + .004, M.chrome)
+        })
+      } else {
+        [-1, 1].forEach((sd) => lamp(widR * .75, .1, sd * widR * .42, tY));
+        [-1, 1].forEach((sd) => add(widR * .3, .035, .03, sd * widR * .42, tY + .08, tZ, M.dark));
+      }
     } else if (sig === 'twinbar') {
       [-1, 1].forEach((sd) => lamp(widR * .95, .12, sd * widR * .38, tY));
       add(widR * 1.55, .025, .02, 0, tY, tZ + .02, M.chrome);
@@ -382,6 +415,11 @@ function addDetails(THREE, car, group, M, spec) {
       else {
         add(widR * 1.2, .034, .28, 0, car.tailY + .045, tail - .18, M.paint, .28);
         add(widR * 1.0, .02, .06, 0, car.tailY + .085, tail - .1, M.paint, .2);
+        /* HERO REAR PASS: end caps sharpen the ducktail into two planes
+         * instead of one soft lip (review points 3 and 10). */
+        if (key === 'sport') {
+          [-1, 1].forEach((sd) => add(.05, .05, .26, sd * widR * .585, car.tailY + .045, tail - .18, M.paint, .28));
+        }
       }
     } else if (wing === 'gt') {
       const wy = car.tailY + .32, wz = tail - .22;

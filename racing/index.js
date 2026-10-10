@@ -140,13 +140,31 @@
     return /racing\/$/.test(root) ? root.replace(/racing\/$/, "racing-v2/") : "racing-v2/";
   }
 
+  /* Absolute URL for the bundle.
+   *
+   * import() is NOT the same as a <script src>: a specifier without a leading
+   * "./", "../" or "/" is treated as a bare MODULE specifier, not a relative
+   * URL, and the browser rejects it outright --
+   * "Failed to resolve module specifier 'racing-v2/racing-v2.js'". base()
+   * returns exactly that shape, so resolving against the document here is
+   * what makes the import work at all. */
+  function appUrl() {
+    var rel = appBase() + APP_ENTRY;
+    try {
+      return new URL(rel, document.baseURI || location.href).href;
+    } catch (e) {
+      // Last resort; at least make it document-relative rather than bare.
+      return rel.charAt(0) === "/" ? rel : "./" + rel;
+    }
+  }
+
   /* Load the app bundle. Resolves with its module (which exports mount and
      unmount), or rejects. Deliberately does NOT mount: the caller decides
      when React takes over the canvas. */
   function loadApp() {
     if (appModule) return Promise.resolve(appModule);
     if (appLoading) return appLoading;
-    var url = appBase() + APP_ENTRY;
+    var url = appUrl();
     /* A literal dynamic import, deliberately NOT new Function("return import(u)").
        The Function constructor would need 'unsafe-eval' in any future
        Content-Security-Policy: this site serves ads and adding a script-src
@@ -225,6 +243,7 @@
         mod.mount(container, {
           opponents: options.opponents,
           seed: options.seed,
+          onQuit: options.onQuit,
           onError: function () {
             try { mod.unmount(); } catch (e) {}
             try { if (typeof options.onFail === "function") options.onFail(); } catch (e) {}
@@ -244,6 +263,91 @@
     try { appModule.unmount(); } catch (e) {}
   }
 
+  /* ---- arcade integration ------------------------------------------------
+   *
+   * Hooks the existing arcade rather than editing app.js, which is 12k lines
+   * and carries unrelated uncommitted work. racing/index.js already loads on
+   * every page view immediately after app.js, so `arcade` is defined by the
+   * time this runs and wrapping its select() is the smallest possible seam.
+   *
+   * Everything here is fail-open. If the flag is off, if the arcade is not
+   * where it is expected, if WebGL is missing, or if the bundle will not
+   * load, the wrapper calls straight through to the original and the student
+   * gets the v1 game exactly as before. The ONLY way v2 appears is if every
+   * check passes.
+   */
+  var V2_GAMES = { drift: true, racing: true };
+  var mountEl = null;
+  var hooked = false;
+
+  function ensureMount(stage) {
+    if (mountEl && mountEl.isConnected) return mountEl;
+    mountEl = document.createElement("div");
+    mountEl.id = "racingV2Mount";
+    mountEl.setAttribute("role", "application");
+    mountEl.setAttribute("aria-label", "Racing game");
+    // Fills the arcade stage and sits above the 2D canvas. Inline styles
+    // rather than a class because racing.css belongs to v1 and this element
+    // must not depend on it.
+    mountEl.style.cssText = "position:absolute;inset:0;z-index:5;display:none;";
+    stage.appendChild(mountEl);
+    return mountEl;
+  }
+
+  function teardown(stage) {
+    stopApp();
+    if (mountEl) mountEl.style.display = "none";
+    if (stage) stage.classList.remove("racing-v2-active");
+  }
+
+  function hookArcade() {
+    if (hooked) return;
+    /* `arcade` is a top-level const in app.js, so it is a global lexical
+       binding reachable by bare name but NOT as window.arcade. typeof guards
+       against both a missing binding and a load-order change. */
+    if (typeof arcade === "undefined" || !arcade || typeof arcade.select !== "function") return;
+    var stage = document.getElementById("arcadeStage");
+    if (!stage) return;
+
+    hooked = true;
+    var originalSelect = arcade.select.bind(arcade);
+
+    arcade.select = function (game) {
+      // Not a driving game, or the flag is off: nothing changes, at all.
+      if (!V2_GAMES[game] || !enabled()) {
+        teardown(stage);
+        return originalSelect(game);
+      }
+
+      // Open the overlay and clear any previous game the way select() would,
+      // then try v2. If it declines, fall through to v1 in the same tick so
+      // the student never sees a gap.
+      var host = ensureMount(stage);
+      host.style.display = "block";
+      stage.classList.add("racing-v2-active");
+
+      startApp(host, {
+        opponents: 6,
+        seed: "race-" + game,
+        onFail: function () { teardown(stage); originalSelect(game); },
+        onQuit: function () { teardown(stage); originalSelect(game); }
+      }).then(function (started) {
+        if (!started) {
+          teardown(stage);
+          originalSelect(game);
+        }
+      });
+    };
+  }
+
+  if (typeof document !== "undefined") {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", hookArcade, { once: true });
+    } else {
+      hookArcade();
+    }
+  }
+
   window.RacingV2 = {
     KEY: KEY,
     PARTS: PARTS,
@@ -257,6 +361,7 @@
     startApp: startApp,
     stopApp: stopApp,
     webglSupported: webglSupported,
+    hookArcade: hookArcade,
     appLoaded: function () { return !!appModule; },
     source: function () {
       if (fromQuery() !== null) return "query";

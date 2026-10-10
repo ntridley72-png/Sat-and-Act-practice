@@ -15,7 +15,12 @@ const OUT = path.join(__dirname, 'shots')
     p.on('pageerror', (e) => errs.push(String(e)))
     await p.goto(`http://127.0.0.1:8901/?opponents=${n}`, { waitUntil: 'load' })
     await p.waitForFunction('window.__ready === true', { timeout: 20000 })
-    // Let the grid settle onto the road and the cars start moving.
+    // Capture the intro first, then click through to the race the way a
+    // player would, so the shots show both screens that actually ship.
+    await p.waitForTimeout(2000)
+    if (n === 0) await p.screenshot({ path: path.join(OUT, 'intro.png') })
+    const go = await p.$('.rv2-go')
+    if (go) await go.click()
     await p.waitForTimeout(6000)
     const file = path.join(OUT, `grid-${n}.png`)
     await p.screenshot({ path: file })

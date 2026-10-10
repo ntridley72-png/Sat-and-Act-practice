@@ -15,6 +15,12 @@ import { StrictMode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { App } from './App'
 import { ErrorBoundary } from './ErrorBoundary'
+// ?inline keeps the CSS as a string INSIDE this chunk instead of emitting a
+// separate .css file. The host is a vanilla page that imports only this
+// module by URL; it never parses an HTML document that could <link> a
+// stylesheet, so an emitted file would simply never load and the game would
+// mount unstyled.
+import hudCss from './ui/hud.css?inline'
 
 export type MountOptions = {
   /* Opponent count. Named rather than a bare number so the call site reads
@@ -24,6 +30,9 @@ export type MountOptions = {
      machine, so it is an explicit input rather than something generated
      inside the game. */
   seed?: string
+  /* Called when the player chooses to leave the game, so the host can restore
+     whatever was on screen before. */
+  onQuit?: () => void
   /* Called if the game fails AFTER mounting. The host uses it to restore the
      v1 game, which is why a post-mount failure must be reported rather than
      merely logged. */
@@ -32,6 +41,24 @@ export type MountOptions = {
 
 let root: Root | null = null
 let mountedOn: HTMLElement | null = null
+let styleEl: HTMLStyleElement | null = null
+
+/* Inject the stylesheet once. Every rule is scoped under .rv2-*, because this
+   loads into a 12k-line site with its own stylesheet and a bare `button` rule
+   would restyle the study app the moment a student opened the racer. */
+function ensureStyles(): void {
+  if (styleEl || typeof document === 'undefined') return
+  try {
+    styleEl = document.createElement('style')
+    styleEl.dataset.racingV2 = ''
+    styleEl.textContent = hudCss
+    document.head.appendChild(styleEl)
+  } catch {
+    // An unstyled game is worse than a styled one but far better than no
+    // game, so a failure here must not stop the mount.
+    styleEl = null
+  }
+}
 
 /* Boot the game into `container`. Idempotent: calling it twice on the same
    container re-renders rather than leaking a second React root, because the
@@ -44,6 +71,8 @@ export function mount(container: HTMLElement, options: MountOptions = {}): void 
     // rather than stranding a live WebGL context on a detached node.
     unmount()
   }
+
+  ensureStyles()
 
   if (!root) {
     root = createRoot(container)
@@ -58,7 +87,7 @@ export function mount(container: HTMLElement, options: MountOptions = {}): void 
     root.render(
       <StrictMode>
         <ErrorBoundary onError={options.onError}>
-          <App opponents={options.opponents ?? 0} seed={options.seed ?? 'default'} />
+          <App opponents={options.opponents ?? 0} seed={options.seed ?? 'default'} onQuit={options.onQuit} />
         </ErrorBoundary>
       </StrictMode>,
     )
@@ -80,6 +109,9 @@ export function unmount(): void {
   root.unmount()
   root = null
   mountedOn = null
+  // Leave the <style> in place: re-mounting is common (the student goes back
+  // to the arcade and returns) and re-injecting identical CSS each time would
+  // churn the stylesheet for no benefit.
 }
 
 /* Whether the game is currently mounted, so the host page can decide between

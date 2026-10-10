@@ -1,0 +1,267 @@
+/* Racing v2 UI.
+ *
+ * Scoped under .rv2-* and injected only when the game mounts, because this
+ * loads into a 12k-line vanilla site with its own stylesheet. A bare `button`
+ * or `h1` rule here would restyle the study app the moment a student opened
+ * the racer.
+ *
+ * Dark-only on purpose: the game canvas is dark in both themes, so a HUD that
+ * followed prefers-color-scheme would be unreadable over it half the time.
+ */
+
+.rv2-root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0f1216;
+  /* The site's own font if it set one, else a sane stack. Inheriting blindly
+     is what makes an embedded UI look like a ransom note. */
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
+
+.rv2-hud {
+  position: absolute;
+  inset: 0;
+  /* The HUD must never eat a click meant for the canvas. Interactive children
+     opt back in individually. */
+  pointer-events: none;
+  padding: clamp(10px, 2vw, 20px);
+}
+
+.rv2-corner { position: absolute; }
+.rv2-tl { top: clamp(10px, 2vw, 20px); left: clamp(10px, 2vw, 20px); }
+.rv2-tr { top: clamp(10px, 2vw, 20px); right: clamp(10px, 2vw, 20px); }
+.rv2-bl { bottom: clamp(10px, 2vw, 20px); left: clamp(10px, 2vw, 20px); }
+.rv2-br { bottom: clamp(10px, 2vw, 20px); right: clamp(10px, 2vw, 20px); text-align: right; }
+
+.rv2-label {
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .5);
+  margin-bottom: 2px;
+}
+
+.rv2-clock {
+  font-size: clamp(20px, 3.4vw, 30px);
+  font-weight: 650;
+  /* Fixed width so the clock does not jitter the layout as digits change. */
+  min-width: 7ch;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, .6);
+}
+
+.rv2-map {
+  width: clamp(104px, 15vw, 168px);
+  height: clamp(104px, 15vw, 168px);
+  background: rgba(10, 13, 17, .5);
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 10px;
+  backdrop-filter: blur(3px);
+}
+
+.rv2-board {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  line-height: 1.75;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, .7);
+}
+.rv2-board li { white-space: nowrap; }
+
+.rv2-speed {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 5px;
+  font-size: clamp(32px, 6vw, 56px);
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, .65);
+}
+.rv2-speed small {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  color: rgba(255, 255, 255, .55);
+}
+
+.rv2-boost-track {
+  margin-top: 7px;
+  margin-left: auto;
+  width: clamp(92px, 14vw, 150px);
+  height: 5px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, .14);
+  overflow: hidden;
+}
+.rv2-boost-fill {
+  height: 100%;
+  width: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #ffd166, #ff7b47);
+  /* Short, not zero: the bar should read as draining rather than teleporting,
+     but a long transition would lag behind the actual boost. */
+  transition: width .08s linear;
+}
+
+/* ---- screens ---------------------------------------------------------- */
+
+.rv2-screen {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: radial-gradient(120% 90% at 50% 0%, rgba(32, 40, 54, .82), rgba(8, 10, 13, .94));
+  backdrop-filter: blur(5px);
+  pointer-events: auto;
+  overflow-y: auto;
+}
+
+.rv2-panel {
+  width: min(520px, 100%);
+  padding: clamp(20px, 4vw, 32px);
+  border-radius: 16px;
+  background: rgba(18, 22, 29, .9);
+  border: 1px solid rgba(255, 255, 255, .09);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .55);
+}
+.rv2-panel-sm { width: min(380px, 100%); text-align: center; }
+
+.rv2-title {
+  margin: 0 0 6px;
+  font-size: clamp(24px, 4.6vw, 34px);
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+.rv2-sub { margin: 0 0 22px; font-size: 13px; color: rgba(255, 255, 255, .62); line-height: 1.55; }
+.rv2-result { margin: 0 0 4px; font-size: 26px; }
+.rv2-result strong { color: #ffd166; }
+
+.rv2-field { margin-bottom: 18px; }
+.rv2-field-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .5);
+}
+.rv2-field-label strong { color: #fff; }
+
+.rv2-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.rv2-chip {
+  /* 30px tall is below the 44px comfortable target, so the chips get generous
+     horizontal padding and sit in a loose wrap rather than a dense grid. */
+  padding: 7px 11px;
+  min-height: 32px;
+  font: inherit;
+  font-size: 12px;
+  color: rgba(255, 255, 255, .72);
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease, border-color .12s ease;
+}
+.rv2-chip:hover { background: rgba(255, 255, 255, .11); color: #fff; }
+.rv2-chip.is-on { background: rgba(255, 209, 102, .16); border-color: rgba(255, 209, 102, .5); color: #ffd166; }
+
+.rv2-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.rv2-swatch {
+  /* 30px visual, but the ::after expands the hit area to 44px so this is
+     comfortably tappable on a phone without inflating the swatch itself. */
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, .22);
+  cursor: pointer;
+  padding: 0;
+  transition: transform .12s ease, border-color .12s ease;
+}
+.rv2-swatch::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+}
+.rv2-swatch:hover { transform: scale(1.08); }
+.rv2-swatch.is-on { border-color: #fff; transform: scale(1.12); }
+
+.rv2-range { width: 100%; accent-color: #ffd166; height: 24px; cursor: pointer; }
+
+.rv2-actions { display: grid; gap: 8px; margin-top: 18px; }
+
+.rv2-go {
+  width: 100%;
+  min-height: 46px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 650;
+  color: #15181d;
+  background: linear-gradient(180deg, #ffd980, #ffc14d);
+  border: 0;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: filter .12s ease, transform .06s ease;
+}
+.rv2-go:hover { filter: brightness(1.06); }
+.rv2-go:active { transform: translateY(1px); }
+
+.rv2-ghost {
+  width: 100%;
+  min-height: 42px;
+  font: inherit;
+  font-size: 13px;
+  color: rgba(255, 255, 255, .72);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+}
+.rv2-ghost:hover { background: rgba(255, 255, 255, .07); color: #fff; }
+
+.rv2-foot { margin: 18px 0 0; font-size: 11px; color: rgba(255, 255, 255, .34); line-height: 1.5; }
+
+/* ---- help ------------------------------------------------------------- */
+
+.rv2-help { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); pointer-events: auto; }
+.rv2-help-toggle {
+  min-height: 30px;
+  padding: 5px 12px;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .55);
+  background: rgba(10, 13, 17, .55);
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 99px;
+  cursor: pointer;
+}
+.rv2-help-toggle:hover { color: #fff; }
+.rv2-keys {
+  margin: 8px 0 0;
+  padding: 11px 14px;
+  display: grid;
+  gap: 4px 16px;
+  font-size: 12px;
+  background: rgba(10, 13, 17, .82);
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 10px;
+}
+.rv2-keys > div { display: flex; gap: 10px; justify-content: space-between; }
+.rv2-keys dt { color: rgba(255, 255, 255, .55); }
+.rv2-keys dd { margin: 0; }
+
+/* Respect a reduced-motion preference: these are decorative transitions and
+   there is no reason to force them on someone who asked not to have them. */
+@media (prefers-reduced-motion: reduce) {
+  .rv2-chip, .rv2-swatch, .rv2-go, .rv2-ghost, .rv2-boost-fill { transition: none; }
+}

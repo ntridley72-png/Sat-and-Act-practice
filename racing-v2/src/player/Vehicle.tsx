@@ -17,6 +17,11 @@ import { Wheel } from './Wheel'
 import { vehicleConfig, wheelInfo, playerMutation } from './config'
 import { useControls } from './useControls'
 import { mutation } from '../ai/mutation'
+import { useLapTracker } from './useLapTracker'
+import type { RacingLine } from '../ai/racingLine'
+import { AudioRig } from '../audio/engine'
+import { Skid } from '../effects/Skid'
+import { Dust } from '../effects/Dust'
 
 const { lerp } = MathUtils
 const v = new Vector3()
@@ -25,18 +30,31 @@ const v = new Vector3()
  *  car's ground-level origin lines up with the bottom of the box. */
 const CHASSIS_HEIGHT = 1.2
 
+/* Boost. Drains while held and refills slowly when not, so it is a resource
+ * to spend at the right moment rather than a second accelerator. The numbers
+ * give roughly 3.3 s of boost from full and ~14 s to refill. */
+const BOOST_MULTIPLIER = 1.9
+const BOOST_DRAIN = 30   // units per second while held
+const BOOST_REFILL = 7   // units per second while not
+
 export interface VehicleProps {
   position?: [number, number, number]
   rotation?: [number, number, number]
   archetype?: string
   paint?: string
+  /** The circuit, for lap tracking and the leaderboard. */
+  line: RacingLine
+  /** Called with the new lap count each time the player completes one. */
+  onLap?: (lap: number) => void
 }
 
-export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype = 'sport', paint }: VehicleProps) {
+export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype = 'sport', paint, line, onLap }: VehicleProps) {
+  const laps = useLapTracker(line)
+  const lastLap = useRef(0)
   const defaultCamera = useThree((state) => state.camera)
   const controls = useControls()
 
-  const [chassisBody] = useBox(() => ({
+  const [chassisBody, chassisApi] = useBox(() => ({
     mass: 500,
     args: [vehicleConfig.width, CHASSIS_HEIGHT, 4.4],
     position,
@@ -61,6 +79,13 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
     }
   })
 
+  const audio = useRef<AudioRig | null>(null)
+  /* World position and heading, republished each frame for the effects.
+     Refs rather than state: these change every frame and the effects read
+     them from their own useFrame, so nothing needs to re-render. */
+  const worldPos = useRef(new Vector3())
+  const worldHeading = useRef(0)
+
   const [, api] = useRaycastVehicle(() => ({
     chassisBody,
     wheels: wheelRefs.current as unknown as React.RefObject<Group>[],
@@ -69,16 +94,62 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
 
   useLayoutEffect(() => api.sliding.subscribe((sliding) => (playerMutation.sliding = sliding)), [api])
 
+  /* Publish speed into the shared mutable object. Nothing wrote it before, so
+     speed read as 0 forever: the engine note never pitched and the maxSpeed
+     cut-out never engaged, which would have read as "the audio is broken"
+     rather than "the value is missing". */
+  useLayoutEffect(
+    () =>
+      chassisApi.velocity.subscribe(([vx, vy, vz]) => {
+        playerMutation.speed = Math.hypot(vx, vy, vz)
+      }),
+    [chassisApi],
+  )
+
+  /* Audio is created here but stays SILENT until a real user gesture, because
+     browsers reject playback before one and a rejected play() would otherwise
+     log an error on every sound. The first keypress arms it. */
+  useLayoutEffect(() => {
+    const rig = new AudioRig()
+    rig.init()
+    audio.current = rig
+    const armOnce = () => {
+      rig.arm()
+      rig.startEngine()
+    }
+    window.addEventListener('keydown', armOnce, { once: true })
+    window.addEventListener('pointerdown', armOnce, { once: true })
+    return () => {
+      window.removeEventListener('keydown', armOnce)
+      window.removeEventListener('pointerdown', armOnce)
+      rig.dispose()
+      audio.current = null
+    }
+  }, [])
+
   // Per-frame scratch, kept outside the callback so it is not reallocated 60
   // times a second.
-  const state = useRef({ engineValue: 0, steeringValue: 0, speed: 0, swayValue: 0, swayTarget: 0, swaySpeed: 0 })
+  const state = useRef({
+    engineValue: 0, steeringValue: 0, speed: 0,
+    swayValue: 0, swayTarget: 0, swaySpeed: 0,
+    wasSliding: false, wasBoosting: false,
+  })
 
   useFrame((_, delta) => {
     const s = state.current
     const c = controls.current
 
     const speed = playerMutation.speed
-    const engine = c.forward ? force : c.backward ? -force : 0
+
+    /* Boost: drain while held and only while actually driving forward, so it
+       cannot be banked by holding it on the grid. Refills whenever not held. */
+    const boosting = c.boost && playerMutation.boost > 0 && c.forward
+    playerMutation.boost = Math.max(
+      0,
+      Math.min(100, playerMutation.boost + (boosting ? -BOOST_DRAIN : BOOST_REFILL) * delta),
+    )
+
+    const engine = (c.forward ? force : c.backward ? -force : 0) * (boosting ? BOOST_MULTIPLIER : 1)
     // Cut drive above maxSpeed rather than clamping velocity: clamping would
     // fight the solver and make the car feel like it hit a wall.
     s.engineValue = lerp(s.engineValue, Math.abs(speed) > maxSpeed ? 0 : engine, delta * 12)
@@ -97,8 +168,34 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
     s.swaySpeed = lerp(s.swaySpeed, s.swayTarget, delta * 4)
     s.swayValue = lerp(s.swayValue, s.swaySpeed, delta * 6)
 
+    // --- audio, driven from the same values as the physics ---------------
+    const rig = audio.current
+    if (rig) {
+      rig.setEngineSpeed(speed, maxSpeed)
+      if (c.forward && !s.wasSliding) rig.startEngine()
+      // Edge-triggered, not level: playing a one-shot every frame while a
+      // condition holds is a buzzsaw, not a sound effect.
+      if (playerMutation.sliding && !s.wasSliding) rig.play('brake')
+      if (boosting && !s.wasBoosting) rig.play('boost')
+      if (c.brake && Math.abs(speed) > 12 && !s.wasSliding) rig.play('brake')
+    }
+    s.wasSliding = playerMutation.sliding
+    s.wasBoosting = boosting
+
     if (chassisBody.current) {
       chassisBody.current.getWorldPosition(v)
+      worldPos.current.copy(v)
+      worldHeading.current = chassisBody.current.rotation.y
+
+      // Publish the player's progress so the AI avoids it and the leaderboard
+      // can rank it against the field on the same scale.
+      const lap = laps.update(v.x, v.z)
+      mutation.player.progress = laps.progress
+      mutation.player.lap = lap
+      if (lap > lastLap.current) {
+        lastLap.current = lap
+        onLap?.(lap)
+      }
       // Publish the player into the shared slot so AI drivers avoid and
       // overtake it rather than treating it as scenery.
       mutation.player.x = v.x
@@ -131,6 +228,8 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
       {wheelRefs.current.map((ref, i) => (
         <Wheel key={i} ref={ref} leftSide={i % 2 === 0} paint={paint} />
       ))}
+      <Skid target={worldPos} heading={worldHeading} />
+      <Dust target={worldPos} />
     </group>
   )
 }

@@ -1,4 +1,10 @@
-public/
+# Anchored to the repo root on purpose. wrangler.toml's build step generates
+# ./public from an allowlist, so that one directory must stay untracked -- but
+# an UNANCHORED `public/` matches any directory of that name at any depth, and
+# it was silently swallowing racing-v2/public/ (the game's source audio). A
+# fresh clone would have been unable to build the game, with no error to
+# explain why, because git does not report what it is ignoring.
+/public/
 node_modules/
 .wrangler/
 .ai-reviews/

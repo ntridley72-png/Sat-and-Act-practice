@@ -153,9 +153,17 @@ def verify(url):
     return False
 
 
-def rank(urls, cat):
+def same_official(url, host, reg):
+    try:
+        lh = urllib.parse.urlparse(url).hostname.lower().replace("^www\\.", "")
+    except Exception:
+        return False
+    return lh == host or lh == reg or lh.endswith("." + reg) or lh.endswith("." + host)
+
+
+def rank(urls, cat, host, reg):
     pat = re.compile(SITEMAP_PATTERNS[cat], re.I)
-    hits = [u for u in urls if pat.search(u) and not BAD_HINTS.search(u)]
+    hits = [u for u in urls if pat.search(u) and not BAD_HINTS.search(u) and same_official(u, host, reg)]
     hits.sort(key=lambda u: (u.count("/"), len(u)))
     return hits
 
@@ -180,7 +188,8 @@ def discover(college):
     except Exception:
         urls = []
     for cat in CATS:
-        for cand in rank(urls, cat)[:3]:
+        for cand in rank(urls, cat, host, reg)[:3]:
+            cand = cand.replace("http://", "https://", 1)
             if verify(cand):
                 links[cat] = cand
                 break
@@ -201,7 +210,7 @@ def discover(college):
         keyword = {"clubs": "student", "greek": "greek", "athletics": "athlet",
                    "events": "event", "housing": "hous", "paper": "news"}[cat]
         if keyword in text:
-            links[cat] = url
+            links[cat] = url.replace("http://", "https://", 1)
     return {"checked": date.today().isoformat(), "links": links}
 
 

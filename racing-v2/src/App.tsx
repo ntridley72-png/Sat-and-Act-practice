@@ -24,6 +24,9 @@ import { Intro, Finished, Help } from './ui/Screens'
 import { buildTrackLine, trackById, trackGates, TRACKS, DEFAULT_TRACK_ID } from './tracks/catalog'
 import { readSavedTrack, saveTrack } from './tracks/selection'
 import { THEMES } from './tracks/format'
+import type { WeatherId } from './tracks/format'
+import { dimTheme, resolveWeather, WEATHER_GRIP } from './tracks/weather'
+import { Rain } from './art/Rain'
 import { gridSlot, yawForZForward } from './ai/gridSlots'
 import { mutation, resetOpponents } from './ai/mutation'
 import { playerMutation } from './player/config'
@@ -60,7 +63,13 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
   const track = useMemo(() => trackById(trackId), [trackId])
   const line = useMemo(() => buildTrackLine(track), [track])
   const gates = useMemo(() => trackGates(track, line), [track, line])
-  const theme = THEMES[track.theme]
+  /* Weather is session state, not persisted: it resets to dry per session and
+   * resolves against the track's supported set (dry is always supported, so
+   * resolveWeather can only fall back to a legal value). */
+  const [weather, setWeather] = useState<WeatherId>('dry')
+  const activeWeather = resolveWeather(weather, track.weather)
+  const grip = WEATHER_GRIP[activeWeather]
+  const theme = dimTheme(THEMES[track.theme], activeWeather)
 
   const chooseTrack = useCallback((id: string) => {
     const valid = trackById(id).id
@@ -183,6 +192,7 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
         <Physics gravity={[0, -9.81, 0]} broadphase="SAP" allowSleep={false} stepSize={1 / 60}>
           <TrackMesh line={line} theme={theme} hazards={track.hazards} />
           <Scenery def={track} line={line} />
+          {activeWeather === 'rain' && <Rain />}
           <Vehicle
             key={`player-${runId}`}
             position={[pole.x, 1, pole.z]}
@@ -195,8 +205,9 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
             line={line}
             gates={gates}
             topSpeed={track.ai.topSpeed}
+            grip={grip}
           />
-          <Grid key={`grid-${runId}`} line={line} count={opponents} raceSeed={`${seed}:${runId}`} skill={skill} gates={gates} cornerBudget={track.ai.cornerBudget} />
+          <Grid key={`grid-${runId}`} line={line} count={opponents} raceSeed={`${seed}:${runId}`} skill={skill} gates={gates} cornerBudget={track.ai.cornerBudget} grip={grip} />
         </Physics>
       </Canvas>
 
@@ -215,6 +226,9 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
           tracks={TRACKS}
           trackId={track.id}
           onTrackChange={chooseTrack}
+          weatherOptions={track.weather}
+          weather={activeWeather}
+          onWeatherChange={setWeather}
         />
       )}
       {phase === 'finished' && (

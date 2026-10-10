@@ -250,7 +250,11 @@ export const CAPS = {
   hazards: 12,
   sceneryTierCap: { low: 160, mid: 320, high: 560 } as const,
   topSpeed: [18, 60] as const,
-  cornerBudget: [0.1, 0.6] as const,
+  /* Upper bound guards against nonsense, not against measurement: the
+   * calibration harness is what proves a value, and solar-salt-run's roomy
+   * geometry measures 0.65. Anything approaching 1.0 would plan at the grip
+   * limit, which no measured track does. */
+  cornerBudget: [0.1, 0.7] as const,
   carHalfWidth: 0.9,
   carLength: 4.3,
   /** Entries on the largest grid this app supports (1 player + 12 opponents). */

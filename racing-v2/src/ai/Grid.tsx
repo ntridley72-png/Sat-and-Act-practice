@@ -35,9 +35,11 @@ export interface GridProps {
   /** Per-track planning budget, measured by tools/calibrate-corner-budget.mjs.
    *  Falls back to the module default when absent (legacy behaviour). */
   cornerBudget?: number
+  /** Weather grip multiplier (1 = dry), shared with the player. */
+  grip?: number
 }
 
-export function Grid({ line, count, raceSeed, skill = 'medium', gates = [], cornerBudget }: GridProps) {
+export function Grid({ line, count, raceSeed, skill = 'medium', gates = [], cornerBudget, grip = 1 }: GridProps) {
   const cars = useMemo(() => {
     const n = Math.max(0, Math.min(MAX_OPPONENTS, count))
     // All assignment draws come from ONE seeded stream, so the same raceSeed
@@ -71,6 +73,7 @@ export function Grid({ line, count, raceSeed, skill = 'medium', gates = [], corn
           slot={c.slot}
           gates={gates}
           cornerBudget={cornerBudget}
+          grip={grip}
         />
       ))}
     </>

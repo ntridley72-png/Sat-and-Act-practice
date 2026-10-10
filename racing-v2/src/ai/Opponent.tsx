@@ -52,7 +52,8 @@ const ROLL_RESIST = 180         // N, constant
  * sliding sideways through a corner, and the saturation is what makes
  * cornering look honest rather than rail-guided. */
 const LATERAL_STIFFNESS = 9000
-const MAX_LATERAL = MASS * 9.81 * 1.4
+/* The friction circle is MASS * g * 1.4 on a dry road; the grip prop scales
+ * it per weather. It is computed per instance in applyForces, not here. */
 
 /** The driver's step. Matches <Physics step> so controller and solver agree. */
 const FIXED_DT = 1 / 60
@@ -81,9 +82,12 @@ export interface OpponentProps {
   gates?: readonly number[]
   /** Per-track planning budget; see Grid. */
   cornerBudget?: number
+  /** Weather grip multiplier (1 = dry): scales the tyre saturation and the
+   *  driver's planning grip. See src/tracks/weather.ts. */
+  grip?: number
 }
 
-export function Opponent({ index, line, skill, seed, archetype, paint, slot, gates = [], cornerBudget }: OpponentProps) {
+export function Opponent({ index, line, skill, seed, archetype, paint, slot, gates = [], cornerBudget, grip = 1 }: OpponentProps) {
   const env = useEnvironment()
   const startX = slot.x
   const startZ = slot.z
@@ -105,7 +109,7 @@ export function Opponent({ index, line, skill, seed, archetype, paint, slot, gat
     linearDamping: 0.02,
   }))
 
-  const driver = useRef(createDriver({ line, car: DRIVER_CAR, skill, seed, startDistance, id: `ai-${index}`, gates, cornerBudget }))
+  const driver = useRef(createDriver({ line, car: DRIVER_CAR, skill, seed, startDistance, id: `ai-${index}`, gates, cornerBudget, grip }))
 
   /* Body state is read through cannon's subscriptions into plain refs, never
      into React state: these change every frame and a setState here would
@@ -249,8 +253,10 @@ export function Opponent({ index, line, skill, seed, archetype, paint, slot, gat
 
     // Lateral: resist sideways motion, saturated at the friction circle. Past
     // saturation the car slides, which is what makes a corner taken too fast
-    // actually go wrong instead of being quietly corrected.
-    const fLateral = Math.max(-MAX_LATERAL, Math.min(MAX_LATERAL, -LATERAL_STIFFNESS * vLateral))
+    // actually go wrong instead of being quietly corrected. Rain lowers the
+    // circle, so the same corner taken at the same speed slides sooner.
+    const maxLateral = MASS * 9.81 * 1.4 * grip
+    const fLateral = Math.max(-maxLateral, Math.min(maxLateral, -LATERAL_STIFFNESS * vLateral))
 
     api.applyLocalForce([fForward, 0, 0], [0, 0, 0])
     api.applyLocalForce([0, 0, fLateral], [0, 0, 0])

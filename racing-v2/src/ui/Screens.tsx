@@ -7,7 +7,8 @@
 import { useState } from 'react'
 import { PALETTE } from '../ai/Grid'
 import { ARCHETYPES } from '../art/ProceduralCar'
-import type { TrackDefinition } from '../tracks/format'
+import type { TrackDefinition, WeatherId } from '../tracks/format'
+import { WEATHER_LABEL } from '../tracks/weather'
 
 export interface IntroProps {
   onStart: (opts: { paint: string; archetype: string; opponents: number }) => void
@@ -22,11 +23,15 @@ export interface IntroProps {
   tracks: TrackDefinition[]
   trackId: string
   onTrackChange: (id: string) => void
+  /** Weather variants the selected track supports (always >= 1). */
+  weatherOptions: WeatherId[]
+  weather: WeatherId
+  onWeatherChange: (w: WeatherId) => void
 }
 
 const DIFFICULTY_LABEL: Record<number, string> = { 1: 'Easy', 2: 'Medium', 3: 'Hard' }
 
-export function Intro({ onStart, initialPaint, initialArchetype, initialOpponents, tracks, trackId, onTrackChange }: IntroProps) {
+export function Intro({ onStart, initialPaint, initialArchetype, initialOpponents, tracks, trackId, onTrackChange, weatherOptions, weather, onWeatherChange }: IntroProps) {
   const [paint, setPaint] = useState<string>(initialPaint ?? PALETTE[0])
   const [archetype, setArchetype] = useState<string>(initialArchetype ?? 'sport')
   const [opponents, setOpponents] = useState(initialOpponents ?? 6)
@@ -54,6 +59,24 @@ export function Intro({ onStart, initialPaint, initialArchetype, initialOpponent
             ))}
           </div>
         </div>
+
+        {weatherOptions.length > 1 && (
+          <div className="rv2-field">
+            <span className="rv2-field-label">Weather</span>
+            <div className="rv2-chips">
+              {weatherOptions.map((w) => (
+                <button
+                  key={w}
+                  type="button"
+                  className={'rv2-chip' + (w === weather ? ' is-on' : '')}
+                  onClick={() => onWeatherChange(w)}
+                >
+                  {WEATHER_LABEL[w]}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="rv2-field">
           <span className="rv2-field-label">Car</span>

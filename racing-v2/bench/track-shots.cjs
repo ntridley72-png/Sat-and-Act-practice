@@ -60,19 +60,29 @@ if (!tracks.length) {
     await p.goto(`http://127.0.0.1:8901/?opponents=8&track=${encodeURIComponent(track)}`, { waitUntil: 'load' })
     await p.waitForFunction('window.__ready === true', { timeout: 20000 })
     await p.waitForTimeout(1500)
-    await p.screenshot({ path: path.join(OUT, `${track}-intro.png`) })
+    // Optional WEATHER env: click the matching chip before capturing, for the
+    // tracks that support variants (Tempest Causeway: dry/wet/rain).
+    const weather = process.env.WEATHER
+    if (weather) {
+      const chip = await p.$(`.rv2-chip:text-is("${weather[0].toUpperCase() + weather.slice(1)}")`)
+      if (chip) await chip.click()
+      else console.log(`   (weather chip "${weather}" not found on ${track})`)
+      await p.waitForTimeout(400)
+    }
+    const suffix = weather ? `-${weather}` : ''
+    await p.screenshot({ path: path.join(OUT, `${track}-intro${suffix}.png`) })
 
     const go = await p.$('.rv2-go')
     if (go) await go.click()
     await p.waitForTimeout(2500)
-    await p.screenshot({ path: path.join(OUT, `${track}-grid.png`) })
+    await p.screenshot({ path: path.join(OUT, `${track}-grid${suffix}.png`) })
 
     // Drive for a few seconds so the shot is mid-track, then capture.
     await p.keyboard.down('w')
     await p.waitForTimeout(7000)
     await p.keyboard.up('w')
     await p.waitForTimeout(400)
-    await p.screenshot({ path: path.join(OUT, `${track}-drive.png`) })
+    await p.screenshot({ path: path.join(OUT, `${track}-drive${suffix}.png`) })
 
     const nonBlack = await p.evaluate(() => {
       const c = document.querySelector('canvas')

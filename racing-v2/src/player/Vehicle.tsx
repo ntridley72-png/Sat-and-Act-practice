@@ -73,9 +73,11 @@ export interface VehicleProps {
   /** Per-track top speed in m/s (tools/speed-envelope.mjs measures it from
    *  the circuit geometry). Defaults to the vehicle config. */
   topSpeed?: number
+  /** Weather grip multiplier (1 = dry). Scales wheel friction. */
+  grip?: number
 }
 
-export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype = 'sport', paint, line, onLap, assetBase, startDistance = 0, gates = [], topSpeed }: VehicleProps) {
+export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype = 'sport', paint, line, onLap, assetBase, startDistance = 0, gates = [], topSpeed, grip = 1 }: VehicleProps) {
   const laps = useLapTracker(line, startDistance, gates)
   const lastLap = useRef(0)
   const defaultCamera = useThree((state) => state.camera)
@@ -106,6 +108,9 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
     const sideMulti = index % 2 ? 0.5 : -0.5
     return {
       ...wheelInfo,
+      /* Weather scales the tyre's peak grip. The AI plans around the same
+       * multiplier in its driver (see src/tracks/weather.ts). */
+      frictionSlip: wheelInfo.frictionSlip * grip,
       chassisConnectionPointLocal: [width * sideMulti, height, length],
       isFrontWheel: index < 2,
     }

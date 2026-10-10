@@ -1,12 +1,14 @@
 /* Frame times on the PRODUCTION bundle at 0/4/8/12 opponents.
  *
- * HONEST CAVEAT, stated up front because the numbers are meaningless without
- * it: headless Chromium here has no GPU and falls back to SwiftShader software
- * rasterisation. These numbers therefore measure the CPU cost of the scene --
- * the physics worker, the driver loop, the React/R3F overhead -- on a software
- * rasteriser. They are a sound RELATIVE comparison across grid sizes, which is
- * what the frame-budget question actually is, and they are a pessimistic floor
- * for absolute performance. They are NOT what a student's GPU will do.
+ * Run headed by default, because it is the only way to get a real GPU here:
+ *   node bench/frame-bench.cjs            -> headed, HARDWARE GPU, real numbers
+ *   node bench/frame-bench.cjs headless   -> SwiftShader, relative comparison only
+ *
+ * Headless Chromium falls back to SwiftShader software rasterisation, where an
+ * EMPTY grid already costs ~100 ms a frame. Those numbers are a pessimistic
+ * floor and a valid relative comparison, but they are not what a student sees.
+ * The harness prints the renderer string with the results so nobody has to
+ * guess which kind of number they are reading.
  */
 const { chromium } = require('playwright-core')
 const fs = require('node:fs')
@@ -44,10 +46,31 @@ function stats(a) {
 }
 
 ;(async () => {
+  const headless = process.argv[2] === 'headless'
   const browser = await chromium.launch({
     executablePath: execPath(),
-    args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader'],
+    headless,
+    args: headless
+      ? ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader']
+      : ['--no-sandbox'],
   })
+
+  // Report the renderer first. A frame time without the renderer behind it is
+  // not a measurement, it is a number.
+  {
+    const probe = await browser.newPage()
+    await probe.goto('http://127.0.0.1:8901/?opponents=0', { waitUntil: 'load' })
+    const r = await probe.evaluate(() => {
+      const gl = document.createElement('canvas').getContext('webgl2')
+      const d = gl && gl.getExtension('WEBGL_debug_renderer_info')
+      return d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : 'unknown'
+    })
+    const software = /swiftshader|software|llvmpipe/i.test(String(r))
+    console.log(`renderer: ${r}`)
+    console.log(`          ${software ? 'SOFTWARE - relative comparison only' : 'HARDWARE GPU - absolute numbers are real'}\n`)
+    await probe.close()
+  }
+
   console.log('grid   frames   mean ms   p50 ms   p95 ms   max ms   implied fps (p50)')
   const results = []
   for (const n of [0, 4, 8, 12]) {

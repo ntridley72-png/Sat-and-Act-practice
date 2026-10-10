@@ -243,6 +243,9 @@
         mod.mount(container, {
           opponents: options.opponents,
           seed: options.seed,
+          // The host knows where the game was served from; the bundle cannot
+          // reliably work it out, because Vite rewrites import.meta.url.
+          assetBase: appBase(),
           onQuit: options.onQuit,
           onError: function () {
             try { mod.unmount(); } catch (e) {}

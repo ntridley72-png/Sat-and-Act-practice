@@ -222,6 +222,219 @@ function buildWheel(THREE, M, spec, side, opts) {
     return g;
   }
 
+function boxPart(THREE, M, w, h, d, x, y, z, mat, rx, ry) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    m.position.set(x, y, z);
+    if (rx) m.rotation.x = rx;
+    if (ry) m.rotation.y = ry;
+    return m;
+  }
+
+function addDetails(THREE, car, group, M, spec) {
+    const nose = -car.len / 2, tail = car.len / 2, wid = car.wid, widR = car.widR || car.wid;
+    const belt = car.beltY, key = spec.key || 'sport';
+    const tY = car.tailY + (key === 'sport' ? -.22 : -.3), tZ = tail + .01;
+    const add = (w, h, d, x, y, z, mat, rx) => group.add(boxPart(THREE, M, w, h, d, x, y, z, mat, rx));
+    // front end
+    add(wid * 1.8, .14, .2, 0, .34, nose - .01, M.dark);
+    add(wid * .9, .12, .12, 0, .34, nose - .06, M.trim);
+    if (spec.splitter || car.splitter) add(wid * 1.9, .035, .3, 0, .2, nose - .08, M.trim);
+    if (car.mud || spec.mud) add(wid * .95, .05, .3, 0, .3, nose - .05, M.trim);
+    add(wid * .05, .09, car.len * .42, -wid * .98, car.baseY + .02, 0, M.trim);
+    add(wid * .05, .09, car.len * .42, wid * .98, car.baseY + .02, 0, M.trim);
+    [-1, 1].forEach((sd) => {
+      add(.15, .06, .1, sd * wid * .93, belt - .01, car.cabin[0] - .12, M.paint);
+      add(.1, .035, .05, sd * wid * .8, belt - .02, car.cabin[0] - .12, M.trim);
+      add(.022, .05, Math.max(.6, (car.cabin[1] - car.cabin[0]) + 1.1), sd * (wid + .006), belt - .07, (car.cabin[0] + car.cabin[1]) / 2, M.paint);
+    });
+    const headX = wid * .62, headZ = nose + .06, headY = car.noseY - .1;
+    [-1, 1].forEach((sd) => {
+      add(wid * .3, .09, .12, sd * headX, headY, headZ, M.dark);
+      add(wid * .26, .05, .08, sd * headX, headY + .01, headZ - .02, M.head);
+      add(wid * .07, .03, .06, sd * wid * .88, headY - .05, headZ + .01, M.amber);
+    });
+    if (car.lightBar) add(wid * .84, .035, .06, 0, headY + .16, headZ, M.head);
+    if (spec.vents || car.vents) {
+      add(wid * .3, .045, car.len * .07, 0, car.hoodY + .015, -car.hoodF, M.trim);
+      [-1, 1].forEach((sd) => add(.04, .045, car.len * .16, sd * wid * .86, belt - .14, car.cabin[0] + .5, M.trim));
+    }
+    if (car.popups) {
+      [1, -1].forEach((sd) => {
+        add(wid * .26, .045, .16, sd * wid * .58, car.hoodY + .02, -(car.hoodF - .1), M.paint);
+        add(wid * .22, .03, .12, sd * wid * .58, car.hoodY + .055, -(car.hoodF - .12), M.head);
+      });
+    }
+    // -------- rear: canopy-to-deck fillet (audit shared #1) --------
+    add(wid * .52, Math.max(.12, Math.abs(belt - car.deckY) + .1), .22, 0, (belt + car.deckY) / 2, car.cabin[1] + .3, M.paint);
+    if (car.hatch) add(wid * .7, .3, .03, 0, car.deckY + .05, car.cabin[1] + .3, M.glass);
+    if (car.hatch) add(wid * .74, .026, .07, 0, car.deckY + .18, car.cabin[1] + .28, M.paint, -.5);
+    // -------- rear: fascia stack --------
+    add(widR * 1.7, .018, .012, 0, car.tailY - .02, tail - .02, M.dark);           // deck shut line
+    add(widR * 1.66, .014, .01, 0, car.baseY + .3, tail - .015, M.dark);            // bumper-body seam
+    add(widR * 1.8, .06, .1, 0, car.baseY + .06, tail - .03, M.dark);              // valance band
+    add(widR * .9, .012, .012, 0, car.deckY - .008, tail - .55, M.paint);         // decklid line
+    if (key === 'wedge') add(widR * 1.8, .22, .03, 0, car.tailY - .12, tail + .015, M.dark);   // Kamm panel
+    if (key === 'ev') add(widR * 1.75, .13, .12, 0, .3, tail + .02, M.trim);
+    else add(widR * 1.8, .13, .22, 0, .3, tail + .02, M.dark);
+    // diffuser per car
+    const diff = (w, d, y) => add(widR * w, .1, d, 0, y == null ? .2 : y, tail - .02, M.trim);
+    if (key === 'sport') { diff(.9, .18); [-1, 1].forEach((sd) => add(.03, .09, .16, sd * widR * .22, .22, tail + .04, M.trim)); }
+    else if (key === 'muscle') { diff(.86, .18); [-1, 1].forEach((sd) => add(.03, .09, .16, sd * widR * .24, .22, tail + .04, M.trim)); }
+    else if (key === 'rally') { diff(.86, .18); [-1, 0, 1].forEach((i) => add(.03, .11, .18, i * widR * .26, .24, tail + .05, M.trim)); }
+    else if (key === 'supercar' || key === 'hyper') {
+      const dv = key === 'hyper' ? widR * 1.0 : widR * .98;
+      add(dv, .08, key === 'hyper' ? .26 : .2, 0, .18, tail - .04, M.trim);
+      for (let i = 0; i < 5; i++) add(.03, .12, .22, widR * (-.36 + i * .18), .24, tail + .03, M.trim);
+    }
+    else if (key === 'ev') { /* closed fascia */ }
+    else diff(.82, .18);
+    // -------- rear: light signatures (layered bezel + lens + sliver) --------
+    const lamp = (w, h, x, y, mat) => {
+      add(w + .03, h + .03, .02, x, y, tZ - .012, M.dark);
+      add(w, h, .05, x, y, tZ, mat || M.tail);
+    };
+    const sig = spec.signature || car.signature;
+    if (sig === 'bar') {
+      const bw = widR * 1.5;
+      lamp(bw, key === 'sport' ? .11 : key === 'wedge' ? .05 : .08, 0, tY);
+      if (key === 'sport') [-1, 1].forEach((sd) => add(.02, .11, .05, sd * widR * .18, tY, tZ + .01, M.dark));
+      if (key === 'hyper') {
+        lamp(bw * .94, .02, 0, tY + .06);
+        [-1, 1].forEach((sd) => add(.02, .1, .04, sd * widR * .3, tY + .03, tZ + .01, M.chrome));
+      }
+    } else if (sig === 'dual') {
+      const w = key === 'hatch' ? widR * .3 : widR * .36, h = key === 'hatch' ? .16 : .11, xo = key === 'hatch' ? .46 : .5;
+      [-1, 1].forEach((sd) => lamp(w, h, sd * widR * xo, tY));
+    } else if (sig === 'quad') {
+      const w = key === 'rally' ? widR * .18 : key === 'supercar' ? widR * .19 : widR * .17;
+      const h = key === 'supercar' ? .14 : .11, step = key === 'supercar' ? .26 : .24, x0 = key === 'supercar' ? -.39 : -.36;
+      for (let i = 0; i < 4; i++) lamp(w, h, widR * (x0 + i * step), tY);
+    } else if (sig === 'tribar') {
+      const w = key === 'muscle' ? widR * .09 : widR * .06, h = key === 'muscle' ? .16 : .12, s0 = key === 'muscle' ? .28 : .3, s1 = key === 'muscle' ? .19 : .16;
+      [-1, 1].forEach((sd) => { for (let i = 0; i < 3; i++) lamp(w, h, sd * widR * (s0 + i * s1), tY); });
+      if (key === 'muscle') add(widR * .9, .03, .02, 0, tY - .02, tZ + .02, M.chrome);
+    } else if (sig === 'twin') {
+      [-1, 1].forEach((sd) => lamp(widR * .75, .1, sd * widR * .42, tY));
+      [-1, 1].forEach((sd) => add(widR * .3, .035, .03, sd * widR * .42, tY + .08, tZ, M.dark));
+    } else if (sig === 'twinbar') {
+      [-1, 1].forEach((sd) => lamp(widR * .95, .12, sd * widR * .38, tY));
+      add(widR * 1.55, .025, .02, 0, tY, tZ + .02, M.chrome);
+    } else if (sig === 'round') {
+      [-1, 1].forEach((sd) => {
+        add(.24, .24, .02, sd * widR * .5, tY, tZ - .01, M.dark);
+        const rl = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, .05, 14), M.tail);
+        rl.rotation.x = Math.PI / 2; rl.position.set(sd * widR * .5, tY, tZ);
+        group.add(rl);
+      });
+    } else if (sig === 'barfin') {
+      lamp(widR * 1.5, .09, 0, tY);
+      add(.026, .2, .55, 0, car.deckY + .1, tail - 1.05, M.paint);
+    } else if (sig === 'racetrack') {
+      if (key === 'ev') add(widR * 1.4, .08, .03, 0, tY, tZ + .005, M.tail);
+      lamp(widR * 1.5, .035, 0, tY + .05); lamp(widR * 1.5, .035, 0, tY - .05);
+      [-1, 1].forEach((sd) => lamp(.035, .13, sd * widR * .72, tY));
+    }
+    add(.44, .11, .03, 0, car.baseY + .22, tZ + .04, M.chrome);
+    add(.32, .06, .02, 0, car.baseY + .22, tZ + .055, M.dark);
+    if (key === 'supercar') add(.16, .02, .02, 0, car.roofY - .03, car.cabin[1] + .1, M.tail);
+    if (key === 'hatch') add(.2, .03, .03, 0, car.roofY - .02, car.cabin[1] + .12, M.tail);
+    if (key === 'ev') add(.5, .016, .02, 0, car.roofY - .02, car.cabin[1] + .15, M.tail);
+    if (key === 'hyper') add(.14, .02, .02, 0, car.tailY + .34, tail - .24, M.tail);
+    // reflectors (all but muscle/wedge keep the tail clean)
+    if (key !== 'muscle' && key !== 'wedge') [-1, 1].forEach((sd) => add(key === 'sport' ? .1 : .07, .04, .02, sd * widR * .46, car.baseY + .05, tail - .01, M.amber));
+    if (key === 'rally') {
+      [-1, 1].forEach((sd) => add(wid * .22, .18, .02, sd * widR * .42, car.baseY - .05, tail - .08, M.trim));
+      const loop = new THREE.Mesh(new THREE.TorusGeometry(.04, .012, 6, 12), M.orange);
+      loop.position.set(0, car.baseY + .08, tail + .1); group.add(loop);
+      add(.1, .05, .03, 0, tY - .18, tZ, M.amber);
+    }
+    // exhaust tips (+ socket + heat shield)
+    const exY = car.baseY + (key === 'muscle' || key === 'rally' || key === 'supercar' || key === 'hyper' ? .14 : .1);
+    const exZ = tail + (key === 'muscle' ? .09 : key === 'hyper' ? .1 : key === 'rally' || key === 'supercar' ? .08 : .06);
+    const tips = spec.exhaust === 'none' ? [] : spec.exhaust === 'single' ? [0] : spec.exhaust === 'dual' ? [-.5, .5] : [-.55, -.25, .25, .55];
+    const r0 = key === 'muscle' || key === 'hyper' ? .07 : key === 'rally' || key === 'supercar' ? .06 : key === 'sport' ? .06 : .05;
+    const r1 = r0 + .005, len = key === 'muscle' || key === 'hyper' ? .16 : .13;
+    tips.forEach((f) => {
+      add(r0 * 2 + .02, r0 * 2 + .02, .04, f * widR * 1.15, exY, exZ - .04, M.dark);
+      const tip = new THREE.Mesh(new THREE.CylinderGeometry(r0, r1, len + .04, 12), M.chrome);
+      tip.rotation.x = Math.PI / 2; tip.position.set(f * widR * 1.15, exY, exZ + .02);
+      group.add(tip);
+      if (key === 'supercar') add(.14, .14, .03, f * widR * 1.15, exY, exZ - .07, M.dark);
+    });
+    if (car.bed) {
+      const bedStart = car.cabin[1] + .15;
+      [-1, 1].forEach((sd) => add(.06, .14, Math.abs(tail - bedStart), sd * widR * .97, car.deckY + .05, (tail + bedStart) / 2, M.paint));
+      add(widR * 1.9, .12, .06, 0, car.deckY + .03, tail - .12, M.paint);
+      add(widR * 1.9, .07, .1, 0, car.baseY + .16, tail + .03, M.chrome);
+    }
+    if (car.boxy) {
+      [-1, 1].forEach((sd) => add(.02, car.deckY * .62, car.len * .45, sd * widR * 1.005, car.deckY * .5, .1, M.trim));
+      [-1, 1].forEach((sd) => add(.03, .05, car.len * .8, sd * widR * .94, car.roofY + .02, 0, M.trim));
+    }
+    if (car.chromeBumper) {
+      add(wid * 1.95, .12, .16, 0, .3, nose - .04, M.chrome);
+      add(widR * 1.95, .12, .16, 0, .32, tail + .04, M.chrome);
+    }
+    // wings
+    const wing = spec.wing || car.wing;
+    if (wing === 'duck' || wing === 'lip') {
+      if (key === 'wedge') add(widR * .72, .022, .26, 0, car.tailY + .01, tail - .18, M.paint, .42);
+      else {
+        add(widR * 1.2, .034, .28, 0, car.tailY + .045, tail - .18, M.paint, .28);
+        add(widR * 1.0, .02, .06, 0, car.tailY + .085, tail - .1, M.paint, .2);
+      }
+    } else if (wing === 'gt') {
+      const wy = car.tailY + .32, wz = tail - .22;
+      [-1, 1].forEach((sd) => add(.07, .36, .16, sd * widR * .5, car.tailY + .16, wz - .04, M.trim));
+      add(widR * 1.5, .065, .46, 0, wy, wz, M.trim);
+      add(widR * 1.5, .022, .44, 0, wy + .045, wz, M.paint);
+      [-1, 1].forEach((sd) => add(.035, .2, .42, sd * widR * .82, wy, wz, M.trim));
+    }
+    // interior
+    if (spec.interior) {
+      const mid = (car.cabin[0] + car.cabin[1]) / 2;
+      add(wid * 1.5, .1, .34, 0, belt - .18, car.cabin[0] - .05, M.interior);
+      add(wid * 1.55, .3, Math.abs(car.cabin[1] - car.cabin[0]) * .9, 0, belt - .38, mid + .1, M.interior);
+      [-1, 1].forEach((sd) => {
+        add(.42, .16, .46, sd * wid * .42, belt - .28, mid, M.seat);
+        add(.42, .5, .12, sd * wid * .42, belt - .1, mid + .24, M.seat, -.16);
+      });
+      const wheel = new THREE.Mesh(new THREE.TorusGeometry(.16, .028, 8, 20), M.interior);
+      wheel.position.set(wid * .42, belt - .16, car.cabin[0] - .02); wheel.rotation.x = 1.15;
+      group.add(wheel);
+    }
+  }
+
+function envSceneCanvas(accent) {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 256;
+    const g = c.getContext('2d');
+    const grd = g.createLinearGradient(0, 0, 0, 256);
+    grd.addColorStop(0, '#8ea3c9'); grd.addColorStop(.38, '#4a566f');
+    grd.addColorStop(.5, '#171c26'); grd.addColorStop(.56, '#0a0d13'); grd.addColorStop(1, '#04050a');
+    g.fillStyle = grd; g.fillRect(0, 0, 512, 256);
+    const blob = (x, y, r, color, alpha) => {
+      const rg = g.createRadialGradient(x, y, 0, x, y, r);
+      rg.addColorStop(0, color); rg.addColorStop(1, 'rgba(0,0,0,0)');
+      g.globalAlpha = alpha; g.fillStyle = rg; g.fillRect(x - r, y - r, r * 2, r * 2); g.globalAlpha = 1;
+    };
+    blob(118, 42, 70, '#ffffff', .6);
+    blob(140, 46, 34, '#ffffff', .7);
+    blob(390, 62, 78, '#cfe3ff', .38);
+    blob(258, 20, 62, accent || '#ffd9a0', .45);
+    blob(258, 120, 26, accent || '#ffe6c0', .35);
+    blob(255, 214, 210, '#030408', .92);
+    return c;
+  }
+
+function makeEnvTexture(THREE, renderer, accent, pmrem) {
+    try {
+      const tex = new THREE.CanvasTexture(envSceneCanvas(accent));
+      tex.encoding = THREE.sRGBEncoding;
+      tex.mapping = THREE.EquirectangularReflectionMapping;
+      return pmrem.fromEquirectangular(tex).texture;
+    } catch (e) { return null; }
+  }
+
 const CARS = {
     sport: {
       name: 'Sport Coupe', paint: '#c8102e', finish: 'metallic',
@@ -345,4 +558,4 @@ const CARS = {
     }
   }
 
-export { bodyGeometry, canopyGeometry, materials, buildWheel, buildStations, ringShaped, loftGeometry, CARS }
+export { bodyGeometry, canopyGeometry, materials, buildWheel, buildStations, ringShaped, loftGeometry, addDetails, boxPart, envSceneCanvas, makeEnvTexture, CARS }

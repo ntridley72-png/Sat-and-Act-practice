@@ -7,13 +7,16 @@
  */
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
+import { ACESFilmicToneMapping, sRGBEncoding } from 'three'
 import { Physics } from '@react-three/cannon'
 import { TrackMesh } from './art/TrackMesh'
+import { Sky } from './art/Sky'
 import { Grid } from './ai/Grid'
 import { Vehicle } from './player/Vehicle'
 import { Hud } from './ui/Hud'
 import { Intro, Finished, Help } from './ui/Screens'
 import { buildRacingLine, APEX_FLATS } from './ai/racingLine'
+import { gridSlot, yawForZForward } from './ai/gridSlots'
 import { mutation, resetOpponents } from './ai/mutation'
 import { playerMutation } from './player/config'
 import type { SkillName } from './ai/driver'
@@ -26,6 +29,8 @@ export type AppProps = {
   archetype?: string
   /** Host callback for "back to the arcade". */
   onQuit?: () => void
+  /** Base URL the game's assets are served from. */
+  assetBase?: string
 }
 
 type Phase = 'intro' | 'racing' | 'finished'
@@ -34,7 +39,7 @@ type Phase = 'intro' | 'racing' | 'finished'
  *  five-minute race is a five-minute detour from practice questions. */
 const RACE_LAPS = 2
 
-export function App({ opponents: initialOpponents, seed, skill = 'medium', paint: initialPaint, archetype: initialArchetype = 'sport', onQuit }: AppProps) {
+export function App({ opponents: initialOpponents, seed, skill = 'medium', paint: initialPaint, archetype: initialArchetype = 'sport', onQuit, assetBase }: AppProps) {
   const line = useMemo(() => buildRacingLine(APEX_FLATS), [])
 
   const [phase, setPhase] = useState<Phase>('intro')
@@ -90,7 +95,10 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
     setPhase('finished')
   }, [startedAt, line, opponents])
 
-  const startPoint = line.at(0)
+  /* The player is grid slot 0 -- pole. Same function the field uses, so the
+     formation actually agrees. yawForZForward because the raycast vehicle's
+     forward is +Z, not the +X the opponents use. */
+  const pole = useMemo(() => gridSlot(line, 0), [line])
 
   return (
     <div className="rv2-root">
@@ -101,20 +109,45 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
         shadows
         camera={{ position: [0, 6, -14], fov: 45 }}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
+        onCreated={({ gl }) => {
+          /* PBR needs both of these or it looks wrong in opposite directions.
+           * Without sRGB output the whole scene renders washed out and
+           * desaturated; without tone mapping the clearcoat highlights and
+           * the reflections clip to flat white instead of rolling off. The
+           * paint materials are physical materials with a clearcoat layer, so
+           * this is the difference between car paint and coloured plastic. */
+          gl.outputEncoding = sRGBEncoding
+          gl.toneMapping = ACESFilmicToneMapping
+          gl.toneMappingExposure = 1.15
+        }}
       >
-        <color attach="background" args={['#0f1216']} />
-        <fog attach="fog" args={['#0f1216', 180, 520]} />
-        <ambientLight intensity={0.35} />
+        {/* A graded sky, not a black void. The horizon was previously the
+            same near-black as the fog, so the world simply stopped at the
+            edge of the grass and the scene read as unfinished. Fog is tuned
+            to meet the sky colour so the two blend instead of banding. */}
+        <color attach="background" args={['#1b2434']} />
+        <fog attach="fog" args={['#1b2434', 140, 460]} />
+        <Sky />
+        {/* Three-light rig rather than one lamp. A single directional light
+            leaves one flank of every car in flat shadow and gives the
+            bodywork no edge to catch, which is most of why the cars read as
+            untextured blocks. Key defines form, fill lifts the shadow side
+            enough to show the surface, and a low rim behind picks out the
+            roofline and shoulder against the dark road. */}
+        <hemisphereLight args={['#9fb3d4', '#2a2e26', 0.45]} />
         <directionalLight
           position={[80, 120, 40]}
-          intensity={1.2}
+          intensity={1.45}
           castShadow
-          shadow-mapSize={[1024, 1024]}
-          shadow-camera-left={-200}
-          shadow-camera-right={200}
-          shadow-camera-top={200}
-          shadow-camera-bottom={-200}
+          shadow-mapSize={[2048, 2048]}
+          shadow-bias={-0.0004}
+          shadow-camera-left={-120}
+          shadow-camera-right={120}
+          shadow-camera-top={120}
+          shadow-camera-bottom={-120}
         />
+        <directionalLight position={[-60, 40, -30]} intensity={0.35} color="#9db6e0" />
+        <directionalLight position={[0, 25, -90]} intensity={0.5} color="#ffd9a8" />
 
         {/* stepSize must match FIXED_DT in Opponent.tsx: the driver and the
             solver have to advance together or a replay drifts. */}
@@ -122,10 +155,12 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
           <TrackMesh line={line} />
           <Vehicle
             key={`player-${runId}`}
-            position={[startPoint.x, 1, startPoint.y]}
-            rotation={[0, -startPoint.heading, 0]}
+            position={[pole.x, 1, pole.z]}
+            rotation={[0, yawForZForward(pole.heading), 0]}
             archetype={archetype}
             paint={paint}
+            assetBase={assetBase}
+            startDistance={pole.distance}
             onLap={onLap}
             line={line}
           />

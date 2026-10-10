@@ -9,6 +9,7 @@ import type { CylinderProps } from '@react-three/cannon'
 import type { Group } from 'three'
 import { buildWheel, materials, CARS } from '../art/carGeometry'
 import { wheelInfo } from './config'
+import { useEnvironment } from '../art/useEnvironment'
 
 interface WheelProps extends CylinderProps {
   leftSide?: boolean
@@ -17,6 +18,7 @@ interface WheelProps extends CylinderProps {
 
 export const Wheel = forwardRef<Group, WheelProps>(({ leftSide, paint, ...props }, ref) => {
   const { radius } = wheelInfo
+  const env = useEnvironment()
 
   useCompoundBody(
     () => ({
@@ -36,12 +38,12 @@ export const Wheel = forwardRef<Group, WheelProps>(({ leftSide, paint, ...props 
 
   const mesh = useMemo(() => {
     const car = CARS.sport
-    const mats = materials(THREE, paint ?? car.paint, car.finish, null)
+    const mats = materials(THREE, paint ?? car.paint, car.finish, env)
     // Scale the archetype's wheel to the physics radius, so the mesh and the
     // collider agree however the archetype was authored.
     const spec = { ...car.wheel, radius: wheelInfo.radius }
     return buildWheel(THREE, mats, spec, leftSide ? -1 : 1, { details: true })
-  }, [leftSide, paint])
+  }, [leftSide, paint, env])
 
   return (
     <group ref={ref} dispose={null}>

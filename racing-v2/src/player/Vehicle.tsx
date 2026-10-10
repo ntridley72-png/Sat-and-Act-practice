@@ -13,6 +13,7 @@ import type { Group } from 'three'
 import type { WheelInfoOptions } from '@react-three/cannon'
 import { createRef } from 'react'
 import { ProceduralCar } from '../art/ProceduralCar'
+import { useEnvironment } from '../art/useEnvironment'
 import { Wheel } from './Wheel'
 import { vehicleConfig, wheelInfo, playerMutation } from './config'
 import { useControls } from './useControls'
@@ -25,10 +26,19 @@ import { Dust } from '../effects/Dust'
 
 const { lerp } = MathUtils
 const v = new Vector3()
+// Reused each frame; allocating two Vector3s per frame is 120 a second.
+const camTarget = new Vector3()
+const lookTarget = new Vector3()
 
 /** Collision box height. The body mesh is offset down by half of this so the
  *  car's ground-level origin lines up with the bottom of the box. */
 const CHASSIS_HEIGHT = 1.2
+
+/** Chase camera placement, in the car's own frame. */
+const CAM_BACK = 9.5
+const CAM_HEIGHT = 3.6
+const CAM_SIDE = 3.5
+const CAM_LOOK_AHEAD = 7
 
 /* Boost. Drains while held and refills slowly when not, so it is a resource
  * to spend at the right moment rather than a second accelerator. The numbers
@@ -44,15 +54,23 @@ export interface VehicleProps {
   paint?: string
   /** The circuit, for lap tracking and the leaderboard. */
   line: RacingLine
+  /** Base URL for the audio files. */
+  assetBase?: string
+  /** Distance along the line this car starts at. The lap tracker MUST be
+   *  seeded with it: its search is local (+-59 m), so a tracker starting at 0
+   *  while the car sits at 588 m can never find the car, reports progress ~0,
+   *  and the player shows last on the grid at lights-out. */
+  startDistance?: number
   /** Called with the new lap count each time the player completes one. */
   onLap?: (lap: number) => void
 }
 
-export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype = 'sport', paint, line, onLap }: VehicleProps) {
-  const laps = useLapTracker(line)
+export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype = 'sport', paint, line, onLap, assetBase, startDistance = 0 }: VehicleProps) {
+  const laps = useLapTracker(line, startDistance)
   const lastLap = useRef(0)
   const defaultCamera = useThree((state) => state.camera)
   const controls = useControls()
+  const env = useEnvironment()
 
   const [chassisBody, chassisApi] = useBox(() => ({
     mass: 500,
@@ -110,7 +128,7 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
      browsers reject playback before one and a rejected play() would otherwise
      log an error on every sound. The first keypress arms it. */
   useLayoutEffect(() => {
-    const rig = new AudioRig()
+    const rig = new AudioRig(assetBase ? assetBase.replace(/\/?$/, '/') + 'sounds/' : undefined)
     rig.init()
     audio.current = rig
     const armOnce = () => {
@@ -157,7 +175,17 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
     const steerTarget = c.left ? steer : c.right ? -steer : 0
     s.steeringValue = lerp(s.steeringValue, steerTarget, delta * 14)
 
-    for (const i of [2, 3]) api.applyEngineForce(s.engineValue, i)
+    /* ENGINE SIGN IS NEGATED, and it is not arbitrary.
+     *
+     * The mesh faces +Z (ProceduralCar normalises it there to match
+     * upstream's front-axle-at-+1.35 convention), but cannon's raycast
+     * vehicle drives this chassis toward -Z. Measured, not guessed:
+     * bench/forward-test.cjs projects the car's displacement onto its own
+     * forward axis and found W moving -22.8 m along it while S moved +28.9 m.
+     * Negating here makes the physics agree with the bodywork, rather than
+     * flipping the mesh and leaving the collision box and the AI's
+     * convention disagreeing with it. */
+    for (const i of [2, 3]) api.applyEngineForce(-s.engineValue, i)
     for (const i of [0, 1]) api.setSteeringValue(s.steeringValue, i)
     for (const i of [0, 1, 2, 3]) api.setBrake(c.brake ? maxBrake : 0, i)
 
@@ -187,6 +215,18 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
       worldPos.current.copy(v)
       worldHeading.current = chassisBody.current.rotation.y
 
+      /* Debug probe. Harmless in production -- it writes two numbers to a
+         global that nothing reads -- and it is the only way to answer
+         "does the car go where it is pointing?" from a test, since a
+         screenshot cannot and a speed readout is unsigned. */
+      const probe = window as unknown as { __rv2probe?: () => unknown }
+      probe.__rv2probe = () => ({
+        x: v.x,
+        z: v.z,
+        yaw: chassisBody.current ? chassisBody.current.rotation.y : 0,
+        speed: playerMutation.speed,
+      })
+
       // Publish the player's progress so the AI avoids it and the leaderboard
       // can rank it against the field on the same scale.
       const lap = laps.update(v.x, v.z)
@@ -202,11 +242,31 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
       mutation.player.y = v.z
       mutation.player.active = true
 
-      defaultCamera.position.lerp(
-        v.clone().add(new Vector3(Math.sin(s.swayValue) * 10, 5.5, Math.cos(s.swayValue) * -12)),
-        Math.min(1, delta * 3),
-      )
-      defaultCamera.lookAt(v)
+      /* CHASE CAMERA, in the CAR'S frame.
+       *
+       * This was a fixed WORLD offset of -12 on Z, which only sits behind the
+       * car when the car happens to face +Z. Everywhere else on the circuit
+       * the camera hung off to one side or watched the car head-on -- and a
+       * car driving TOWARDS the camera makes every control read backwards,
+       * which is exactly how it was reported: "acceleration and braking are
+       * opposite". Nothing was wrong with the throttle.
+       *
+       * The offset is now rotated by the car's own yaw, so "behind" means
+       * behind the car rather than south of it. */
+      const yaw = chassisBody.current.rotation.y
+      // Local offset: back along the car's forward (-Z), and up.
+      const backX = -Math.sin(yaw) * CAM_BACK + Math.cos(yaw) * Math.sin(s.swayValue) * CAM_SIDE
+      const backZ = -Math.cos(yaw) * CAM_BACK - Math.sin(yaw) * Math.sin(s.swayValue) * CAM_SIDE
+
+      camTarget.set(v.x + backX, v.y + CAM_HEIGHT, v.z + backZ)
+      // Frame-rate-independent smoothing. A raw delta*k lerp snaps at low fps
+      // and crawls at high fps; this converges at the same rate either way.
+      defaultCamera.position.lerp(camTarget, 1 - Math.pow(0.0001, delta))
+
+      // Look slightly ahead of the car rather than at it, so the corner the
+      // player is about to take is on screen instead of the bodywork.
+      lookTarget.set(v.x + Math.sin(yaw) * CAM_LOOK_AHEAD, v.y + 0.8, v.z + Math.cos(yaw) * CAM_LOOK_AHEAD)
+      defaultCamera.lookAt(lookTarget)
     }
   })
 
@@ -222,7 +282,7 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
             cannon box is centred on its origin. Without this offset the
             bodywork floats half a box above its own wheels. */}
         <group position={[0, -CHASSIS_HEIGHT / 2, 0]}>
-          <ProceduralCar archetype={archetype} paint={paint} wheels={false} />
+          <ProceduralCar archetype={archetype} paint={paint} wheels={false} env={env} />
         </group>
       </group>
       {wheelRefs.current.map((ref, i) => (

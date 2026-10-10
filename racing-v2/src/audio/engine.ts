@@ -18,7 +18,21 @@
  *    is what upstream does.
  */
 
-const BASE = 'sounds/'
+/* Where the audio lives.
+ *
+ * NOT derived from import.meta.url. Vite rewrites that to `self.location` in
+ * this build, which is the PAGE's url, not the module's -- so the rig asked
+ * for /sounds/engine.mp3 while the files sit at /racing-v2/sounds/, and every
+ * sound 404'd. It stayed invisible because the rig is deliberately fail-quiet
+ * (a missing file is silence, not an error) and only showed up as unexplained
+ * 404s in the frame benchmark's page-error count.
+ *
+ * So the host passes the base it already computes. racing/index.js derives it
+ * from its own <script> tag, which is the one place that reliably knows where
+ * the game was served from. import.meta.env.BASE_URL is the fallback: correct
+ * for the configured deploy path, and better than a page-relative guess.
+ */
+const DEFAULT_BASE = (import.meta.env.BASE_URL || '/') + 'sounds/'
 
 /** Files the rig may load. Keys are the only names the rest of the code uses,
  *  so a typo is a type error rather than a silent 404. */
@@ -46,8 +60,8 @@ export class AudioRig {
   /** Resolved against the page, so the rig works from any mount path. */
   private base: string
 
-  constructor(baseUrl = BASE) {
-    this.base = baseUrl
+  constructor(baseUrl?: string) {
+    this.base = baseUrl || DEFAULT_BASE
   }
 
   /** Create the elements. Cheap: no network until play() or preload kicks in,

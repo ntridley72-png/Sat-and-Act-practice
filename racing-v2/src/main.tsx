@@ -30,6 +30,9 @@ export type MountOptions = {
      machine, so it is an explicit input rather than something generated
      inside the game. */
   seed?: string
+  /* Where the game's own assets are served from, e.g. "/racing-v2/". The
+     host knows this; the bundle cannot reliably work it out for itself. */
+  assetBase?: string
   /* Called when the player chooses to leave the game, so the host can restore
      whatever was on screen before. */
   onQuit?: () => void
@@ -87,7 +90,7 @@ export function mount(container: HTMLElement, options: MountOptions = {}): void 
     root.render(
       <StrictMode>
         <ErrorBoundary onError={options.onError}>
-          <App opponents={options.opponents ?? 0} seed={options.seed ?? 'default'} onQuit={options.onQuit} />
+          <App opponents={options.opponents ?? 0} seed={options.seed ?? 'default'} onQuit={options.onQuit} assetBase={options.assetBase} />
         </ErrorBoundary>
       </StrictMode>,
     )

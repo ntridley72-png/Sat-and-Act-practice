@@ -8,7 +8,9 @@ const EXEC = process.env.HOME + '/Library/Caches/ms-playwright/chromium-1234/chr
 const OUT = path.join(__dirname, 'shots')
 ;(async () => {
   fs.mkdirSync(OUT, { recursive: true })
-  const b = await chromium.launch({ executablePath: EXEC, args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader'] })
+  // Headed: the only way to get a real GPU here, so the screenshots show what
+  // a player actually sees rather than a software rasteriser's approximation.
+  const b = await chromium.launch({ executablePath: EXEC, headless: false, args: ['--no-sandbox'] })
   for (const n of [0, 4, 12]) {
     const p = await b.newPage({ viewport: { width: 1280, height: 720 } })
     const errs = []

@@ -6,7 +6,7 @@
  */
 import { useMemo } from 'react'
 import * as THREE from 'three'
-import { bodyGeometry, canopyGeometry, materials, buildWheel, CARS } from './carGeometry'
+import { bodyGeometry, canopyGeometry, materials, buildWheel, addDetails, CARS } from './carGeometry'
 import type { CarArchetype, CarMaterials } from './carGeometry'
 
 /* Lofting a body is not cheap, and a full grid wants thirteen of them. The
@@ -35,6 +35,9 @@ export type ProceduralCarProps = {
   paint?: string
   /** Opponents at distance skip brake calipers and similar detail. */
   detailed?: boolean
+  /** Reflection environment. Without it the metallic paint and clearcoat
+   *  have nothing to reflect and the car reads as flat plastic. */
+  env?: THREE.Texture | null
   /** Build the car's own wheels. FALSE for the player car, whose wheels are
    *  separate physics bodies positioned by the raycast vehicle's suspension.
    *  Leaving this true there gives the car eight wheels: four drawn by the
@@ -45,7 +48,7 @@ export type ProceduralCarProps = {
 /* The assembled car as a THREE.Group, memoised per (archetype, paint, detail).
  * Returned as a group rather than JSX because buildWheel already produces a
  * Group and re-expressing it as JSX would duplicate working code. */
-export function useProceduralCar({ archetype = 'sport', paint, detailed = true, wheels = true }: ProceduralCarProps) {
+export function useProceduralCar({ archetype = 'sport', paint, detailed = true, wheels = true, env = null }: ProceduralCarProps) {
   return useMemo(() => {
     const car = CARS[archetype] ?? CARS.sport
     const colour = paint ?? car.paint
@@ -53,7 +56,7 @@ export function useProceduralCar({ archetype = 'sport', paint, detailed = true, 
 
     // Materials are per-car: paint is what distinguishes opponents, so these
     // are NOT shared. They are cheap next to the loft.
-    const mats: CarMaterials = materials(THREE, colour, car.finish, null)
+    const mats: CarMaterials = materials(THREE, colour, car.finish, env)
 
     /* ORIENTATION NORMALISED HERE, once, so no consumer has to think about it.
      *
@@ -83,6 +86,21 @@ export function useProceduralCar({ archetype = 'sport', paint, detailed = true, 
     // car would look like it had a roof box.
     oriented.add(canopy)
 
+    /* Lights, wings, exhausts, vents, splitters and trim.
+     *
+     * The archetype table has always declared these per car -- signature
+     * 'twin', wing 'duck', exhaust 'quad', vents true -- but the first port
+     * skipped the builder that reads them, so every car rendered as a smooth
+     * untrimmed shell with none of the features its own data asked for. This
+     * is the single biggest visual difference between the cars and a block. */
+    try {
+      addDetails(THREE, car, oriented, mats, { ...car, key: archetype })
+    } catch (err) {
+      // A detail builder failing must not cost the whole car. Better a plain
+      // body than no body, on a page whose job is SAT practice.
+      if (typeof console !== 'undefined') console.warn('car detail pass failed:', err)
+    }
+
     const w = car.wheel
     const halfBase = car.wheelbase / 2
     for (const [zi, z] of (wheels ? [-halfBase, halfBase] : []).entries()) {
@@ -99,7 +117,7 @@ export function useProceduralCar({ archetype = 'sport', paint, detailed = true, 
     }
 
     return { group, car, materials: mats }
-  }, [archetype, paint, detailed, wheels])
+  }, [archetype, paint, detailed, wheels, env])
 }
 
 /** Drop-in mesh for a car. Position and rotation are the caller's business. */

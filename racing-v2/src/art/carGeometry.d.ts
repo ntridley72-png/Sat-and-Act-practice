@@ -81,6 +81,40 @@ export declare function buildWheel(
   opts?: { details?: boolean },
 ): THREE.Group
 
+/** Add lights, wings, exhausts, vents, splitters and trim to an assembled car
+ *  group. The archetype table already declares these per car (signature,
+ *  wing, exhaust, vents, popups), so omitting this call throws that detail
+ *  away and leaves a smooth, unconvincing shell. */
+export declare function addDetails(
+  three: typeof THREE,
+  car: CarArchetype,
+  group: THREE.Group,
+  m: CarMaterials,
+  spec: CarArchetype & { key?: string },
+): void
+
+export declare function boxPart(
+  three: typeof THREE,
+  m: CarMaterials,
+  w: number, h: number, d: number,
+  x: number, y: number, z: number,
+  mat: THREE.Material,
+  rx?: number, ry?: number,
+): THREE.Mesh
+
+/** Build a PMREM environment map from a procedurally drawn canvas. No image
+ *  file is involved: the sky, the key light and the ground are painted as
+ *  gradients and radial blobs in code, which is what keeps the reflections
+ *  original. Returns null if PMREM is unavailable. */
+export declare function makeEnvTexture(
+  three: typeof THREE,
+  renderer: THREE.WebGLRenderer,
+  accent: string | null,
+  pmrem: THREE.PMREMGenerator,
+): THREE.Texture | null
+
+export declare function envSceneCanvas(accent: string | null): HTMLCanvasElement
+
 export declare function buildStations(car: CarArchetype): number[][]
 export declare function ringShaped(
   w: number, y0: number, y1: number,

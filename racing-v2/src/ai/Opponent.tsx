@@ -29,9 +29,11 @@ import { useFrame } from '@react-three/fiber'
 import { useBox } from '@react-three/cannon'
 import type { Triplet } from '@react-three/cannon'
 import { ProceduralCar } from '../art/ProceduralCar'
+import { useEnvironment } from '../art/useEnvironment'
 import { createDriver, type SkillName, type DriverCar } from './driver'
 import type { RacingLine } from './racingLine'
 import { mutation, rivalsFor } from './mutation'
+import { yawForXForward, type GridSlot } from './gridSlots'
 
 /** Matches the planning model used to calibrate CORNER_BUDGET. Changing these
  *  invalidates that measurement -- re-run tools/calibrate-corner-budget.mjs. */
@@ -71,21 +73,17 @@ export interface OpponentProps {
   seed: string
   archetype: string
   paint: string
-  /** Metres along the line at the start, i.e. grid slot. */
-  startDistance: number
-  /** Lateral offset from the centreline at the start, metres. Positive is to
-   *  the left of travel. Grid rows use this to stand two cars abreast. */
-  lateral?: number
+  /** This car's slot on the starting grid. */
+  slot: GridSlot
   /** Distant cars update less often. §7.5: degrade before cutting grid size. */
   detailed?: boolean
 }
 
-export function Opponent({ index, line, skill, seed, archetype, paint, startDistance, lateral = 0 }: OpponentProps) {
-  const start = line.at(startDistance)
-  // Offset along the line's left normal, so a grid row sits across the track
-  // rather than along it.
-  const startX = start.x + -Math.sin(start.heading) * lateral
-  const startZ = start.y + Math.cos(start.heading) * lateral
+export function Opponent({ index, line, skill, seed, archetype, paint, slot }: OpponentProps) {
+  const env = useEnvironment()
+  const startX = slot.x
+  const startZ = slot.z
+  const startDistance = slot.distance
 
   const [ref, api] = useBox(() => ({
     mass: MASS,
@@ -98,7 +96,7 @@ export function Opponent({ index, line, skill, seed, archetype, paint, startDist
     // bodywork, which reads as cars bouncing off thin air.
     args: [4.3, BODY_HEIGHT, 1.8] as Triplet,
     position: [startX, 0.8, startZ],
-    rotation: [0, -start.heading, 0],
+    rotation: [0, yawForXForward(slot.heading), 0],
     angularDamping: 0.6,
     linearDamping: 0.02,
   }))
@@ -110,7 +108,7 @@ export function Opponent({ index, line, skill, seed, archetype, paint, startDist
      re-render the whole grid 60 times a second. */
   const pos = useRef<Triplet>([startX, 0.8, startZ])
   const vel = useRef<Triplet>([0, 0, 0])
-  const rot = useRef<Triplet>([0, -start.heading, 0])
+  const rot = useRef<Triplet>([0, yawForXForward(slot.heading), 0])
   const angVel = useRef<Triplet>([0, 0, 0])
 
   useEffect(() => {
@@ -273,7 +271,7 @@ export function Opponent({ index, line, skill, seed, archetype, paint, startDist
           a car whose origin is GROUND LEVEL, while a cannon box is centred on
           its origin, so without this the bodywork floats half a box up. */}
       <group rotation={[0, Math.PI / 2, 0]} position={[0, -BODY_HEIGHT / 2, 0]}>
-        <ProceduralCar archetype={archetype} paint={paint} />
+        <ProceduralCar archetype={archetype} paint={paint} env={env} />
       </group>
     </group>
   )

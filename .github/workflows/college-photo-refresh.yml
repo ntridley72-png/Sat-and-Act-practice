@@ -1,0 +1,80 @@
+# Cloud college photo refresh.
+#
+# Runs the resumable Wikimedia Commons crawl on a GitHub runner and commits the
+# rebaked college-data.js plus the updated photo cache back to the branch it was
+# dispatched on. Dispatch from the Actions tab or with:
+#   gh workflow run college-photo-refresh.yml --ref <branch>
+name: College photo refresh
+
+on:
+  # A push of this workflow file itself starts the crawl, because
+  # workflow_dispatch only resolves workflows that exist on the default branch.
+  push:
+    branches:
+      - college-photo-refresh
+      - main
+    paths:
+      - ".github/workflows/college-photo-refresh.yml"
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Optional comma-separated college names (targeted run)"
+        required: false
+        default: ""
+      throttle:
+        description: "Seconds between Wikimedia API calls"
+        required: false
+        default: "1.8"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: college-photo-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Seed source data (ed.gov and NCES block runner IPs)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download refresh-data -D scripts/.cache --clobber
+
+      - name: Refresh photos and rebake the bundle
+        env:
+          PHOTO_ONLY: ${{ inputs.only }}
+          WIKI_THROTTLE: ${{ inputs.throttle || '1.8' }}
+        run: python3 -u scripts/build-college-data.py
+
+      - name: Validate the bundle
+        id: validate
+        if: always()
+        run: node tests/college-images.cjs
+
+      - name: Commit the refreshed bundle and cache
+        if: always()
+        run: |
+          set +e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ "${{ steps.validate.outcome }}" = "success" ]; then
+            git add college-data.js
+          fi
+          git add -f scripts/.cache/photos.json
+          if git diff --cached --quiet; then
+            echo "Nothing new to commit."
+          else
+            git commit -m "College photos: cloud refresh [skip ci]"
+            git push origin HEAD:${{ github.ref_name }}
+          fi

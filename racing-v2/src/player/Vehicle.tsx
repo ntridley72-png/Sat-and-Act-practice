@@ -67,10 +67,13 @@ export interface VehicleProps {
   startDistance?: number
   /** Called with the new lap count each time the player completes one. */
   onLap?: (lap: number) => void
+  /** Ordered checkpoint distances; a lap only counts when all were crossed
+   *  on-road in order. See ai/checkpoints.ts. */
+  gates?: readonly number[]
 }
 
-export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype = 'sport', paint, line, onLap, assetBase, startDistance = 0 }: VehicleProps) {
-  const laps = useLapTracker(line, startDistance)
+export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype = 'sport', paint, line, onLap, assetBase, startDistance = 0, gates = [] }: VehicleProps) {
+  const laps = useLapTracker(line, startDistance, gates)
   const lastLap = useRef(0)
   const defaultCamera = useThree((state) => state.camera)
   const controls = useControls()

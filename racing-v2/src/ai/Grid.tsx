@@ -30,9 +30,11 @@ export interface GridProps {
   raceSeed: string
   /** Uniform skill, or a per-car list. */
   skill?: SkillName | readonly SkillName[]
+  /** Ordered checkpoint distances shared with the player. */
+  gates?: readonly number[]
 }
 
-export function Grid({ line, count, raceSeed, skill = 'medium' }: GridProps) {
+export function Grid({ line, count, raceSeed, skill = 'medium', gates = [] }: GridProps) {
   const cars = useMemo(() => {
     const n = Math.max(0, Math.min(MAX_OPPONENTS, count))
     // All assignment draws come from ONE seeded stream, so the same raceSeed
@@ -64,6 +66,7 @@ export function Grid({ line, count, raceSeed, skill = 'medium' }: GridProps) {
           archetype={c.archetype}
           paint={c.paint}
           slot={c.slot}
+          gates={gates}
         />
       ))}
     </>

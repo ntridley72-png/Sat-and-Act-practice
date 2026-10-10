@@ -15,7 +15,7 @@ import { Grid } from './ai/Grid'
 import { Vehicle } from './player/Vehicle'
 import { Hud } from './ui/Hud'
 import { Intro, Finished, Help } from './ui/Screens'
-import { buildTrackLine, trackById, DEFAULT_TRACK_ID } from './tracks/catalog'
+import { buildTrackLine, trackById, trackGates, DEFAULT_TRACK_ID } from './tracks/catalog'
 import { gridSlot, yawForZForward } from './ai/gridSlots'
 import { mutation, resetOpponents } from './ai/mutation'
 import { playerMutation } from './player/config'
@@ -40,7 +40,9 @@ type Phase = 'intro' | 'racing' | 'finished'
 const RACE_LAPS = 2
 
 export function App({ opponents: initialOpponents, seed, skill = 'medium', paint: initialPaint, archetype: initialArchetype = 'sport', onQuit, assetBase }: AppProps) {
-  const line = useMemo(() => buildTrackLine(trackById(DEFAULT_TRACK_ID)), [])
+  const track = useMemo(() => trackById(DEFAULT_TRACK_ID), [])
+  const line = useMemo(() => buildTrackLine(track), [track])
+  const gates = useMemo(() => trackGates(track, line), [track, line])
 
   const [phase, setPhase] = useState<Phase>('intro')
   const [opponents, setOpponents] = useState(initialOpponents)
@@ -166,8 +168,9 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
             startDistance={pole.distance}
             onLap={onLap}
             line={line}
+            gates={gates}
           />
-          <Grid key={`grid-${runId}`} line={line} count={opponents} raceSeed={`${seed}:${runId}`} skill={skill} />
+          <Grid key={`grid-${runId}`} line={line} count={opponents} raceSeed={`${seed}:${runId}`} skill={skill} gates={gates} />
         </Physics>
       </Canvas>
 

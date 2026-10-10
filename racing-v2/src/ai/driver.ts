@@ -33,6 +33,7 @@
  */
 import { createStream, type Stream } from './random'
 import type { RacingLine } from './racingLine'
+import { createLapGate, type LapGate } from './checkpoints'
 
 export type SkillName = 'easy' | 'medium' | 'hard'
 
@@ -166,6 +167,10 @@ export interface DriverOptions {
   grip?: number
   /** Override the planning budget. Used by the calibration harness. */
   cornerBudget?: number
+  /** Ordered checkpoint distances (metres). When provided, a lap only counts
+   *  after every gate was crossed in order within its lateral window. Omit
+   *  for the legacy travelled-lap semantics (planning-only harnesses). */
+  gates?: readonly number[]
 }
 
 export interface DriverDebug {
@@ -187,14 +192,12 @@ export class Driver {
   private rng: Stream
   private budget: number
   private grip: number
+  private gate: LapGate
 
   private offset = 0
   private targetOffset = 0
   private steerState = 0
   progress: number
-  /** Unwrapped distance travelled. Laps derive from this rather than from
-   *  detecting a wrap, so reversing over the line cannot mint a lap. */
-  private travelled = 0
   lap = 0
   debug: DriverDebug | null = null
 
@@ -207,6 +210,7 @@ export class Driver {
     this.id = opts.id ?? 'ai'
     this.grip = clamp(opts.grip ?? 1, 0.2, 1)
     this.budget = opts.cornerBudget ?? CORNER_BUDGET
+    this.gate = createLapGate(this.line, opts.gates ?? [], this.progress)
   }
 
   /* Where along the line this car is. Walks forward from the last known point
@@ -227,21 +231,16 @@ export class Driver {
         best = d
       }
     }
-    /* Laps from UNWRAPPED travel, not from a wrap test.
+    /* Laps come from the ordered checkpoint gate, not a wrap test.
      *
      * The old test (`best < progress - length/2`) counted a lap on any
      * forward wrap and had no inverse. A car that crossed the line, reversed
-     * back over it and crossed again scored two laps for one: the reverse
-     * moved progress 0 -> ~594 without decrementing anything. Accumulating a
-     * shortest-path delta makes reversing subtract, so the sequence
-     * forward/back/forward nets exactly one. */
-    const prev = this.progress
-    let delta = best - prev
-    if (delta > line.length * 0.5) delta -= line.length
-    else if (delta < -line.length * 0.5) delta += line.length
-    this.travelled += delta
-    this.lap = Math.floor(this.travelled / line.length)
+     * back over it and crossed again scored two laps for one. Unwrapped-travel
+     * laps fixed that, but travel alone still let a corner cut that jumped
+     * ahead in the local search window mint distance. The gate in
+     * checkpoints.ts is the current rule. */
     this.progress = best
+    this.lap = this.gate.update(best, state.x, state.y)
     return best
   }
 

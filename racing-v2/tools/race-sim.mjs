@@ -10,10 +10,12 @@
  * not cannon -- stated plainly -- but it is the model the driver was tuned
  * against, and a skill ordering that failed here would fail there too.
  */
-import { trackById, buildTrackLine, DEFAULT_TRACK_ID } from '../src/tracks/catalog'
+import { trackById, buildTrackLine, trackGates, DEFAULT_TRACK_ID } from '../src/tracks/catalog'
 import { createDriver, G } from '../src/ai/driver'
 
-const line = buildTrackLine(trackById(process.env.TRACK))
+const track = trackById(process.env.TRACK)
+const line = buildTrackLine(track)
+const gates = trackGates(track, line)
 const CAR = { wheelbase: 2.65, maxSteer: 0.5, gripG: 1.4 }
 const M = 1500, IZ = 2200, A = 1.35, B = 1.30, CF = 95000, CR = 110000
 const MU = CAR.gripG, HALF_W = 0.9, FORCE = 1800 * 4, MAX_BRAKE = 65 * 4 * 90
@@ -22,7 +24,7 @@ const DT = 1 / 60
 function race(skill, seed, laps = 2) {
   const start = line.at(0)
   let x = start.x, y = start.y, psi = start.heading, vx = 10, vy = 0, r = 0
-  const d = createDriver({ line, car: CAR, skill, seed })
+  const d = createDriver({ line, car: CAR, skill, seed, gates })
   let t = 0, offRoad = 0, worstOff = 0, topSpeed = 0, lapTime = null
 
   while (t < 600) {
@@ -59,7 +61,7 @@ function race(skill, seed, laps = 2) {
 }
 
 const SEEDS = ['a', 'b', 'c', 'd', 'e']
-console.log(`Apex Flats, ${line.length.toFixed(0)} m, 2 laps, 5 seeds per skill\n`)
+console.log(`${track.name}, ${line.length.toFixed(0)} m, 2 laps, 5 seeds per skill, ${gates.length} checkpoints enforced\n`)
 console.log('skill    finished   best lap   mean lap   spread   top speed   off-road ticks')
 
 const summary = []

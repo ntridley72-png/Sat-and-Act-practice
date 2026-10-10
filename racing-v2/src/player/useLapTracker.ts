@@ -1,17 +1,19 @@
 /* Lap tracking for the player.
  *
- * Uses the SAME definition as the AI (see Driver.locate): laps are full
- * circuit lengths of unwrapped net travel, not line crossings. Two reasons to
- * keep them identical rather than writing something simpler here:
+ * Uses the SAME definition as the AI (see Driver.locate): laps are full,
+ * ordered, on-road passages of the circuit's checkpoints, not line crossings
+ * and not mere distance. Two reasons to keep them identical rather than
+ * writing something simpler here:
  *
  *   - the leaderboard compares player and AI progress directly, so a
  *     different definition on each side would produce a standings table that
  *     is subtly wrong and very hard to debug;
- *   - unwrapped travel is immune to finish-line oscillation, which is what
- *     broke the AI's first lap counter.
+ *   - the ordered gate is immune to finish-line oscillation AND to corner
+ *     cuts that gain distance in the local search window (checkpoints.ts).
  */
 import { useRef } from 'react'
 import type { RacingLine } from '../ai/racingLine'
+import { createLapGate } from '../ai/checkpoints'
 
 export interface LapTracker {
   /** Feed a world position. Returns the current lap count. */
@@ -20,17 +22,20 @@ export interface LapTracker {
   lap: number
 }
 
-export function useLapTracker(line: RacingLine, startDistance = 0): LapTracker {
+export function useLapTracker(line: RacingLine, startDistance = 0, gates: readonly number[] = []): LapTracker {
   const ref = useRef<LapTracker | null>(null)
   if (!ref.current) {
     let progress = startDistance
-    let travelled = 0
     let lap = 0
+    // The same ordered-checkpoint rule the AI uses. The tracker feeds the
+    // gate its position, not just progress, so the lateral window can be
+    // checked at the crossing.
+    const gate = createLapGate(line, gates, startDistance)
 
     const tracker: LapTracker = {
       get progress() { return progress },
       get lap() { return lap },
-      update(x: number, z: number) {
+      update(x, z) {
         // Local search around the last known point, as the driver does: O(1)
         // and it cannot latch onto the wrong part of a closed circuit.
         const span = 60
@@ -43,12 +48,8 @@ export function useLapTracker(line: RacingLine, startDistance = 0): LapTracker {
           const dist = (p.x - x) ** 2 + (p.y - z) ** 2
           if (dist < bestD) { bestD = dist; best = d }
         }
-        let delta = best - progress
-        if (delta > line.length * 0.5) delta -= line.length
-        else if (delta < -line.length * 0.5) delta += line.length
-        travelled += delta
         progress = best
-        lap = Math.floor(travelled / line.length)
+        lap = gate.update(best, x, z)
         return lap
       },
     }

@@ -4,18 +4,26 @@
  * meshes, textures or fonts; the only third-party assets are six CC0 audio
  * files, recorded in public/sounds/PROVENANCE.md and verified by hash in
  * tools/compliance-gate.mjs.
+ *
+ * THE TRACK IS DATA. Everything visual and physical here -- line, gates,
+ * palette, scenery, off-road surface, speed cap, AI budget -- comes from the
+ * selected TrackDefinition (src/tracks/catalog.ts). The App itself is
+ * track-agnostic, which is what lets new circuits ship as data.
  */
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { ACESFilmicToneMapping, sRGBEncoding } from 'three'
 import { Physics } from '@react-three/cannon'
 import { TrackMesh } from './art/TrackMesh'
+import { Scenery } from './art/Scenery'
 import { Sky } from './art/Sky'
 import { Grid } from './ai/Grid'
 import { Vehicle } from './player/Vehicle'
 import { Hud } from './ui/Hud'
 import { Intro, Finished, Help } from './ui/Screens'
-import { buildTrackLine, trackById, trackGates, DEFAULT_TRACK_ID } from './tracks/catalog'
+import { buildTrackLine, trackById, trackGates, TRACKS, DEFAULT_TRACK_ID } from './tracks/catalog'
+import { readSavedTrack, saveTrack } from './tracks/selection'
+import { THEMES } from './tracks/format'
 import { gridSlot, yawForZForward } from './ai/gridSlots'
 import { mutation, resetOpponents } from './ai/mutation'
 import { playerMutation } from './player/config'
@@ -31,6 +39,9 @@ export type AppProps = {
   onQuit?: () => void
   /** Base URL the game's assets are served from. */
   assetBase?: string
+  /** Track id requested by the host. Wins over the saved selection; an
+   *  unknown id falls back to the default with no error. */
+  track?: string
 }
 
 type Phase = 'intro' | 'racing' | 'finished'
@@ -39,10 +50,23 @@ type Phase = 'intro' | 'racing' | 'finished'
  *  five-minute race is a five-minute detour from practice questions. */
 const RACE_LAPS = 2
 
-export function App({ opponents: initialOpponents, seed, skill = 'medium', paint: initialPaint, archetype: initialArchetype = 'sport', onQuit, assetBase }: AppProps) {
-  const track = useMemo(() => trackById(DEFAULT_TRACK_ID), [])
+export function App({ opponents: initialOpponents, seed, skill = 'medium', paint: initialPaint, archetype: initialArchetype = 'sport', onQuit, assetBase, track: initialTrack }: AppProps) {
+  /* Selection precedence: explicit host request > saved choice > default.
+   * trackById validates: an id from localStorage or a host option is not
+   * trusted, and anything unknown lands on a working circuit. */
+  const [trackId, setTrackId] = useState<string>(() =>
+    initialTrack ? trackById(initialTrack).id : (readSavedTrack() ?? DEFAULT_TRACK_ID),
+  )
+  const track = useMemo(() => trackById(trackId), [trackId])
   const line = useMemo(() => buildTrackLine(track), [track])
   const gates = useMemo(() => trackGates(track, line), [track, line])
+  const theme = THEMES[track.theme]
+
+  const chooseTrack = useCallback((id: string) => {
+    const valid = trackById(id).id
+    setTrackId(valid)
+    saveTrack(valid)
+  }, [])
 
   const [phase, setPhase] = useState<Phase>('intro')
   const [opponents, setOpponents] = useState(initialOpponents)
@@ -100,7 +124,7 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
   /* The player is grid slot 0 -- pole. Same function the field uses, so the
      formation actually agrees. yawForZForward because the raycast vehicle's
      forward is +Z, not the +X the opponents use. */
-  const pole = useMemo(() => gridSlot(line, 0), [line])
+  const pole = useMemo(() => gridSlot(line, 0, track.grid), [line, track])
 
   return (
     <div className="rv2-root">
@@ -123,23 +147,23 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
           gl.toneMappingExposure = 1.15
         }}
       >
-        {/* A graded sky, not a black void. The horizon was previously the
-            same near-black as the fog, so the world simply stopped at the
-            edge of the grass and the scene read as unfinished. Fog is tuned
-            to meet the sky colour so the two blend instead of banding. */}
-        <color attach="background" args={['#1b2434']} />
-        <fog attach="fog" args={['#1b2434', 140, 460]} />
-        <Sky />
+        {/* The world reads as a place, not a void, because sky, fog and
+            ground are pulled from the track's theme. Fog is tuned to meet the
+            sky colour so the two blend instead of banding. */}
+        <color attach="background" args={[theme.background]} />
+        <fog attach="fog" args={[theme.fog.color, theme.fog.near, theme.fog.far]} />
+        <Sky top={theme.sky.top} horizon={theme.sky.horizon} bottom={theme.sky.bottom} />
         {/* Three-light rig rather than one lamp. A single directional light
             leaves one flank of every car in flat shadow and gives the
             bodywork no edge to catch, which is most of why the cars read as
             untextured blocks. Key defines form, fill lifts the shadow side
             enough to show the surface, and a low rim behind picks out the
             roofline and shoulder against the dark road. */}
-        <hemisphereLight args={['#9fb3d4', '#2a2e26', 0.45]} />
+        <hemisphereLight args={[theme.hemi.sky, theme.hemi.ground, theme.hemi.intensity]} />
         <directionalLight
           position={[80, 120, 40]}
-          intensity={1.45}
+          color={theme.key.color}
+          intensity={theme.key.intensity}
           castShadow
           shadow-mapSize={[2048, 2048]}
           shadow-bias={-0.0004}
@@ -152,12 +176,13 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
           shadow-camera-bottom={-120}
         />
         <directionalLight position={[-60, 40, -30]} intensity={0.35} color="#9db6e0" />
-        <directionalLight position={[0, 25, -90]} intensity={0.5} color="#ffd9a8" />
+        <directionalLight position={[0, 25, -90]} intensity={theme.rim.intensity} color={theme.rim.color} />
 
         {/* stepSize must match FIXED_DT in Opponent.tsx: the driver and the
             solver have to advance together or a replay drifts. */}
         <Physics gravity={[0, -9.81, 0]} broadphase="SAP" allowSleep={false} stepSize={1 / 60}>
-          <TrackMesh line={line} />
+          <TrackMesh line={line} theme={theme} hazards={track.hazards} />
+          <Scenery def={track} line={line} />
           <Vehicle
             key={`player-${runId}`}
             position={[pole.x, 1, pole.z]}
@@ -169,8 +194,9 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
             onLap={onLap}
             line={line}
             gates={gates}
+            topSpeed={track.ai.topSpeed}
           />
-          <Grid key={`grid-${runId}`} line={line} count={opponents} raceSeed={`${seed}:${runId}`} skill={skill} gates={gates} />
+          <Grid key={`grid-${runId}`} line={line} count={opponents} raceSeed={`${seed}:${runId}`} skill={skill} gates={gates} cornerBudget={track.ai.cornerBudget} />
         </Physics>
       </Canvas>
 
@@ -186,6 +212,9 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
           initialPaint={initialPaint}
           initialArchetype={initialArchetype}
           initialOpponents={initialOpponents}
+          tracks={TRACKS}
+          trackId={track.id}
+          onTrackChange={chooseTrack}
         />
       )}
       {phase === 'finished' && (

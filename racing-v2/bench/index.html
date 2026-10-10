@@ -8,7 +8,8 @@
 <script type="module">
   // Loads the PRODUCTION bundle, not dev mode, exactly as the site would.
   const mod = await import('/racing-v2/racing-v2.js')
-  const n = Number(new URLSearchParams(location.search).get('opponents') ?? 0)
+  const params = new URLSearchParams(location.search)
+  const n = Number(params.get('opponents') ?? 0)
   window.__frames = []
   let last = performance.now()
   function tick(t) {
@@ -16,7 +17,11 @@
     last = t
     requestAnimationFrame(tick)
   }
-  mod.mount(document.getElementById('root'), { opponents: n, seed: 'bench' })
+  mod.mount(document.getElementById('root'), {
+    opponents: n,
+    seed: 'bench',
+    track: params.get('track') ?? undefined,
+  })
   requestAnimationFrame(tick)
   window.__ready = true
 </script>

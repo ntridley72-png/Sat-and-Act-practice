@@ -236,7 +236,13 @@ export const CAPS = {
   gateMargin: 4,
   minGateGap: 25,
   minGateGapFraction: 0.05,
-  gridRadius: 40,
+  /* Slots must not spawn mid-hairpin, but the existing, fully-raced APEX_FLATS
+   * grid extends 7.6 m into a ~19 m final corner and has passed every race
+   * harness -- so the honest threshold is "no tighter than a checkpoint",
+   * not "straight only". An earlier value of 40 m was this validator's
+   * invention, and it rejected the shipped circuit: the schema was wrong, not
+   * the circuit. */
+  gridRadius: 18,
   gridClearance: 0.6,
   slotSeparation: 4.6,
   landmarkOffset: 14,

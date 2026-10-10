@@ -79,9 +79,11 @@ export interface OpponentProps {
   detailed?: boolean
   /** Ordered checkpoint distances; see ai/checkpoints.ts. */
   gates?: readonly number[]
+  /** Per-track planning budget; see Grid. */
+  cornerBudget?: number
 }
 
-export function Opponent({ index, line, skill, seed, archetype, paint, slot, gates = [] }: OpponentProps) {
+export function Opponent({ index, line, skill, seed, archetype, paint, slot, gates = [], cornerBudget }: OpponentProps) {
   const env = useEnvironment()
   const startX = slot.x
   const startZ = slot.z
@@ -103,7 +105,7 @@ export function Opponent({ index, line, skill, seed, archetype, paint, slot, gat
     linearDamping: 0.02,
   }))
 
-  const driver = useRef(createDriver({ line, car: DRIVER_CAR, skill, seed, startDistance, id: `ai-${index}`, gates }))
+  const driver = useRef(createDriver({ line, car: DRIVER_CAR, skill, seed, startDistance, id: `ai-${index}`, gates, cornerBudget }))
 
   /* Body state is read through cannon's subscriptions into plain refs, never
      into React state: these change every frame and a setState here would

@@ -24,7 +24,7 @@ const DT = 1 / 60
 function race(skill, seed, laps = 2) {
   const start = line.at(0)
   let x = start.x, y = start.y, psi = start.heading, vx = 10, vy = 0, r = 0
-  const d = createDriver({ line, car: CAR, skill, seed, gates })
+  const d = createDriver({ line, car: CAR, skill, seed, gates, cornerBudget: track.ai.cornerBudget })
   let t = 0, offRoad = 0, worstOff = 0, topSpeed = 0, lapTime = null
 
   while (t < 600) {

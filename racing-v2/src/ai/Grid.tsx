@@ -32,9 +32,12 @@ export interface GridProps {
   skill?: SkillName | readonly SkillName[]
   /** Ordered checkpoint distances shared with the player. */
   gates?: readonly number[]
+  /** Per-track planning budget, measured by tools/calibrate-corner-budget.mjs.
+   *  Falls back to the module default when absent (legacy behaviour). */
+  cornerBudget?: number
 }
 
-export function Grid({ line, count, raceSeed, skill = 'medium', gates = [] }: GridProps) {
+export function Grid({ line, count, raceSeed, skill = 'medium', gates = [], cornerBudget }: GridProps) {
   const cars = useMemo(() => {
     const n = Math.max(0, Math.min(MAX_OPPONENTS, count))
     // All assignment draws come from ONE seeded stream, so the same raceSeed
@@ -67,6 +70,7 @@ export function Grid({ line, count, raceSeed, skill = 'medium', gates = [] }: Gr
           paint={c.paint}
           slot={c.slot}
           gates={gates}
+          cornerBudget={cornerBudget}
         />
       ))}
     </>

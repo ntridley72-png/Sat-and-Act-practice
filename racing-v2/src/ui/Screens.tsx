@@ -7,6 +7,7 @@
 import { useState } from 'react'
 import { PALETTE } from '../ai/Grid'
 import { ARCHETYPES } from '../art/ProceduralCar'
+import type { TrackDefinition } from '../tracks/format'
 
 export interface IntroProps {
   onStart: (opts: { paint: string; archetype: string; opponents: number }) => void
@@ -17,18 +18,42 @@ export interface IntroProps {
   initialPaint?: string
   initialArchetype?: string
   initialOpponents?: number
+  /** The circuits on offer, the current pick, and the change handler. */
+  tracks: TrackDefinition[]
+  trackId: string
+  onTrackChange: (id: string) => void
 }
 
-export function Intro({ onStart, initialPaint, initialArchetype, initialOpponents }: IntroProps) {
+const DIFFICULTY_LABEL: Record<number, string> = { 1: 'Easy', 2: 'Medium', 3: 'Hard' }
+
+export function Intro({ onStart, initialPaint, initialArchetype, initialOpponents, tracks, trackId, onTrackChange }: IntroProps) {
   const [paint, setPaint] = useState<string>(initialPaint ?? PALETTE[0])
   const [archetype, setArchetype] = useState<string>(initialArchetype ?? 'sport')
   const [opponents, setOpponents] = useState(initialOpponents ?? 6)
+  const track = tracks.find((t) => t.id === trackId) ?? tracks[0]
 
   return (
     <div className="rv2-screen">
       <div className="rv2-panel">
-        <h1 className="rv2-title">Apex Flats</h1>
-        <p className="rv2-sub">A quick race. Arrow keys or WASD, Shift to boost, Space to brake.</p>
+        <h1 className="rv2-title">{track ? track.name : 'Race'}</h1>
+        <p className="rv2-sub">{track ? track.blurb : 'A quick race.'} Arrow keys or WASD, Shift to boost, Space to brake.</p>
+
+        <div className="rv2-field">
+          <span className="rv2-field-label">Track</span>
+          <div className="rv2-chips">
+            {tracks.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className={'rv2-chip' + (t.id === trackId ? ' is-on' : '')}
+                onClick={() => onTrackChange(t.id)}
+                title={`${t.name} — ${DIFFICULTY_LABEL[t.difficulty]}`}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="rv2-field">
           <span className="rv2-field-label">Car</span>

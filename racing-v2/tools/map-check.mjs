@@ -16,8 +16,10 @@ import {
   FORMAT_TAG,
   FORMAT_VERSION,
 } from '../src/tracks/format'
+import { createHash } from 'node:crypto'
 import { TRACKS, DEFAULT_TRACK_ID, buildTrackLine, trackGates } from '../src/tracks/catalog'
 import { gridSlot } from '../src/ai/gridSlots'
+import { scatterTrack, isClearOfRoad, SCENERY_CLEARANCE } from '../src/tracks/scatter'
 
 let failures = 0
 function ok(name) {
@@ -321,6 +323,43 @@ const APEX_PIN = {
     if (gates.length >= 2 && sorted && gates.every((v) => v > 0 && v < L.length)) ok('APEX_FLATS gates convert to sorted metres')
     else fail('APEX_FLATS gates', JSON.stringify(gates))
   }
+}
+
+/* ---- scenery scatter: generated props must be off the roadway ------------ */
+console.log('scenery scatter')
+for (const t of TRACKS) {
+  const L = buildTrackLine(t)
+  const first = scatterTrack(t, L)
+  if (first.props.length <= t.scenery.count) {
+    ok(`${t.id}: ${first.props.length}/${t.scenery.count} props placed (within budget)`)
+  } else {
+    fail(`${t.id} scatter budget`, `${first.props.length} > ${t.scenery.count}`)
+  }
+  const pad = SCENERY_CLEARANCE[t.scenery.kind]
+  let bad = 0
+  for (const p of first.props) {
+    if (t.scenery.kind !== 'clouds' && !isClearOfRoad(L, p.x, p.z, pad)) bad++
+    if (!isFinite(p.x) || !isFinite(p.z) || !isFinite(p.rot) || !isFinite(p.y)) bad++
+  }
+  if (bad === 0) ok(`${t.id}: every generated prop is off-road and finite`)
+  else fail(`${t.id} scatter on-road`, `${bad} offending placement(s)`)
+
+  let lmBad = 0
+  for (const lm of first.landmarks) {
+    if (!isClearOfRoad(L, lm.x, lm.z, 10)) lmBad++
+  }
+  if (lmBad === 0) ok(`${t.id}: landmarks clear of the road`)
+  else fail(`${t.id} landmark clearance`, `${lmBad} offending landmark(s)`)
+
+  const digest = (r) => {
+    const h = createHash('sha256')
+    for (const p of r.props) h.update(`${p.x.toFixed(4)},${p.z.toFixed(4)},${p.y.toFixed(4)},${p.rot.toFixed(4)},${p.scale.toFixed(4)},${p.variant.toFixed(4)};`)
+    for (const p of r.landmarks) h.update(`L:${p.x.toFixed(4)},${p.z.toFixed(4)},${p.rot.toFixed(4)};`)
+    return h.digest('hex')
+  }
+  const second = scatterTrack(t, L)
+  if (digest(first) === digest(second)) ok(`${t.id}: scatter is deterministic`)
+  else fail(`${t.id} scatter determinism`, 'two runs differ')
 }
 
 console.log('')

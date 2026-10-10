@@ -70,9 +70,12 @@ export interface VehicleProps {
   /** Ordered checkpoint distances; a lap only counts when all were crossed
    *  on-road in order. See ai/checkpoints.ts. */
   gates?: readonly number[]
+  /** Per-track top speed in m/s (tools/speed-envelope.mjs measures it from
+   *  the circuit geometry). Defaults to the vehicle config. */
+  topSpeed?: number
 }
 
-export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype = 'sport', paint, line, onLap, assetBase, startDistance = 0, gates = [] }: VehicleProps) {
+export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype = 'sport', paint, line, onLap, assetBase, startDistance = 0, gates = [], topSpeed }: VehicleProps) {
   const laps = useLapTracker(line, startDistance, gates)
   const lastLap = useRef(0)
   const defaultCamera = useThree((state) => state.camera)
@@ -89,7 +92,11 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
 
   const wheelRefs = useRef([createRef<Group>(), createRef<Group>(), createRef<Group>(), createRef<Group>()] as const)
 
-  const { back, force, front, height, maxBrake, steer, maxSpeed, width } = vehicleConfig
+  const { back, force, front, height, maxBrake, steer, maxSpeed: configMaxSpeed, width } = vehicleConfig
+  /* Per-track speed cap. 32 m/s was derived from APEX_FLATS by
+   * tools/speed-envelope.mjs; a longer or faster circuit derives its own and
+   * the track data carries it. The config value remains the fallback. */
+  const maxSpeed = topSpeed ?? configMaxSpeed
 
   /* Wheel placement follows upstream exactly: indices 0,1 are the front axle
      (z = front), 2,3 the rear (z = back), and the side alternates. Keeping

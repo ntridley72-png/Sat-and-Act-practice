@@ -5,22 +5,25 @@
  * is all an arcade racer needs. It also gives the fog something to blend
  * into, which is what stops the world looking like it ends at the grass.
  *
+ * The three stops come from the track's theme (src/tracks/format.ts), so six
+ * circuits can read as six places without a single asset.
+ *
  * BackSide on a large sphere, depthWrite off, and rendered first so it never
  * occludes anything.
  */
 import { useMemo } from 'react'
 import * as THREE from 'three'
 
-export function Sky() {
+export function Sky({ top, horizon, bottom }: { top: string; horizon: string; bottom: string }) {
   const material = useMemo(
     () =>
       new THREE.ShaderMaterial({
         side: THREE.BackSide,
         depthWrite: false,
         uniforms: {
-          top: { value: new THREE.Color('#2d4straight'.replace('straight', '366')) },
-          horizon: { value: new THREE.Color('#8fa4bd') },
-          bottom: { value: new THREE.Color('#121820') },
+          top: { value: new THREE.Color(top) },
+          horizon: { value: new THREE.Color(horizon) },
+          bottom: { value: new THREE.Color(bottom) },
         },
         vertexShader: `
           varying vec3 vPos;
@@ -45,7 +48,7 @@ export function Sky() {
           }
         `,
       }),
-    [],
+    [top, horizon, bottom],
   )
 
   return (

@@ -243,6 +243,9 @@
         mod.mount(container, {
           opponents: options.opponents,
           seed: options.seed,
+          /* Additive: hosts may request a circuit by id; the game validates
+             it and falls back to its default when absent or unknown. */
+          track: options.track,
           // The host knows where the game was served from; the bundle cannot
           // reliably work it out, because Vite rewrites import.meta.url.
           assetBase: appBase(),

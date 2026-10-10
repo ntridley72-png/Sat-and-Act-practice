@@ -74,7 +74,69 @@ export const APEX_FLATS: TrackDefinition = {
   },
 }
 
-export const TRACKS: TrackDefinition[] = [APEX_FLATS]
+/* PRISM SKYWAY.
+ *
+ * An original layout: a long launch straight, a long 180-degree prism sweep
+ * that doubles back above it, a narrowing esse pair (the technical sequence)
+ * and a wide left sweeper returning to the line. The "elevation" drama of a
+ * skyway is delivered by the cloud deck BELOW the road and the sky palette,
+ * not by a height channel: the runtime's physics is flat in v1 by explicit
+ * decision (see the plan doc). Ideas borrowed: none that are protectable --
+ * "a road in space with colourful light" is a setting, and the layout itself
+ * is authored here from generic corner types (straight, hairpin, esses,
+ * sweeper), the same vocabulary APEX_FLATS uses. */
+export const PRISM_SKYWAY: TrackDefinition = {
+  format: 'funsat.track',
+  version: 1,
+  id: 'prism-skyway',
+  name: 'Prism Skyway',
+  blurb: 'A floating road above a cloud sea: long sweeps into tight esses.',
+  theme: 'skyway',
+  difficulty: 2,
+  seed: 'prism-skyway-v1',
+  direction: 'forward',
+  centerline: [
+    { x: 0, y: 0, half: 9 },        // start/finish, wide
+    { x: 130, y: 0, half: 9 },      // launch straight
+    { x: 175, y: 20, half: 7 },     // sweep in
+    { x: 190, y: 60, half: 6.5 },   // sweep apex
+    { x: 175, y: 100, half: 6.5 },  // sweep out
+    { x: 135, y: 115, half: 7 },    // upper straight
+    { x: 100, y: 110, half: 5.5 },  // technical entry, narrows
+    { x: 75, y: 92, half: 5 },      // esse left
+    { x: 45, y: 100, half: 5 },     // esse right
+    { x: 20, y: 125, half: 5.5 },   // esses exit
+    { x: -20, y: 140, half: 7 },    // top left sweep
+    { x: -75, y: 135, half: 8 },
+    { x: -115, y: 105, half: 8 },   // long left sweeper
+    { x: -125, y: 60, half: 8 },
+    { x: -110, y: 20, half: 8 },
+    { x: -75, y: 2, half: 8 },      // sweeper exit
+    { x: -40, y: -6, half: 9 },     // return to the line
+  ],
+  checkpoints: [0.16, 0.42, 0.62, 0.84], // refined against map-check
+  grid: { ...DEFAULT_GRID },
+  surface: { offroad: 'cloud', brake: 18 },
+  hazards: [],
+  landmarks: [
+    { name: 'The Prism Spire', kind: 'spire', atFraction: 0.5, side: 'left', offset: 26, scale: 1.4 },
+  ],
+  scenery: { kind: 'clouds', count: 220, tier: 'mid' },
+  weather: ['dry'],
+  /* Measured 2026-10-10 on this exact geometry:
+   *   calibrate-corner-budget -> largest passing 0.60 (3 skills x 5 seeds,
+   *     every car home, no wheel off; the roomier corners carry more
+   *     planning grip than APEX_FLATS' 0.30)
+   *   speed-envelope -> suggested top speed 34 m/s (122 km/h) */
+  ai: { cornerBudget: 0.6, topSpeed: 34 },
+  provenance: {
+    origin: 'original',
+    license: 'CC0-1.0',
+    note: 'Layout authored for this project from generic corner types; no traced circuit.',
+  },
+}
+
+export const TRACKS: TrackDefinition[] = [APEX_FLATS, PRISM_SKYWAY]
 
 export const DEFAULT_TRACK_ID = APEX_FLATS.id
 

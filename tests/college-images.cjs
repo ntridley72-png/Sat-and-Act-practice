@@ -16,14 +16,22 @@ const LABELS = {
   social: "Student life & traditions",
   history: "School history",
 };
-const BAD = /logo|seal|crest|coat_of_arms|coat%20of%20arms|wordmark|bookplate|contact.?sheet|placeholder/i;
+const BAD = /logo|seal|crest|coat_of_arms|coat%20of%20arms|wordmark|bookplate|contact.?sheet|placeholder|cemetery|graveyard/i;
 const SOURCE = /^https:\/\/commons\.wikimedia\.org\/wiki\//;
 
 /* A prospective student wants to see the place, not a scrum of players, and a
    road game is shot at the opponent's stadium — which is how another school's
    venue used to end up on a college's own page. */
-const ACTION = /\bvs\.?\b|versus|championship|march madness|bowl game|pre-?game|halftime|kickoff|touchdown|scrimmage|tailgate|take[sn]? the field|entering field|head coach|offensive coordinator|defensive coordinator|quarterback|cheerlead|marching band|first pitch|playing of the|tip-?off|free throw|home run|student section/i;
-const VENUE = /stadium|arena|ballpark|coliseum|field ?house|natatorium|pavilion|athletics? complex|sports complex|track|field/i;
+const ACTION = /\bvs\.?\b|versus|championship|march madness|bowl game|game between|warm(?:ing)?[ -]up|pre-?game|halftime|kickoff|touchdown|scrimmage|tailgate|take[sn]? the field|entering field|head coach|offensive coordinator|defensive coordinator|quarterback|cheerlead|marching band|first pitch|playing of the|tip-?off|free throw|home run|student section/i;
+/* Mirrors VENUE_WORDS in scripts/build-college-data.py, which must cover every
+   facility word photo_kind reads as athletics — otherwise a real venue photo is
+   thrown away for naming no venue. Bare sport names stay out on purpose. */
+const VENUE = /stadium|arena|ballpark|coliseum|field ?house|natatorium|pavilion|athletics? complex|sports complex|athletics? center|basketball center|track|field/i;
+
+/* Internet Archive book-page uploads: "<title> (1902) (14740142836).jpg". Page
+   scans, not photographs of a place, and their title text drags in other
+   schools. A bare upload id is fine — Flickr and Geograph photos look like that. */
+const SCANNED_PAGE = /\((?:1[5-9]\d{2}|20\d{2})\)\s*\(\d{8,}\)/;
 
 /* The Commons file name, decoded and readable: "Kyle Field aerial.jpg". */
 const fileName = (im) => {
@@ -68,9 +76,10 @@ for (const c of colleges) {
     if (!SOURCE.test(im.l || "")) fail(where + ": source must be a Commons file page, saw " + (im.l || "(empty)"));
     if (!LABELS[im.kind]) fail(where + ": unknown category kind " + JSON.stringify(im.kind));
     if (im.label !== LABELS[im.kind]) fail(where + ": label must match its kind, saw " + JSON.stringify(im.label));
-    if (BAD.test(im.l || "") || BAD.test(im.u || "")) fail(where + ": rejected subject (logo/seal/placeholder)");
+    if (BAD.test(im.l || "") || BAD.test(im.u || "")) fail(where + ": rejected subject (logo/seal/placeholder/cemetery)");
     const name = fileName(im);
     if (ACTION.test(name)) fail(where + ": game action / people close-up, not a view of the school");
+    if (SCANNED_PAGE.test(name)) fail(where + ": scanned book page, not a photograph of the school");
     if (im.kind === "athletics" && !VENUE.test(name)) {
       fail(where + ": filed as athletics but the file name names no venue");
     }

@@ -5,7 +5,26 @@ const path = require("node:path");
 const os = require("node:os");
 
 const ROOT = path.dirname(__dirname);
-const EXEC = path.join(os.homedir(), "Library/Caches/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-mac-x64/chrome-headless-shell");
+/* Which Chromium to drive. CHROME_PATH wins, then whatever a Playwright
+   browsers directory holds (how a Linux CI image ships it, and its build number
+   will not match the one installed here), then the local macOS shell. */
+const MAC_EXEC = path.join(os.homedir(), "Library/Caches/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-mac-x64/chrome-headless-shell");
+const findExec = () => {
+  if (process.env.CHROME_PATH) return process.env.CHROME_PATH;
+  const root = process.env.PLAYWRIGHT_BROWSERS_PATH;
+  if (root && fs.existsSync(root)) {
+    const rels = ["chrome-linux/headless_shell", "chrome-linux/chrome",
+                  "chrome-headless-shell-mac-x64/chrome-headless-shell"];
+    for (const dir of fs.readdirSync(root).sort()) {
+      for (const rel of rels) {
+        const candidate = path.join(root, dir, rel);
+        if (fs.existsSync(candidate)) return candidate;
+      }
+    }
+  }
+  return MAC_EXEC;
+};
+const EXEC = findExec();
 const BASE = process.env.BASE_URL || "http://localhost:8899";
 const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent("SAT & ACT Practice.html") : "/";
 const SHOTS = path.join(ROOT, "tests", "screenshots");

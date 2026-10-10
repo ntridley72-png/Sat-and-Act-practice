@@ -319,6 +319,12 @@ PHOTO_LABELS = {
 }
 
 
+# A campus across the water sells itself, but these words are short enough to
+# hide inside a name -- "bay" sits inside "Baylor" -- and photo_kind otherwise
+# matches on plain substrings, so they have to stand as their own words.
+WATERSIDE = re.compile(r"\b(?:bay|harbor|harbour|sound|inlet)\b")
+
+
 def photo_kind(text):
     """Classify only subjects that help a prospective student picture campus life."""
     low = urllib.parse.unquote(str(text or "")).lower().replace("_", " ")
@@ -328,8 +334,10 @@ def photo_kind(text):
                               "athletic center", "athletics center", "football field", "basketball center",
                               "baseball", "basketball", "football", "soccer", "lacrosse")):
         return "athletics"
-    if any(k in low for k in ("aerial", "skyline", "panorama", "downtown", "overview", "bird's-eye",
-                              "mountain", "lake", "river", "beach", "arboretum", "botanical garden")):
+    if (any(k in low for k in ("aerial", "skyline", "pano", "downtown", "overview", "bird's-eye",
+                               "mountain", "lake", "river", "beach", "waterfront",
+                               "arboretum", "botanical garden"))
+            or WATERSIDE.search(low)):
         return "surroundings"
     if any(k in low for k in ("hall", "library", "chapel", "center", "building", "museum", "tower",
                               "laboratory", "institute", "auditorium", "theatre", "theater", "architecture")):
@@ -351,7 +359,10 @@ LEGACY_REJECT = ("logo", "seal", "crest", "coat of arms", "coat_of_arms", "wordm
                  "headshot", "portrait", "award ceremony", "commencement speaker", "lathe",
                  "machinery", "machine shop", "equipment", "usmc", "marine corps", "u.s. navy",
                  "us navy", "midshipman", "first pitch", "change of command", "swearing in",
-                 "tractor", "aircraft", "weapons", "rifle", "magazine", "lccn", "bain news")
+                 "tractor", "aircraft", "weapons", "rifle", "magazine", "lccn", "bain news",
+                 # Accurate to the campus, but nobody picks a college for its
+                 # graveyard, and these galleries are meant to sell the place.
+                 "cemetery", "graveyard")
 
 
 FILLER_WORDS = {"file", "the", "of", "and", "at", "a", "an", "is", "in", "on", "for", "to", "with", "by"}
@@ -404,6 +415,8 @@ def legacy_ok(p):
     name = urllib.parse.unquote(raw.split("/wiki/")[-1] if "/wiki/" in raw else raw.rsplit("/", 1)[-1]).lower()
     if not re.search(r"\.(?:jpe?g|png|webp|tiff?)$", name):
         return False  # documents, audio, SVG diagrams are not gallery photos
+    if scanned_page(name):
+        return False  # a scanned book page, not a photograph of the place
     if any(bad in text for bad in LEGACY_REJECT):
         return False
     if any(marker in text for marker in ACTION_MARKERS):
@@ -425,16 +438,41 @@ ACTION_MARKERS = (
     "defensive coordinator", "quarterback", "cheerleader", "cheerleading", "marching band",
     "first pitch", "playing of the", "tipoff", "tip-off", "free throw", "home run",
     "touchdown celebration", "fans ", "crowd ", "student section",
+    # A bowl game is played at a neutral site, so the photo shows neither
+    # school's campus: one 1954 Gator Bowl aerial was filed under Auburn *and*
+    # Baylor. "warming up" is players on a field, not the field.
+    "game between", "warming up", "warm-up",
 )
 
-# A stadium photo has to actually show the venue.
+# A stadium photo has to actually show the venue. Every facility word photo_kind
+# treats as athletics has to appear here too: a term that buckets a photo as
+# athletics but is not accepted as a venue would throw the photo away outright,
+# which is how "Kirk Athletic Center.jpg" was lost. Bare sport names
+# (baseball, football, soccer, lacrosse) are deliberately absent -- on their own
+# they mark a team or a game, not a place.
 VENUE_WORDS = ("stadium", "arena", "ballpark", "coliseum", "fieldhouse", "field house",
                "natatorium", "pavilion", "athletic complex", "athletics complex",
-               "sports complex", "track", "field")
+               "sports complex", "athletic center", "athletics center",
+               "basketball center", "track", "field")
 
 # The shots worth leading with: height, distance, whole-venue.
-WIDE_WORDS = ("aerial", "drone", "panorama", "panoramic", "overview", "from above",
+# "pano" stands in for panorama/panoramic/pano, which Commons uses
+# interchangeably, and counts once rather than boosting the same shot twice.
+WIDE_WORDS = ("aerial", "drone", "pano", "overview", "from above",
               "bird's eye", "birds eye", "skyline", "exterior", "overhead", "wide view")
+
+# Internet Archive book-page uploads land on Commons as "<book title> (1902)
+# (14740142836).jpg": a publication year in brackets next to a long upload id.
+# They are scans of pages, not photographs of a place, and the title text drags
+# in unrelated schools -- "Transactions of the Royal Society of New Zealand
+# (1920)" was filed under BYU-Hawaii. A plain upload id is fine on its own,
+# since that is also how Flickr and Geograph photos arrive.
+SCANNED_PAGE = re.compile(r"\((?:1[5-9]\d{2}|20\d{2})\)\s*\(\d{8,}\)")
+
+
+def scanned_page(name):
+    """True for an Internet Archive book/yearbook page scan rather than a photo."""
+    return bool(SCANNED_PAGE.search(str(name or "")))
 
 
 def athletics_photo_ok(title, description):
@@ -598,6 +636,8 @@ def fetch_photos(colleges):
                     continue  # game action, not the stadium itself
                 if any(marker in subject.lower() for marker in ACTION_MARKERS):
                     continue  # people close-ups read as someone else's team photo
+                if scanned_page(title):
+                    continue  # an Internet Archive book page, not the campus
                 if bucket == "greek":
                     dates = " ".join(str((meta.get(k, {}) or {}).get("value", "")) for k in
                                      ("DateTimeOriginal", "DateTime", "DateTimeDigitized"))

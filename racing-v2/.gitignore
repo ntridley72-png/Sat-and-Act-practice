@@ -1,0 +1,11 @@
+# Dependencies are not committed; `npm install` restores them from package.json.
+node_modules/
+
+# dist/ IS committed deliberately. The site has no root package.json and is
+# deployed as static files by a Cloudflare Worker whose build step only copies
+# files, so a committed bundle is what makes the game servable without adding
+# an npm install to every deploy. Regenerate with `npm run build`.
+# (Nothing here ignores dist/ -- this comment exists so nobody adds it.)
+
+*.local
+.DS_Store

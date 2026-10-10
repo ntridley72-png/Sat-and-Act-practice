@@ -4,10 +4,53 @@
    had yesterday; and a failed optional download must leave them on v1 rather
    than break the arcade. */
 const { chromium } = require("playwright-core");
+const fs = require("node:fs");
 const path = require("node:path");
 const os = require("node:os");
 
-const EXEC = path.join(os.homedir(), "Library/Caches/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-mac-x64/chrome-headless-shell");
+const PLAYWRIGHT_CACHE = path.join(os.homedir(), "Library", "Caches", "ms-playwright");
+
+// Resolve the Chromium executable without hardcoding a version string:
+//   1. PLAYWRIGHT_EXEC env override (so CI can pin an exact build),
+//   2. playwright-core's supported API (no globbing needed),
+//   3. glob the cache and take the highest installed headless-shell build.
+function resolveExecutable() {
+  if (process.env.PLAYWRIGHT_EXEC) {
+    if (fs.existsSync(process.env.PLAYWRIGHT_EXEC)) return process.env.PLAYWRIGHT_EXEC;
+    throw new Error(`PLAYWRIGHT_EXEC points at a missing file: ${process.env.PLAYWRIGHT_EXEC}`);
+  }
+
+  try {
+    const p = chromium.executablePath();
+    if (p && fs.existsSync(p)) return p;
+  } catch (e) {
+    // no usable path from playwright-core; fall through to globbing
+  }
+
+  if (fs.existsSync(PLAYWRIGHT_CACHE)) {
+    const versions = fs
+      .readdirSync(PLAYWRIGHT_CACHE)
+      .filter((name) => name.startsWith("chromium_headless_shell-"))
+      .map((name) => name.slice("chromium_headless_shell-".length))
+      .sort((a, b) => (parseInt(b, 10) || 0) - (parseInt(a, 10) || 0));
+    for (const version of versions) {
+      const candidate = path.join(
+        PLAYWRIGHT_CACHE,
+        `chromium_headless_shell-${version}`,
+        "chrome-headless-shell-mac-x64",
+        "chrome-headless-shell",
+      );
+      if (fs.existsSync(candidate)) return candidate;
+    }
+  }
+
+  throw new Error(
+    "Could not locate a Playwright Chromium executable. " +
+      "Install it with: npx playwright install chromium",
+  );
+}
+
+const EXEC = resolveExecutable();
 const BASE = process.env.BASE_URL || "http://localhost:8899";
 const PAGE = "/" + encodeURIComponent("SAT & ACT Practice.html");
 

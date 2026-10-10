@@ -3,7 +3,6 @@ import create from 'zustand'
 import shallow from 'zustand/shallow'
 import type { RefObject } from 'react'
 import type { PublicApi, WheelInfoOptions } from '@react-three/cannon'
-import type { Session } from '@supabase/supabase-js'
 import type { Group } from 'three'
 import type { GetState, SetState, StateSelector } from 'zustand'
 
@@ -148,7 +147,6 @@ export interface IState extends BaseState {
   finished: number
   get: Getter
   level: RefObject<Group>
-  session: Session | null
   set: Setter
   start: number
   vehicleConfig: VehicleConfig
@@ -222,7 +220,6 @@ const useStoreImpl = create<IState>((set: SetState<IState>, get: GetState<IState
     get,
     keyInput: null,
     level: createRef<Group>(),
-    session: null,
     set,
     start: 0,
     vehicleConfig,

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import type { ComponentType } from 'react'
 import { Layers } from 'three'
 import { Canvas } from '@react-three/fiber'
 import { Physics, Debug } from '@react-three/cannon'
@@ -10,11 +11,26 @@ import { HideMouse, Keyboard } from './controls'
 import { Cameras } from './effects'
 import { BoundingBox, Ramp, Track, Vehicle, Goal, Train, Heightmap } from './models'
 import { angularVelocity, levelLayer, position, rotation, useStore } from './store'
-import { Checkpoint, Clock, Speed, Minimap, Intro, Help, Editor, LeaderBoard, Finished, PickColor } from './ui'
+import { Checkpoint, Clock, Speed, Minimap, Intro, Help, LeaderBoard, Finished, PickColor } from './ui'
 import { useToggle } from './useToggle'
 
 const layers = new Layers()
 layers.enable(levelLayer)
+
+// The leva-backed editor is dev-only. It is loaded through a dynamic import
+// behind import.meta.env.DEV so a production build never pulls `leva` into the
+// bundle (see MODIFICATIONS.md).
+function DevEditor(): JSX.Element | null {
+  const [Editor, setEditor] = useState<ComponentType | null>(null)
+
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      import('./ui/Editor').then(({ Editor }) => setEditor(() => Editor))
+    }
+  }, [])
+
+  return Editor ? <Editor /> : null
+}
 
 export function App(): JSX.Element {
   const [light, setLight] = useState<DirectionalLight | null>(null)
@@ -23,7 +39,7 @@ export function App(): JSX.Element {
 
   const ToggledCheckpoint = useToggle(Checkpoint, 'checkpoint')
   const ToggledDebug = useToggle(Debug, 'debug')
-  const ToggledEditor = useToggle(Editor, 'editor')
+  const ToggledEditor = useToggle(DevEditor, 'editor')
   const ToggledFinished = useToggle(Finished, 'finished')
   const ToggledMap = useToggle(Minimap, 'map')
   const ToggledOrbitControls = useToggle(OrbitControls, 'editor')

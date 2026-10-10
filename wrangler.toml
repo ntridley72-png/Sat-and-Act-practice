@@ -21,7 +21,7 @@ routes = [
 # MAIL_FROM = "FunSAT <no-reply@funsat.bid>"
 
 [build]
-command = "rm -rf public && mkdir -p public && cp \"SAT & ACT Practice.html\" public/index.html && cp app.js avatar.js workspace.css workspace.js college-data.js college.js college-profile.js college-gallery.js redesign.css redesign.js subjects.css subjects.js scholarships-data.js scholarships.js dirtbike.js ads.js ads.txt robots.txt social-card.png apple-touch-icon.png favicon.png favicon.ico *.txt public/ && cp -R fonts racing public/ && python3 scripts/build-seo-pages.py --out public && python3 scripts/build-landing-pages.py --out public && python3 scripts/build-hubs.py --out public && python3 scripts/build-sitemaps.py --out public"
+command = "rm -rf public && mkdir -p public && cp \"SAT & ACT Practice.html\" public/index.html && cp app.js avatar.js workspace.css workspace.js college-data.js college.js college-profile.js college-gallery.js redesign.css redesign.js subjects.css subjects.js scholarships-data.js scholarships.js dirtbike.js ads.js ads.txt robots.txt social-card.png apple-touch-icon.png favicon.png favicon.ico *.txt public/ && cp -R fonts racing public/ && if [ -d racing-v2/dist ]; then mkdir -p public/racing-v2 && cp -R racing-v2/dist/. public/racing-v2/; else echo \"racing-v2/dist absent; game not served this deploy\" >&2; fi && python3 scripts/build-seo-pages.py --out public && python3 scripts/build-landing-pages.py --out public && python3 scripts/build-hubs.py --out public && python3 scripts/build-sitemaps.py --out public"
 
 [assets]
 directory = "./public"

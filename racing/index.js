@@ -115,7 +115,87 @@
     });
   }
 
+  /* ---- v2 React app (the rebuilt 3D game) --------------------------------
+   *
+   * Separate from load()/ensure() above on purpose. Those load the vanilla v2
+   * SIMULATION modules in PARTS and are asserted on by tests/racing-v2-flag.cjs,
+   * which requires ensure() to return the Racing namespace and run a 120-tick
+   * physics step. Repointing them at the React bundle would break that
+   * contract, so the app gets its own pair and the vanilla path is untouched.
+   *
+   * The bundle is an ES module built by racing-v2/ and served at
+   * /racing-v2/racing-v2.js. It is import()ed, never <script>-tagged, and
+   * nothing here runs until ensureApp() is called -- which is what keeps
+   * three.js and cannon off the wire for a student who never opens the game.
+   */
+  var APP_ENTRY = "racing-v2.js";
+  var appLoading = null;
+  var appModule = null;
+
+  /* The app is a sibling of racing/, so derive its URL from the same script
+     tag rather than hardcoding a root-absolute path. That keeps the game
+     working if the site is ever served from a subdirectory. */
+  function appBase() {
+    var root = base();
+    return /racing\/$/.test(root) ? root.replace(/racing\/$/, "racing-v2/") : "racing-v2/";
+  }
+
+  /* Load the app bundle. Resolves with its module (which exports mount and
+     unmount), or rejects. Deliberately does NOT mount: the caller decides
+     when React takes over the canvas. */
+  function loadApp() {
+    if (appModule) return Promise.resolve(appModule);
+    if (appLoading) return appLoading;
+    var url = appBase() + APP_ENTRY;
+    /* import() is a syntax error in browsers that do not support it, so it is
+       reached through the Function constructor. This file is a classic script
+       loaded on every page view; a parse error here would take the whole page
+       down, not just the game. */
+    appLoading = new Promise(function (resolve, reject) {
+      var dynamicImport;
+      try {
+        dynamicImport = new Function("u", "return import(u)");
+      } catch (e) {
+        reject(new Error("this browser cannot load the v2 game (no dynamic import)"));
+        return;
+      }
+      dynamicImport(url).then(resolve, reject);
+    }).then(function (mod) {
+      if (!mod || typeof mod.mount !== "function") {
+        throw new Error("racing v2 app loaded but exports no mount()");
+      }
+      appModule = mod;
+      return mod;
+    }).catch(function (err) {
+      appLoading = null;
+      throw err;
+    });
+    return appLoading;
+  }
+
+  /* Load the app only if the flag is on. Resolves null when it is off OR when
+     the download failed, mirroring ensure() so every caller can keep writing
+     `if (!app) return v1()`. A failed optional download must never cost a
+     student their game, and must never throw into the page. */
+  function ensureApp() {
+    if (!enabled()) return Promise.resolve(null);
+    return loadApp().catch(function (err) {
+      try { console.warn("racing v2 app unavailable, staying on v1:", err.message); } catch (e) {}
+      return null;
+    });
+  }
+
   window.RacingV2 = {
+    KEY: KEY,
+    PARTS: PARTS,
+    APP_ENTRY: APP_ENTRY,
+    enabled: enabled,
+    setLocal: setLocal,
+    load: load,
+    ensure: ensure,
+    loadApp: loadApp,
+    ensureApp: ensureApp,
+    appLoaded: function () { return !!appModule; },
     KEY: KEY,
     PARTS: PARTS,
     enabled: enabled,

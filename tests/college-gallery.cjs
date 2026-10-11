@@ -16,12 +16,18 @@ const findExec = () => {
   if (process.env.CHROME_PATH) return process.env.CHROME_PATH;
   const root = process.env.PLAYWRIGHT_BROWSERS_PATH;
   if (root && fs.existsSync(root)) {
+    /* Playwright's own bundles use chrome-linux/; the -linux64 pair is the
+       Chrome-for-Testing layout, in case a runner installs that instead. */
     const rels = ["chrome-linux/headless_shell", "chrome-linux/chrome",
+                  "chrome-headless-shell-linux64/chrome-headless-shell",
+                  "chrome-linux64/chrome",
                   "chrome-headless-shell-mac-x64/chrome-headless-shell"];
     for (const dir of fs.readdirSync(root).sort()) {
       for (const rel of rels) {
         const candidate = path.join(root, dir, rel);
-        if (fs.existsSync(candidate)) return candidate;
+        /* Executable, not merely present: a stub or a directory would other-
+           wise be chosen and then fail at launch with a confusing error. */
+        try { fs.accessSync(candidate, fs.constants.X_OK); return candidate; } catch (e) { /* keep looking */ }
       }
     }
   }

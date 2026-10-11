@@ -43,7 +43,7 @@ import {
   formatRunTime,
 } from './economy'
 import type { EconomyBridge, RecordEntry, RunMode } from './economy'
-import { carPhysics, resolvePaint, DEFAULT_TUNE } from './garage'
+import { carPhysics, resolvePaint, racePayout, DEFAULT_TUNE } from './garage'
 import type { CarSpec, GarageBridge, TuneSpec } from './garage'
 
 export type AppProps = {
@@ -87,6 +87,8 @@ export interface RunOutcome {
   improvedLap: boolean
   best: RecordEntry | null
   lap: string | null
+  /** Cash banked by this run's finish (0 unless a scored race finished). */
+  payout: number
 }
 
 const FALLBACK_WINGS: Record<string, { name: string; price: number }> = {
@@ -102,7 +104,7 @@ const FALLBACK_FINISHES: Record<string, string> = {
 const EMPTY_OUTCOME: RunOutcome = {
   time: '0:00.00', position: 1, total: 1, mode: 'practice',
   timeUp: false, endReason: null, recorded: false,
-  improvedRace: false, improvedLap: false, best: null, lap: null,
+  improvedRace: false, improvedLap: false, best: null, lap: null, payout: 0,
 }
 
 export function App({ opponents: initialOpponents, seed, skill = 'medium', paint: initialPaint, archetype: initialArchetype = 'sport', onQuit, assetBase, track: initialTrack, economy, garage }: AppProps) {
@@ -318,10 +320,24 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
       setTokens(economy.tokens())
     }
 
+    /* SCORED RACES PAY. Practice and unrecorded (time-up/idle) runs pay
+       nothing, matching v1 where only scored runs banked cash. The table
+       lives in one place (garage.ts) and is unit-tested. */
+    if (r.mode === 'scored' && !timeUp && garage) {
+      outcome.payout = racePayout({
+        seconds: elapsed,
+        position: outcome.position,
+        finished: true,
+        weather: r.weather,
+      })
+      garage.addCash(outcome.payout)
+      setCash(garage.cash())
+    }
+
     resultRef.current = outcome
     setResult(outcome)
     setPhase('finished')
-  }, [economy, line, setPhase])
+  }, [economy, garage, line, setPhase])
 
   /* Called by the player car each lap. Kept here rather than in Vehicle so
      the lifecycle lives in one place. */

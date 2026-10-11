@@ -439,6 +439,7 @@ export interface FinishedProps {
     improvedLap: boolean
     best: RecordEntry | null
     lap: string | null
+    payout: number
   }
   trackName: string
   weather: WeatherId
@@ -450,7 +451,7 @@ export interface FinishedProps {
 }
 
 export function Finished({ outcome, trackName, weather, restartMode, tokenCost, onRestart, onQuit }: FinishedProps) {
-  const { time, position, total, mode, timeUp, endReason, recorded, improvedRace, improvedLap, best, lap } = outcome
+  const { time, position, total, mode, timeUp, endReason, recorded, improvedRace, improvedLap, best, lap, payout } = outcome
   return (
     <div className="rv2-screen">
       <div className="rv2-panel rv2-panel-sm">
@@ -471,15 +472,20 @@ export function Finished({ outcome, trackName, weather, restartMode, tokenCost, 
           </p>
         )}
         {mode === 'scored' && recorded && (
-          <p className="rv2-note">
-            {improvedRace || improvedLap ? 'New record! ' : 'Recorded. '}
-            {best && best.race != null && (
-              <>
-                {trackName} ({WEATHER_LABEL[weather]}): best race {formatRunTime(best.race)}
-                {best.lap != null ? ` · best lap ${formatRunTime(best.lap)}` : ''}
-              </>
+          <>
+            <p className="rv2-note">
+              {improvedRace || improvedLap ? 'New record! ' : 'Recorded. '}
+              {best && best.race != null && (
+                <>
+                  {trackName} ({WEATHER_LABEL[weather]}): best race {formatRunTime(best.race)}
+                  {best.lap != null ? ` · best lap ${formatRunTime(best.lap)}` : ''}
+                </>
+              )}
+            </p>
+            {payout > 0 && (
+              <p className="rv2-note rv2-best">+${payout.toLocaleString()} garage cash — spend it on cars and upgrades.</p>
             )}
-          </p>
+          </>
         )}
         <div className="rv2-actions">
           <button type="button" className="rv2-go" onClick={onRestart}>

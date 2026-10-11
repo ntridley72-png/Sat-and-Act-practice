@@ -509,18 +509,17 @@
       try { console.warn("racing v2 needs WebGL, staying on v1"); } catch (e) {}
       return Promise.resolve(false);
     }
-    /* Consume any session request (the workshop's 'Scored run' button) so the
-       v2 intro opens already pointed at the right mode. Not consuming it would
-       leave it waiting to surprise a later v1 launch. */
+    /* The workshop's 'Scored run' request travels through here. It is
+       consumed only once the v2 bundle is confirmed present: consuming it up
+       front silently downgraded a paid request to Open Practice whenever v2
+       could not boot, because the v1 fallback then found nothing pending. */
     var pendingMode = null;
-    try {
-      if (typeof RacingSession !== "undefined" && RacingSession && RacingSession.takePending) {
-        pendingMode = RacingSession.takePending();
-      }
-    } catch (e) {}
     return ensureApp().then(function (mod) {
       if (!mod) return false;
       try {
+        if (typeof RacingSession !== "undefined" && RacingSession && RacingSession.takePending) {
+          pendingMode = RacingSession.takePending();
+        }
         mod.mount(container, {
           opponents: options.opponents,
           seed: options.seed,
@@ -653,7 +652,15 @@
       startApp(host, {
         opponents: 6,
         seed: "race-" + game,
-        onFail: function () { fallbackToV1(game); },
+        onFail: function () {
+          /* The mount threw AFTER the pending mode was consumed. Put the
+             paid-scored request back so the v1 fallback charges and runs it
+             as requested, rather than silently downgrading to practice. */
+          try {
+            if (pendingMode === "scored" && window.RacingSession && RacingSession.request) RacingSession.request("scored");
+          } catch (e) {}
+          fallbackToV1(game);
+        },
         onQuit: function () {
           /* The v2 button says "Back to the arcade", so that is what it must
              do. Releasing back to the v1 flow here launched the old drift

@@ -418,7 +418,13 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
     if (phase !== 'racing') return
     let raf = 0
     let last = performance.now()
-    const onInput = () => { clock.current.lastInput = performance.now() }
+    /* v1's exact activity rule: hovering is not driving. Without the buttons
+       check, a mouse resting over the page kept the idle timer at zero and
+       burned the paid allowance while the player was not actually driving. */
+    const onInput = (e: Event) => {
+      if (e.type === 'pointermove' && !(e as PointerEvent).buttons) return
+      clock.current.lastInput = performance.now()
+    }
     const events = ['keydown', 'pointerdown', 'pointermove', 'touchstart']
     events.forEach((e) => document.addEventListener(e, onInput, true))
     const tick = (t: number) => {

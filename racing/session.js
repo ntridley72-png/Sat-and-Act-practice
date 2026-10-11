@@ -119,6 +119,14 @@
   // ---- arcade integration --------------------------------------------------
   var origSelect = arcade.select.bind(arcade);
   arcade.select = function (game) {
+    /* When the v2 game will take this selection, stay out of the way: it runs
+       the session rules itself through the economy bridge (same token cost,
+       same records) and consumes the pending mode via takePending(). Running
+       both spent a token here AND mounted a v2 race that expected to spend
+       its own on start. */
+    if (window.RacingV2 && typeof window.RacingV2.willHandle === "function" && window.RacingV2.willHandle(game)) {
+      return origSelect(game);
+    }
     var wanted = S.pending;
     S.pending = null;
     if (RACING_KEYS.indexOf(game) < 0) { clear(); return origSelect(game); }
@@ -254,6 +262,10 @@
     state: function () { return { mode: S.mode, remaining: S.remaining, idle: S.idle, ended: S.ended }; },
     label: label,
     canAfford: canAfford,
+    /* Read AND clear the pending mode. The v2 game consumes it when it takes
+       over the selection (racing/index.js), so a workshop 'Scored run' request
+       reaches v2 instead of waiting here to surprise a later v1 launch. */
+    takePending: function () { var p = S.pending; S.pending = null; return p; },
     // Exposed for tests: drive the clock without waiting in real time.
     _tick: function (seconds, opts) {
       opts = opts || {};

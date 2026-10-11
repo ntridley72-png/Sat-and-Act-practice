@@ -237,12 +237,83 @@
     }
   }
 
+  /* ---- the v2 economy bridge ---------------------------------------------
+   *
+   * v2 is the game now, so the v1 session economy has to live on inside it:
+   * one token per scored run, Open Practice free and unrecorded, records
+   * banked in the profile. v1's session.js wrapped arcade.select(), but the
+   * v2 path intercepts BEFORE that wrapper, so the rules come to v2 instead
+   * through this bridge.
+   *
+   * Every method is try/guarded. This is the seam between a 12k-line vanilla
+   * app and the React game, and no economy call may cost a student their race.
+   */
+  function ensureRecords() {
+    if (!profile.racingV2Records || typeof profile.racingV2Records !== "object") profile.racingV2Records = {};
+    return profile.racingV2Records;
+  }
+  function makeEconomy(initialMode) {
+    return {
+      initialMode: initialMode === "scored" ? "scored" : "practice",
+      tokenCost: 1,
+      tokens: function () {
+        try { return profile.tokens | 0; } catch (e) { return 0; }
+      },
+      spendScored: function () {
+        try {
+          if ((profile.tokens | 0) < 1) return false;
+          profile.tokens = (profile.tokens | 0) - 1;
+          saveProfile();
+          updateHUD();
+          return true;
+        } catch (e) { return false; }
+      },
+      best: function (trackId, weather) {
+        try { return ensureRecords()[trackId + ":" + weather] || null; } catch (e) { return null; }
+      },
+      record: function (trackId, weather, run) {
+        try {
+          var recs = ensureRecords();
+          var key = trackId + ":" + weather;
+          var prev = recs[key] || {};
+          var entry = {
+            race: typeof prev.race === "number" ? prev.race : null,
+            raceAt: prev.raceAt || null,
+            lap: typeof prev.lap === "number" ? prev.lap : null,
+            lapAt: prev.lapAt || null,
+            position: typeof prev.position === "number" ? prev.position : null,
+          };
+          var now = new Date().toISOString();
+          var improvedRace = typeof run.race === "number" && (entry.race === null || run.race < entry.race);
+          var improvedLap = typeof run.lap === "number" && (entry.lap === null || run.lap < entry.lap);
+          if (improvedRace) { entry.race = run.race; entry.raceAt = now; entry.position = run.position; }
+          if (improvedLap) { entry.lap = run.lap; entry.lapAt = now; }
+          recs[key] = entry;
+          saveProfile();
+          return { entry: entry, improvedRace: improvedRace, improvedLap: improvedLap };
+        } catch (e) {
+          return { entry: null, improvedRace: false, improvedLap: false };
+        }
+      },
+      toast: function (message) { try { showToast(message); } catch (e) {} },
+    };
+  }
+
   function startApp(container, opts) {
     var options = opts || {};
     if (!webglSupported()) {
       try { console.warn("racing v2 needs WebGL, staying on v1"); } catch (e) {}
       return Promise.resolve(false);
     }
+    /* Consume any session request (the workshop's 'Scored run' button) so the
+       v2 intro opens already pointed at the right mode. Not consuming it would
+       leave it waiting to surprise a later v1 launch. */
+    var pendingMode = null;
+    try {
+      if (typeof RacingSession !== "undefined" && RacingSession && RacingSession.takePending) {
+        pendingMode = RacingSession.takePending();
+      }
+    } catch (e) {}
     return ensureApp().then(function (mod) {
       if (!mod) return false;
       try {
@@ -255,6 +326,7 @@
           // The host knows where the game was served from; the bundle cannot
           // reliably work it out, because Vite rewrites import.meta.url.
           assetBase: appBase(),
+          economy: makeEconomy(pendingMode),
           onQuit: options.onQuit,
           onError: function () {
             try { mod.unmount(); } catch (e) {}
@@ -306,10 +378,20 @@
     return mountEl;
   }
 
+  /* One-shot pass-through after a v2 startup failure: the retry must run the
+     FULL v1 chain below the hook (session rules included) without re-entering
+     v2, which is exactly what this flag buys (see the onFail path). */
+  var v2Failed = false;
+
   function teardown(stage) {
     stopApp();
     if (mountEl) mountEl.style.display = "none";
-    if (stage) stage.classList.remove("racing-v2-active");
+    if (stage) {
+      stage.classList.remove("racing-v2-active");
+      // Put the stage back the way v1 manages it; backToMenu()/select() will
+      // re-add `active` on their own paths.
+      stage.classList.remove("active");
+    }
   }
 
   function hookArcade() {
@@ -324,9 +406,24 @@
     hooked = true;
     var originalSelect = arcade.select.bind(arcade);
 
+    /* The one way back to v1 when v2 cannot boot (bundle download failure,
+       import failure, mount throw -- every route funnels here). Re-dispatch
+       through the CURRENT select chain so racing/session.js runs too: the
+       student must get the full v1 experience, session rules included, not a
+       bare game with no token accounting. v2Failed makes the re-dispatch pass
+       through the v2 hook exactly once. */
+    function fallbackToV1(game) {
+      v2Failed = true;
+      teardown(stage);
+      try { arcade.select(game); } catch (e) { v2Failed = false; originalSelect(game); }
+    }
+
     arcade.select = function (game) {
-      // Not a driving game, or the flag is off: nothing changes, at all.
-      if (!V2_GAMES[game] || !enabled()) {
+      // Not a driving game, the flag is off, or v2 just failed to start:
+      // nothing changes, at all. v2Failed is consumed here so the retry below
+      // passes through exactly once.
+      if (!V2_GAMES[game] || !enabled() || v2Failed) {
+        if (v2Failed) v2Failed = false;
         teardown(stage);
         return originalSelect(game);
       }
@@ -337,17 +434,36 @@
       var host = ensureMount(stage);
       host.style.display = "block";
       stage.classList.add("racing-v2-active");
+      /* SHOW THE STAGE. `.arcade-stage` is display:none until v1's select()
+       * adds `active`, and this hook intercepts BEFORE select() runs -- so
+       * without the next three lines the game mounts into a 0x0 hidden box
+       * and no student ever sees it. It did exactly that until a browser test
+       * measured the mount's LAYOUT instead of its display property. */
+      try {
+        if (typeof arcade.open === "function") arcade.open(); // overlay visible
+        if (arcade.menu && arcade.menu.style) arcade.menu.style.display = "none";
+      } catch (e) {}
+      stage.classList.add("active");
 
       startApp(host, {
         opponents: 6,
         seed: "race-" + game,
-        onFail: function () { teardown(stage); originalSelect(game); },
-        onQuit: function () { teardown(stage); originalSelect(game); }
-      }).then(function (started) {
-        if (!started) {
+        onFail: function () { fallbackToV1(game); },
+        onQuit: function () {
+          /* The v2 button says "Back to the arcade", so that is what it must
+             do. Releasing back to the v1 flow here launched the old drift
+             game instead of showing the menu, which was incoherent once v2
+             became the default. Original select remains the last resort. */
           teardown(stage);
-          originalSelect(game);
+          try {
+            if (typeof arcade !== "undefined" && arcade && typeof arcade.backToMenu === "function") arcade.backToMenu();
+            else originalSelect(game);
+          } catch (e) { originalSelect(game); }
         }
+      }).then(function (started) {
+        // The promise is built to never reject; false means the bundle never
+        // became usable, and that is the same fallback as any other failure.
+        if (!started) fallbackToV1(game);
       });
     };
   }
@@ -362,6 +478,13 @@
 
   window.RacingV2 = {
     KEY: KEY,
+    /* Would a driving-game selection be handled by v2 right now? Used by
+       racing/session.js to stay out of the way: v2 runs the session rules
+       itself (economy bridge), and double-running them spent a token AND
+       started a v1 session underneath a v2 race. FALSE while a fallback is
+       in flight, so the v1 retry runs the session wrapper rather than
+       deferring to a hook that is currently passing through. */
+    willHandle: function (game) { return !v2Failed && !!V2_GAMES[game] && enabled(); },
     PARTS: PARTS,
     APP_ENTRY: APP_ENTRY,
     enabled: enabled,

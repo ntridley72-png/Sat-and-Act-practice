@@ -181,6 +181,34 @@ const PAGE = "/" + encodeURIComponent("SAT & ACT Practice.html");
     await page.close();
   }
 
+  // --- a failed v2 APP boot still lands on the full v1 game ----------------
+  // (The vanilla-module failure case above is different: this one aborts the
+  // React bundle itself, so startApp reports failure and the hook must
+  // re-dispatch through the whole v1 chain -- session rules included.)
+  {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    const errs = [];
+    page.on("pageerror", (e) => errs.push(e.message));
+    await page.route("**/racing-v2/racing-v2.js", (route) => route.abort());
+    await page.goto(BASE + PAGE, { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("body[data-workspace]");
+    const r = await page.evaluate(async () => {
+      arcade.select("drift");
+      await new Promise((res) => setTimeout(res, 2500));
+      return {
+        ctor: arcade.game && arcade.game.constructor && arcade.game.constructor.name,
+        sessionMode: window.RacingSession ? RacingSession.state().mode : null,
+        tokens: profile.tokens,
+        mountHidden: !document.getElementById("racingV2Mount") || document.getElementById("racingV2Mount").style.display === "none",
+      };
+    });
+    if (r.ctor !== "DriftCircuit") fail("a failed v2 boot must land on v1 DriftCircuit", r);
+    if (r.sessionMode !== "practice") fail("the v1 session rules must own the failed-boot fallback", r);
+    if (!r.mountHidden) fail("the v2 mount must be hidden after a failed boot", r);
+    if (errs.length) fail("a failed v2 boot must not throw into the page", errs);
+    await page.close();
+  }
+
   await browser.close();
-  console.log("PASS: racingV2 defaults on with every explicit opt-out intact, nothing loads until a game is opened, query/device/account precedence, in-browser v2 simulation runs, and a failed load falls back to v1.");
+  console.log("PASS: racingV2 defaults on with every explicit opt-out intact, nothing loads until a game is opened, query/device/account precedence, in-browser v2 simulation runs, a failed v2 app boot falls back to the full v1 game, and a failed module load stays on v1.");
 })().catch((e) => { console.error(e); process.exit(1); });

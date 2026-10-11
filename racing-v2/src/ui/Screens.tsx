@@ -9,6 +9,8 @@ import { PALETTE } from '../ai/Grid'
 import { ARCHETYPES } from '../art/ProceduralCar'
 import type { TrackDefinition, WeatherId } from '../tracks/format'
 import { WEATHER_LABEL } from '../tracks/weather'
+import { formatRunTime } from '../economy'
+import type { RecordEntry, RunMode } from '../economy'
 
 export interface IntroProps {
   onStart: (opts: { paint: string; archetype: string; opponents: number }) => void
@@ -27,11 +29,19 @@ export interface IntroProps {
   weatherOptions: WeatherId[]
   weather: WeatherId
   onWeatherChange: (w: WeatherId) => void
+  /** The session economy: practice is free, a scored run costs a token. */
+  mode: RunMode
+  onModeChange: (m: RunMode) => void
+  tokens: number
+  tokenCost: number
+  affordable: boolean
+  /** Best recorded run on this track in this weather, if any. */
+  best: RecordEntry | null
 }
 
 const DIFFICULTY_LABEL: Record<number, string> = { 1: 'Easy', 2: 'Medium', 3: 'Hard' }
 
-export function Intro({ onStart, initialPaint, initialArchetype, initialOpponents, tracks, trackId, onTrackChange, weatherOptions, weather, onWeatherChange }: IntroProps) {
+export function Intro({ onStart, initialPaint, initialArchetype, initialOpponents, tracks, trackId, onTrackChange, weatherOptions, weather, onWeatherChange, mode, onModeChange, tokens, tokenCost, affordable, best }: IntroProps) {
   const [paint, setPaint] = useState<string>(initialPaint ?? PALETTE[0])
   const [archetype, setArchetype] = useState<string>(initialArchetype ?? 'sport')
   const [opponents, setOpponents] = useState(initialOpponents ?? 6)
@@ -76,6 +86,42 @@ export function Intro({ onStart, initialPaint, initialArchetype, initialOpponent
               ))}
             </div>
           </div>
+        )}
+
+        <div className="rv2-field">
+          <span className="rv2-field-label">Mode</span>
+          <div className="rv2-chips">
+            <button
+              type="button"
+              className={'rv2-chip' + (mode === 'practice' ? ' is-on' : '')}
+              onClick={() => onModeChange('practice')}
+            >
+              Open Practice
+            </button>
+            <button
+              type="button"
+              className={'rv2-chip' + (mode === 'scored' ? ' is-on' : '')}
+              disabled={!affordable}
+              title={affordable ? 'One token for a scored run; best race and lap are recorded' : 'Answer questions to earn a token'}
+              onClick={() => onModeChange('scored')}
+            >
+              Scored run · {tokenCost} token{tokenCost === 1 ? '' : 's'}
+            </button>
+          </div>
+          <p className="rv2-note">
+            {mode === 'scored'
+              ? 'Scored run: five minutes of driving; your best race and lap are recorded.'
+              : 'Open Practice is free and unlimited — nothing is recorded.'}
+            {' '}You have <strong>{tokens}</strong> token{tokens === 1 ? '' : 's'}.
+            {!affordable && ' Answer questions to earn more.'}
+          </p>
+        </div>
+
+        {best && best.race != null && (
+          <p className="rv2-note rv2-best">
+            Best here ({WEATHER_LABEL[weather]}): race {formatRunTime(best.race)}
+            {best.lap != null ? ` · lap ${formatRunTime(best.lap)}` : ''}
+          </p>
         )}
 
         <div className="rv2-field">
@@ -139,14 +185,30 @@ export function Intro({ onStart, initialPaint, initialArchetype, initialOpponent
 }
 
 export interface FinishedProps {
-  time: string
-  position: number
-  total: number
+  outcome: {
+    time: string
+    position: number
+    total: number
+    mode: RunMode
+    timeUp: boolean
+    endReason: 'clock' | 'idle' | null
+    recorded: boolean
+    improvedRace: boolean
+    improvedLap: boolean
+    best: RecordEntry | null
+    lap: string | null
+  }
+  trackName: string
+  weather: WeatherId
+  /** What the next run will cost, after the broke-player downgrade. */
+  restartMode: RunMode
+  tokenCost: number
   onRestart: () => void
   onQuit: () => void
 }
 
-export function Finished({ time, position, total, onRestart, onQuit }: FinishedProps) {
+export function Finished({ outcome, trackName, weather, restartMode, tokenCost, onRestart, onQuit }: FinishedProps) {
+  const { time, position, total, mode, timeUp, endReason, recorded, improvedRace, improvedLap, best, lap } = outcome
   return (
     <div className="rv2-screen">
       <div className="rv2-panel rv2-panel-sm">
@@ -154,9 +216,33 @@ export function Finished({ time, position, total, onRestart, onQuit }: FinishedP
         <p className="rv2-result">
           <strong>P{position}</strong> of {total}
         </p>
-        <p className="rv2-sub">Lap time {time}</p>
+        <p className="rv2-sub">
+          Race time {time}
+          {lap ? ` · best lap ${lap}` : ''}
+        </p>
+        {mode === 'practice' && (
+          <p className="rv2-note">Open Practice — not scored. Start a scored run to set a record.</p>
+        )}
+        {mode === 'scored' && timeUp && (
+          <p className="rv2-note">
+            {endReason === 'idle' ? 'Ended after three idle minutes' : 'Five-minute allowance used'} — this run was not recorded.
+          </p>
+        )}
+        {mode === 'scored' && recorded && (
+          <p className="rv2-note">
+            {improvedRace || improvedLap ? 'New record! ' : 'Recorded. '}
+            {best && best.race != null && (
+              <>
+                {trackName} ({WEATHER_LABEL[weather]}): best race {formatRunTime(best.race)}
+                {best.lap != null ? ` · best lap ${formatRunTime(best.lap)}` : ''}
+              </>
+            )}
+          </p>
+        )}
         <div className="rv2-actions">
-          <button type="button" className="rv2-go" onClick={onRestart}>Race again</button>
+          <button type="button" className="rv2-go" onClick={onRestart}>
+            Race again{restartMode === 'scored' ? ` · ${tokenCost} token` : ' · free'}
+          </button>
           <button type="button" className="rv2-ghost" onClick={onQuit}>Back to the arcade</button>
         </div>
       </div>

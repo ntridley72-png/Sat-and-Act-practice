@@ -87,11 +87,13 @@ function serve() {
       return {
         ctor: arcade.game && arcade.game.constructor && arcade.game.constructor.name,
         visible: !!host && host.style.display === "block",
+        rectW: host ? Math.round(host.getBoundingClientRect().width) : 0,
         appLoaded: RacingV2.appLoaded(),
       };
     });
     if (!mounted.appLoaded) fail("the default path must load the v2 bundle", mounted);
     if (!mounted.visible) fail("the default path must show the v2 mount", mounted);
+    if (!(mounted.rectW > 300)) fail("the default path must lay the game out, not mount it at 0x0", mounted);
     if (errs.length) fail("page errors on the default path", errs);
     await page.close();
   }
@@ -133,9 +135,15 @@ function serve() {
       // Give the dynamic import and the React mount time to land.
       await new Promise((r) => setTimeout(r, 4000));
       const host = document.getElementById("racingV2Mount");
+      const go = document.querySelector(".rv2-go");
       return {
         hostExists: !!host,
         visible: !!host && host.style.display === "block",
+        // LAYOUT, not display: the stage was display:none while its child
+        // mount was display:block, so the game rendered into a 0x0 box and
+        // every existence check still passed. A rect is the honest measure.
+        rectW: host ? Math.round(host.getBoundingClientRect().width) : 0,
+        buttonTick: go ? Math.round(go.getBoundingClientRect().height) : 0,
         hasCanvas: !!(host && host.querySelector("canvas")),
         appLoaded: RacingV2.appLoaded(),
       };
@@ -144,6 +152,8 @@ function serve() {
     if (!mounted.visible) fail("the v2 mount should be visible with the flag on", mounted);
     if (!mounted.appLoaded) fail("the v2 bundle did not load", mounted);
     if (!mounted.hasCanvas) fail("the v2 game did not render a canvas", mounted);
+    if (!(mounted.rectW > 300)) fail("the v2 mount must have real layout, not a 0x0 box", mounted);
+    if (!(mounted.buttonTick > 0)) fail("the intro must actually be on screen", mounted);
     if (errs.length) fail("page errors with the flag on", errs);
     await page.close();
   }

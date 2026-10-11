@@ -14,6 +14,7 @@ import { useEffect, useRef } from 'react'
 import { playerMutation } from '../player/config'
 import { mutation } from '../ai/mutation'
 import type { RacingLine } from '../ai/racingLine'
+import type { RunMode } from '../economy'
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60)
@@ -27,12 +28,23 @@ export interface HudProps {
   opponents: number
   /** Null until the race has started. */
   startedAt: number | null
+  /** Session mode for the badge, updated imperatively like everything else. */
+  mode: RunMode
+  /** The scored-run clock (live, read every frame; rendered as a countdown). */
+  clock: { current: { mode: RunMode; active: boolean; remaining: number } }
 }
 
-export function Hud({ line, opponents, startedAt }: HudProps) {
+/** "4:59" — a countdown, not a stopwatch: whole seconds, ceiling. */
+function fmtCountdown(seconds: number): string {
+  const s = Math.max(0, Math.ceil(seconds))
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+}
+
+export function Hud({ line, opponents, startedAt, mode, clock }: HudProps) {
   const speedEl = useRef<HTMLDivElement>(null)
   const boostEl = useRef<HTMLDivElement>(null)
   const clockEl = useRef<HTMLDivElement>(null)
+  const modeEl = useRef<HTMLDivElement>(null)
   const boardEl = useRef<HTMLOListElement>(null)
   const mapEl = useRef<HTMLCanvasElement>(null)
 
@@ -52,6 +64,11 @@ export function Hud({ line, opponents, startedAt }: HudProps) {
       }
       if (clockEl.current) {
         clockEl.current.textContent = startedAt === null ? '0:00.00' : formatTime((performance.now() - startedAt) / 1000)
+      }
+      if (modeEl.current) {
+        modeEl.current.textContent = mode === 'scored'
+          ? `SCORED · ${fmtCountdown(clock.current.remaining)} LEFT`
+          : 'OPEN PRACTICE'
       }
 
       // --- leaderboard, by distance covered ------------------------------
@@ -86,13 +103,14 @@ export function Hud({ line, opponents, startedAt }: HudProps) {
 
     raf = requestAnimationFrame(draw)
     return () => cancelAnimationFrame(raf)
-  }, [line, startedAt])
+  }, [line, startedAt, mode, clock])
 
   return (
     <div className="rv2-hud">
       <div className="rv2-corner rv2-tl">
         <div className="rv2-label">LAP TIME</div>
         <div ref={clockEl} className="rv2-clock">0:00.00</div>
+        <div ref={modeEl} className="rv2-mode" />
       </div>
 
       <div className="rv2-corner rv2-tr">

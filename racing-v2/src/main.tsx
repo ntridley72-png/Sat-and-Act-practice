@@ -21,6 +21,7 @@ import { ErrorBoundary } from './ErrorBoundary'
 // stylesheet, so an emitted file would simply never load and the game would
 // mount unstyled.
 import hudCss from './ui/hud.css?inline'
+import type { EconomyBridge } from './economy'
 
 export type MountOptions = {
   /* Opponent count. Named rather than a bare number so the call site reads
@@ -43,6 +44,9 @@ export type MountOptions = {
   /* Track id the host wants, e.g. from a URL parameter. Validated inside the
      game; an unknown id falls back to the default circuit silently. */
   track?: string
+  /* The host's session economy (tokens, records). Absent means practice-only:
+     nothing spends and nothing is recorded. */
+  economy?: EconomyBridge
 }
 
 let root: Root | null = null
@@ -93,7 +97,7 @@ export function mount(container: HTMLElement, options: MountOptions = {}): void 
     root.render(
       <StrictMode>
         <ErrorBoundary onError={options.onError}>
-          <App opponents={options.opponents ?? 0} seed={options.seed ?? 'default'} onQuit={options.onQuit} assetBase={options.assetBase} track={options.track} />
+          <App opponents={options.opponents ?? 0} seed={options.seed ?? 'default'} onQuit={options.onQuit} assetBase={options.assetBase} track={options.track} economy={options.economy} />
         </ErrorBoundary>
       </StrictMode>,
     )

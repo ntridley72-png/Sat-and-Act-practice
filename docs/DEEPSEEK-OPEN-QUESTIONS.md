@@ -135,16 +135,39 @@ What still holds, and is now pinned by tests: `?racingV2=0`, the
 failure still falls through to v1 in the same tick; nothing downloads until
 a driving game is opened.
 
-Two follow-ups worth a conscious decision:
+Follow-ups:
 
-1. **The v1 token/session economy does not apply to v2.** `racing/session.js`
-   (Open Practice / Scored run) meters the v1 `arcade.game` clock, and its
-   "Scored run" button lives in the v1 workshop, which is not reachable while
-   v2 is running. So with the new default: v2 play is effectively Open
-   Practice, and no tokens are spent or earned through v2 races. If v2 should
-   have its own economy (tokens for scored runs, records), that is a feature
-   project on top of the v2 race lifecycle — say the word and it gets scoped.
-2. **`/SAT%20%26%20ACT%20Practice.html` 301s to a 404.** The Worker's
+1. **RESOLVED (same day): v2 now carries the session economy.** Operator
+   decision: "v2 should be the new v1". Built and shipped in version
+   `f530f5df`:
+   - Open Practice stays free, unlimited and unrecorded.
+   - A Scored run costs one token, gets five minutes of ACTIVE driving (input
+     grace or a car still moving; hidden tabs spend nothing; three idle
+     minutes end the run), and banks records: best race and best lap per
+     track per weather, stored in `profile.racingV2Records` so they sync with
+     the rest of the profile. The intro shows tokens and the best here; the
+     finish screen says recorded / new record / not recorded and why.
+   - The workshop's "Scored run" button presets the v2 intro via
+     `RacingSession.request()` / `takePending()`; the token is spent when the
+     race starts, not on selection.
+   - Covered by `tests/racing-v2-economy.cjs` (8 sections: free practice,
+     spend-on-start, record/improve/no-overwrite, time-up unrecorded, broke
+     fallback, workshop path).
+2. **Two latent bugs surfaced and were fixed while wiring it.** Both were
+   pre-existing and invisible to the old tests:
+   - v2 mounted into a 0×0 hidden stage from the arcade (`.arcade-stage` was
+     never given `active` because the v2 hook bypasses v1's select). The old
+     arcade test checked `display` on the mount, which was "block" inside a
+     hidden parent. Tests now measure layout rects.
+   - racing/session.js wraps select OUTSIDE the v2 hook (script order), so it
+     spent the token AND started a v1 session underneath v2. Fixed with a
+     `RacingV2.willHandle()` deferral and a unified v1 fallback; a failed v2
+     boot now re-dispatches through the full v1 chain, session rules included,
+     which the updated flag test asserts.
+   Still open from this area: the v1 workshop's tuning/cash upgrades do not
+   apply to v2 cars (v2 has its own car, paint, track and mode selection).
+   If the garage economy should also move into v2, that is the next feature.
+3. **`/SAT%20%26%20ACT%20Practice.html` 301s to a 404.** The Worker's
    canonical redirect strips `.html` and adds a slash; the raw app filename
    then has no page. This is pre-existing (not from today's changes) and
    affects nobody using `/`; flagging it because it surfaced in a canary.

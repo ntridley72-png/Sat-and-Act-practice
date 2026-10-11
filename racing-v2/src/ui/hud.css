@@ -53,6 +53,29 @@
   text-shadow: 0 1px 10px rgba(0, 0, 0, .6);
 }
 
+/* Session mode + scored-run countdown, under the lap clock. */
+.rv2-mode {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: #ffd166;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, .6);
+}
+
+/* Explanatory lines in the intro/finish panels (mode rules, records). */
+.rv2-note {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, .62);
+}
+.rv2-note strong { color: #fff; }
+.rv2-best { color: #ffd166; margin-top: 0; margin-bottom: 18px; }
+
+/* A chip that is unavailable stays visible so its tooltip can explain why. */
+.rv2-chip:disabled { opacity: .45; cursor: not-allowed; }
+
 .rv2-map {
   width: clamp(104px, 15vw, 168px);
   height: clamp(104px, 15vw, 168px);

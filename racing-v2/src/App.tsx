@@ -9,8 +9,14 @@
  * palette, scenery, off-road surface, speed cap, AI budget -- comes from the
  * selected TrackDefinition (src/tracks/catalog.ts). The App itself is
  * track-agnostic, which is what lets new circuits ship as data.
+ *
+ * THE ECONOMY IS THE HOST'S. v2 is the game now, so the v1 session rules
+ * carry over: Open Practice is free and never recorded; a Scored run costs
+ * one token, gets five minutes of ACTIVE driving, and banks a record. The
+ * rules live behind an EconomyBridge provided by racing/index.js (where the
+ * student profile lives); this file only drives what the student sees.
  */
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { ACESFilmicToneMapping, sRGBEncoding } from 'three'
 import { Physics } from '@react-three/cannon'
@@ -31,6 +37,12 @@ import { gridSlot, yawForZForward } from './ai/gridSlots'
 import { mutation, resetOpponents } from './ai/mutation'
 import { playerMutation } from './player/config'
 import type { SkillName } from './ai/driver'
+import {
+  SCORED_ACTIVE_SECONDS,
+  SCORED_IDLE_END_SECONDS,
+  formatRunTime,
+} from './economy'
+import type { EconomyBridge, RecordEntry, RunMode } from './economy'
 
 export type AppProps = {
   opponents: number
@@ -45,6 +57,9 @@ export type AppProps = {
   /** Track id requested by the host. Wins over the saved selection; an
    *  unknown id falls back to the default with no error. */
   track?: string
+  /** The host's session economy. Absent (e.g. in isolation) means practice
+   *  only: nothing spends and nothing is recorded. */
+  economy?: EconomyBridge
 }
 
 type Phase = 'intro' | 'racing' | 'finished'
@@ -53,7 +68,29 @@ type Phase = 'intro' | 'racing' | 'finished'
  *  five-minute race is a five-minute detour from practice questions. */
 const RACE_LAPS = 2
 
-export function App({ opponents: initialOpponents, seed, skill = 'medium', paint: initialPaint, archetype: initialArchetype = 'sport', onQuit, assetBase, track: initialTrack }: AppProps) {
+export interface RunOutcome {
+  time: string
+  position: number
+  total: number
+  mode: RunMode
+  /** The run hit the time cap or ended while idle: not recorded. */
+  timeUp: boolean
+  endReason: 'clock' | 'idle' | null
+  /** A scored run that counted in the economy (whether or not it beat a best). */
+  recorded: boolean
+  improvedRace: boolean
+  improvedLap: boolean
+  best: RecordEntry | null
+  lap: string | null
+}
+
+const EMPTY_OUTCOME: RunOutcome = {
+  time: '0:00.00', position: 1, total: 1, mode: 'practice',
+  timeUp: false, endReason: null, recorded: false,
+  improvedRace: false, improvedLap: false, best: null, lap: null,
+}
+
+export function App({ opponents: initialOpponents, seed, skill = 'medium', paint: initialPaint, archetype: initialArchetype = 'sport', onQuit, assetBase, track: initialTrack, economy }: AppProps) {
   /* Selection precedence: explicit host request > saved choice > default.
    * trackById validates: an id from localStorage or a host option is not
    * trusted, and anything unknown lands on a working circuit. */
@@ -77,19 +114,128 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
     saveTrack(valid)
   }, [])
 
-  const [phase, setPhase] = useState<Phase>('intro')
+  /* ---- economy state ------------------------------------------------------ */
+  const tokenCost = economy?.tokenCost ?? 1
+  const [tokens, setTokens] = useState(() => economy?.tokens() ?? 0)
+  const [runMode, setRunMode] = useState<RunMode>(() =>
+    economy?.initialMode === 'scored' && economy.tokens() >= (economy.tokenCost || 1) ? 'scored' : 'practice',
+  )
+  const affordable = !economy || tokens >= tokenCost
+
+  const [phase, setPhaseRaw] = useState<Phase>('intro')
+  /* Mirrors of phase/result for the test probe. Reading state values from the
+     probe's closure made the probe racy (a read between a finish and React's
+     effect re-run returned pre-finish values); refs are always live. */
+  const phaseRef = useRef<Phase>('intro')
+  const resultRef = useRef<RunOutcome>(EMPTY_OUTCOME)
+  const setPhase = useCallback((p: Phase) => { phaseRef.current = p; setPhaseRaw(p) }, [])
   const [opponents, setOpponents] = useState(initialOpponents)
   const [paint, setPaint] = useState(initialPaint ?? '#c8102e')
   const [archetype, setArchetype] = useState(initialArchetype)
   const [startedAt, setStartedAt] = useState<number | null>(null)
-  const [result, setResult] = useState({ time: '0:00.00', position: 1, total: 1 })
+  const [result, setResult] = useState<RunOutcome>(EMPTY_OUTCOME)
   /* Bumped on every restart so React remounts the whole scene. Resetting a
      live physics world in place is far more error-prone than rebuilding it,
      and a race start is not a moment where frame cost matters. */
   const [runId, setRunId] = useState(0)
   const finishedRef = useRef(false)
 
-  const start = useCallback(({ paint: p, archetype: a, opponents: n }: { paint: string; archetype: string; opponents: number }) => {
+  /* Everything the finish path needs about the CURRENT run, in a ref: the
+     finish can arrive from a lap callback, the scored clock, or the test
+     seam, and none of them may read stale React state. */
+  const run = useRef({
+    mode: 'practice' as RunMode,
+    startedAt: 0,
+    trackId: track.id,
+    weather: 'dry' as WeatherId,
+    opponents: 0,
+    bestLap: null as number | null,
+    lastLapAt: 0,
+  })
+  /** The scored-run clock: remaining seconds, idle time, and recent input. */
+  const clock = useRef({ mode: 'practice' as RunMode, active: false, remaining: SCORED_ACTIVE_SECONDS, idle: 0, lastInput: 0 })
+
+  const finishRun = useCallback((timeUp: boolean, endReason: 'clock' | 'idle' | null = null, secondsOverride?: number, lapOverride?: number | null) => {
+    if (finishedRef.current) return
+    finishedRef.current = true
+    const r = run.current
+    const elapsed = secondsOverride ?? (performance.now() - r.startedAt) / 1000
+    const lapBest = lapOverride === undefined ? r.bestLap : lapOverride
+
+    // Position = how many cars have covered more ground than the player.
+    const playerDist = mutation.player.lap * line.length + mutation.player.progress
+    let ahead = 0
+    for (let i = 0; i < mutation.count; i++) {
+      const o = mutation.opponents[i]
+      if (o.active && o.lap * line.length + o.progress > playerDist) ahead++
+    }
+
+    const outcome: RunOutcome = {
+      ...EMPTY_OUTCOME,
+      time: formatRunTime(elapsed),
+      position: ahead + 1,
+      total: r.opponents + 1,
+      mode: r.mode,
+      timeUp,
+      endReason,
+      lap: lapBest == null ? null : formatRunTime(lapBest),
+    }
+
+    if (r.mode === 'scored' && !timeUp && economy) {
+      const res = economy.record(r.trackId, r.weather, {
+        race: Math.round(elapsed * 1000) / 1000,
+        lap: lapBest == null ? null : Math.round(lapBest * 1000) / 1000,
+        position: outcome.position,
+      })
+      outcome.recorded = res.entry != null
+      outcome.improvedRace = res.improvedRace
+      outcome.improvedLap = res.improvedLap
+      outcome.best = res.entry
+      setTokens(economy.tokens())
+    }
+
+    resultRef.current = outcome
+    setResult(outcome)
+    setPhase('finished')
+  }, [economy, line, setPhase])
+
+  /* Called by the player car each lap. Kept here rather than in Vehicle so
+     the lifecycle lives in one place. */
+  const onLap = useCallback((lap: number) => {
+    if (finishedRef.current) return
+    const r = run.current
+    const elapsed = (performance.now() - r.startedAt) / 1000
+    const split = elapsed - r.lastLapAt
+    r.lastLapAt = elapsed
+    r.bestLap = r.bestLap == null ? split : Math.min(r.bestLap, split)
+    if (lap >= RACE_LAPS) finishRun(false)
+  }, [finishRun])
+
+  const start = useCallback(({ paint: p, archetype: a, opponents: n }: { paint: string; archetype: string; opponents: number }, modeOverride?: RunMode) => {
+    let mode: RunMode = modeOverride ?? runMode
+    if (mode === 'scored') {
+      /* Practice is the fallback in every failure direction: no bridge, no
+         tokens, or a spend that cannot complete all land the student in a
+         free race rather than a broken start. */
+      const ok = economy ? economy.spendScored() : false
+      if (!ok) {
+        economy?.toast('No tokens — answering questions earns them. Starting Open Practice.')
+        mode = 'practice'
+      }
+      setRunMode(mode)
+      setTokens(economy?.tokens() ?? 0)
+    }
+    run.current = {
+      mode,
+      startedAt: performance.now(),
+      trackId: track.id,
+      weather: activeWeather,
+      opponents: n,
+      bestLap: null,
+      lastLapAt: 0,
+    }
+    clock.current = { mode, active: mode === 'scored', remaining: SCORED_ACTIVE_SECONDS, idle: 0, lastInput: performance.now() }
+
     resetOpponents()
     playerMutation.boost = 100
     playerMutation.speed = 0
@@ -102,38 +248,89 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
     setRunId((r) => r + 1)
     setStartedAt(performance.now())
     setPhase('racing')
-  }, [])
+  }, [runMode, economy, track, activeWeather])
 
-  /* Called by the player car each lap. Kept here rather than in Vehicle so
-     the lifecycle lives in one place. */
-  const onLap = useCallback((lap: number) => {
-    if (finishedRef.current || lap < RACE_LAPS) return
-    finishedRef.current = true
-
-    const elapsed = startedAt === null ? 0 : (performance.now() - startedAt) / 1000
-    const m = Math.floor(elapsed / 60)
-    const s = Math.floor(elapsed % 60)
-    const cs = Math.floor((elapsed * 100) % 100)
-
-    // Position = how many cars have covered more ground than the player.
-    const playerDist = mutation.player.lap * line.length + mutation.player.progress
-    let ahead = 0
-    for (let i = 0; i < mutation.count; i++) {
-      const o = mutation.opponents[i]
-      if (o.active && o.lap * line.length + o.progress > playerDist) ahead++
+  /* The scored clock. Mirrors v1's session rules in spirit: only ACTIVE
+     driving spends the allowance (input within the grace window, or a car
+     still carrying speed), a hidden tab spends nothing, and both the
+     five-minute cap and the three-minute idle end stop the run WITHOUT
+     recording it. The race itself is finite, so this only ever costs a
+     player who stops driving. */
+  useEffect(() => {
+    if (phase !== 'racing') return
+    let raf = 0
+    let last = performance.now()
+    const onInput = () => { clock.current.lastInput = performance.now() }
+    const events = ['keydown', 'pointerdown', 'pointermove', 'touchstart']
+    events.forEach((e) => document.addEventListener(e, onInput, true))
+    const tick = (t: number) => {
+      raf = requestAnimationFrame(tick)
+      const dt = Math.min((t - last) / 1000, 0.25)
+      last = t
+      const c = clock.current
+      if (!c.active || c.mode !== 'scored') return
+      if (document.hidden) return
+      const driving = performance.now() - c.lastInput < 600 || playerMutation.speed > 4
+      if (driving) {
+        c.idle = 0
+        c.remaining -= dt
+        if (c.remaining <= 0) {
+          c.remaining = 0
+          c.active = false
+          finishRun(true, 'clock')
+        }
+      } else {
+        c.idle += dt
+        if (c.idle >= SCORED_IDLE_END_SECONDS) {
+          c.active = false
+          finishRun(true, 'idle')
+        }
+      }
     }
-    setResult({
-      time: `${m}:${String(s).padStart(2, '0')}.${String(cs).padStart(2, '0')}`,
-      position: ahead + 1,
-      total: opponents + 1,
-    })
-    setPhase('finished')
-  }, [startedAt, line, opponents])
+    raf = requestAnimationFrame(tick)
+    return () => {
+      cancelAnimationFrame(raf)
+      events.forEach((e) => document.removeEventListener(e, onInput, true))
+    }
+  }, [phase, finishRun])
+
+  /* Test seam, in the spirit of Vehicle's __rv2probe: the browser test needs
+     to finish a race without driving two real laps, and to drive the scored
+     clock without waiting five real minutes. Harmless in production -- it
+     only exposes what the UI already shows and the finish path already does. */
+  useEffect(() => {
+    const w = window as unknown as { __rv2economyProbe?: unknown }
+    w.__rv2economyProbe = {
+      state: () => ({
+        phase: phaseRef.current,
+        mode: run.current.mode,
+        tokens: economy?.tokens() ?? null,
+        remaining: clock.current.remaining,
+        result: resultRef.current,
+      }),
+      finish: (seconds?: number, lap?: number | null) => finishRun(false, null, seconds, lap),
+      tick: (seconds: number) => {
+        const c = clock.current
+        if (!c.active || c.mode !== 'scored') return
+        c.remaining = Math.max(0, c.remaining - seconds)
+        if (c.remaining <= 0) {
+          c.active = false
+          finishRun(true, 'clock')
+        }
+      },
+    }
+    return () => { w.__rv2economyProbe = undefined }
+  }, [economy, finishRun])
 
   /* The player is grid slot 0 -- pole. Same function the field uses, so the
      formation actually agrees. yawForZForward because the raycast vehicle's
      forward is +Z, not the +X the opponents use. */
   const pole = useMemo(() => gridSlot(line, 0, track.grid), [line, track])
+
+  const best = useMemo(
+    () => (economy ? economy.best(track.id, activeWeather) : null),
+    [economy, track.id, activeWeather],
+  )
 
   return (
     <div className="rv2-root">
@@ -213,7 +410,7 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
 
       {phase === 'racing' && (
         <>
-          <Hud line={line} opponents={opponents} startedAt={startedAt} />
+          <Hud line={line} opponents={opponents} startedAt={startedAt} mode={runMode} clock={clock} />
           <Help />
         </>
       )}
@@ -229,14 +426,29 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
           weatherOptions={track.weather}
           weather={activeWeather}
           onWeatherChange={setWeather}
+          mode={runMode}
+          onModeChange={setRunMode}
+          tokens={tokens}
+          tokenCost={tokenCost}
+          affordable={affordable}
+          best={best}
         />
       )}
       {phase === 'finished' && (
         <Finished
-          time={result.time}
-          position={result.position}
-          total={result.total}
-          onRestart={() => start({ paint, archetype, opponents })}
+          outcome={result}
+          trackName={track.name}
+          weather={activeWeather}
+          tokenCost={tokenCost}
+          restartMode={runMode === 'scored' && tokens < tokenCost ? 'practice' : runMode}
+          onRestart={() => {
+            let mode: RunMode = runMode
+            if (mode === 'scored' && (!economy || economy.tokens() < tokenCost)) {
+              economy?.toast('Out of tokens — switching to free Open Practice')
+              mode = 'practice'
+            }
+            start({ paint, archetype, opponents }, mode)
+          }}
           onQuit={() => onQuit?.()}
         />
       )}

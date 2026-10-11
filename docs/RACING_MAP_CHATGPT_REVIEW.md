@@ -221,3 +221,11 @@ required data steps were run (see the deployment note in
   (`?racingV2=0`, the device override, the account flag) still returns v1,
   and the updated browser tests pin both directions; the live canary shows
   `enabled: true, source: "default"`.
+- A final follow-up decision — "v2 should be the new v1" — moved the session
+  economy into v2 (Open Practice free and unrecorded; scored runs cost one
+  token with a five-minute active-driving allowance and bank best race/lap
+  records per track per weather in the profile). Shipped in `f530f5df` with
+  `tests/racing-v2-economy.cjs`; while wiring it, two latent bugs were found
+  and fixed (v2 mounted into a 0x0 hidden stage from the arcade; session.js
+  wrapped outside the v2 hook and double-ran the rules). Details in
+  questions §12.

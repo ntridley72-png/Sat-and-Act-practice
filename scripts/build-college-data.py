@@ -385,7 +385,19 @@ def normalize_photo(p):
         credit = combined.rsplit(" · ", 1)[0].strip() if " · " in combined else (combined.strip() or "Wikimedia Commons")
     if not license_name:
         license_name = combined.rsplit(" · ", 1)[1].strip() if " · " in combined else "Wikimedia Commons"
-    kind = p.get("kind") or photo_kind(page or u) or "campus"
+    # The URL is today's truth about what a photo shows; a cached kind can be
+    # a v7 misfile (an "athletics" label on a mascot or campus shot), which is
+    # exactly what the audit gate rejects. Re-derive first, fall back to the
+    # cache only when the URL says nothing.
+    kind = photo_kind(page or u) or p.get("kind") or "campus"
+    # The audit gate's invariant: an athletics photo must name a venue in its
+    # file name. Cached v7 entries break it (an "athletics" label on a mascot
+    # or skyline shot), and the URL often yields no fresh kind to correct them,
+    # so downgrade to campus rather than ship a misfiled label.
+    if kind == "athletics":
+        name = urllib.parse.unquote(str(page or u or "").rsplit("/", 1)[-1]).replace("_", " ").lower()
+        if not re.search(r"stadium|arena|ballpark|coliseum|field ?house|natatorium|pavilion|athletics? complex|sports complex|track|field", name):
+            kind = "campus"
     if re.match(r"^(public domain|cc[ -]|cc0|no restrictions|fair use|unknown)", credit.lower()):
         credit = "Wikimedia Commons"
     out = dict(p)

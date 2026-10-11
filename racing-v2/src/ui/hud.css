@@ -74,7 +74,37 @@
 .rv2-best { color: #ffd166; margin-top: 0; margin-bottom: 18px; }
 
 /* A chip that is unavailable stays visible so its tooltip can explain why. */
-.rv2-chip:disabled { opacity: .45; cursor: not-allowed; }
+.rv2-root .rv2-chip:disabled { opacity: .45; cursor: not-allowed; }
+
+/* The car roster: name over state/price, locked cards visibly dimmer. */
+.rv2-cars { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; }
+.rv2-root .rv2-car {
+  display: flex; flex-direction: column; gap: 2px; align-items: flex-start;
+  padding: 8px 10px; border-radius: 9px; cursor: pointer; text-align: left;
+  background: rgba(255, 255, 255, .05);
+  border: 1px solid rgba(255, 255, 255, .12);
+  color: inherit; font: inherit;
+}
+.rv2-root .rv2-car b { font-size: 12px; font-weight: 650; }
+.rv2-root .rv2-car small { font-size: 11px; color: rgba(255, 255, 255, .55); }
+.rv2-root .rv2-car:hover { background: rgba(255, 255, 255, .11); }
+.rv2-root .rv2-car.is-on { background: rgba(255, 209, 102, .16); border-color: rgba(255, 209, 102, .5); }
+.rv2-root .rv2-car.is-on small { color: #ffd166; }
+.rv2-root .rv2-car.is-locked small { color: #ffd166; }
+.rv2-root .rv2-car:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Collapsible garage sections keep the panel short by default. */
+.rv2-details { margin-bottom: 18px; }
+.rv2-details summary {
+  cursor: pointer; font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  color: rgba(255, 255, 255, .5); padding: 6px 0; list-style: none;
+}
+.rv2-details summary::-webkit-details-marker { display: none; }
+.rv2-details summary::before { content: "▸ "; }
+.rv2-details[open] summary::before { content: "▾ "; }
+.rv2-details summary:hover { color: #fff; }
+.rv2-root .rv2-reset { margin-top: 4px; }
+.rv2-warn { color: #ffd166; }
 
 .rv2-map {
   width: clamp(104px, 15vw, 168px);
@@ -177,7 +207,7 @@
 .rv2-field-label strong { color: #fff; }
 
 .rv2-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.rv2-chip {
+.rv2-root .rv2-chip {
   /* 30px tall is below the 44px comfortable target, so the chips get generous
      horizontal padding and sit in a loose wrap rather than a dense grid. */
   padding: 7px 11px;
@@ -191,11 +221,11 @@
   cursor: pointer;
   transition: background .12s ease, color .12s ease, border-color .12s ease;
 }
-.rv2-chip:hover { background: rgba(255, 255, 255, .11); color: #fff; }
-.rv2-chip.is-on { background: rgba(255, 209, 102, .16); border-color: rgba(255, 209, 102, .5); color: #ffd166; }
+.rv2-root .rv2-chip:hover { background: rgba(255, 255, 255, .11); color: #fff; }
+.rv2-root .rv2-chip.is-on { background: rgba(255, 209, 102, .16); border-color: rgba(255, 209, 102, .5); color: #ffd166; }
 
 .rv2-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
-.rv2-swatch {
+.rv2-root .rv2-swatch {
   /* 30px visual, but the ::after expands the hit area to 44px so this is
      comfortably tappable on a phone without inflating the swatch itself. */
   position: relative;
@@ -207,20 +237,20 @@
   padding: 0;
   transition: transform .12s ease, border-color .12s ease;
 }
-.rv2-swatch::after {
+.rv2-root .rv2-swatch::after {
   content: "";
   position: absolute;
   inset: -7px;
   border-radius: 50%;
 }
-.rv2-swatch:hover { transform: scale(1.08); }
-.rv2-swatch.is-on { border-color: #fff; transform: scale(1.12); }
+.rv2-root .rv2-swatch:hover { transform: scale(1.08); }
+.rv2-root .rv2-swatch.is-on { border-color: #fff; transform: scale(1.12); }
 
-.rv2-range { width: 100%; accent-color: #ffd166; height: 24px; cursor: pointer; }
+.rv2-root .rv2-range { width: 100%; accent-color: #ffd166; height: 24px; cursor: pointer; }
 
 .rv2-actions { display: grid; gap: 8px; margin-top: 18px; }
 
-.rv2-go {
+.rv2-root .rv2-go {
   width: 100%;
   min-height: 46px;
   font: inherit;
@@ -233,10 +263,10 @@
   cursor: pointer;
   transition: filter .12s ease, transform .06s ease;
 }
-.rv2-go:hover { filter: brightness(1.06); }
-.rv2-go:active { transform: translateY(1px); }
+.rv2-root .rv2-go:hover { filter: brightness(1.06); }
+.rv2-root .rv2-go:active { transform: translateY(1px); }
 
-.rv2-ghost {
+.rv2-root .rv2-ghost {
   width: 100%;
   min-height: 42px;
   font: inherit;
@@ -248,14 +278,14 @@
   cursor: pointer;
   transition: background .12s ease, color .12s ease;
 }
-.rv2-ghost:hover { background: rgba(255, 255, 255, .07); color: #fff; }
+.rv2-root .rv2-ghost:hover { background: rgba(255, 255, 255, .07); color: #fff; }
 
 .rv2-foot { margin: 18px 0 0; font-size: 11px; color: rgba(255, 255, 255, .34); line-height: 1.5; }
 
 /* ---- help ------------------------------------------------------------- */
 
 .rv2-help { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); pointer-events: auto; }
-.rv2-help-toggle {
+.rv2-root .rv2-help-toggle {
   min-height: 30px;
   padding: 5px 12px;
   font: inherit;
@@ -268,7 +298,7 @@
   border-radius: 99px;
   cursor: pointer;
 }
-.rv2-help-toggle:hover { color: #fff; }
+.rv2-root .rv2-help-toggle:hover { color: #fff; }
 .rv2-keys {
   margin: 8px 0 0;
   padding: 11px 14px;
@@ -286,5 +316,5 @@
 /* Respect a reduced-motion preference: these are decorative transitions and
    there is no reason to force them on someone who asked not to have them. */
 @media (prefers-reduced-motion: reduce) {
-  .rv2-chip, .rv2-swatch, .rv2-go, .rv2-ghost, .rv2-boost-fill { transition: none; }
+  .rv2-chip, .rv2-root .rv2-swatch, .rv2-root .rv2-go, .rv2-root .rv2-ghost, .rv2-boost-fill { transition: none; }
 }

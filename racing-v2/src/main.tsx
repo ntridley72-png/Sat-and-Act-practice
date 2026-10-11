@@ -22,6 +22,7 @@ import { ErrorBoundary } from './ErrorBoundary'
 // mount unstyled.
 import hudCss from './ui/hud.css?inline'
 import type { EconomyBridge } from './economy'
+import type { GarageBridge } from './garage'
 
 export type MountOptions = {
   /* Opponent count. Named rather than a bare number so the call site reads
@@ -47,6 +48,9 @@ export type MountOptions = {
   /* The host's session economy (tokens, records). Absent means practice-only:
      nothing spends and nothing is recorded. */
   economy?: EconomyBridge
+  /* The host's garage: cash, roster, purchases, tune, cosmetics. Absent
+     (bench pages) means free play with the raw archetypes. */
+  garage?: GarageBridge
 }
 
 let root: Root | null = null
@@ -97,7 +101,7 @@ export function mount(container: HTMLElement, options: MountOptions = {}): void 
     root.render(
       <StrictMode>
         <ErrorBoundary onError={options.onError}>
-          <App opponents={options.opponents ?? 0} seed={options.seed ?? 'default'} onQuit={options.onQuit} assetBase={options.assetBase} track={options.track} economy={options.economy} />
+          <App opponents={options.opponents ?? 0} seed={options.seed ?? 'default'} onQuit={options.onQuit} assetBase={options.assetBase} track={options.track} economy={options.economy} garage={options.garage} />
         </ErrorBoundary>
       </StrictMode>,
     )

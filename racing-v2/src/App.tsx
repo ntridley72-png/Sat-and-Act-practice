@@ -43,6 +43,8 @@ import {
   formatRunTime,
 } from './economy'
 import type { EconomyBridge, RecordEntry, RunMode } from './economy'
+import { carPhysics, resolvePaint, DEFAULT_TUNE } from './garage'
+import type { CarSpec, GarageBridge, TuneSpec } from './garage'
 
 export type AppProps = {
   opponents: number
@@ -60,6 +62,9 @@ export type AppProps = {
   /** The host's session economy. Absent (e.g. in isolation) means practice
    *  only: nothing spends and nothing is recorded. */
   economy?: EconomyBridge
+  /** The host's garage: cash, the car roster, purchases, tune, cosmetics.
+   *  Absent (bench pages) means free play with the raw archetypes. */
+  garage?: GarageBridge
 }
 
 type Phase = 'intro' | 'racing' | 'finished'
@@ -84,13 +89,23 @@ export interface RunOutcome {
   lap: string | null
 }
 
+const FALLBACK_WINGS: Record<string, { name: string; price: number }> = {
+  none: { name: 'No wing', price: 0 },
+  lip: { name: 'Lip', price: 150 },
+  duck: { name: 'Ducktail', price: 300 },
+  gt: { name: 'GT wing', price: 600 },
+}
+const FALLBACK_FINISHES: Record<string, string> = {
+  gloss: 'Gloss', metallic: 'Metallic', matte: 'Matte', pearl: 'Pearl', chrome: 'Chrome',
+}
+
 const EMPTY_OUTCOME: RunOutcome = {
   time: '0:00.00', position: 1, total: 1, mode: 'practice',
   timeUp: false, endReason: null, recorded: false,
   improvedRace: false, improvedLap: false, best: null, lap: null,
 }
 
-export function App({ opponents: initialOpponents, seed, skill = 'medium', paint: initialPaint, archetype: initialArchetype = 'sport', onQuit, assetBase, track: initialTrack, economy }: AppProps) {
+export function App({ opponents: initialOpponents, seed, skill = 'medium', paint: initialPaint, archetype: initialArchetype = 'sport', onQuit, assetBase, track: initialTrack, economy, garage }: AppProps) {
   /* Selection precedence: explicit host request > saved choice > default.
    * trackById validates: an id from localStorage or a host option is not
    * trusted, and anything unknown lands on a working circuit. */
@@ -121,6 +136,115 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
     economy?.initialMode === 'scored' && economy.tokens() >= (economy.tokenCost || 1) ? 'scored' : 'practice',
   )
   const affordable = !economy || tokens >= tokenCost
+
+  /* ---- garage state ------------------------------------------------------- */
+  /* null = the roster is still loading; [] = no host garage (bench pages),
+     in which case the raw archetype chips keep working as before. */
+  const [roster, setRoster] = useState<CarSpec[] | null>(null)
+  const [selected, setSelected] = useState<string>(() => (garage ? garage.car() : (initialArchetype ?? 'sport')))
+  const [cash, setCash] = useState(() => garage?.cash() ?? 0)
+  const [unlocked, setUnlocked] = useState<string[]>(() => (garage ? garage.unlocked() : []))
+  const [tune, setTune] = useState<TuneSpec>(() => garage?.tune() ?? DEFAULT_TUNE)
+  const [styleState, setStyleState] = useState(() => garage?.style() ?? { paint: '#c8102e', finish: 'metallic', spoiler: 'lip', neon: 'none' })
+  const [paintPalette] = useState<Record<string, string> | null>(() => garage?.paintPalette() ?? null)
+  const [ownedWings, setOwnedWings] = useState<string[]>(() => garage?.ownedWings() ?? ['none', 'lip'])
+  const [camMode, setCamMode] = useState<'chase' | 'far' | 'hood'>(() => garage?.cam() ?? 'chase')
+  const [volume, setVolumeState] = useState(() => garage?.volume() ?? 0.7)
+  const [notice, setNotice] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!garage) { setRoster([]); return }
+    let live = true
+    garage.roster().then((list) => {
+      if (!live) return
+      setRoster(list.length ? list : [])
+      /* A selection saved by an older version may carry a legacy id; the
+         launch records' migrateSelection maps it forward. */
+      if (list.length && !list.some((c) => c.id === selected)) {
+        const fixed = garage.migrate ? garage.migrate(selected) : 'sport'
+        setSelected(fixed)
+        garage.select(fixed)
+      }
+    }).catch(() => { if (live) setRoster([]) })
+    return () => { live = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [garage])
+
+  const refreshGarage = useCallback(() => {
+    if (!garage) return
+    setCash(garage.cash())
+    setTokens(garage.tokens())
+    setUnlocked(garage.unlocked())
+    setTune(garage.tune())
+    setStyleState(garage.style())
+    setOwnedWings(garage.ownedWings())
+  }, [garage])
+
+  const carSpec = useMemo(() => (roster ? roster.find((c) => c.id === selected) ?? null : null), [roster, selected])
+  const carConfig = useMemo(() => (carSpec ? carPhysics(carSpec, tune) : null), [carSpec, tune])
+  const paintHex = useMemo(() => resolvePaint(styleState.paint, paintPalette), [styleState.paint, paintPalette])
+
+  const chooseCar = useCallback((id: string) => {
+    if (!garage) { setSelected(id); return } // bench: id is a raw archetype
+    const spec = roster?.find((c) => c.id === id)
+    if (!unlocked.includes(id)) {
+      if (!spec) return
+      if (cash < spec.price) {
+        setNotice(`Need $${spec.price.toLocaleString()} — earn cash by racing.`)
+        return
+      }
+      if (!garage.buy(id)) {
+        setNotice('That purchase did not complete.')
+        return
+      }
+    }
+    garage.select(id)
+    setSelected(id)
+    setNotice(null)
+    refreshGarage()
+  }, [garage, roster, unlocked, cash, refreshGarage])
+
+  const changeTune = useCallback((key: keyof TuneSpec, value: number) => {
+    setTune((t) => ({ ...t, [key]: value }))
+    garage?.setTune({ [key]: value })
+  }, [garage])
+
+  const resetTune = useCallback(() => {
+    setTune(DEFAULT_TUNE)
+    garage?.setTune(DEFAULT_TUNE)
+  }, [garage])
+
+  const changeStyle = useCallback((patch: { paint?: string; finish?: string; spoiler?: string; neon?: string }) => {
+    if (!garage) {
+      setStyleState((v) => ({ ...v, ...patch }))
+      return
+    }
+    garage.setStyle(patch)
+    const after = garage.style()
+    if (patch.spoiler && after.spoiler !== patch.spoiler) setNotice('Need cash for that wing — earn cash by racing.')
+    else setNotice(null)
+    setStyleState(after)
+    setCash(garage.cash())
+    setOwnedWings(garage.ownedWings())
+  }, [garage])
+
+  const convertTokens = useCallback((all: boolean) => {
+    if (!garage) return
+    const amount = all ? garage.tokens() : Math.min(1, garage.tokens())
+    const gained = garage.convertTokens(amount)
+    if (gained) economy?.toast(`+$${gained} garage cash`)
+    refreshGarage()
+  }, [garage, economy, refreshGarage])
+
+  const changeCam = useCallback((mode: 'chase' | 'far' | 'hood') => {
+    setCamMode(mode)
+    garage?.setCam(mode)
+  }, [garage])
+
+  const changeVolume = useCallback((v: number) => {
+    setVolumeState(v)
+    garage?.setVolume(v)
+  }, [garage])
 
   const [phase, setPhaseRaw] = useState<Phase>('intro')
   /* Mirrors of phase/result for the test probe. Reading state values from the
@@ -242,13 +366,16 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
     mutation.player.lap = 0
     mutation.player.progress = 0
     finishedRef.current = false
-    setPaint(p)
-    setArchetype(a)
+    /* The garage's chosen car decides the silhouette and the paint; the
+       Intro's local archetype/paint only matter on bench pages with no
+       host garage. */
+    setPaint(garage ? paintHex : p)
+    setArchetype(carSpec ? carSpec.archetype : a)
     setOpponents(n)
     setRunId((r) => r + 1)
     setStartedAt(performance.now())
     setPhase('racing')
-  }, [runMode, economy, track, activeWeather])
+  }, [runMode, economy, track, activeWeather, garage, paintHex, carSpec])
 
   /* The scored clock. Mirrors v1's session rules in spirit: only ACTIVE
      driving spends the allowance (input within the grace window, or a car
@@ -403,6 +530,7 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
             gates={gates}
             topSpeed={track.ai.topSpeed}
             grip={grip}
+            physics={carConfig ?? undefined}
           />
           <Grid key={`grid-${runId}`} line={line} count={opponents} raceSeed={`${seed}:${runId}`} skill={skill} gates={gates} cornerBudget={track.ai.cornerBudget} grip={grip} />
         </Physics>
@@ -432,6 +560,24 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
           tokenCost={tokenCost}
           affordable={affordable}
           best={best}
+          garage={{
+            roster, unlocked, selected, cash, tokens, notice,
+            tune,
+            style: styleState,
+            palette: paintPalette,
+            wings: garage?.wings() ?? FALLBACK_WINGS,
+            finishes: garage?.finishes() ?? FALLBACK_FINISHES,
+            ownedWings,
+            cam: camMode,
+            volume,
+            onCar: chooseCar,
+            onConvert: convertTokens,
+            onTune: changeTune,
+            onTuneReset: resetTune,
+            onStyle: changeStyle,
+            onCam: changeCam,
+            onVolume: changeVolume,
+          }}
         />
       )}
       {phase === 'finished' && (

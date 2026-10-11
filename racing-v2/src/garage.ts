@@ -93,6 +93,14 @@ export function peakTorque(curve: ReadonlyArray<readonly [number, number]>): num
   return best
 }
 
+/** The paint value may be a v1 palette NAME (teal) or a raw hex. Resolve it
+ *  for rendering; unknown values fall back to the starter red. */
+export function resolvePaint(value: string, palette: Record<string, string> | null): string {
+  if (palette && palette[value]) return palette[value]
+  if (/^#[0-9a-fA-F]{3,8}$/.test(value)) return value
+  return '#c8102e'
+}
+
 /* The reference point: the shipped car at the shipped tune. Every mapping
  * below is expressed relative to these, so the default drive is unchanged. */
 const REF_MASS = 1280 // sport coupe, racing/data/cars.js
@@ -139,11 +147,25 @@ export interface GarageBridge {
   unlocked(): string[]
   /** Loads the canonical roster (racing/data/cars.js). Resolves [] on failure. */
   roster(): Promise<CarSpec[]>
+  /** Maps a legacy car id (panda, popup, ...) onto a launch id. */
+  migrate(id: string): string
   buy(id: string): boolean
   select(id: string): void
   setTune(patch: Partial<TuneSpec>): void
   addCash(amount: number): void
   /** Converts up to n tokens at $250; returns the cash gained. */
   convertTokens(n: number): number
+  /* Cosmetics, shared with v1's workshop. */
+  style(): { paint: string; finish: string; spoiler: string; neon: string }
+  wings(): Record<string, { name: string; price: number }>
+  finishes(): Record<string, string>
+  ownedWings(): string[]
+  /** A refused spoiler purchase (no cash) changes nothing. */
+  setStyle(patch: { paint?: string; finish?: string; spoiler?: string; neon?: string }): void
+  /* Camera and audio, shared with v1. */
+  cam(): 'chase' | 'far' | 'hood'
+  setCam(mode: 'chase' | 'far' | 'hood'): void
+  volume(): number
+  setVolume(v: number): void
   save(): void
 }

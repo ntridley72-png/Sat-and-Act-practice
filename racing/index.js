@@ -397,6 +397,12 @@
           return true;
         } catch (e) { return false; }
       },
+      migrate: function (id) {
+        try {
+          var Cars = window.Racing && window.Racing.Cars;
+          return Cars ? Cars.migrateSelection(id) : "sport";
+        } catch (e) { return "sport"; }
+      },
       select: function (id) {
         try {
           var garage = DriftCircuit.garage();
@@ -439,6 +445,59 @@
           updateHUD();
           return cash;
         } catch (e) { return 0; }
+      },
+      /* Cosmetics and preferences. All shared with v1's workshop: a
+         paint/finish/spoiler/neon/camera choice made in v2 is the choice
+         v1 sees, and vice versa. Wings keep their one-time prices. */
+      style: function () {
+        try {
+          var garage = DriftCircuit.garage();
+          return { paint: garage.paint, finish: garage.finish, spoiler: garage.spoiler, neon: garage.neon };
+        } catch (e) { return { paint: "teal", finish: "gloss", spoiler: "lip", neon: "none" }; }
+      },
+      wings: function () { try { return DriftCircuit.WINGS; } catch (e) { return { none: { name: "No wing", price: 0 }, lip: { name: "Lip", price: 0 } }; } },
+      finishes: function () { try { return DriftCircuit.FINISHES; } catch (e) { return { gloss: "Gloss" }; } },
+      ownedWings: function () { try { return DriftCircuit.garage().ownedWings || ["none", "lip"]; } catch (e) { return ["none", "lip"]; } },
+      setStyle: function (patch) {
+        try {
+          var garage = DriftCircuit.garage();
+          var p = patch || {};
+          if (typeof p.paint === "string") garage.paint = p.paint;
+          if (typeof p.finish === "string") garage.finish = p.finish;
+          if (typeof p.neon === "string") garage.neon = p.neon;
+          if (typeof p.spoiler === "string") {
+            var wing = (DriftCircuit.WINGS || {})[p.spoiler];
+            if (wing) {
+              var owned = garage.ownedWings || (garage.ownedWings = []);
+              if (owned.indexOf(p.spoiler) < 0) {
+                var price = wing.price | 0;
+                if ((garage.cash | 0) < price) return; // refused: nothing changes
+                garage.cash = (garage.cash | 0) - price;
+                owned.push(p.spoiler);
+              }
+              garage.spoiler = p.spoiler;
+            }
+          }
+          saveProfile();
+          updateHUD();
+        } catch (e) {}
+      },
+      cam: function () { try { return DriftCircuit.garage().cam; } catch (e) { return "chase"; } },
+      setCam: function (v) {
+        try {
+          if (v !== "chase" && v !== "far" && v !== "hood") return;
+          DriftCircuit.garage().cam = v;
+          saveProfile();
+        } catch (e) {}
+      },
+      volume: function () { try { return Number(DriftCircuit.garage().engineVolume); } catch (e) { return 0.7; } },
+      setVolume: function (v) {
+        try {
+          var n = Math.max(0, Math.min(1, Number(v)));
+          if (!isFinite(n)) return;
+          DriftCircuit.garage().engineVolume = n;
+          saveProfile();
+        } catch (e) {}
       },
       save: function () { try { saveProfile(); updateHUD(); } catch (e) {} },
     };

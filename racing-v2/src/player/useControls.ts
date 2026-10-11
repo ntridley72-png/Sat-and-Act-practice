@@ -10,12 +10,15 @@ export interface Controls {
   backward: boolean
   left: boolean
   right: boolean
-  brake: boolean
+  /** Rear-wheel lock, on the key v1 always used for it (Space). Braking while
+   *  moving is Down/S, which is also v1's mapping -- there is no separate
+   *  four-wheel brake button because v1 never had one. */
+  handbrake: boolean
   boost: boolean
   reset: boolean
 }
 
-const EMPTY: Controls = { forward: false, backward: false, left: false, right: false, brake: false, boost: false, reset: false }
+const EMPTY: Controls = { forward: false, backward: false, left: false, right: false, handbrake: false, boost: false, reset: false }
 
 /* Upstream's key map, plus WASD, because a study-site visitor should not have
  * to discover which of the two sets works. */
@@ -28,7 +31,7 @@ const KEYS: Record<string, keyof Controls> = {
   KeyA: 'left',
   ArrowRight: 'right',
   KeyD: 'right',
-  Space: 'brake',
+  Space: 'handbrake',
   ShiftLeft: 'boost',
   ShiftRight: 'boost',
   KeyR: 'reset',

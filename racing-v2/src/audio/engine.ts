@@ -50,6 +50,8 @@ export type SoundName = keyof typeof FILES
 interface Voice {
   el: HTMLAudioElement
   ready: boolean
+  /** The voice's own level; the master volume scales it. */
+  base: number
 }
 
 export class AudioRig {
@@ -57,6 +59,8 @@ export class AudioRig {
   private armed = false
   private disposed = false
   private muted = false
+  /** Master level from the garage's volume slider; scales every voice. */
+  private volume = 1
   /** Resolved against the page, so the rig works from any mount path. */
   private base: string
 
@@ -73,13 +77,10 @@ export class AudioRig {
       try {
         const el = new Audio(this.base + FILES[name])
         el.preload = 'auto'
-        if (name === 'engine') {
-          el.loop = true
-          el.volume = 0.35
-        } else {
-          el.volume = name === 'boost' ? 0.5 : 0.45
-        }
-        const voice: Voice = { el, ready: false }
+        if (name === 'engine') el.loop = true
+        const base = name === 'engine' ? 0.35 : name === 'boost' ? 0.5 : 0.45
+        el.volume = base * this.volume
+        const voice: Voice = { el, ready: false, base }
         el.addEventListener('canplaythrough', () => { voice.ready = true }, { once: true })
         // A missing or undecodable file must not take the game down. The rig
         // simply stays silent for that one sound.
@@ -101,6 +102,15 @@ export class AudioRig {
   setMuted(muted: boolean): void {
     this.muted = muted
     if (muted) this.stopAll()
+  }
+
+  /** Master volume, 0..1, from the garage. Applies immediately to every
+   *  voice; the engine loop re-applies it each frame anyway. */
+  setVolume(volume: number): void {
+    this.volume = Math.max(0, Math.min(1, isFinite(volume) ? volume : 1))
+    for (const voice of this.voices.values()) {
+      try { voice.el.volume = voice.base * this.volume } catch { /* ignore */ }
+    }
   }
 
   /** Fire a one-shot. Restarts from zero so rapid repeats are audible. */
@@ -136,7 +146,7 @@ export class AudioRig {
     const rate = 0.6 + t * 1.8
     try {
       voice.el.playbackRate = rate
-      voice.el.volume = this.muted ? 0 : 0.18 + t * 0.3
+      voice.el.volume = this.muted ? 0 : (0.18 + t * 0.3) * this.volume
     } catch {
       /* playbackRate out of range on some engines; ignore */
     }

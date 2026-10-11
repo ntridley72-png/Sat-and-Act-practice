@@ -16,8 +16,10 @@ const EXEC = process.env.HOME + '/Library/Caches/ms-playwright/chromium-1234/chr
      forward trial's momentum, still shows net forward displacement, and
      reports a false inversion -- which it did. */
   async function stop() {
+    // Space is the HANDBRAKE (v1's key): rear-only, so it needs a little
+    // longer than the old four-wheel brake to bleed speed off.
     await p.keyboard.down('Space')
-    await p.waitForTimeout(2500)
+    await p.waitForTimeout(4000)
     await p.keyboard.up('Space')
     await p.waitForTimeout(600)
   }

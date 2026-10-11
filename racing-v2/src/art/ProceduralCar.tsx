@@ -19,6 +19,36 @@ import type { CarArchetype, CarMaterials } from './carGeometry'
  * geometry the rest are still drawing. */
 const geometryCache = new Map<string, { body: THREE.BufferGeometry; canopy: THREE.BufferGeometry }>()
 
+/* Underglow sprite: a soft radial falloff, generated in code (the project
+ * ships no textures). Cached per colour; a hard-edged plane read as a glowing
+ * rectangle under the car rather than an underglow. */
+const neonTextures = new Map<string, THREE.Texture | null>()
+function neonTexture(color: string): THREE.Texture | null {
+  if (neonTextures.has(color)) return neonTextures.get(color) ?? null
+  let tex: THREE.Texture | null = null
+  try {
+    const c = document.createElement('canvas')
+    c.width = 128
+    c.height = 64
+    const g = c.getContext('2d')
+    if (g) {
+      const col = new THREE.Color(color)
+      const rgba = (a: number) => `rgba(${Math.round(col.r * 255)},${Math.round(col.g * 255)},${Math.round(col.b * 255)},${a})`
+      const grad = g.createRadialGradient(64, 32, 2, 64, 32, 62)
+      grad.addColorStop(0, rgba(0.9))
+      grad.addColorStop(0.55, rgba(0.38))
+      grad.addColorStop(1, rgba(0))
+      g.fillStyle = grad
+      g.fillRect(0, 0, 128, 64)
+      tex = new THREE.CanvasTexture(c)
+    }
+  } catch {
+    tex = null
+  }
+  neonTextures.set(color, tex)
+  return tex
+}
+
 function sharedGeometry(key: string, car: CarArchetype) {
   let g = geometryCache.get(key)
   if (!g) {
@@ -43,12 +73,19 @@ export type ProceduralCarProps = {
    *  Leaving this true there gives the car eight wheels: four drawn by the
    *  body and four more placed by the solver. */
   wheels?: boolean
+  /** Paint finish, from the garage (v1 workshop keys). Defaults to the
+   *  archetype's own finish. */
+  finish?: string
+  /** Wing override, from the garage: v1 workshop keys (none/lip/duck/gt). */
+  spoiler?: string
+  /** Underglow colour, from the garage; 'none' or absent = no glow. */
+  neon?: string
 }
 
 /* The assembled car as a THREE.Group, memoised per (archetype, paint, detail).
  * Returned as a group rather than JSX because buildWheel already produces a
  * Group and re-expressing it as JSX would duplicate working code. */
-export function useProceduralCar({ archetype = 'sport', paint, detailed = true, wheels = true, env = null }: ProceduralCarProps) {
+export function useProceduralCar({ archetype = 'sport', paint, detailed = true, wheels = true, env = null, finish, spoiler, neon }: ProceduralCarProps) {
   return useMemo(() => {
     const car = CARS[archetype] ?? CARS.sport
     const colour = paint ?? car.paint
@@ -56,7 +93,10 @@ export function useProceduralCar({ archetype = 'sport', paint, detailed = true, 
 
     // Materials are per-car: paint is what distinguishes opponents, so these
     // are NOT shared. They are cheap next to the loft.
-    const mats: CarMaterials = materials(THREE, colour, car.finish, env)
+    /* The bridge hands back plain strings (shared with v1 storage); the
+     * material builder's union is the same set, so narrow here rather than
+     * widening the materials API. */
+    const mats: CarMaterials = materials(THREE, colour, (finish as typeof car.finish) ?? car.finish, env)
 
     /* ORIENTATION NORMALISED HERE, once, so no consumer has to think about it.
      *
@@ -94,11 +134,38 @@ export function useProceduralCar({ archetype = 'sport', paint, detailed = true, 
      * untrimmed shell with none of the features its own data asked for. This
      * is the single biggest visual difference between the cars and a block. */
     try {
-      addDetails(THREE, car, oriented, mats, { ...car, key: archetype })
+      /* The garage can override the wing; `wing` in the detail spec wins over
+         the archetype's own (addDetails: spec.wing || car.wing). */
+      addDetails(THREE, car, oriented, mats, { ...car, key: archetype, wing: spoiler ?? car.wing })
     } catch (err) {
       // A detail builder failing must not cost the whole car. Better a plain
       // body than no body, on a page whose job is SAT practice.
       if (typeof console !== 'undefined') console.warn('car detail pass failed:', err)
+    }
+
+    /* Underglow: one unlit horizontal plane under the car. Generated in
+       code like everything else; depthWrite off so it tints the road without
+       fighting it. */
+    if (neon && neon !== 'none') {
+      try {
+        const tex = neonTexture(neon)
+        const glow = new THREE.Mesh(
+          new THREE.PlaneGeometry(4.7, 2.4),
+          new THREE.MeshBasicMaterial({
+            color: tex ? '#ffffff' : new THREE.Color(neon),
+            map: tex ?? null,
+            transparent: true,
+            opacity: tex ? 0.8 : 0.35,
+            toneMapped: false,
+            depthWrite: false,
+          }),
+        )
+        glow.rotation.x = -Math.PI / 2
+        glow.position.y = 0.02
+        oriented.add(glow)
+      } catch {
+        /* cosmetics must never cost the car */
+      }
     }
 
     const w = car.wheel
@@ -117,7 +184,7 @@ export function useProceduralCar({ archetype = 'sport', paint, detailed = true, 
     }
 
     return { group, car, materials: mats }
-  }, [archetype, paint, detailed, wheels, env])
+  }, [archetype, paint, detailed, wheels, env, finish, spoiler, neon])
 }
 
 /** Drop-in mesh for a car. Position and rotation are the caller's business. */

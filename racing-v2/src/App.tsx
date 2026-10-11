@@ -377,6 +377,21 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
     setPhase('racing')
   }, [runMode, economy, track, activeWeather, garage, paintHex, carSpec])
 
+  /* C cycles the camera while racing, as v1 did. Kept here rather than in
+     useControls because the camera is React state, and this runs only while
+     the race is live. */
+  useEffect(() => {
+    if (phase !== 'racing') return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== 'KeyC') return
+      const order = ['chase', 'far', 'hood'] as const
+      const next = order[(order.indexOf(camMode) + 1) % order.length]
+      changeCam(next)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [phase, camMode, changeCam])
+
   /* The scored clock. Mirrors v1's session rules in spirit: only ACTIVE
      driving spends the allowance (input within the grace window, or a car
      still carrying speed), a hidden tab spends nothing, and both the
@@ -531,6 +546,11 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
             topSpeed={track.ai.topSpeed}
             grip={grip}
             physics={carConfig ?? undefined}
+            camera={camMode}
+            volume={volume}
+            finish={styleState.finish}
+            spoiler={styleState.spoiler}
+            neon={styleState.neon}
           />
           <Grid key={`grid-${runId}`} line={line} count={opponents} raceSeed={`${seed}:${runId}`} skill={skill} gates={gates} cornerBudget={track.ai.cornerBudget} grip={grip} />
         </Physics>

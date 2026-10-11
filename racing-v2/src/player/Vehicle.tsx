@@ -16,6 +16,8 @@ import { ProceduralCar } from '../art/ProceduralCar'
 import { useEnvironment } from '../art/useEnvironment'
 import { Wheel } from './Wheel'
 import { vehicleConfig, wheelInfo, playerMutation } from './config'
+import { drivenWheels } from '../garage'
+import type { ResolvedCar } from '../garage'
 import { useControls } from './useControls'
 import { mutation } from '../ai/mutation'
 import { useLapTracker } from './useLapTracker'
@@ -34,11 +36,16 @@ const lookTarget = new Vector3()
  *  car's ground-level origin lines up with the bottom of the box. */
 const CHASSIS_HEIGHT = 1.2
 
-/** Chase camera placement, in the car's own frame. */
-const CAM_BACK = 9.5
-const CAM_HEIGHT = 3.6
-const CAM_SIDE = 3.5
-const CAM_LOOK_AHEAD = 7
+/** Camera placements, in the car's own frame. The garage's View selector
+ *  (and C while driving) picks one; the constants keep the chase view that
+ *  shipped untouched. */
+const CAMERAS = {
+  chase: { back: 9.5, height: 3.6, side: 3.5, look: 7 },
+  far: { back: 14.5, height: 5.8, side: 5.0, look: 10 },
+  /* Cockpit sits at the windscreen: slightly forward of the car's centre,
+   * at eye height, looking well ahead with almost no sway. */
+  hood: { back: -0.2, height: 1.5, side: 0.8, look: 22 },
+} as const
 
 /** Brake applied on all four wheels while off the racing surface. Enough to
  *  make cutting a corner slower than taking it, not enough to feel punitive. */
@@ -75,9 +82,20 @@ export interface VehicleProps {
   topSpeed?: number
   /** Weather grip multiplier (1 = dry). Scales wheel friction. */
   grip?: number
+  /** Per-car + tune vehicle parameters, from the garage (src/garage.ts).
+   *  Absent on bench pages: the shipped config applies unchanged. */
+  physics?: ResolvedCar
+  /** Chase camera flavour, from the garage (C cycles it while racing). */
+  camera?: 'chase' | 'far' | 'hood'
+  /** Engine volume 0..1, from the garage. */
+  volume?: number
+  /** Cosmetics, shared with v1's workshop. */
+  finish?: string
+  spoiler?: string
+  neon?: string
 }
 
-export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype = 'sport', paint, line, onLap, assetBase, startDistance = 0, gates = [], topSpeed, grip = 1 }: VehicleProps) {
+export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype = 'sport', paint, line, onLap, assetBase, startDistance = 0, gates = [], topSpeed, grip = 1, physics, camera = 'chase', volume = 1, finish, spoiler, neon }: VehicleProps) {
   const laps = useLapTracker(line, startDistance, gates)
   const lastLap = useRef(0)
   const defaultCamera = useThree((state) => state.camera)
@@ -85,7 +103,10 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
   const env = useEnvironment()
 
   const [chassisBody, chassisApi] = useBox(() => ({
-    mass: 500,
+    // Per-car mass from the garage; 500 is the shipped starter (calibration
+    // pinned in tools/garage-check.mjs). A race remounts this component, so
+    // the factory always reads the car that is actually racing.
+    mass: physics?.mass ?? 500,
     args: [vehicleConfig.width, CHASSIS_HEIGHT, 4.4],
     position,
     rotation,
@@ -108,9 +129,10 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
     const sideMulti = index % 2 ? 0.5 : -0.5
     return {
       ...wheelInfo,
-      /* Weather scales the tyre's peak grip. The AI plans around the same
-       * multiplier in its driver (see src/tracks/weather.ts). */
-      frictionSlip: wheelInfo.frictionSlip * grip,
+      /* Weather scales the tyre's peak grip, and the car+tune's grip factor
+       * scales it too (physics.frictionSlip is already absolute; the ratio
+       * against the shipped 1.5 keeps this a multiplier). */
+      frictionSlip: wheelInfo.frictionSlip * grip * (physics ? physics.frictionSlip / wheelInfo.frictionSlip : 1),
       chassisConnectionPointLocal: [width * sideMulti, height, length],
       isFrontWheel: index < 2,
     }
@@ -151,6 +173,7 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
   useLayoutEffect(() => {
     const rig = new AudioRig(assetBase ? assetBase.replace(/\/?$/, '/') + 'sounds/' : undefined)
     rig.init()
+    rig.setVolume(volume)
     audio.current = rig
     const armOnce = () => {
       rig.arm()
@@ -205,11 +228,23 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
      * forward axis and found W moving -22.8 m along it while S moved +28.9 m.
      * Negating here makes the physics agree with the bodywork, rather than
      * flipping the mesh and leaving the collision box and the AI's
-     * convention disagreeing with it. */
-    for (const i of [2, 3]) api.applyEngineForce(-s.engineValue, i)
+     * convention disagreeing with it.
+     *
+     * DRIVETRAIN decides which wheels are driven (garage): rwd the rears as
+     * shipped, fwd the fronts, awd all four with the force split so the total
+     * stays the car's engine force rather than doubling for awd. */
+    const driveWheels = physics ? drivenWheels(physics.drive) : ([2, 3] as const)
+    const powerScale = (physics ? physics.engineForce : force) / force
+    const perWheelScaling = powerScale * (2 / driveWheels.length)
+    for (const i of driveWheels) api.applyEngineForce(-s.engineValue * perWheelScaling, i)
     for (const i of [0, 1]) api.setSteeringValue(s.steeringValue, i)
+    /* HAND BRAKE, on v1's key and with v1's semantics: the rear wheels only,
+     * so a held Space at speed rotates the car instead of stopping it dead.
+     * Braking while moving is Down/S (reverse engine force), exactly v1. */
     const offRoadBrake = offTrack.current ? OFF_TRACK_BRAKE : 0
-    for (const i of [0, 1, 2, 3]) api.setBrake(Math.max(c.brake ? maxBrake : 0, offRoadBrake), i)
+    const handbrake = c.handbrake ? (physics?.handbrakeBrake ?? maxBrake) : 0
+    for (const i of [0, 1]) api.setBrake(offRoadBrake, i)
+    for (const i of [2, 3]) api.setBrake(Math.max(offRoadBrake, handbrake), i)
 
     /* The camera sway. Upstream computes a target from steering and speed and
        lerps toward it; this is a large part of why their game feels quick even
@@ -227,7 +262,7 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
       // condition holds is a buzzsaw, not a sound effect.
       if (playerMutation.sliding && !s.wasSliding) rig.play('brake')
       if (boosting && !s.wasBoosting) rig.play('boost')
-      if (c.brake && Math.abs(speed) > 12 && !s.wasSliding) rig.play('brake')
+      if (c.handbrake && Math.abs(speed) > 12 && !s.wasSliding) rig.play('brake')
     }
     s.wasSliding = playerMutation.sliding
     s.wasBoosting = boosting
@@ -247,6 +282,12 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
         z: v.z,
         yaw: chassisBody.current ? chassisBody.current.rotation.y : 0,
         speed: playerMutation.speed,
+        /* The resolved garage physics, so a test can prove the right car and
+           tune actually reached the solver. Null on bench pages. */
+        car: physics
+          ? { mass: physics.mass, slip: physics.frictionSlip, force: physics.engineForce, drive: physics.drive }
+          : null,
+        camera,
       })
 
       // Publish the player's progress so the AI avoids it and the leaderboard
@@ -287,18 +328,20 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
        * The offset is now rotated by the car's own yaw, so "behind" means
        * behind the car rather than south of it. */
       const yaw = chassisBody.current.rotation.y
-      // Local offset: back along the car's forward (-Z), and up.
-      const backX = -Math.sin(yaw) * CAM_BACK + Math.cos(yaw) * Math.sin(s.swayValue) * CAM_SIDE
-      const backZ = -Math.cos(yaw) * CAM_BACK - Math.sin(yaw) * Math.sin(s.swayValue) * CAM_SIDE
+      const CAM = CAMERAS[camera] ?? CAMERAS.chase
+      // Local offset: along the car's forward axis (negative back = ahead of
+      // centre, the cockpit), and up.
+      const backX = -Math.sin(yaw) * CAM.back + Math.cos(yaw) * Math.sin(s.swayValue) * CAM.side
+      const backZ = -Math.cos(yaw) * CAM.back - Math.sin(yaw) * Math.sin(s.swayValue) * CAM.side
 
-      camTarget.set(v.x + backX, v.y + CAM_HEIGHT, v.z + backZ)
+      camTarget.set(v.x + backX, v.y + CAM.height, v.z + backZ)
       // Frame-rate-independent smoothing. A raw delta*k lerp snaps at low fps
       // and crawls at high fps; this converges at the same rate either way.
       defaultCamera.position.lerp(camTarget, 1 - Math.pow(0.0001, delta))
 
       // Look slightly ahead of the car rather than at it, so the corner the
       // player is about to take is on screen instead of the bodywork.
-      lookTarget.set(v.x + Math.sin(yaw) * CAM_LOOK_AHEAD, v.y + 0.8, v.z + Math.cos(yaw) * CAM_LOOK_AHEAD)
+      lookTarget.set(v.x + Math.sin(yaw) * CAM.look, v.y + 0.8, v.z + Math.cos(yaw) * CAM.look)
       defaultCamera.lookAt(lookTarget)
     }
   })
@@ -315,7 +358,7 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
             cannon box is centred on its origin. Without this offset the
             bodywork floats half a box above its own wheels. */}
         <group position={[0, -CHASSIS_HEIGHT / 2, 0]}>
-          <ProceduralCar archetype={archetype} paint={paint} wheels={false} env={env} />
+          <ProceduralCar archetype={archetype} paint={paint} wheels={false} env={env} finish={finish} spoiler={spoiler} neon={neon} />
         </group>
       </group>
       {wheelRefs.current.map((ref, i) => (

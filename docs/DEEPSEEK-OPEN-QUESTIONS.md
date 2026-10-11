@@ -122,3 +122,29 @@ you can review or revert them:
 - Everything else of yours (bank content in app.js, guide/landing head
   stamps, favicon assets, SEO regeneration) is untouched in the working
   tree, uncommitted, as you left it.
+
+## 12. New game flipped to default ON — follow-ups to be aware of
+
+Operator instruction (2026-10-10): "change the game to the new version."
+`racing/index.js` now defaults enabled. Deployed as version `f3dadba7`; the
+live canary reads `enabled: true, source: "default"`.
+
+What still holds, and is now pinned by tests: `?racingV2=0`, the
+`RacingV2.setLocal(false)` device override and an account
+`profile.flags.racingV2 === false` all return the v1 game; a v2 startup
+failure still falls through to v1 in the same tick; nothing downloads until
+a driving game is opened.
+
+Two follow-ups worth a conscious decision:
+
+1. **The v1 token/session economy does not apply to v2.** `racing/session.js`
+   (Open Practice / Scored run) meters the v1 `arcade.game` clock, and its
+   "Scored run" button lives in the v1 workshop, which is not reachable while
+   v2 is running. So with the new default: v2 play is effectively Open
+   Practice, and no tokens are spent or earned through v2 races. If v2 should
+   have its own economy (tokens for scored runs, records), that is a feature
+   project on top of the v2 race lifecycle — say the word and it gets scoped.
+2. **`/SAT%20%26%20ACT%20Practice.html` 301s to a 404.** The Worker's
+   canonical redirect strips `.html` and adds a slash; the raw app filename
+   then has no page. This is pre-existing (not from today's changes) and
+   affects nobody using `/`; flagging it because it surfaced in a canary.

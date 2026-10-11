@@ -1,11 +1,11 @@
 /* The racing-v2 arcade integration.
  *
- * racing/index.js wraps arcade.select() so the driving games can run the v2
- * React game. The thing that matters most here is the NEGATIVE case: with the
- * flag off, the wrapper must be completely transparent and the student must
- * get exactly the v1 game they had yesterday. A hook that works when enabled
- * but subtly breaks the arcade when disabled is far worse than no hook.
- */
+ * racing/index.js wraps arcade.select() so the driving games run the v2 React
+ * game. As of 2026-10-10 that is the DEFAULT (operator decision); this test
+ * pins both directions: with no overrides the arcade mounts v2, and with an
+ * explicit ?racingV2=0 the wrapper is completely transparent and the student
+ * gets exactly the v1 game. A hook that works when enabled but subtly breaks
+ * the explicit opt-out is far worse than no hook. */
 const { chromium } = require("playwright-core");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -74,15 +74,37 @@ function serve() {
     return { page, errs };
   };
 
-  // --- flag OFF: the wrapper must be invisible -----------------------------
+  // --- DEFAULT (no overrides): v2 mounts, v1 is not started ----------------
   {
     const { page, errs } = await open("");
+    const r = await page.evaluate(() => RacingV2.enabled());
+    if (r !== true) fail("racingV2 must default on for the arcade path", r);
+
+    const mounted = await page.evaluate(async () => {
+      arcade.select("drift");
+      await new Promise((res) => setTimeout(res, 4000));
+      const host = document.getElementById("racingV2Mount");
+      return {
+        ctor: arcade.game && arcade.game.constructor && arcade.game.constructor.name,
+        visible: !!host && host.style.display === "block",
+        appLoaded: RacingV2.appLoaded(),
+      };
+    });
+    if (!mounted.appLoaded) fail("the default path must load the v2 bundle", mounted);
+    if (!mounted.visible) fail("the default path must show the v2 mount", mounted);
+    if (errs.length) fail("page errors on the default path", errs);
+    await page.close();
+  }
+
+  // --- explicit ?racingV2=0: the wrapper must be invisible ------------------
+  {
+    const { page, errs } = await open("?racingV2=0");
     const r = await page.evaluate(() => ({
       enabled: RacingV2.enabled(),
       hooked: typeof RacingV2.hookArcade === "function",
       selectIsFunction: typeof arcade !== "undefined" && typeof arcade.select === "function",
     }));
-    if (r.enabled !== false) fail("flag must default off", r);
+    if (r.enabled !== false) fail("?racingV2=0 must disable", r);
     if (!r.selectIsFunction) fail("arcade.select must still be callable after hooking", r);
 
     // Actually start the v1 drift game and confirm it is the v1 class.
@@ -94,9 +116,9 @@ function serve() {
           document.getElementById("racingV2Mount").style.display === "none",
       };
     });
-    if (v1.ctor !== "DriftCircuit") fail("flag off must still run v1 DriftCircuit", v1);
-    if (!v1.mountHidden) fail("the v2 mount must not be visible with the flag off", v1);
-    if (errs.length) fail("page errors with the flag off", errs);
+    if (v1.ctor !== "DriftCircuit") fail("explicitly disabled must still run v1 DriftCircuit", v1);
+    if (!v1.mountHidden) fail("the v2 mount must not be visible when disabled", v1);
+    if (errs.length) fail("page errors when disabled", errs);
     await page.close();
   }
 
@@ -139,5 +161,5 @@ function serve() {
 
   await browser.close();
   server.close();
-  console.log("PASS: the arcade hook is transparent with the flag off, mounts v2 with it on, and leaves other games alone.");
+  console.log("PASS: the arcade mounts v2 by default, is fully transparent under ?racingV2=0, and leaves other games alone.");
 })().catch((e) => { console.error("FAIL:", e.message); process.exit(1); });

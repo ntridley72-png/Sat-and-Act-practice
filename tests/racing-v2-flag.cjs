@@ -1,8 +1,11 @@
 /* The racingV2 flag and lazy loader.
 
-   The flag must default OFF, so a student who loads the page gets the game they
-   had yesterday; and a failed optional download must leave them on v1 rather
-   than break the arcade. */
+   The flag defaults ON as of 2026-10-10 (operator decision): the rebuilt game
+   is what students get when they open a driving game. What still must hold:
+   every explicit way back to v1 (?racingV2=0, the device override, the account
+   flag) wins over the default, nothing downloads until a driving game is
+   actually opened, and a failed optional download leaves the student on v1
+   rather than breaking the arcade. */
 const { chromium } = require("playwright-core");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -68,18 +71,30 @@ const PAGE = "/" + encodeURIComponent("SAT & ACT Practice.html");
     return { page, errs };
   };
 
-  // --- defaults OFF, and nothing is downloaded ---
+  // --- defaults ON, and still nothing is downloaded until a game is opened ---
   {
     const { page, errs } = await open();
     const r = await page.evaluate(() => ({
       enabled: RacingV2.enabled(), source: RacingV2.source(), loaded: !!window.Racing,
     }));
-    if (r.enabled !== false) fail("racingV2 must default off", r);
+    if (r.enabled !== true) fail("racingV2 must default on", r);
     if (r.source !== "default") fail("unexpected flag source", r);
-    if (r.loaded) fail("v2 modules must not load while the flag is off", r);
+    if (r.loaded) fail("v2 modules must not load merely from page load", r);
     const v1 = await page.evaluate(() => ({ drift: typeof DriftCircuit, racing: typeof NeonRacing }));
     if (v1.drift !== "function" || v1.racing !== "function") fail("v1 classes must still be present", v1);
-    if (errs.length) fail("page errors with the flag off", errs);
+    if (errs.length) fail("page errors with the default flag", errs);
+    await page.close();
+  }
+
+  // --- ?racingV2=0 still returns the old game ---
+  {
+    const { page, errs } = await open("?racingV2=0");
+    const r = await page.evaluate(() => ({
+      enabled: RacingV2.enabled(), source: RacingV2.source(), loaded: !!window.Racing,
+    }));
+    if (r.enabled !== false || r.source !== "query") fail("?racingV2=0 must disable", r);
+    if (r.loaded) fail("nothing may load when explicitly disabled", r);
+    if (errs.length) fail("page errors with the flag explicitly off", errs);
     await page.close();
   }
 
@@ -133,12 +148,21 @@ const PAGE = "/" + encodeURIComponent("SAT & ACT Practice.html");
   {
     const { page } = await open();
     const r = await page.evaluate(() => {
+      profile.flags = { racingV2: false };
+      return { enabled: RacingV2.enabled(), source: RacingV2.source() };
+    });
+    if (r.enabled !== false || r.source !== "account") fail("an account with the flag off must beat the default on", r);
+    await page.close();
+  }
+  {
+    const { page } = await open();
+    const r = await page.evaluate(() => {
       profile.flags = { racingV2: true };
       return { enabled: RacingV2.enabled(), source: RacingV2.source() };
     });
     if (r.enabled !== true || r.source !== "account") fail("the account flag should apply when nothing overrides it", r);
-    const cleared = await page.evaluate(() => { RacingV2.setLocal(true); const a = RacingV2.enabled(); RacingV2.setLocal(null); return { a, b: RacingV2.source() }; });
-    if (cleared.a !== true || cleared.b !== "account") fail("clearing the device override should fall back to the account", cleared);
+    const cleared = await page.evaluate(() => { RacingV2.setLocal(false); const a = RacingV2.enabled(); RacingV2.setLocal(null); return { a, b: RacingV2.source() }; });
+    if (cleared.a !== false || cleared.b !== "account") fail("a device override must win in both directions, and clearing it should fall back to the account", cleared);
     await page.close();
   }
 
@@ -158,5 +182,5 @@ const PAGE = "/" + encodeURIComponent("SAT & ACT Practice.html");
   }
 
   await browser.close();
-  console.log("PASS: racingV2 defaults off and loads nothing, query/device/account precedence, in-browser v2 simulation runs, and a failed load falls back to v1.");
+  console.log("PASS: racingV2 defaults on with every explicit opt-out intact, nothing loads until a game is opened, query/device/account precedence, in-browser v2 simulation runs, and a failed load falls back to v1.");
 })().catch((e) => { console.error(e); process.exit(1); });

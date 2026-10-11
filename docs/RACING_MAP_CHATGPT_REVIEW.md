@@ -215,6 +215,9 @@ required data steps were run (see the deployment note in
 - IndexNow: 663 sitemap URLs submitted in 7 batches, all HTTP 200.
 - `wrangler.toml` gained the four new favicon files in its build copy list;
   without that the freshly stamped favicon links in every page would 404.
-- The racingV2 flag still defaults OFF and the v1 fallback path is untouched,
-  so the racing work is not reachable by students until the operator turns
-  the flag on.
+- The racingV2 flag was flipped to **default ON** by a further operator
+  decision the same day ("change the game to the new version"); see
+  `docs/DEEPSEEK-OPEN-QUESTIONS.md` §12. Every explicit opt-out
+  (`?racingV2=0`, the device override, the account flag) still returns v1,
+  and the updated browser tests pin both directions; the live canary shows
+  `enabled: true, source: "default"`.

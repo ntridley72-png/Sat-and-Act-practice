@@ -1,18 +1,20 @@
 /* Racing v2 entry point and feature flag.
  *
- * The v2 simulation ships alongside the original DriftCircuit/NeonRacing code
- * rather than replacing it. `racingV2` decides which one runs, and it defaults
- * OFF: a student loading the page gets exactly the game they had yesterday
- * unless the flag is turned on for them.
+ * The rebuilt 3D game is the DEFAULT as of 2026-10-10 (operator decision):
+ * a student who opens 'drift' or 'racing' in the arcade gets the v2 game.
+ * Every explicit way back still wins, because a shipped default is exactly
+ * the thing that needs escape hatches:
  *
- * Flag precedence, highest first:
- *   1. ?racingV2=1 / ?racingV2=0  — a link, for testing on a real device
- *   2. localStorage               — a per-device override, set by the toggle
- *   3. profile.flags.racingV2     — the account value, synced from the server
- *   4. off
+ *   1. ?racingV2=0               — a link, for testing on a real device
+ *   2. localStorage              — a per-device override (RacingV2.setLocal)
+ *   3. profile.flags.racingV2    — the account value, synced from the server
+ *   4. on                        — the default
  *
- * The v2 SIMULATION modules (core/, data/, game/) are loaded lazily and only
- * when the flag is on, so a student who never turns it on never downloads them.
+ * The original v1 game and its code remain fully present; a failure anywhere
+ * in the v2 startup path falls through to v1 in the same tick, which the
+ * browser tests assert. The v2 SIMULATION modules (core/, data/, game/) are
+ * still loaded lazily -- nothing downloads them until a driving game is
+ * actually opened.
  *
  * Note that `racing/` also holds two files that are NOT part of v2 and are
  * deliberately loaded unconditionally from the page: `session.js` (the free
@@ -56,7 +58,11 @@
     var q = fromQuery(); if (q !== null) return q;
     var s = fromStorage(); if (s !== null) return s;
     var p = fromProfile(); if (p !== null) return p;
-    return false;
+    /* DEFAULT ON (operator decision, 2026-10-10): the new game is what
+       students get. Every explicit signal above still wins -- ?racingV2=0 and
+       RacingV2.setLocal(false) return the old game, and a startup failure
+       falls through to v1 regardless of this value. */
+    return true;
   }
 
   /* Set the per-device override. Passing null clears it and falls back to the

@@ -14,7 +14,9 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
   page.on("console", (m) => { if (m.type() === "error" && !/\/api\/|501|404/.test(m.text())) errors.push("console: " + m.text()); });
 
-  await page.goto(BASE + PAGE_PATH, { waitUntil: "domcontentloaded" });
+  // This suite pins the v1 game's contracts. v2 is the DEFAULT since
+  // 2026-10-10; the v1 path is the documented ?racingV2=0 opt-out.
+  await page.goto(BASE + PAGE_PATH + "?racingV2=0", { waitUntil: "domcontentloaded" });
   await page.waitForSelector("body[data-workspace]");
 
   // ---- 1. Racing starts, accelerates, advances distance, steers laterally ----

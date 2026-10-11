@@ -299,6 +299,151 @@
     };
   }
 
+  /* ---- the v2 garage bridge -----------------------------------------------
+   *
+   * The whole progression lives in profile.garage, owned by the v1 app and
+   * shared with v1's workshop, so a car bought in v2 shows as owned in v1 and
+   * a legacy garage keeps everything Cars.migrateUnlocks() maps forward.
+   *
+   * The roster itself comes from racing/data/cars.js -- one canonical file,
+   * loaded lazily the first time the garage asks for it (a student who never
+   * opens the game downloads nothing, and a student who opens it pays for one
+   * small script). Display names and prices prefer DriftCircuit.CARS, which
+   * is what the v1 shop shows today, so the two shops name the same car the
+   * same way.
+   */
+  var V2_ARCHETYPES = {
+    sport: "sport", hatch: "hatch", coupe90: "roadster", muscle: "muscle",
+    rotary: "wedge", rally: "rally", track: "supercar", straight: "sport",
+    hyper: "hyper", ev: "ev",
+  };
+  var rosterPromise = null;
+  function loadCarRoster() {
+    if (window.Racing && window.Racing.Cars && window.Racing.Cars.CARS) return Promise.resolve(window.Racing.Cars);
+    if (rosterPromise) return rosterPromise;
+    rosterPromise = loadScript(base() + "data/cars.js").then(function () {
+      return (window.Racing && window.Racing.Cars) || null;
+    }).catch(function () {
+      rosterPromise = null;
+      return null;
+    });
+    return rosterPromise;
+  }
+  function buildRoster(Cars) {
+    var DC = (typeof DriftCircuit !== "undefined" && DriftCircuit.CARS) || {};
+    return Cars.ORDER.map(function (id) {
+      var c = Cars.CARS[id], dc = DC[id] || {};
+      return {
+        id: id,
+        name: dc.name || c.name,
+        price: typeof dc.price === "number" ? dc.price : (c.unlockPrice | 0),
+        archetype: V2_ARCHETYPES[id] || "sport",
+        starter: !!c.starter,
+        mass: c.mass, drive: c.drive,
+        gripFront: c.gripFront, gripRear: c.gripRear,
+        torqueCurve: c.torqueCurve, handbrakeRelease: c.handbrakeRelease,
+      };
+    });
+  }
+  function makeGarage() {
+    function g() {
+      try { return DriftCircuit.garage(); } catch (e) { return null; }
+    }
+    return {
+      cash: function () { try { return g().cash | 0; } catch (e) { return 0; } },
+      tokens: function () { try { return profile.tokens | 0; } catch (e) { return 0; } },
+      paintPalette: function () { try { return window.CAR_PAINTS || null; } catch (e) { return null; } },
+      car: function () { try { return DriftCircuit.garage().raceCar; } catch (e) { return "sport"; } },
+      tune: function () {
+        try {
+          var t = DriftCircuit.garage().tune;
+          return { power: t.power, grip: t.grip, weight: t.weight, handbrake: t.handbrake };
+        } catch (e) { return { power: 0.7, grip: 1.35, weight: 1.2, handbrake: 1 }; }
+      },
+      unlocked: function () {
+        try {
+          var garage = DriftCircuit.garage();
+          var u = Array.isArray(garage.unlocked) ? garage.unlocked : [];
+          /* Map legacy ids (panda, popup, wedge, ...) onto the launch records
+             once, then persist -- migration is idempotent. */
+          var migrated = (window.Racing && window.Racing.Cars) ? window.Racing.Cars.migrateUnlocks(u) : u;
+          if (migrated.length !== u.length || migrated.some(function (id, i) { return id !== u[i]; })) {
+            garage.unlocked = migrated;
+            try { saveProfile(); } catch (e2) {}
+          }
+          return migrated;
+        } catch (e) { return ["sport"]; }
+      },
+      roster: function () {
+        return loadCarRoster().then(function (Cars) {
+          if (!Cars || !Cars.CARS) return [];
+          return buildRoster(Cars);
+        });
+      },
+      buy: function (id) {
+        try {
+          var garage = DriftCircuit.garage();
+          if ((garage.unlocked || []).indexOf(id) >= 0) return true;
+          var Cars = window.Racing && window.Racing.Cars;
+          var spec = Cars && Cars.CARS[id];
+          var price = 0;
+          try { price = (typeof DriftCircuit.CARS[id] !== "undefined") ? (DriftCircuit.CARS[id].price | 0) : (spec ? (spec.unlockPrice | 0) : 0); } catch (e3) { price = spec ? (spec.unlockPrice | 0) : 0; }
+          if ((garage.cash | 0) < price) return false;
+          garage.cash = (garage.cash | 0) - price;
+          garage.unlocked = (garage.unlocked || []).concat([id]);
+          saveProfile();
+          updateHUD();
+          try { showToast("Unlocked " + ((DriftCircuit.CARS[id] && DriftCircuit.CARS[id].name) || (spec && spec.name) || id) + "!"); } catch (e4) {}
+          return true;
+        } catch (e) { return false; }
+      },
+      select: function (id) {
+        try {
+          var garage = DriftCircuit.garage();
+          if ((garage.unlocked || []).indexOf(id) < 0) return;
+          /* v2 has no separate drift mode, so the choice follows the student
+             into the v1 drift game too rather than diverging silently. */
+          garage.raceCar = id;
+          garage.car = id;
+          saveProfile();
+        } catch (e) {}
+      },
+      setTune: function (patch) {
+        try {
+          var garage = DriftCircuit.garage();
+          Object.keys(patch || {}).forEach(function (k) {
+            if (typeof patch[k] === "number" && isFinite(patch[k])) garage.tune[k] = patch[k];
+          });
+          saveProfile();
+        } catch (e) {}
+      },
+      addCash: function (amount) {
+        try {
+          var n = Math.max(0, Math.floor(amount) || 0);
+          if (!n) return;
+          var garage = DriftCircuit.garage();
+          garage.cash = (garage.cash | 0) + n;
+          saveProfile();
+          updateHUD();
+        } catch (e) {}
+      },
+      convertTokens: function (n) {
+        try {
+          var count = Math.max(0, Math.min(profile.tokens | 0, Math.floor(n) || 0));
+          if (!count) return 0;
+          profile.tokens = (profile.tokens | 0) - count;
+          var cash = count * 250;
+          var garage = DriftCircuit.garage();
+          garage.cash = (garage.cash | 0) + cash;
+          saveProfile();
+          updateHUD();
+          return cash;
+        } catch (e) { return 0; }
+      },
+      save: function () { try { saveProfile(); updateHUD(); } catch (e) {} },
+    };
+  }
+
   function startApp(container, opts) {
     var options = opts || {};
     if (!webglSupported()) {
@@ -327,6 +472,7 @@
           // reliably work it out, because Vite rewrites import.meta.url.
           assetBase: appBase(),
           economy: makeEconomy(pendingMode),
+          garage: makeGarage(),
           onQuit: options.onQuit,
           onError: function () {
             try { mod.unmount(); } catch (e) {}

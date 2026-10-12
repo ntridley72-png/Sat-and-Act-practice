@@ -14,10 +14,10 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #0f1216;
+  background: #05060f;
   /* The site's own font if it set one, else a sane stack. Inheriting blindly
      is what makes an embedded UI look like a ransom note. */
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: "Press Start 2P", ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
   color: #fff;
 }
@@ -41,7 +41,7 @@
   font-size: 10px;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, .5);
+  color: #ffef5a;
   margin-bottom: 2px;
 }
 
@@ -59,7 +59,7 @@
   font-size: 11px;
   font-weight: 600;
   letter-spacing: .12em;
-  color: #ffd166;
+  color: #ffef5a;
   text-shadow: 0 1px 8px rgba(0, 0, 0, .6);
 }
 
@@ -71,7 +71,7 @@
   color: rgba(255, 255, 255, .62);
 }
 .rv2-note strong { color: #fff; }
-.rv2-best { color: #ffd166; margin-top: 0; margin-bottom: 18px; }
+.rv2-best { color: #ffef5a; margin-top: 0; margin-bottom: 18px; }
 
 /* A chip that is unavailable stays visible so its tooltip can explain why. */
 .rv2-root .rv2-chip:disabled { opacity: .45; cursor: not-allowed; }
@@ -80,17 +80,17 @@
 .rv2-cars { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; }
 .rv2-root .rv2-car {
   display: flex; flex-direction: column; gap: 2px; align-items: flex-start;
-  padding: 8px 10px; border-radius: 9px; cursor: pointer; text-align: left;
-  background: rgba(255, 255, 255, .05);
-  border: 1px solid rgba(255, 255, 255, .12);
+  padding: 8px 10px; border-radius: 6px; cursor: pointer; text-align: left;
+  background: #0a0b1e;
+  border: 2px solid #2b2bff;
   color: inherit; font: inherit;
 }
 .rv2-root .rv2-car b { font-size: 12px; font-weight: 650; }
 .rv2-root .rv2-car small { font-size: 11px; color: rgba(255, 255, 255, .55); }
-.rv2-root .rv2-car:hover { background: rgba(255, 255, 255, .11); }
-.rv2-root .rv2-car.is-on { background: rgba(255, 209, 102, .16); border-color: rgba(255, 209, 102, .5); }
-.rv2-root .rv2-car.is-on small { color: #ffd166; }
-.rv2-root .rv2-car.is-locked small { color: #ffd166; }
+.rv2-root .rv2-car:hover { background: #101236; }
+.rv2-root .rv2-car.is-on { background: #0a0b1e; border-color: #ffef5a; box-shadow: 0 0 0 1px #ffef5a, 0 0 12px rgba(255, 239, 90, .3); }
+.rv2-root .rv2-car.is-on small { color: #ffef5a; }
+.rv2-root .rv2-car.is-locked small { color: #ffef5a; }
 .rv2-root .rv2-car:disabled { opacity: .45; cursor: not-allowed; }
 
 /* Collapsible garage sections keep the panel short by default. */
@@ -104,7 +104,7 @@
 .rv2-details[open] summary::before { content: "▾ "; }
 .rv2-details summary:hover { color: #fff; }
 .rv2-root .rv2-reset { margin-top: 4px; }
-.rv2-warn { color: #ffd166; }
+.rv2-warn { color: #ffef5a; }
 
 .rv2-map {
   width: clamp(104px, 15vw, 168px);
@@ -169,7 +169,7 @@
   display: grid;
   place-items: center;
   padding: 16px;
-  background: radial-gradient(120% 90% at 50% 0%, rgba(32, 40, 54, .82), rgba(8, 10, 13, .94));
+  background: radial-gradient(120% 90% at 50% 0%, rgba(43, 43, 255, .2), rgba(5, 6, 15, .96));
   backdrop-filter: blur(5px);
   pointer-events: auto;
   overflow-y: auto;
@@ -178,22 +178,25 @@
 .rv2-panel {
   width: min(520px, 100%);
   padding: clamp(20px, 4vw, 32px);
-  border-radius: 16px;
-  background: rgba(18, 22, 29, .9);
-  border: 1px solid rgba(255, 255, 255, .09);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, .55);
+  border-radius: 14px;
+  background: #05060f;
+  border: 3px solid #2b2bff;
+  box-shadow: inset 0 0 30px rgba(43, 43, 255, .35), 0 24px 70px rgba(0, 0, 0, .65);
 }
 .rv2-panel-sm { width: min(380px, 100%); text-align: center; }
 
 .rv2-title {
   margin: 0 0 6px;
   font-size: clamp(24px, 4.6vw, 34px);
-  font-weight: 700;
-  letter-spacing: -.02em;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: #ff3df2;
+  text-align: center;
+  text-shadow: 0 0 12px #ff3df2;
 }
 .rv2-sub { margin: 0 0 22px; font-size: 13px; color: rgba(255, 255, 255, .62); line-height: 1.55; }
 .rv2-result { margin: 0 0 4px; font-size: 26px; }
-.rv2-result strong { color: #ffd166; }
+.rv2-result strong { color: #ffef5a; }
 
 .rv2-field { margin-bottom: 18px; }
 .rv2-field-label {
@@ -202,7 +205,7 @@
   font-size: 11px;
   letter-spacing: .12em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, .5);
+  color: #ffef5a;
 }
 .rv2-field-label strong { color: #fff; }
 
@@ -215,14 +218,14 @@
   font: inherit;
   font-size: 12px;
   color: rgba(255, 255, 255, .72);
-  background: rgba(255, 255, 255, .06);
-  border: 1px solid transparent;
-  border-radius: 8px;
+  background: #0a0b1e;
+  border: 2px solid #2b2bff;
+  border-radius: 6px;
   cursor: pointer;
   transition: background .12s ease, color .12s ease, border-color .12s ease;
 }
-.rv2-root .rv2-chip:hover { background: rgba(255, 255, 255, .11); color: #fff; }
-.rv2-root .rv2-chip.is-on { background: rgba(255, 209, 102, .16); border-color: rgba(255, 209, 102, .5); color: #ffd166; }
+.rv2-root .rv2-chip:hover { background: #101236; color: #fff; }
+.rv2-root .rv2-chip.is-on { background: #0a0b1e; border-color: #ffef5a; color: #ffef5a; box-shadow: 0 0 0 1px #ffef5a; }
 
 .rv2-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
 .rv2-root .rv2-swatch {
@@ -246,7 +249,7 @@
 .rv2-root .rv2-swatch:hover { transform: scale(1.08); }
 .rv2-root .rv2-swatch.is-on { border-color: #fff; transform: scale(1.12); }
 
-.rv2-root .rv2-range { width: 100%; accent-color: #ffd166; height: 24px; cursor: pointer; }
+.rv2-root .rv2-range { width: 100%; accent-color: #ffef5a; height: 24px; cursor: pointer; }
 
 .rv2-actions { display: grid; gap: 8px; margin-top: 18px; }
 
@@ -256,10 +259,10 @@
   font: inherit;
   font-size: 15px;
   font-weight: 650;
-  color: #15181d;
-  background: linear-gradient(180deg, #ffd980, #ffc14d);
-  border: 0;
-  border-radius: 11px;
+  color: #05060f;
+  background: #ffef5a;
+  border: 2px solid #ffef5a;
+  border-radius: 6px;
   cursor: pointer;
   transition: filter .12s ease, transform .06s ease;
 }
@@ -274,7 +277,7 @@
   color: rgba(255, 255, 255, .72);
   background: transparent;
   border: 1px solid rgba(255, 255, 255, .16);
-  border-radius: 11px;
+  border-radius: 6px;
   cursor: pointer;
   transition: background .12s ease, color .12s ease;
 }

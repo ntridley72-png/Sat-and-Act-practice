@@ -95,6 +95,21 @@ function serve() {
     if (!mounted.visible) fail("the default path must show the v2 mount", mounted);
     if (!(mounted.rectW > 300)) fail("the default path must lay the game out, not mount it at 0x0", mounted);
     if (errs.length) fail("page errors on the default path", errs);
+
+    // app.js owns a global cabinet shortcut: Space launches the highlighted
+    // menu item whenever arcade.mode is still `menu`. v2 also uses Space for
+    // its handbrake, so the host seam must keep that key inside the live race
+    // instead of letting the hidden cabinet replace it.
+    await page.locator('body').focus();
+    await page.keyboard.press('Space');
+    await page.waitForTimeout(150);
+    const afterSpace = await page.evaluate(() => ({
+      visible: document.getElementById('racingV2Mount')?.style.display === 'block',
+      active: document.getElementById('arcadeStage')?.classList.contains('racing-v2-active'),
+      mode: arcade.mode,
+    }));
+    if (!afterSpace.visible || !afterSpace.active) fail("Space must stay inside v2 instead of relaunching the cabinet selection", afterSpace);
+    if (afterSpace.mode !== 'playing') fail("the host must expose v2 as a live game to cabinet shortcuts", afterSpace);
     await page.close();
   }
 

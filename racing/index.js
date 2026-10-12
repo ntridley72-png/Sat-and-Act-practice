@@ -691,6 +691,16 @@
       } catch (e) {}
       stage.classList.add("active");
 
+      /* app.js keeps the cabinet's global Space/Enter handler alive while the
+       * overlay is open. If arcade.mode is still `menu`, Space is interpreted
+       * as "launch the highlighted cabinet game" before v2's handbrake
+       * listener sees it, which tears down the race. Mark the host seam as a
+       * live game even though v2 deliberately does not create a v1
+       * `arcade.game`; the old handler then ignores gameplay keys and React's
+       * own controls receive them normally. backToMenu() and every v1
+       * select() path set the mode they need when v2 leaves. */
+      try { arcade.mode = "playing"; } catch (e) {}
+
       startApp(host, {
         opponents: 6,
         seed: "race-" + game,

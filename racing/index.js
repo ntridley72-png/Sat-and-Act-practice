@@ -253,6 +253,9 @@
     return profile.racingV2Records;
   }
   function makeEconomy(initialMode) {
+    /* Scored runs charged-but-not-refunded. The v1 fallback seam reads this so
+       a mount that dies after the player already paid cannot double-charge. */
+    var scoredCharges = 0;
     return {
       initialMode: initialMode === "scored" ? "scored" : "practice",
       tokenCost: 1,
@@ -263,6 +266,17 @@
         try {
           if ((profile.tokens | 0) < 1) return false;
           profile.tokens = (profile.tokens | 0) - 1;
+          scoredCharges++;
+          saveProfile();
+          updateHUD();
+          return true;
+        } catch (e) { return false; }
+      },
+      scoredCharges: function () { return scoredCharges; },
+      refundScored: function () {
+        try {
+          profile.tokens = (profile.tokens | 0) + 1;
+          scoredCharges = Math.max(0, scoredCharges - 1);
           saveProfile();
           updateHUD();
           return true;
@@ -418,7 +432,11 @@
         try {
           var garage = DriftCircuit.garage();
           Object.keys(patch || {}).forEach(function (k) {
-            if (typeof patch[k] === "number" && isFinite(patch[k])) garage.tune[k] = patch[k];
+            if (typeof patch[k] !== "number" || !isFinite(patch[k])) return;
+            /* Mirror of TUNE_RANGE in racing-v2/src/garage.ts. The slider
+               already bounds this, but the bridge is the data layer, so it
+               clamps instead of trusting the caller. */
+            garage.tune[k] = Math.max(0.7, Math.min(1.4, patch[k]));
           });
           saveProfile();
         } catch (e) {}
@@ -520,6 +538,20 @@
         if (typeof RacingSession !== "undefined" && RacingSession && RacingSession.takePending) {
           pendingMode = RacingSession.takePending();
         }
+      } catch (e) {}
+      var econ = makeEconomy(pendingMode);
+      /* Any failure AFTER the request was consumed must put the scored
+         request back, and must refund a token v2 already charged for this
+         attempt -- otherwise the v1 fallback either double-charges or
+         silently downgrades the paid run to practice. */
+      function restoreScoredRequest() {
+        try {
+          if (pendingMode !== "scored") return;
+          if (econ.scoredCharges() > 0) econ.refundScored();
+          if (window.RacingSession && RacingSession.request) RacingSession.request("scored");
+        } catch (e) {}
+      }
+      try {
         mod.mount(container, {
           opponents: options.opponents,
           seed: options.seed,
@@ -529,11 +561,12 @@
           // The host knows where the game was served from; the bundle cannot
           // reliably work it out, because Vite rewrites import.meta.url.
           assetBase: appBase(),
-          economy: makeEconomy(pendingMode),
+          economy: econ,
           garage: makeGarage(),
           onQuit: options.onQuit,
           onError: function () {
             try { mod.unmount(); } catch (e) {}
+            restoreScoredRequest();
             try { if (typeof options.onFail === "function") options.onFail(); } catch (e) {}
           }
         });
@@ -541,6 +574,7 @@
       } catch (err) {
         try { console.warn("racing v2 failed to start, staying on v1:", err && err.message); } catch (e) {}
         try { mod.unmount(); } catch (e) {}
+        restoreScoredRequest();
         return false;
       }
     });
@@ -632,9 +666,17 @@
         return originalSelect(game);
       }
 
-      // Open the overlay and clear any previous game the way select() would,
-      // then try v2. If it declines, fall through to v1 in the same tick so
-      // the student never sees a gap.
+      /* Clear the outgoing game exactly the way v1's select() does: stop its
+         audio and drop the object. Skipping this left a running v1 engine
+         audible over v2 and a stale arcade.game that the money-banking hook
+         and the arcade tests read. */
+      try {
+        if (arcade.game && typeof arcade.game.stopAudio === "function") arcade.game.stopAudio();
+      } catch (e) {}
+      try { arcade.game = null; } catch (e) {}
+
+      // Open the overlay and try v2. If it declines, fall through to v1 in
+      // the same tick so the student never sees a gap.
       var host = ensureMount(stage);
       host.style.display = "block";
       stage.classList.add("racing-v2-active");
@@ -653,12 +695,10 @@
         opponents: 6,
         seed: "race-" + game,
         onFail: function () {
-          /* The mount threw AFTER the pending mode was consumed. Put the
-             paid-scored request back so the v1 fallback charges and runs it
-             as requested, rather than silently downgrading to practice. */
-          try {
-            if (pendingMode === "scored" && window.RacingSession && RacingSession.request) RacingSession.request("scored");
-          } catch (e) {}
+          /* startApp has already restored any scored request it consumed
+             (and refunded a token v2 charged for this attempt), so the v1
+             fallback runs it as requested instead of downgrading to practice
+             or double-charging. */
           fallbackToV1(game);
         },
         onQuit: function () {

@@ -26,7 +26,15 @@ const EXEC = process.env.HOME + '/Library/Caches/ms-playwright/chromium-1234/chr
 
   async function run(key, label) {
     await stop()
-    const a = await p.evaluate(() => window.__rv2probe && window.__rv2probe())
+    let a = await p.evaluate(() => window.__rv2probe && window.__rv2probe())
+    /* A trial only means something from a standstill. On a slow frame the
+       handbrake window can end before the car fully stops, and the leftover
+       forward momentum then showed up as a false "INVERTED" verdict. */
+    if (a && Math.abs(a.speed) > 2) {
+      await stop()
+      a = await p.evaluate(() => window.__rv2probe && window.__rv2probe())
+    }
+    if (a && Math.abs(a.speed) > 2) console.log(`  ${label.padEnd(18)} (car still rolling at ${a.speed.toFixed(1)} m/s; result approximate)`)
     await p.keyboard.down(key); await p.waitForTimeout(2000); await p.keyboard.up(key)
     await p.waitForTimeout(300)
     const c = await p.evaluate(() => window.__rv2probe && window.__rv2probe())

@@ -185,10 +185,15 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
     g = pick("doom"); g.started = true; g.input("left");
     out.doomTouchTurn = g.controlMap({}).turn === -1;
 
-    // Leaving a driving game stops its engine audio.
+    // Leaving a driving game stops its engine audio. v2 is the default game
+    // now, so the v1 racer only exists synchronously under the documented
+    // opt-out; flipping back to the default makes the v2 hook the thing under
+    // test -- it must stop the OUTGOING v1 racer the way select() used to.
+    RacingV2.setLocal(false);
     arcade.select("racing");
     const racer = arcade.game;
     racer.audio = { eg: { gain: { value: 1 } }, ng: { gain: { value: 1 } }, ctx: { close() { racer._closed = true; } } };
+    RacingV2.setLocal(null);
     arcade.select("drift");
     out.audioStops = racer.audio === null && racer._closed === true;
 

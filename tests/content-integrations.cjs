@@ -48,5 +48,7 @@ vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync("college-data.js", "utf8"), sandbox);
 const colleges = sandbox.window.COLLEGE_DATA.colleges;
 const attributed = colleges.filter((college) => Array.isArray(college.imgs) && college.imgs.every((photo) => photo.u && photo.a && photo.l));
-if (attributed.length && attributed.some((college) => college.imgs.length > 3)) throw new Error("gallery exceeds three images");
+/* The gallery contract is six images (see college-gallery.cjs, which covers
+   the 1/6/none cases); this assertion lagged the v7+ photo refresh at three. */
+if (attributed.length && attributed.some((college) => college.imgs.length > 6)) throw new Error("gallery exceeds six images");
 console.log("PASS: SEO, Adsterra units, controlled slots, dirt-bike registration, and attributed college galleries are present (" + attributed.length + "/" + colleges.length + " galleries cached)." );

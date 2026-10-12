@@ -80,8 +80,12 @@ export function racePayout(run: {
   weather: string
 }): number {
   if (!run.finished) return 0
+  /* The game computes position as ahead + 1, so 1 is the best real finish.
+     Guard the money function against junk input: a non-finite position pays
+     as last place, and anything below 1 cannot out-earn the leader. */
+  const position = Number.isFinite(run.position) ? Math.max(1, run.position) : PAYOUT.lastPlace
   const credit = Math.max(0, Math.min(PAYOUT.perSecondCap, 120 - run.seconds))
-  const place = Math.max(0, PAYOUT.lastPlace - run.position) * PAYOUT.perPlace
+  const place = Math.max(0, PAYOUT.lastPlace - position) * PAYOUT.perPlace
   const wet = run.weather !== 'dry' ? PAYOUT.wetBonus : 0
   return Math.round(PAYOUT.base + credit * PAYOUT.perSecondUnder120 + place + wet)
 }
@@ -116,13 +120,24 @@ export function carPhysics(car: CarSpec, tune: TuneSpec = DEFAULT_TUNE): Resolve
   const refTorque = 245 // sport's peak torque from the launch records
   const avgGrip = (car.gripFront + car.gripRear) / 2
   const powerRatio = car.torqueCurve.length ? peakTorque(car.torqueCurve) / refTorque : 1
+  /* Defensive read-path clamp. The slider and the bridge both bound their
+     writes, but the profile itself is editable, and an unbounded value here
+     means 10x engine force. Junk falls back to the shipped default. */
+  const bound = (v: number, fallback: number) =>
+    Number.isFinite(v) ? Math.min(TUNE_RANGE.max, Math.max(TUNE_RANGE.min, v)) : fallback
+  const t = {
+    power: bound(tune.power, DEFAULT_TUNE.power),
+    grip: bound(tune.grip, DEFAULT_TUNE.grip),
+    weight: bound(tune.weight, DEFAULT_TUNE.weight),
+    handbrake: bound(tune.handbrake, DEFAULT_TUNE.handbrake),
+  }
   return {
-    mass: REF_CHASSIS_MASS * (car.mass / REF_MASS) * (tune.weight / DEFAULT_TUNE.weight),
-    frictionSlip: REF_SLIP * (avgGrip / REF_GRIP) * (tune.grip / DEFAULT_TUNE.grip),
-    engineForce: REF_FORCE * powerRatio * (tune.power / DEFAULT_TUNE.power),
+    mass: REF_CHASSIS_MASS * (car.mass / REF_MASS) * (t.weight / DEFAULT_TUNE.weight),
+    frictionSlip: REF_SLIP * (avgGrip / REF_GRIP) * (t.grip / DEFAULT_TUNE.grip),
+    engineForce: REF_FORCE * powerRatio * (t.power / DEFAULT_TUNE.power),
     drive: car.drive,
     handbrakeBrake:
-      REF_HANDBRAKE_BRAKE * (car.handbrakeRelease / REF_HANDBRAKE) * (tune.handbrake / DEFAULT_TUNE.handbrake),
+      REF_HANDBRAKE_BRAKE * (car.handbrakeRelease / REF_HANDBRAKE) * (t.handbrake / DEFAULT_TUNE.handbrake),
   }
 }
 

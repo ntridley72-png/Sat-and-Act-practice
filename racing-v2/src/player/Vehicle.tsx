@@ -288,6 +288,18 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
           ? { mass: physics.mass, slip: physics.frictionSlip, force: physics.engineForce, drive: physics.drive }
           : null,
         camera,
+        /* The live handbrake input state, so a test can prove Space is the
+           handbrake in v2 the way it was in v1. */
+        handbrake: controls.current.handbrake,
+        /* Read-only race context for the finish-line test: lap state and the
+           live opponents the scripted driver can chase. None of this can end
+           a race or mint cash -- finishRun's payout stays behind the real
+           lap-completion path and the pay gate. */
+        lap: mutation.player.lap,
+        progress: laps.progress,
+        opponents: mutation.opponents
+          .filter((o) => o.active)
+          .map((o) => ({ x: o.x, z: o.y, lap: o.lap, progress: o.progress })),
       })
 
       // Publish the player's progress so the AI avoids it and the leaderboard

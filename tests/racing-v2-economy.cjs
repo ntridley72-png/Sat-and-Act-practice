@@ -184,6 +184,18 @@ function serve() {
   await page.click(".rv2-go");
   if ((await tokens()) !== 0) fail("starting the preset scored run must spend the token", await tokens());
 
+  // --- 9. the shipping test probe must never mint cash ---------------------
+  // finish() records like the real path but passes pay=false. Before this
+  // gate (codex + claude review, 2026-10-10) a devtools call to the probe
+  // during a Scored run banked a full payout without driving a metre.
+  const cashBefore = await page.evaluate(() => DriftCircuit.garage().cash);
+  await probe("finish", 80, 30);
+  st = await probe("state");
+  const cashAfter = await page.evaluate(() => DriftCircuit.garage().cash);
+  if (st.result.recorded !== true) fail("the probe finish must still record scored runs", st.result);
+  if (st.result.payout) fail("the probe finish must not carry a payout", st.result);
+  if (cashAfter !== cashBefore) fail("the probe finish must not change cash", { cashBefore, cashAfter });
+
   if (errs.length) fail("page errors during the economy flow", errs.slice(0, 3));
   await page.close();
   await browser.close();

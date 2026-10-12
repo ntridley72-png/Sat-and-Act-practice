@@ -281,7 +281,7 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
   /** The scored-run clock: remaining seconds, idle time, and recent input. */
   const clock = useRef({ mode: 'practice' as RunMode, active: false, remaining: SCORED_ACTIVE_SECONDS, idle: 0, lastInput: 0 })
 
-  const finishRun = useCallback((timeUp: boolean, endReason: 'clock' | 'idle' | null = null, secondsOverride?: number, lapOverride?: number | null) => {
+  const finishRun = useCallback((timeUp: boolean, endReason: 'clock' | 'idle' | null = null, secondsOverride?: number, lapOverride?: number | null, pay = true) => {
     if (finishedRef.current) return
     finishedRef.current = true
     const r = run.current
@@ -322,8 +322,9 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
 
     /* SCORED RACES PAY. Practice and unrecorded (time-up/idle) runs pay
        nothing, matching v1 where only scored runs banked cash. The table
-       lives in one place (garage.ts) and is unit-tested. */
-    if (r.mode === 'scored' && !timeUp && garage) {
+       lives in one place (garage.ts) and is unit-tested. `pay === false` is
+       reserved for the test seam below: it must never mint cash. */
+    if (r.mode === 'scored' && !timeUp && garage && pay) {
       outcome.payout = racePayout({
         seconds: elapsed,
         position: outcome.position,
@@ -460,8 +461,11 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
 
   /* Test seam, in the spirit of Vehicle's __rv2probe: the browser test needs
      to finish a race without driving two real laps, and to drive the scored
-     clock without waiting five real minutes. Harmless in production -- it
-     only exposes what the UI already shows and the finish path already does. */
+     clock without waiting five real minutes. This ships in the production
+     bundle, so it is deliberately NOT harmless: finish() records the result
+     but passes pay=false, because a console call to it during a Scored run
+     previously banked a full payout without driving a metre. Payouts come
+     only from the real race path. */
   useEffect(() => {
     const w = window as unknown as { __rv2economyProbe?: unknown }
     w.__rv2economyProbe = {
@@ -472,7 +476,7 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
         remaining: clock.current.remaining,
         result: resultRef.current,
       }),
-      finish: (seconds?: number, lap?: number | null) => finishRun(false, null, seconds, lap),
+      finish: (seconds?: number, lap?: number | null) => finishRun(false, null, seconds, lap, false),
       tick: (seconds: number) => {
         const c = clock.current
         if (!c.active || c.mode !== 'scored') return

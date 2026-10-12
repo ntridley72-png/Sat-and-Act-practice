@@ -13,7 +13,10 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   const errors = [];
   page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
 
-  await page.goto(BASE + PAGE_PATH, { waitUntil: "domcontentloaded" });
+  // v2 is the default game now; this suite is the v1 DriftCircuit contract,
+  // so it runs on the documented ?racingV2=0 opt-out the way racing-behavior
+  // does. The v2 side has its own suites.
+  await page.goto(BASE + PAGE_PATH + "?racingV2=0", { waitUntil: "domcontentloaded" });
   await page.waitForSelector("body[data-workspace]");
 
   // Garage is reachable from the arcade menu before picking a game.

@@ -46,6 +46,12 @@ const SHOTS = path.join(__dirname, "screenshots");
   };
 
   for (const key of games) {
+    /* The two driving games are v2 by default now, and their real path is
+       covered by tests/racing-v2-arcade.cjs. This smoke test reads the v1
+       game object synchronously, so it drives those two iterations on the
+       documented ?racingV2=0-style opt-out instead. */
+    const drivingGame = key === "racing" || key === "drift";
+    if (drivingGame) await page.evaluate(() => window.RacingV2 && RacingV2.setLocal(false));
     await page.evaluate((k) => arcade.select(k), key);
     await page.waitForTimeout(160);
     const info = await page.evaluate(() => {
@@ -74,6 +80,7 @@ const SHOTS = path.join(__dirname, "screenshots");
       if (key === "drift" && !(Math.hypot(after.x - before.x, after.y - before.y) > 3)) throw new Error("drift car did not move");
       if (key === "drift" && !(after.score > before.score)) throw new Error("space did not start a scored drift");
     }
+    if (drivingGame) await page.evaluate(() => window.RacingV2 && RacingV2.setLocal(null));
     if (interaction[key]) await page.evaluate(() => {
       const actions = {
         "2048": () => arcade.game.input("left"),

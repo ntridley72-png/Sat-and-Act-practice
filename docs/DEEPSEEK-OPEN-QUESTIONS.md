@@ -164,10 +164,94 @@ Follow-ups:
      `RacingV2.willHandle()` deferral and a unified v1 fallback; a failed v2
      boot now re-dispatches through the full v1 chain, session rules included,
      which the updated flag test asserts.
-   Still open from this area: the v1 workshop's tuning/cash upgrades do not
-   apply to v2 cars (v2 has its own car, paint, track and mode selection).
-   If the garage economy should also move into v2, that is the next feature.
+   RESOLVED 2026-10-10: the workshop's tuning/cash upgrades now apply to v2
+   cars — v2 has the full garage. See section 13.
 3. **`/SAT%20%26%20ACT%20Practice.html` 301s to a 404.** The Worker's
    canonical redirect strips `.html` and adds a slash; the raw app filename
    then has no page. This is pre-existing (not from today's changes) and
    affects nobody using `/`; flagging it because it surfaced in a canary.
+
+
+## 13. Garage complete: cars, cash, tuning, cosmetics — and the headless reviews
+
+Operator instruction (2026-10-10): "make the upgrades and cash economy apply
+to v2 cars aswell as track, mode and all the other things", with locked
+decisions along the way: in-game cash only (no real money), Space = handbrake
+exactly as v1, starter car free (the redesigned hero), every other car behind
+a cash paywall, all six tracks unlocked from the jump, cosmetics paint +
+finish + spoiler + neon, all three camera views with a selector, adjustable
+engine volume, "chill" payout rates. And: "have codex headless and claude
+look it over to help."
+
+### What shipped (commits 0088592, 6fe1207, b7a62cc, 520d084, ea7a9a4 + this)
+- The intro is the garage: roster from `racing/data/cars.js` (one canonical
+  list both games read), starter free and selected, every other car priced
+  and bought with in-game cash earned by finishing scored runs. Tokens
+  convert to cash ($250) in the garage too.
+- All six tracks free from the start (enabled chips at $0).
+- Tuning (power/grip/weight/handbrake) resolves into the real Vehicle physics
+  (`racing-v2/src/garage.ts` `carPhysics`). Calibration pinned in
+  `racing-v2/tools/garage-check.mjs` (29 cases): the stock sport car at the
+  default tune equals the shipped vehicle exactly (mass 500, slip 1.5,
+  force 1800).
+- Payouts on scored finishes: $500 base + $25/s under 120 s (90 s credit cap)
+  + $75 per place better than 12th + $150 wet. Practice, time-up and idle pay
+  nothing (idle end verified live: $0, 7/7, reason idle).
+- Cameras chase/far/hood (selector + C cycles); engine volume slider;
+  cosmetics paint/finish/spoiler/neon (neon is a generated canvas texture).
+- v1-era garages migrate (legacy ids map forward, e.g. panda→hatch) and v1
+  reads the same `profile.garage`, so both games share one garage.
+- Space = handbrake, S/Down = brake/reverse, Shift = boost.
+
+### Review findings and dispositions (codex exec + claude -p, read-only)
+- codex: a pending scored request was consumed before the v2 bundle was
+  confirmed, so a failed boot silently downgraded a paid run to practice.
+  FIXED: consumed only after load; on any later failure the request is
+  restored and a token v2 charged for that attempt is refunded, so v1 charges
+  exactly once. Pinned by two new flag-test cases (sync mount throw;
+  charged-then-post-mount-error — both end tokens 1→0 with a scored v1 run).
+- codex: passive pointer movement counted as driving on the scored clock.
+  FIXED to v1's exact rule (pointermove needs buttons held).
+- codex: the college audit gate (aa75c7f) failed on 55 cached mis-filed
+  photos inside the review range. FIXED in the builder: kind is re-derived
+  from the URL and an athletics label without a venue file name downgrades to
+  campus; cache-only rebake brings the gate from 55 failures to 0 (1260
+  photos). Also aligned `content-integrations`' stale 3-image cap with the
+  six-image gallery contract.
+- claude (live exploit): the shipping test probe could finish a Scored run
+  and bank a full payout from devtools. FIXED: probe finish is pay-gated
+  (records, never mints cash); pinned in economy test section 9. The probe's
+  "harmless in production" comment was corrected.
+- claude: double-charge on post-mount error and the sync-throw restore — same
+  seam as codex's finding; both covered by the new flag cases.
+- claude: tune bounds — the bridge clamps writes to 0.7–1.4 and `carPhysics`
+  clamps reads, so a hand-edited profile cannot reach the solver with 10×
+  force; pinned live (hostile 99 → force 3600 = range max). `racePayout`
+  guards junk positions.
+- Residual (documented, not hidden): the real drive-to-finish payout cannot
+  be automated headless — SwiftShader renders the host page at ~2 fps and a
+  scripted driver wedges on track barriers. The exact payout block was
+  measured live before the gate landed (P1 at 100 s = $1825 exactly, cash
+  1825), the formula is unit-pinned, and lap completion calls that same
+  block. Recommended manual close-out: one finished Scored run on real GPU.
+- Also caught by re-running the operator's suite under v2-by-default: the v2
+  hook skipped v1's select() teardown, so a running v1 engine kept playing
+  over v2 and `arcade.game` went stale. FIXED (stopAudio + game=null before
+  mounting v2) and arcade-logic now exercises the teardown itself. arcade-ui
+  and drift-ui were adapted to the documented v1 opt-out for their v1
+  contracts. New `scripts/serve-tests.cjs` serves the production layout on
+  :8899 (/racing-v2/* → dist) — a plain http.server made every v2 request a
+  404 that arcade-ui correctly flagged.
+
+### Verification (all green, 2026-10-10)
+`racing-v2-garage` (new: roster/paywall, buy persistence, v1 visibility,
+tune→physics, hostile clamp, migration, Space handbrake) ·
+`racing-v2-economy` (9 sections) · `racing-v2-flag` (incl. both failure
+variants) · `racing-v2-arcade` · `racing-behavior` · `garage-check` 29/29 ·
+`forward-test` (hardened to require a standstill) · v1 node:test suites
+7+16+23+31+30+10 = 117 pass · `racing-session` · `racing-garage-conflicts`
+(in real Worker, wrangler dev :8787) · `arcade-logic` · `arcade-ui` (28
+games) · `drift-ui` · `college-images` / `college-ui` / `college-gallery` /
+`college.test` · `content-integrations` · `contrast-audit` ·
+`workspace-layout` · `workshop-tracks-bars` · `seo-audit` · `ads-filter`.
+Screenshots: `racing-v2/bench/shots/garage-{intro,style,tuning,race}.png`.

@@ -209,6 +209,37 @@ const PAGE = "/" + encodeURIComponent("SAT & ACT Practice.html");
     await page.close();
   }
 
+  // --- a scored request survives every v2 failure, charged exactly once ---
+  // The stub replaces the React bundle with a module that fails in the two
+  // ways the real one can after the request was consumed: mount() throwing
+  // synchronously, and a post-mount error after the run already charged its
+  // token. Both must land on v1 with the run scored, not practice.
+  const STUB_THROWS = "export function mount() { throw new Error('boom in mount') } export function unmount() {}";
+  const STUB_CHARGES_THEN_ERRORS = "export function mount(c, o) { o.economy.spendScored(); setTimeout(function () { o.onError() }, 10) } export function unmount() {}";
+  for (const [name, stub] of [["sync mount throw", STUB_THROWS], ["charged then post-mount error", STUB_CHARGES_THEN_ERRORS]]) {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    const errs = [];
+    page.on("pageerror", (e) => errs.push(e.message));
+    await page.route("**/racing-v2/racing-v2.js", (route) => route.fulfill({ status: 200, contentType: "text/javascript", body: stub }));
+    await page.goto(BASE + PAGE, { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("body[data-workspace]");
+    const r = await page.evaluate(async () => {
+      profile.tokens = 1;
+      RacingSession.start("scored");
+      await new Promise((res) => setTimeout(res, 2500));
+      return {
+        ctor: arcade.game && arcade.game.constructor && arcade.game.constructor.name,
+        sessionMode: RacingSession.state().mode,
+        tokens: profile.tokens,
+      };
+    });
+    if (r.ctor !== "DriftCircuit") fail(`${name}: must land on v1 DriftCircuit`, r);
+    if (r.sessionMode !== "scored") fail(`${name}: the paid scored request must survive into v1, got ${r.sessionMode}`, r);
+    if (r.tokens !== 0) fail(`${name}: exactly one token must be charged, tokens=${r.tokens}`, r);
+    if (errs.length) fail(`${name}: must not throw into the page`, errs);
+    await page.close();
+  }
+
   await browser.close();
-  console.log("PASS: racingV2 defaults on with every explicit opt-out intact, nothing loads until a game is opened, query/device/account precedence, in-browser v2 simulation runs, a failed v2 app boot falls back to the full v1 game, and a failed module load stays on v1.");
+  console.log("PASS: racingV2 defaults on with every explicit opt-out intact, nothing loads until a game is opened, query/device/account precedence, in-browser v2 simulation runs, a failed v2 app boot falls back to the full v1 game, a failed module load stays on v1, and a scored request survives both v2 failure timing variants with a single charge.");
 })().catch((e) => { console.error(e); process.exit(1); });

@@ -5993,6 +5993,7 @@ const arcade = {
         recover.textContent = '↺ Reset Position';
         recover.addEventListener('click', () => {
           if (this.game && typeof this.game.resetPosition === 'function') { clearArcadeInput(); this.game.resetPosition(); }
+          else document.querySelector('#racingV2Mount .rv2-recover')?.click();
         });
         hudGarage.insertAdjacentElement('afterend', recover);
       }

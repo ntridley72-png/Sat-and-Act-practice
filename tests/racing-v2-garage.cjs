@@ -71,7 +71,7 @@ function serve() {
 
   const garage = () => page.evaluate(() => DriftCircuit.garage());
   const openGame = async () => {
-    await page.evaluate(() => arcade.select("drift"));
+    await page.evaluate(() => arcade.select("racing"));
     await page.waitForFunction("window.RacingV2 && RacingV2.appLoaded() === true", { timeout: 20000 });
     await page.waitForSelector(".rv2-go", { state: "visible", timeout: 20000 });
     await page.waitForFunction("window.__rv2economyProbe", { timeout: 20000 });

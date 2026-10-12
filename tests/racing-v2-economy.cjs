@@ -78,7 +78,7 @@ function serve() {
   const probe = (fn, ...args) => page.evaluate(({ fn, args }) => window.__rv2economyProbe[fn](...args), { fn, args });
 
   const openGame = async () => {
-    await page.evaluate(() => arcade.select("drift"));
+    await page.evaluate(() => arcade.select("racing"));
     await page.waitForFunction("window.RacingV2 && RacingV2.appLoaded() === true", { timeout: 20000 });
     await page.waitForSelector(".rv2-go", { state: "visible", timeout: 20000 });
     await page.waitForFunction("window.__rv2economyProbe", { timeout: 20000 });
@@ -169,10 +169,10 @@ function serve() {
   st = await probe("state");
   if (st.result.recorded) fail("broke practice run must not record", st.result);
 
-  // --- 8. workshop path: RacingSession.start('scored') presets v2 ----------
+  // --- 8. a pending scored request presets the racing-v2 intro ------------
   await backToArcade();
   await setTokens(1);
-  await page.evaluate(() => RacingSession.start("scored"));
+  await page.evaluate(() => { RacingSession.request("scored"); arcade.select("racing"); });
   await page.waitForFunction("window.RacingV2 && RacingV2.appLoaded() === true", { timeout: 20000 });
   await page.waitForSelector(".rv2-go", { timeout: 20000 });
   await page.waitForFunction("window.__rv2economyProbe", { timeout: 20000 });

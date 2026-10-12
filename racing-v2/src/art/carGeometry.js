@@ -120,9 +120,11 @@ function buildStations(car) {
     archRun(wb, fenderR, false);
     put(tail - .55, base(tail - .55), top(tail - .55), wAt(tail - .55), .38);
     put(tail - .32, base(tail - .32) + .03, top(tail - .32) - .01, wAt(tail - .32) * .95, .4);
-    put(tail - .14, car.baseY + .12, car.tailY - .03, wAt(tail - .14) * .82, .44);
-    put(tail - .02, car.baseY + .16, car.tailY - .07, wAt(tail - .02) * .68, .5);
-    put(tail, car.baseY + .2, car.tailY - .12, wAt(tail) * .58, .55);
+    // Preserve a full-width rear fascia beneath the lamp housings instead
+    // of pinching the body to a point and leaving lights floating outside it.
+    put(tail - .14, car.baseY + .12, car.tailY - .03, wAt(tail - .14) * .98, .38);
+    put(tail - .02, car.baseY + .14, car.tailY - .05, wAt(tail - .02) * .96, .4);
+    put(tail, car.baseY + .16, car.tailY - .07, wAt(tail) * .94, .42);
     return st.sort((a, b) => a[0] - b[0]);
   }
 

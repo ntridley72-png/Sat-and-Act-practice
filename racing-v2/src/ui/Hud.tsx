@@ -108,6 +108,7 @@ export function Hud({ line, opponents, startedAt, mode, clock }: HudProps) {
   return (
     <div className="rv2-hud">
       <div className="rv2-corner rv2-tl">
+        <button type="button" className="rv2-recover" onClick={() => { playerMutation.resetRequest++ }}>Reset Position</button>
         <div className="rv2-label">LAP TIME</div>
         <div ref={clockEl} className="rv2-clock">0:00.00</div>
         <div ref={modeEl} className="rv2-mode" />

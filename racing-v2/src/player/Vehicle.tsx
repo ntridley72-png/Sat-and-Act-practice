@@ -111,6 +111,10 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
     position,
     rotation,
     allowSleep: false,
+    // The arcade road collider is flat: keep the chassis upright while
+    // preserving yaw, suspension travel and car-specific traction/drive.
+    angularFactor: [0, 1, 0],
+    angularDamping: 0.45,
   }))
 
   const wheelRefs = useRef([createRef<Group>(), createRef<Group>(), createRef<Group>(), createRef<Group>()] as const)
@@ -174,6 +178,12 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
     const rig = new AudioRig(assetBase ? assetBase.replace(/\/?$/, '/') + 'sounds/' : undefined)
     rig.init()
     rig.setVolume(volume)
+    const host = window as unknown as { FunSATAudio?: { muted: boolean } }
+    rig.setMuted(host.FunSATAudio?.muted ?? false)
+    const mute = (event: Event) => {
+      rig.setMuted((event as CustomEvent<{ muted: boolean }>).detail.muted)
+    }
+    window.addEventListener('funsat:mute', mute)
     audio.current = rig
     const armOnce = () => {
       rig.arm()
@@ -184,6 +194,7 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
     return () => {
       window.removeEventListener('keydown', armOnce)
       window.removeEventListener('pointerdown', armOnce)
+      window.removeEventListener('funsat:mute', mute)
       rig.dispose()
       audio.current = null
     }
@@ -195,11 +206,28 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
     engineValue: 0, steeringValue: 0, speed: 0,
     swayValue: 0, swayTarget: 0, swaySpeed: 0,
     wasSliding: false, wasBoosting: false,
+    wasReset: false, resetRequest: playerMutation.resetRequest,
   })
 
   useFrame((_, delta) => {
     const s = state.current
     const c = controls.current
+    const dt = Math.min(Math.max(delta, 0), 0.05)
+    if ((c.reset && !s.wasReset) || s.resetRequest !== playerMutation.resetRequest) {
+      const point = line.at(laps.progress)
+      chassisApi.position.set(point.x, 0.85, point.y)
+      chassisApi.rotation.set(0, Math.PI / 2 - point.heading, 0)
+      chassisApi.velocity.set(0, 0, 0)
+      chassisApi.angularVelocity.set(0, 0, 0)
+      s.engineValue = 0; s.steeringValue = 0; s.swayValue = 0; s.swaySpeed = 0
+      playerMutation.speed = 0
+      controls.current.forward = false; controls.current.backward = false
+      controls.current.left = false; controls.current.right = false
+      controls.current.handbrake = false; controls.current.boost = false
+      audio.current?.stopAll()
+      s.resetRequest = playerMutation.resetRequest
+    }
+    s.wasReset = c.reset
 
     const speed = playerMutation.speed
 
@@ -214,10 +242,11 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
     const engine = (c.forward ? force : c.backward ? -force : 0) * (boosting ? BOOST_MULTIPLIER : 1)
     // Cut drive above maxSpeed rather than clamping velocity: clamping would
     // fight the solver and make the car feel like it hit a wall.
-    s.engineValue = lerp(s.engineValue, Math.abs(speed) > maxSpeed ? 0 : engine, delta * 12)
+    s.engineValue = lerp(s.engineValue, Math.abs(speed) > maxSpeed ? 0 : engine, 1 - Math.exp(-dt * 8))
 
-    const steerTarget = c.left ? steer : c.right ? -steer : 0
-    s.steeringValue = lerp(s.steeringValue, steerTarget, delta * 14)
+    const steeringLimit = steer / (1 + Math.max(0, speed - 8) * 0.055)
+    const steerTarget = c.left ? steeringLimit : c.right ? -steeringLimit : 0
+    s.steeringValue = lerp(s.steeringValue, steerTarget, 1 - Math.exp(-dt * 10))
 
     /* ENGINE SIGN IS NEGATED, and it is not arbitrary.
      *
@@ -279,7 +308,9 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
       const probe = window as unknown as { __rv2probe?: () => unknown }
       probe.__rv2probe = () => ({
         x: v.x,
+        y: v.y,
         z: v.z,
+        upright: chassisBody.current ? new Vector3(0, 1, 0).applyQuaternion(chassisBody.current.quaternion).y : 1,
         yaw: chassisBody.current ? chassisBody.current.rotation.y : 0,
         speed: playerMutation.speed,
         /* The resolved garage physics, so a test can prove the right car and

@@ -522,7 +522,9 @@
     };
   }
 
+  var mountGeneration = 0;
   function startApp(container, opts) {
+    var generation = ++mountGeneration;
     var options = opts || {};
     if (!webglSupported()) {
       try { console.warn("racing v2 needs WebGL, staying on v1"); } catch (e) {}
@@ -534,6 +536,8 @@
        could not boot, because the v1 fallback then found nothing pending. */
     var pendingMode = null;
     return ensureApp().then(function (mod) {
+      // A close/switch during the import must not mount an invisible game.
+      if (generation !== mountGeneration) return true;
       if (!mod) return false;
       try {
         if (typeof RacingSession !== "undefined" && RacingSession && RacingSession.takePending) {
@@ -582,6 +586,7 @@
   }
 
   function stopApp() {
+    mountGeneration++;
     if (!appModule) return;
     try { appModule.unmount(); } catch (e) {}
   }
@@ -644,6 +649,16 @@
 
     hooked = true;
     var originalSelect = arcade.select.bind(arcade);
+    // Closing the host must unmount React too: hiding its canvas leaves the
+    // audio elements and physics frame loop alive underneath the cabinet.
+    ['close', 'showMenu', 'backToMenu'].forEach(function (name) {
+      if (typeof arcade[name] !== 'function') return;
+      var original = arcade[name].bind(arcade);
+      arcade[name] = function () {
+        teardown(stage);
+        return original.apply(null, arguments);
+      };
+    });
 
     /* The one way back to v1 when v2 cannot boot (bundle download failure,
        import failure, mount throw -- every route funnels here). Re-dispatch

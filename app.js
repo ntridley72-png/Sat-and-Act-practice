@@ -3437,7 +3437,11 @@ let pendingUnlock = null;
 
 // ---- AUDIO ----
 let audioCtx = null;
-function ensureAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+function ensureAudio() {
+  if (!audioCtx || audioCtx.state === 'closed') audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended' && profile.soundOn) void audioCtx.resume().catch(() => {});
+}
+window.FunSATAudio = { muted: !profile.soundOn };
 function playTone(freq, dur, type, vol) {
   if (!profile.soundOn) return;
   try {
@@ -4652,6 +4656,12 @@ $("btnSound").addEventListener("click", () => {
   profile.soundOn = !profile.soundOn;
   $("btnSound").textContent = profile.soundOn ? "🔊" : "🔇";
   $("btnSound").classList.toggle("muted", !profile.soundOn);
+  window.FunSATAudio.muted = !profile.soundOn;
+  window.dispatchEvent(new CustomEvent('funsat:mute', { detail: { muted: !profile.soundOn } }));
+  if (!profile.soundOn) {
+    if (audioCtx && audioCtx.state !== 'closed') void audioCtx.close().catch(() => {});
+    if (arcade.game && typeof arcade.game.stopAudio === 'function') arcade.game.stopAudio();
+  }
   saveProfile();
 });
 $("btnArcadeAddTime").addEventListener("click", () => arcade.addTime());
@@ -5976,6 +5986,17 @@ const arcade = {
       const driveBtn = document.getElementById('btnDriftTouch'); if (driveBtn) driveBtn.classList.toggle('show', showGarage);
       const driftGarageBtn = document.getElementById('driftGarageBtn'); if (driftGarageBtn) driftGarageBtn.style.display = showGarage ? '' : 'none';
       const hudGarage = document.getElementById('btnDriftGarage');
+      let recover = document.getElementById('btnResetPosition');
+      if (!recover && hudGarage) {
+        recover = document.createElement('button');
+        recover.id = 'btnResetPosition'; recover.type = 'button'; recover.className = 'secondary';
+        recover.textContent = '↺ Reset Position';
+        recover.addEventListener('click', () => {
+          if (this.game && typeof this.game.resetPosition === 'function') { clearArcadeInput(); this.game.resetPosition(); }
+        });
+        hudGarage.insertAdjacentElement('afterend', recover);
+      }
+      if (recover) recover.style.display = showGarage ? '' : 'none';
       if (hudGarage) {
         hudGarage.style.display = showGarage ? '' : 'none';
         try { hudGarage.textContent = '🏁 Garage · $' + DriftCircuit.garage().cash; } catch (e) { hudGarage.textContent = '🏁 Garage'; }
@@ -10361,6 +10382,7 @@ function startCarAudio(gameKey) {
 }
 function updateCarAudio(a, rpm, throttle, slip, dt) {
   if (!a) return;
+  if (!soundOn()) { a.eg.gain.value = 0; a.ng.gain.value = 0; return; }
   try {
     const r = Math.max(0, Math.min(1, rpm || 0)), vol = (a.vol == null ? .7 : a.vol);
     // Wider pitch sweep so speed is audible across the whole range rather than
@@ -10686,7 +10708,6 @@ const RacingGL = (function () {
     const color = hexRgb(paint), dark = [color[0] * .45, color[1] * .45, color[2] * .45], glass = [.045, .09, .14];
     const FIN = { gloss: [0.45, 30], metallic: [0.7, 48], pearl: [0.6, 42], matte: [0.04, 8], chrome: [1.1, 80] }[opts.finish || 'gloss'] || [0.45, 30];
     const PAINT_SPEC = { spec: FIN[0], shininess: FIN[1] }, GLASS_SPEC = { spec: .95, shininess: 70 };
-    const accent = color[2] > color[0] * 1.15 ? [1, .2, .58] : [.08, .82, .92];
     const wheelC = hexRgb(opts.wheelColor || '#111111'), pc = [Math.max(0, color[0] * .7), Math.max(0, color[1] * .7), Math.max(0, color[2] * .7)];
     const style = shape.style || 'boxy';
     const cab = cabinFor(style), cspec = cab.spec;
@@ -10713,10 +10734,10 @@ const RacingGL = (function () {
     drawMesh(state.meshes.box, mPart(pose, { y: .72, z: -.08, x: -W2 * .95, sz: .14, sx: .14, sy: .09 }), dark);
     drawMesh(state.meshes.box, mPart(pose, { y: .72, z: -.08, x: W2 * .95, sz: .14, sx: .14, sy: .09 }), dark);
     for (const sd of [-1, 1]) drawMesh(state.meshes.box, mPart(pose, { x: sd * W2 * .84, y: .7, z: -.07, sx: .11, sy: .04, sz: .045 }), dark);
-    // Bright stepped rocker panels give the low-poly traffic the arcade cover-car silhouette.
-    drawMesh(state.meshes.box, mPart(pose, { y: .27, z: .05, x: -W2 * .94, sz: L * .72, sx: .07, sy: .11 }), accent, { emissive: .25 });
-    drawMesh(state.meshes.box, mPart(pose, { y: .27, z: .05, x: W2 * .94, sz: L * .72, sx: .07, sy: .11 }), accent, { emissive: .25 });
-    drawMesh(state.meshes.box, mPart(pose, { y: .58, z: L * .34, sz: L * .13, sx: W2 * .72, sy: .08 }), accent, { emissive: .18 });
+    // Painted hood and restrained rocker trim keep the silhouette readable.
+    drawMesh(state.meshes.box, mPart(pose, { y: .27, z: .05, x: -W2 * .94, sz: L * .72, sx: .055, sy: .07 }), dark, PAINT_SPEC);
+    drawMesh(state.meshes.box, mPart(pose, { y: .27, z: .05, x: W2 * .94, sz: L * .72, sx: .055, sy: .07 }), dark, PAINT_SPEC);
+    drawMesh(state.meshes.box, mPart(pose, { y: .69, z: L * .32, sz: L * .18, sx: W2 * .85, sy: .025 }), color, PAINT_SPEC);
     if (fenderW > 0) { drawMesh(state.meshes.box, mPart(pose, { y: .34, z: L * .3, sz: .5, sx: W2 + fenderW }), dark); drawMesh(state.meshes.box, mPart(pose, { y: .34, z: -L * .3, sz: .5, sx: W2 + fenderW }), dark); }
     drawMesh(state.meshes.box, mPart(pose, { y: .3, z: L * .48, sz: .14, sx: W2 * 1.02, sy: .18 }), pc);
     drawMesh(state.meshes.box, mPart(pose, { y: .34, z: -L * .48, sz: .14, sx: W2 * 1.02, sy: .2 }), pc);
@@ -10748,7 +10769,10 @@ const RacingGL = (function () {
     // Emissive boxes only: each signature costs 1-6 small draws and is what
     // makes one car distinguishable from another at the back of the pack.
     const RED = [.95, .1, .08], HOT = [1, .72, .78];
-    const lamp = (x, w, h, y) => drawMesh(state.meshes.box, mPart(pose, { y: y == null ? .5 : y, z: -L * .5, x, sz: .05, sx: w, sy: h }), RED, { emissive: 1 });
+    const lamp = (x, w, h, y) => {
+      drawMesh(state.meshes.box, mPart(pose, { y: y == null ? .5 : y, z: -L * .5, x, sz: .035, sx: w + .02, sy: h + .015 }), [.025, .027, .03]);
+      drawMesh(state.meshes.box, mPart(pose, { y: y == null ? .5 : y, z: -L * .52, x, sz: .025, sx: w, sy: h }), RED, { emissive: opts.brake ? 1 : .45 });
+    };
     const sig = shape.rear || (lightBar ? 'bar' : 'dual');
     if (sig === 'bar') {
       lamp(0, W2 * 1.9, .07);
@@ -10766,6 +10790,8 @@ const RacingGL = (function () {
       lamp(W2 * .4, .28, .1); lamp(-W2 * .4, .28, .1);
     }
     drawMesh(state.meshes.box, mPart(pose, { y: .32, z: -L * .51, sz: .035, sx: W2 * .9, sy: .08 }), [.035, .045, .065]);
+    drawMesh(state.meshes.box, mPart(pose, { y: .62, z: -L * .48, sz: .12, sx: W2 * .89, sy: .06 }), color, PAINT_SPEC);
+    for (const f of [-.48, 0, .48]) drawMesh(state.meshes.box, mPart(pose, { x: W2 * f, y: .23, z: -L * .5, sx: .015, sy: .065, sz: .13 }), [.025, .028, .032]);
     drawMesh(state.meshes.box, mPart(pose, { y: .4, z: -L * .52, sz: .03, sx: .22, sy: .1 }), [.82, .86, .9], { emissive: .18 });
     drawMesh(state.meshes.box, mPart(pose, { y: .4, z: -L * .523, sz: .018, sx: .16, sy: .048 }), [.07, .08, .11]);
     if (lightBar) {
@@ -10930,6 +10956,12 @@ class NeonRacing {
   };
   constructor(canvas, arcade) { this.canvas = canvas; this.arcade = arcade; this.ctx = canvas.getContext('2d'); this.name = 'Neon Racing'; this.key = 'racing'; this.W = 760; this.H = 460; this.smooth = true; this.reset(); }
   car() { return DriftCircuit.carFor('racing'); }
+  resetPosition() {
+    this.playerX = 0; this.renderPlayerX = 0; this.speed = 0;
+    this.steerAngle = 0; this.steerSmoothed = 0; this.lateralVel = 0;
+    this.slip = 0; this.touch = {}; this.shake = 0; this.flash = 0;
+    this.hitCooldown = 1; this.stopAudio();
+  }
   theme() { return Scene3D.THEMES[DriftCircuit.garage().theme] || Scene3D.THEMES.night; }
   mode() { return DriftCircuit.garage().raceMode || 'traffic'; }
   reset() {
@@ -11596,6 +11628,14 @@ class DriftCircuit {
   constructor(canvas, arcade) { this.canvas = canvas; this.arcade = arcade; this.ctx = canvas.getContext('2d'); this.name = 'Drift Circuit'; this.key = 'drift'; this.W = 760; this.H = 460; this.smooth = true; this.reset(); }
   static GL_SCALE = 0.08;
   car() { return DriftCircuit.carFor('drift'); }
+  resetPosition() {
+    this.x = this.worldW / 2; this.y = this.worldH / 2;
+    this.a = 0; this.camYaw = 0; this.vx = 0; this.vy = 0; this.speedNow = 0;
+    this.steer = 0; this.slip = 0; this.handbrake = false; this.touch = {};
+    this.shake = 0; this.flash = 0; this._lastSkids = null;
+    this.collideCooldown = .5;
+    this.stopAudio();
+  }
   // Drift Circuit is an open practice playground, not a lap race. The shared
   // garage track choice still belongs to Neon Racing; drift always gets the
   // purpose-built lot with free spawn, obstacles, and no lap/damage rules.
@@ -11636,7 +11676,8 @@ class DriftCircuit {
       for (let i = 0; i < 12; i++) this.obstacles.push({ x: cx + Math.cos(i / 12 * Math.PI * 2) * R * 0.62, y: cy + Math.sin(i / 12 * Math.PI * 2) * R * 0.62, r: 13, kind: 'cone' });
       this.obstacles.push({ x: cx - R * 0.28, y: cy - R * 0.28, r: 24, kind: 'stack' });
       this.obstacles.push({ x: cx + R * 0.28, y: cy + R * 0.28, r: 24, kind: 'stack' });
-      this.obstacles.push({ x: cx, y: cy, r: 30, kind: 'stack' });
+      // Keep the spawn point clear of collisions before the player moves.
+      this.obstacles.push({ x: cx, y: cy + R * .42, r: 30, kind: 'stack' });
     }
     this.props = [];
     for (let i = 0; i < samples.length; i += 7) {
@@ -11813,7 +11854,7 @@ class DriftCircuit {
     let vl = -this.vx * sin + this.vy * cos;
     const speed = Math.hypot(vf, vl);
     // Speed-sensitive steering
-    const steerAuthority = P.steerBase + P.steerSpeed * clamp(speed / P.maxSpeed, 0, 1);
+    const steerAuthority = (P.steerBase + P.steerSpeed * clamp(speed / P.maxSpeed, 0, 1)) * clamp(speed / 90, 0, 1);
     this.a += this.steer * steerAuthority * dt * (this.handbrake ? 1.25 : 1);
     // Weight transfer: with the handbrake pulled, lateral slip turns the car further so a
     // drift can be held. Without it, the effect is small so the car does not spin out.
@@ -12041,6 +12082,7 @@ class DriftCircuit {
       wallsL: RacingGL.wallStrip(centers, { side: -1, off, height, color: () => wall }),
       wallsR: RacingGL.wallStrip(centers, { side: 1, off, height, color: () => wall }),
       themeRef, pathRef: path, centers,
+      sandbox: this.sandbox,
     };
     return this.track3d;
   }
@@ -12068,8 +12110,11 @@ class DriftCircuit {
       const sunP = [eye[0] + fwd[0] * 105, eye[1] + 24, eye[2] + fwd[2] * 105];
       RacingGL.drawMesh(RacingGL.mesh('disk'), billboard(sunP[0], sunP[1], sunP[2], 9), [1, .68, .26], { emissive: 1, alpha: .95 });
       for (let m = 0; m < 18; m++) {
-        const ma = m / 18 * Math.PI * 2, mr = 92 + (m % 3) * 12, mh = 8 + (m % 4) * 3;
-        RacingGL.drawMesh(RacingGL.mesh('cone'), RacingGL.matrices.mPose(Math.sin(ma) * mr, -4, Math.cos(ma) * mr, 0, 7 + (m % 3) * 2, mh, 7 + (m % 3) * 2), RacingGL.hexRgb(theme.prop).map((c) => c * .55));
+        const ma = m / 18 * Math.PI * 2;
+        const mr = (this.sandbox ? Math.max(this.worldW, this.worldH) * S + 50 : 92) + (m % 3) * 12;
+        const mh = 8 + (m % 4) * 3;
+        const ox = this.sandbox ? this.worldW * S / 2 : 0, oz = this.sandbox ? this.worldH * S / 2 : 0;
+        RacingGL.drawMesh(RacingGL.mesh('cone'), RacingGL.matrices.mPose(ox + Math.sin(ma) * mr, -4, oz + Math.cos(ma) * mr, 0, 7 + (m % 3) * 2, mh, 7 + (m % 3) * 2), RacingGL.hexRgb(theme.prop).map((c) => c * .55));
       }
     }
     if (this.track3d.sandbox) {

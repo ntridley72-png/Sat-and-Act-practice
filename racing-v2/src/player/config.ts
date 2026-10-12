@@ -57,4 +57,5 @@ export const playerMutation = {
   speed: 0,
   sliding: false,
   boost: 100,
+  resetRequest: 0,
 }

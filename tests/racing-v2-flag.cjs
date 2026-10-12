@@ -193,7 +193,7 @@ const PAGE = "/" + encodeURIComponent("SAT & ACT Practice.html");
     await page.goto(BASE + PAGE, { waitUntil: "domcontentloaded" });
     await page.waitForSelector("body[data-workspace]");
     const r = await page.evaluate(async () => {
-      arcade.select("drift");
+      arcade.select("racing");
       await new Promise((res) => setTimeout(res, 2500));
       return {
         ctor: arcade.game && arcade.game.constructor && arcade.game.constructor.name,
@@ -202,7 +202,7 @@ const PAGE = "/" + encodeURIComponent("SAT & ACT Practice.html");
         mountHidden: !document.getElementById("racingV2Mount") || document.getElementById("racingV2Mount").style.display === "none",
       };
     });
-    if (r.ctor !== "DriftCircuit") fail("a failed v2 boot must land on v1 DriftCircuit", r);
+    if (r.ctor !== "NeonRacing") fail("a failed v2 boot must land on v1 NeonRacing", r);
     if (r.sessionMode !== "practice") fail("the v1 session rules must own the failed-boot fallback", r);
     if (!r.mountHidden) fail("the v2 mount must be hidden after a failed boot", r);
     if (errs.length) fail("a failed v2 boot must not throw into the page", errs);
@@ -225,7 +225,8 @@ const PAGE = "/" + encodeURIComponent("SAT & ACT Practice.html");
     await page.waitForSelector("body[data-workspace]");
     const r = await page.evaluate(async () => {
       profile.tokens = 1;
-      RacingSession.start("scored");
+      RacingSession.request("scored");
+      arcade.select("racing");
       await new Promise((res) => setTimeout(res, 2500));
       return {
         ctor: arcade.game && arcade.game.constructor && arcade.game.constructor.name,
@@ -233,7 +234,7 @@ const PAGE = "/" + encodeURIComponent("SAT & ACT Practice.html");
         tokens: profile.tokens,
       };
     });
-    if (r.ctor !== "DriftCircuit") fail(`${name}: must land on v1 DriftCircuit`, r);
+    if (r.ctor !== "NeonRacing") fail(`${name}: must land on v1 NeonRacing`, r);
     if (r.sessionMode !== "scored") fail(`${name}: the paid scored request must survive into v1, got ${r.sessionMode}`, r);
     if (r.tokens !== 0) fail(`${name}: exactly one token must be charged, tokens=${r.tokens}`, r);
     if (errs.length) fail(`${name}: must not throw into the page`, errs);

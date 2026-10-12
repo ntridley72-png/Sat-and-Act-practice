@@ -101,6 +101,7 @@ export class AudioRig {
 
   setMuted(muted: boolean): void {
     this.muted = muted
+    for (const voice of this.voices.values()) voice.el.muted = muted
     if (muted) this.stopAll()
   }
 
@@ -122,7 +123,9 @@ export class AudioRig {
       voice.el.currentTime = 0
       // play() returns a promise that REJECTS when the browser blocks it.
       // Unhandled, that is a console error on every blocked sound.
-      void voice.el.play().catch(() => {})
+      void voice.el.play().then(() => {
+        if (this.disposed || this.muted) voice.el.pause()
+      }).catch(() => {})
     } catch {
       /* currentTime can throw before metadata loads; skip this one */
     }
@@ -133,7 +136,9 @@ export class AudioRig {
     if (!this.armed || this.muted || this.disposed) return
     const voice = this.voices.get('engine')
     if (!voice || !voice.el.paused) return
-    void voice.el.play().catch(() => {})
+    void voice.el.play().then(() => {
+      if (this.disposed || this.muted) voice.el.pause()
+    }).catch(() => {})
   }
 
   /** Engine pitch from speed. `speed` in m/s, `maxSpeed` the car's ceiling.

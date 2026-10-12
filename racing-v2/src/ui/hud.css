@@ -288,6 +288,8 @@
 /* ---- help ------------------------------------------------------------- */
 
 .rv2-help { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); pointer-events: auto; }
+.rv2-root .rv2-recover { pointer-events: auto; min-height: 44px; margin-bottom: 12px; padding: 10px 12px; background: #0a0b1e; color: #ffef5a; border: 1px solid #2b2bff; border-radius: 6px; font: inherit; font-size: 10px; cursor: pointer; }
+.rv2-root .rv2-recover:focus-visible { outline: 2px solid #ffef5a; outline-offset: 3px; }
 .rv2-root .rv2-help-toggle {
   min-height: 30px;
   padding: 5px 12px;

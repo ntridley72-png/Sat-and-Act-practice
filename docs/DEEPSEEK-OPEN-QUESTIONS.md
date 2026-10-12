@@ -255,3 +255,11 @@ games) · `drift-ui` · `college-images` / `college-ui` / `college-gallery` /
 `college.test` · `content-integrations` · `contrast-audit` ·
 `workspace-layout` · `workshop-tracks-bars` · `seo-audit` · `ads-filter`.
 Screenshots: `racing-v2/bench/shots/garage-{intro,style,tuning,race}.png`.
+
+Deployed as version `dac73988-e650-4233-9d60-54c1f0c6b813` (2026-10-10);
+IndexNow submitted the 68 changed URLs (HTTP 200). Live canary against
+funsat.bid: racing-v2.js and college-data.js 200; RacingV2 enabled by
+default; v2 mounts with a real layout; garage roster renders with the starter
+selected; the probe finish pays $0 and a scored run charges its token and
+records; no page errors; and the deployed college data now files
+AppKidBrewer2.jpg as `kind: "campus"` (was the mis-filed athletics label).

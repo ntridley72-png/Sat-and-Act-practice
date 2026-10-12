@@ -1,7 +1,8 @@
 /* Racing v2 entry point and feature flag.
  *
  * The rebuilt 3D game is the DEFAULT as of 2026-10-10 (operator decision):
- * a student who opens 'drift' or 'racing' in the arcade gets the v2 game.
+ * a student who opens 'racing' in the arcade gets the v2 game. Drift Circuit
+ * intentionally remains the v1 parking-lot sandbox.
  * Every explicit way back still wins, because a shipped default is exactly
  * the thing that needs escape hatches:
  *
@@ -598,7 +599,7 @@
    * gets the v1 game exactly as before. The ONLY way v2 appears is if every
    * check passes.
    */
-  var V2_GAMES = { drift: true, racing: true };
+  var V2_GAMES = { racing: true };
   var mountEl = null;
   var hooked = false;
 

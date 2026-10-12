@@ -5808,6 +5808,7 @@ const arcade = {
   showMenu() {
     this.overtime = false;
     if (this.remaining > 0 && this.runMode !== 'credit') this.remainingCarry = Math.ceil(this.remaining);
+    if (this.game && typeof this.game.stopAudio === 'function') { try { this.game.stopAudio(); } catch (e) {} }
     this.remaining = 0; this.game = null; this.runMode = 'timed';
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     this.mode = 'menu'; this.showMsg(false);
@@ -5915,6 +5916,7 @@ const arcade = {
 
   close() {
     arcdeOpen = false;
+    if (this.game && typeof this.game.stopAudio === 'function') { try { this.game.stopAudio(); } catch (e) {} }
     this.overlay.classList.remove('show');
     $('btnArcade')?.classList.remove('active');
     this.mode = 'menu';
@@ -11594,7 +11596,10 @@ class DriftCircuit {
   constructor(canvas, arcade) { this.canvas = canvas; this.arcade = arcade; this.ctx = canvas.getContext('2d'); this.name = 'Drift Circuit'; this.key = 'drift'; this.W = 760; this.H = 460; this.smooth = true; this.reset(); }
   static GL_SCALE = 0.08;
   car() { return DriftCircuit.carFor('drift'); }
-  trackDef() { return DriftCircuit.TRACKS[DriftCircuit.garage().track] || DriftCircuit.TRACKS.oval; }
+  // Drift Circuit is an open practice playground, not a lap race. The shared
+  // garage track choice still belongs to Neon Racing; drift always gets the
+  // purpose-built lot with free spawn, obstacles, and no lap/damage rules.
+  trackDef() { return DriftCircuit.TRACKS.lot; }
   theme() { return Scene3D.THEMES[DriftCircuit.garage().theme] || Scene3D.THEMES.sunset; }
   // Catmull-Rom through the control points, resampled to an even-spaced path with tangents/normals.
   buildTrack() {
@@ -11654,7 +11659,7 @@ class DriftCircuit {
     this.vx = 0; this.vy = 0; this.steer = 0; this.throttle = 0; this.brake = 0; this.handbrake = false;
     this.score = 0; this.combo = 1; this.started = false; this.over = false; this.banked = false; this.damage = 0;
     this.laps = 0; this.lapProgress = 0; this.lapArmed = true; this.checkpoint = 0; this.bestLap = null; this.lapStart = 0; this.lapTime = 0;
-    this.skids = []; this.smoke = []; this.sparks = []; this.dust = []; this.shake = 0; this.flash = 0;
+    this.skids = []; this._lastSkids = null; this.smoke = []; this.sparks = []; this.dust = []; this.shake = 0; this.flash = 0;
     this.collideCooldown = 0; this.earned = 0; this.drifting = false; this.slip = 0; this.touch = {}; this.now = 0; this.audio = null; this.lastPathIndex = 0;
     try { if (RacingGL.available()) this.buildTrack3D(this.theme()); } catch (e) {}
   }
@@ -11894,12 +11899,27 @@ class DriftCircuit {
     if (this.drifting) {
       this.combo = Math.min(10, this.combo + dt * 1.5);
       this.score += Math.floor(this.speedNow * slipAngle * this.combo * .12 * dt * 10);
-      const bx = this.x - Math.cos(this.a) * 18, by = this.y - Math.sin(this.a) * 18;
-      if (this._lastSkid) this.skids.push({ x1: this._lastSkid.x, y1: this._lastSkid.y, x2: bx, y2: by, t: 1, w: clamp(1.8 + this.slip / 8, 2, 6) });
-      this._lastSkid = { x: bx, y: by };
+      // Lay two traces from the rear tire contact patches. Their axle spacing
+      // rotates with the body, while each segment follows the patch's actual
+      // world movement; this preserves countersteer arcs and donut circles.
+      const rear = Math.max(12, (this.car().shape?.len || 40) * .42);
+      const halfAxle = Math.max(5, (this.car().shape?.wid || 20) * .34);
+      const bx = this.x - Math.cos(this.a) * rear, by = this.y - Math.sin(this.a) * rear;
+      const nx = -Math.sin(this.a), ny = Math.cos(this.a);
+      const patches = [
+        { x: bx + nx * halfAxle, y: by + ny * halfAxle, side: -1 },
+        { x: bx - nx * halfAxle, y: by - ny * halfAxle, side: 1 },
+      ];
+      if (this._lastSkids) patches.forEach((patch, i) => {
+        const prev = this._lastSkids[i];
+        if (Math.hypot(patch.x - prev.x, patch.y - prev.y) < 30) {
+          this.skids.push({ x1: prev.x, y1: prev.y, x2: patch.x, y2: patch.y, side: patch.side, t: 1, w: clamp(1.4 + this.slip / 14, 1.6, 4.2) });
+        }
+      });
+      this._lastSkids = patches;
       const rate = this.slip > 24 ? 3 : 2;
       for (let i = 0; i < rate; i++) this.smoke.push({ x: bx + (Math.random() - .5) * 12, y: by + (Math.random() - .5) * 12, vx: (Math.random() - .5) * 40 - this.vx * .08, vy: (Math.random() - .5) * 40 - this.vy * .08, life: .8, max: .8, size: 9 + Math.random() * 8, alpha: .38 });
-    } else { this.combo = Math.max(1, this.combo - dt * .55); this._lastSkid = null; }
+    } else { this.combo = Math.max(1, this.combo - dt * .55); this._lastSkids = null; }
     this.skids = this.skids.filter((s) => (s.t -= dt * .04) > 0).slice(-P.skidMax);
     this.earned = Math.floor(this.score / 400);
   }
@@ -12449,7 +12469,12 @@ addEventListener('pointerup', (e) => {
 addEventListener('keydown', (e) => {
   if (!arcade.overlay || !arcade.overlay.classList.contains('show')) return;
   const key = e.key;
-  if (arcade.mode === 'menu') {
+  /* The cabinet keyboard belongs to the cabinet ONLY while its menu is
+     actually visible. Integrations can keep the overlay open while rendering
+     their own game surface; mode drift must never let Space, Enter, or an
+     arrow launch a different hidden tile underneath that game. */
+  const cabinetVisible = arcade.mode === 'menu' && arcade.menu && getComputedStyle(arcade.menu).display !== 'none';
+  if (cabinetVisible) {
     const d = KEY_DIR[key];
     if (d) { e.preventDefault(); arcade.moveMenu(d === 'left' ? -1 : d === 'right' ? 1 : d === 'up' ? -4 : 4); return; }
     if (key === 'Enter' || key === ' ') { e.preventDefault(); if (arcade.enter) arcade.enter(GAME_LIST[arcade.menuSel].key); else arcade.select(GAME_LIST[arcade.menuSel].key); return; }
@@ -12484,7 +12509,10 @@ document.addEventListener('visibilitychange', () => {
 });
 // held keys tracking
 const heldKeys = {};
-addEventListener('keydown', (e) => { if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','s','a','d','W','S','A','D',' '].includes(e.key)) heldKeys[e.key] = true; });
+addEventListener('keydown', (e) => {
+  const live = arcade.overlay && arcade.overlay.classList.contains('show') && (arcade.mode === 'playing' || arcade.mode === 'ready');
+  if (live && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','s','a','d','W','S','A','D',' '].includes(e.key)) heldKeys[e.key] = true;
+});
 addEventListener('keyup', (e) => { heldKeys[e.key] = false; });
 arcade._heldKeys = heldKeys;
 function clearArcadeInput() {

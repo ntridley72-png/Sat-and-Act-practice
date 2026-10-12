@@ -197,6 +197,21 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
     arcade.select("drift");
     out.audioStops = racer.audio === null && racer._closed === true;
 
+    // Every route that dismisses a game must silence it before dropping the
+    // object. Test both the cabinet menu and closing the overlay outright.
+    RacingV2.setLocal(false);
+    arcade.select("drift");
+    const menuGame = arcade.game;
+    menuGame.audio = { eg: { gain: { value: 1 } }, ng: { gain: { value: 1 } }, ctx: { close() { menuGame._closed = true; } } };
+    arcade.showMenu();
+    const menuStopped = menuGame.audio === null && menuGame._closed === true && arcade.game === null;
+    arcade.select("drift");
+    const closeGame = arcade.game;
+    closeGame.audio = { eg: { gain: { value: 1 } }, ng: { gain: { value: 1 } }, ctx: { close() { closeGame._closed = true; } } };
+    arcade.close();
+    out.audioStopsOnExit = menuStopped && closeGame.audio === null && closeGame._closed === true && arcade.game === null;
+    RacingV2.setLocal(null);
+
     // Every game tile renders a distinct, non-blank sprite (guards renamed/new games).
     out.sprites = (() => {
       const bad = [];
@@ -219,5 +234,5 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   await browser.close();
   const failed = Object.entries(results).filter(([, v]) => !v).map(([k]) => k);
   if (errors.length || failed.length) { console.error(errors.join("\n")); throw new Error("failed checks: " + failed.join(", ")); }
-  console.log("PASS: 2048 merges, Breakout launches, Flappy flaps, Minesweeper first-click/hint/difficulty/keyboard/restart/hint-prep, every tile sprite renders, Detailing Bay score/payout, Arena Protocol touch turn, engine-audio stop, Battleships placement/fire/round win, Connect 4 wins, Vocab stats persist, Sudoku completes, Solitaire deals and draws, and every game has rules.");
+  console.log("PASS: 2048 merges, Breakout launches, Flappy flaps, Minesweeper first-click/hint/difficulty/keyboard/restart/hint-prep, every tile sprite renders, Detailing Bay score/payout, Arena Protocol touch turn, engine audio stops on switch/menu/close, Battleships placement/fire/round win, Connect 4 wins, Vocab stats persist, Sudoku completes, Solitaire deals and draws, and every game has rules.");
 })().catch((error) => { console.error(error); process.exit(1); });

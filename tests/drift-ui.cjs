@@ -108,9 +108,11 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
     g2.vx = p0.tx * 320; g2.vy = p0.ty * 320;
     g2.touch.up = 1; g2.touch.drift = 1; g2.touch.left = 1;
     for (let i = 0; i < 40; i++) g2.update(0.016);
-    return { smoke: g2.smoke.length, skids: g2.skids.length, score: g2.score, combo: g2.combo };
+    const sides = [...new Set(g2.skids.map((s) => s.side))];
+    const widthsOk = g2.skids.every((s) => s.w >= 1.6 && s.w <= 4.2);
+    return { smoke: g2.smoke.length, skids: g2.skids.length, sides, widthsOk, score: g2.score, combo: g2.combo };
   });
-  if (drift.smoke < 3 || drift.skids < 1 || !(drift.score > 0)) throw new Error("drift effects broken: " + JSON.stringify(drift));
+  if (drift.smoke < 3 || drift.skids < 2 || drift.sides.length !== 2 || !drift.widthsOk || !(drift.score > 0)) throw new Error("paired rear-tire drift effects broken: " + JSON.stringify(drift));
 
   // Racing: garage applies, both modes run, themes work.
   await page.evaluate(() => arcade.select("racing"));
@@ -168,9 +170,10 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   const continued = await page.evaluate(() => { const before = profile.tokens; document.getElementById("continueRun").click(); return { before, after: profile.tokens, over: arcade.game.over, mode: arcade.mode }; });
   if (continued.after !== continued.before - 1 || continued.over || continued.mode !== "playing") throw new Error("continue with token failed: " + JSON.stringify(continued));
 
-  // Parking Lot Sandbox: centre spawn, no laps or damage, obstacles bounce, lot boundary bounces.
+  // Drift Circuit is always the Parking Lot Sandbox: a garage circuit choice
+  // may affect Racing, but cannot turn drift practice back into a lap course.
   const sandbox = await page.evaluate(() => {
-    const g = DriftCircuit.garage(); g.track = "lot";
+    const g = DriftCircuit.garage(); g.track = "oval";
     arcade.select("drift");
     const game = arcade.game; game.reset(); game.started = true;
     const spawn = { x: Math.round(game.x), y: Math.round(game.y), cx: Math.round(game.worldW / 2), cy: Math.round(game.worldH / 2) };
@@ -181,8 +184,8 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
     game.x = 10; game.vx = -100; game.update(0.016);
     const bounced = { x: Math.round(game.x), vx: Math.round(game.vx) };
     game.draw(arcade.ctx);
-    g.track = "oval"; game.reset();
-    return { spawn, driven, bounced, backToTrack: !game.sandbox && game.laps === 0 };
+    game.reset();
+    return { spawn, driven, bounced, remainsLot: game.sandbox && game.trackDef().name === "Parking Lot Sandbox" };
   });
   if (!sandbox.driven.sandbox) throw new Error("lot track should be a sandbox: " + JSON.stringify(sandbox));
   if (sandbox.spawn.x !== sandbox.spawn.cx || sandbox.spawn.y !== sandbox.spawn.cy) throw new Error("sandbox should spawn at lot centre: " + JSON.stringify(sandbox.spawn));
@@ -190,7 +193,7 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   if (sandbox.driven.obstacles < 10) throw new Error("sandbox obstacles missing: " + JSON.stringify(sandbox.driven));
   if (sandbox.driven.score <= 0) throw new Error("sandbox drifting should still score: " + JSON.stringify(sandbox.driven));
   if (sandbox.bounced.x < 20 || sandbox.bounced.vx <= 0) throw new Error("lot boundary should bounce the car back: " + JSON.stringify(sandbox.bounced));
-  if (!sandbox.backToTrack) throw new Error("switching back to a circuit track should re-enable laps: " + JSON.stringify(sandbox));
+  if (!sandbox.remainsLot) throw new Error("garage track choices must not turn Drift Circuit into a lap course: " + JSON.stringify(sandbox));
 
   // Phone layout: the settings panel parks off-screen and must be reachable
   // from the nav and dismissable again, or the whole right-hand side is lost.

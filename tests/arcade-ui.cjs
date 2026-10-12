@@ -65,6 +65,15 @@ const SHOTS = path.join(__dirname, "screenshots");
     if (!info.wantsSmooth && info.smooth !== "pixelated") throw new Error(key + " should keep retro pixels: " + info.smooth);
     // Start and interact.
     await page.evaluate(() => { arcade.play(); arcade.game.started = true; }, key);
+    // An unassigned key must be inert: it cannot reopen the cabinet, switch
+    // games, or replace/reset the active game object.
+    await page.evaluate(() => { arcade.game.__keyIsolationNonce = Math.random(); });
+    const isolationBefore = await page.evaluate(() => ({ key: arcade.game.key, nonce: arcade.game.__keyIsolationNonce }));
+    await page.keyboard.press("F9");
+    const isolationAfter = await page.evaluate(() => ({ key: arcade.game && arcade.game.key, nonce: arcade.game && arcade.game.__keyIsolationNonce, mode: arcade.mode, menu: getComputedStyle(arcade.menu).display }));
+    if (isolationAfter.key !== isolationBefore.key || isolationAfter.nonce !== isolationBefore.nonce || isolationAfter.mode === "menu" || isolationAfter.menu !== "none") {
+      throw new Error(key + " changed after an unused key: " + JSON.stringify(isolationAfter));
+    }
     if (key === "racing" || key === "drift") {
       const before = await page.evaluate(() => ({ x: arcade.game.x, y: arcade.game.y, distance: arcade.game.distance || 0, speed: arcade.game.speed || 0, score: arcade.game.score || 0 }));
       await page.keyboard.down("ArrowUp");

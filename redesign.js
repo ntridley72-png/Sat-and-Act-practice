@@ -412,10 +412,6 @@
     if (practice) practice.addEventListener("click", () => home && home.click());
     const restart = document.getElementById("btnArcadeRestart");
     if (restart) restart.addEventListener("click", resetCurrentGame);
-    addEventListener("keydown", (e) => {
-      if (!arcade || !arcade.overlay || !arcade.overlay.classList.contains("show")) return;
-      if ((e.key === "r" || e.key === "R") && !e.metaKey && !e.ctrlKey) { e.preventDefault(); resetCurrentGame(); }
-    });
     if (typeof arcade !== "undefined" && arcade) {
       arcade.enter = function (key) { playArcadeIntro(key); };
       // Tokens spent per run: entering a game resets the count.

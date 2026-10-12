@@ -1,6 +1,6 @@
 /* The racing-v2 arcade integration.
  *
- * racing/index.js wraps arcade.select() so the driving games run the v2 React
+ * racing/index.js wraps arcade.select() so Neon Racing runs the v2 React
  * game. As of 2026-10-10 that is the DEFAULT (operator decision); this test
  * pins both directions: with no overrides the arcade mounts v2, and with an
  * explicit ?racingV2=0 the wrapper is completely transparent and the student
@@ -74,42 +74,25 @@ function serve() {
     return { page, errs };
   };
 
-  // --- DEFAULT (no overrides): v2 mounts, v1 is not started ----------------
+  // --- DEFAULT: Drift Circuit is the dedicated v1 parking-lot sandbox ------
   {
     const { page, errs } = await open("");
     const r = await page.evaluate(() => RacingV2.enabled());
     if (r !== true) fail("racingV2 must default on for the arcade path", r);
 
-    const mounted = await page.evaluate(async () => {
+    const drift = await page.evaluate(() => {
       arcade.select("drift");
-      await new Promise((res) => setTimeout(res, 4000));
       const host = document.getElementById("racingV2Mount");
       return {
         ctor: arcade.game && arcade.game.constructor && arcade.game.constructor.name,
-        visible: !!host && host.style.display === "block",
-        rectW: host ? Math.round(host.getBoundingClientRect().width) : 0,
-        appLoaded: RacingV2.appLoaded(),
+        sandbox: !!(arcade.game && arcade.game.sandbox),
+        track: arcade.game && arcade.game.trackDef().name,
+        mountHidden: !host || host.style.display === "none",
       };
     });
-    if (!mounted.appLoaded) fail("the default path must load the v2 bundle", mounted);
-    if (!mounted.visible) fail("the default path must show the v2 mount", mounted);
-    if (!(mounted.rectW > 300)) fail("the default path must lay the game out, not mount it at 0x0", mounted);
+    if (drift.ctor !== "DriftCircuit" || !drift.sandbox || drift.track !== "Parking Lot Sandbox") fail("Drift Circuit must be the parking-lot sandbox", drift);
+    if (!drift.mountHidden) fail("Drift Circuit must not mount the v2 circuit game", drift);
     if (errs.length) fail("page errors on the default path", errs);
-
-    // app.js owns a global cabinet shortcut: Space launches the highlighted
-    // menu item whenever arcade.mode is still `menu`. v2 also uses Space for
-    // its handbrake, so the host seam must keep that key inside the live race
-    // instead of letting the hidden cabinet replace it.
-    await page.locator('body').focus();
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(150);
-    const afterSpace = await page.evaluate(() => ({
-      visible: document.getElementById('racingV2Mount')?.style.display === 'block',
-      active: document.getElementById('arcadeStage')?.classList.contains('racing-v2-active'),
-      mode: arcade.mode,
-    }));
-    if (!afterSpace.visible || !afterSpace.active) fail("Space must stay inside v2 instead of relaunching the cabinet selection", afterSpace);
-    if (afterSpace.mode !== 'playing') fail("the host must expose v2 as a live game to cabinet shortcuts", afterSpace);
     await page.close();
   }
 
@@ -124,16 +107,16 @@ function serve() {
     if (r.enabled !== false) fail("?racingV2=0 must disable", r);
     if (!r.selectIsFunction) fail("arcade.select must still be callable after hooking", r);
 
-    // Actually start the v1 drift game and confirm it is the v1 class.
+    // Actually start the v1 racing game and confirm it is the v1 class.
     const v1 = await page.evaluate(() => {
-      arcade.select("drift");
+      arcade.select("racing");
       return {
         ctor: arcade.game && arcade.game.constructor && arcade.game.constructor.name,
         mountHidden: !document.getElementById("racingV2Mount") ||
           document.getElementById("racingV2Mount").style.display === "none",
       };
     });
-    if (v1.ctor !== "DriftCircuit") fail("explicitly disabled must still run v1 DriftCircuit", v1);
+    if (v1.ctor !== "NeonRacing") fail("explicitly disabled must still run v1 NeonRacing", v1);
     if (!v1.mountHidden) fail("the v2 mount must not be visible when disabled", v1);
     if (errs.length) fail("page errors when disabled", errs);
     await page.close();
@@ -146,7 +129,7 @@ function serve() {
     if (on !== true) fail("?racingV2=1 should enable", on);
 
     const mounted = await page.evaluate(async () => {
-      arcade.select("drift");
+      arcade.select("racing");
       // Give the dynamic import and the React mount time to land.
       await new Promise((r) => setTimeout(r, 4000));
       const host = document.getElementById("racingV2Mount");
@@ -186,5 +169,5 @@ function serve() {
 
   await browser.close();
   server.close();
-  console.log("PASS: the arcade mounts v2 by default, is fully transparent under ?racingV2=0, and leaves other games alone.");
+  console.log("PASS: Drift Circuit stays a parking-lot sandbox, Neon Racing mounts v2, the opt-out remains transparent, and other games are untouched.");
 })().catch((e) => { console.error("FAIL:", e.message); process.exit(1); });

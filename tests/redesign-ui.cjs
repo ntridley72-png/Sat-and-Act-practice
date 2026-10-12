@@ -184,6 +184,20 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   let introClosed = false;
   for (let i = 0; i < 40 && !introClosed; i++) { await page.waitForTimeout(200); introClosed = await page.evaluate(() => { const el = document.getElementById("fxOverlay"); return !!el && !el.classList.contains("show"); }); }
   if (!introClosed) throw new Error("arcade intro overlay did not finish");
+  // Plain letter keys belong to the active game. The old global R shortcut
+  // reset every game, even games that did not advertise R as a control.
+  const resetCountBefore = await page.evaluate(() => {
+    const original = arcade.game.reset.bind(arcade.game);
+    arcade.game.__testResetCount = 0;
+    arcade.game.reset = function () { this.__testResetCount++; return original(); };
+    return arcade.game.__testResetCount;
+  });
+  await page.keyboard.press("r");
+  await page.waitForTimeout(100);
+  const afterUnusedKey = await page.evaluate(() => ({ key: arcade.game && arcade.game.key, resets: arcade.game && arcade.game.__testResetCount, mode: arcade.mode }));
+  if (afterUnusedKey.key !== "2048" || afterUnusedKey.resets !== resetCountBefore || afterUnusedKey.mode === "menu") {
+    throw new Error("unused arcade key affected the active game: " + JSON.stringify(afterUnusedKey));
+  }
   await page.evaluate(() => { arcade.game.over = true; });
   await page.waitForTimeout(150);
   const reset = await page.evaluate(() => window.FunSATRedesign.resetCurrentGame());

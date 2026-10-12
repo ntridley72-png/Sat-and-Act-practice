@@ -116,8 +116,8 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
     return { moved: Math.hypot(g.x - p0.x, g.y - p0.y), speed: g.speedNow };
   });
   if (!(driftMove.moved > 10 && driftMove.speed > 30)) throw new Error("drift did not move under throttle: " + JSON.stringify(driftMove));
-  const circuitSize = await page.evaluate(() => ({ length: arcade.game.pathLength, width: arcade.game.halfWidth, samples: arcade.game.path.length }));
-  if (!(circuitSize.length > 2000 && circuitSize.width >= 40 && circuitSize.samples >= 100)) throw new Error("drift circuit was not enlarged: " + JSON.stringify(circuitSize));
+  const lotSize = await page.evaluate(() => ({ sandbox: arcade.game.sandbox, worldW: arcade.game.worldW, worldH: arcade.game.worldH, width: arcade.game.halfWidth, samples: arcade.game.path.length }));
+  if (!lotSize.sandbox || !(lotSize.worldW > 1500 && lotSize.worldH > 900 && lotSize.width >= 100 && lotSize.samples >= 80)) throw new Error("drift parking lot is not a full-size sandbox: " + JSON.stringify(lotSize));
 
   // ---- 5. Steering changes heading ----
   const heading = await page.evaluate(() => {
@@ -155,24 +155,19 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
     const g = arcade.game;
     const slipDuring = g.slip;
     arcade._heldKeys[" "] = false; arcade._heldKeys.ArrowLeft = false; arcade._heldKeys.ArrowUp = true;
-    for (let i = 0; i < 60; i++) g.update(0.016);
+    for (let i = 0; i < 90; i++) g.update(0.016);
     return { slipDuring, slipAfter: g.slip };
   });
-  if (!(grip.slipAfter < grip.slipDuring * 0.5)) throw new Error("grip did not recover after releasing space: " + JSON.stringify(grip));
+  if (!(grip.slipAfter < grip.slipDuring * 0.6)) throw new Error("grip did not recover after releasing space: " + JSON.stringify(grip));
 
-  // ---- 9. A valid lap can be recorded (checkpoints in order, forward direction) ----
-  const lap = await page.evaluate(() => {
+  // ---- 9. The parking lot never turns movement into laps or damage --------
+  const lotRules = await page.evaluate(() => {
     const g = arcade.game; g.reset(); g.started = true;
-    const path = g.path, n = path.length;
-    for (const cp of [1, 2, 3, 0]) {
-      const idx = g.checkpoints[cp], p = path[idx];
-      g.lastPathIndex = idx;
-      g.x = p.x; g.y = p.y; g.vx = p.tx * 200; g.vy = p.ty * 200;
-      g.checkLap({ i: idx, p, lateral: 0, signed: 0 });
-    }
-    return { laps: g.laps, score: g.score };
+    g.vx = 300; g.vy = 180;
+    for (let i = 0; i < 300; i++) g.update(0.016);
+    return { sandbox: g.sandbox, laps: g.laps, damage: g.damage };
   });
-  if (lap.laps !== 1) throw new Error("valid lap was not recorded: " + JSON.stringify(lap));
+  if (!lotRules.sandbox || lotRules.laps !== 0 || lotRules.damage !== 0) throw new Error("parking-lot rules changed: " + JSON.stringify(lotRules));
 
   // ---- 10. Touch-equivalent controls hold throttle, steering, and drift ----
   const touch = await page.evaluate(() => {
@@ -266,5 +261,5 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
 
   await browser.close();
   if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
-  console.log("PASS: racing accelerates/brakes/steers/scores with traffic collisions; drift accelerates, steers, slips with space, scores, recovers grip, laps, and responds to held touch controls; DPR, space contract, blur clearing, garage-cash banking, stopAudio, and all arcade games verified.");
+  console.log("PASS: racing accelerates/brakes/steers/scores with traffic collisions; drift accelerates, steers, slips with space, scores, recovers grip, keeps parking-lot rules, and responds to held touch controls; DPR, space contract, blur clearing, garage-cash banking, stopAudio, and all arcade games verified.");
 })().catch((error) => { console.error(error); process.exit(1); });

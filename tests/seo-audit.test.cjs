@@ -83,7 +83,19 @@ for (const url of urlList) {
   if (h1s !== 1) fail(`expected exactly one H1 on ${url}, found ${h1s}`);
   if (/http-equiv="refresh"/i.test(html)) fail("meta refresh on " + url);
   for (const m of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
-    try { JSON.parse(m[1]); } catch (e) { fail("malformed JSON-LD on " + url); }
+    try {
+      const data = JSON.parse(m[1]);
+      const nodes = Array.isArray(data) ? data : (Array.isArray(data["@graph"]) ? data["@graph"] : [data]);
+      for (const node of nodes) {
+        const types = Array.isArray(node && node["@type"]) ? node["@type"] : [node && node["@type"]];
+        if (types.some((t) => ["WebPage", "Article", "BlogPosting"].includes(t)) && typeof node.url === "string" && node.url !== canon) {
+          fail(`JSON-LD identity URL must match canonical on ${url}: ${node.url}`);
+        }
+        if (types.some((t) => ["Article", "BlogPosting"].includes(t)) && typeof node.mainEntityOfPage === "string" && node.mainEntityOfPage !== canon) {
+          fail(`JSON-LD mainEntityOfPage must match canonical on ${url}: ${node.mainEntityOfPage}`);
+        }
+      }
+    } catch (e) { fail("malformed JSON-LD on " + url); }
   }
   if (title) titles.set(title, (titles.get(title) || []).concat(url));
   if (desc) descriptions.set(desc, (descriptions.get(desc) || []).concat(url));

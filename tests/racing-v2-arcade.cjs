@@ -111,15 +111,22 @@ function serve() {
       // Give the dynamic import and the React mount time to land.
       await new Promise((r) => setTimeout(r, 4000));
       const host = document.getElementById("racingV2Mount");
+      const stage = document.getElementById("arcadeStage");
       return {
         hostExists: !!host,
         visible: !!host && host.style.display === "block",
         hasCanvas: !!(host && host.querySelector("canvas")),
         appLoaded: RacingV2.appLoaded(),
+        /* The mount's own display is not enough: ".arcade-stage" is display:none
+           until "active" is added, so the game can mount, run and render inside
+           a hidden container. Assert the stage the host sits in is shown. */
+        stageShown: !!stage && getComputedStyle(stage).display !== "none",
+        stageCls: stage ? stage.className : null,
       };
     });
     if (!mounted.hostExists) fail("the v2 mount element was never created", mounted);
     if (!mounted.visible) fail("the v2 mount should be visible with the flag on", mounted);
+    if (!mounted.stageShown) fail("the arcade stage must be shown, not just the v2 mount", mounted);
     if (!mounted.appLoaded) fail("the v2 bundle did not load", mounted);
     if (!mounted.hasCanvas) fail("the v2 game did not render a canvas", mounted);
     if (errs.length) fail("page errors with the flag on", errs);

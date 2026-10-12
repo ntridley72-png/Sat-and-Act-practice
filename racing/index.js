@@ -303,7 +303,13 @@
   function teardown(stage) {
     stopApp();
     if (mountEl) mountEl.style.display = "none";
-    if (stage) stage.classList.remove("racing-v2-active");
+    /* Drop "active" only when v2 was the one that set it. v1's select() owns
+       that class the rest of the time, and taking it away from a running v1
+       game would blank the stage underneath it. */
+    if (stage && stage.classList.contains("racing-v2-active")) {
+      stage.classList.remove("racing-v2-active");
+      stage.classList.remove("active");
+    }
   }
 
   function hookArcade() {
@@ -331,6 +337,10 @@
       var host = ensureMount(stage);
       host.style.display = "block";
       stage.classList.add("racing-v2-active");
+      /* ".arcade-stage" is display:none until "active" is added, and only v1's
+         select() ever added it. Without this the v2 game mounted, ran and was
+         never seen: a working canvas inside a hidden container. */
+      stage.classList.add("active");
 
       startApp(host, {
         opponents: 6,

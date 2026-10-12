@@ -116,123 +116,164 @@
   display: grid;
   place-items: center;
   padding: 16px;
-  background: radial-gradient(120% 90% at 50% 0%, rgba(32, 40, 54, .82), rgba(8, 10, 13, .94));
+  background: radial-gradient(120% 90% at 50% 0%, rgba(16, 18, 52, .88), rgba(5, 6, 15, .96));
   backdrop-filter: blur(5px);
   pointer-events: auto;
   overflow-y: auto;
 }
 
+/* The panel is the arcade cabinet, borrowed token for token from ".cab" in the
+   host page: the pixel face, the 10px/1.9 rhythm, the near-black screen and the
+   blue tube glow. Without it the setup screen read as a web form that had been
+   dropped into a cabinet. */
 .rv2-panel {
-  width: min(520px, 100%);
-  padding: clamp(20px, 4vw, 32px);
-  border-radius: 16px;
-  background: rgba(18, 22, 29, .9);
-  border: 1px solid rgba(255, 255, 255, .09);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, .55);
+  width: min(560px, 100%);
+  padding: clamp(18px, 3.5vw, 26px);
+  border-radius: 14px;
+  background: #05060f;
+  border: 3px solid #2b2bff;
+  box-shadow: inset 0 0 30px rgba(43, 43, 255, .35), 0 24px 70px rgba(0, 0, 0, .6);
+  font-family: "Press Start 2P", ui-monospace, monospace;
+  font-size: 10px;
+  line-height: 1.9;
+  color: #fff;
 }
-.rv2-panel-sm { width: min(380px, 100%); text-align: center; }
+.rv2-panel-sm { width: min(420px, 100%); text-align: center; }
 
+/* Pixel glyphs are wide and have one weight, so the title leans on the marquee
+   glow for emphasis rather than size or boldness. */
 .rv2-title {
-  margin: 0 0 6px;
-  font-size: clamp(24px, 4.6vw, 34px);
-  font-weight: 700;
-  letter-spacing: -.02em;
+  margin: 0 0 10px;
+  font-size: clamp(13px, 2.2vw, 17px);
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0;
+  color: #ff3df2;
+  text-shadow: 0 0 12px #ff3df2;
 }
-.rv2-sub { margin: 0 0 22px; font-size: 13px; color: rgba(255, 255, 255, .62); line-height: 1.55; }
-.rv2-result { margin: 0 0 4px; font-size: 26px; }
-.rv2-result strong { color: #ffd166; }
+.rv2-sub { margin: 0 0 20px; font-size: 9px; color: #8ea0c9; line-height: 1.9; }
+.rv2-result { margin: 0 0 6px; font-size: 13px; line-height: 1.7; }
+.rv2-result strong { color: #ffef5a; }
 
-.rv2-field { margin-bottom: 18px; }
+.rv2-field { margin-bottom: 16px; }
+/* Yellow is the cabinet's label colour (".cab-top", ".cab-press"). */
 .rv2-field-label {
   display: block;
   margin-bottom: 8px;
-  font-size: 11px;
-  letter-spacing: .12em;
+  font-size: 9px;
+  letter-spacing: .06em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, .5);
+  color: #ffef5a;
 }
 .rv2-field-label strong { color: #fff; }
 
-.rv2-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.rv2-chip {
+/* Everything a student can click is scoped under .rv2-root, purely to win a
+   specificity fight. workspace.css carries
+   `body[data-workspace] button { background: var(--ws-accent) }` plus a
+   border-radius reset, at (0,1,2); a bare `.rv2-chip` is (0,1,0) and loses, so
+   the panel came out wearing the study app's orange with square corners no
+   matter what this file said. The extra class makes it (0,2,0), which wins.
+   Scoping, not !important: a later rule here can still override normally. */
+.rv2-root .rv2-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+/* A chip is a ".cab-tile": near-black screen, 2px blue bezel, square-ish
+   corners. Selected matches ".cab-tile.on" exactly, glow included, so the
+   highlight means the same thing here as on the cabinet's own grid. */
+.rv2-root .rv2-chip {
   /* 30px tall is below the 44px comfortable target, so the chips get generous
      horizontal padding and sit in a loose wrap rather than a dense grid. */
-  padding: 7px 11px;
+  padding: 9px 10px;
   min-height: 32px;
   font: inherit;
-  font-size: 12px;
-  color: rgba(255, 255, 255, .72);
-  background: rgba(255, 255, 255, .06);
-  border: 1px solid transparent;
-  border-radius: 8px;
+  font-size: 9px;
+  line-height: 1.6;
+  color: #fff;
+  background: #0a0b1e;
+  border: 2px solid #2b2bff;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background .12s ease, color .12s ease, border-color .12s ease;
+  transition: background .12s ease, color .12s ease, border-color .12s ease, box-shadow .12s ease;
 }
-.rv2-chip:hover { background: rgba(255, 255, 255, .11); color: #fff; }
-.rv2-chip.is-on { background: rgba(255, 209, 102, .16); border-color: rgba(255, 209, 102, .5); color: #ffd166; }
+.rv2-root .rv2-chip:hover { background: #101236; color: #fff; }
+.rv2-root .rv2-chip.is-on {
+  background: #0a0b1e;
+  border-color: #ffef5a;
+  color: #ffef5a;
+  box-shadow: 0 0 0 2px #ffef5a, 0 0 18px rgba(255, 239, 90, .4);
+}
 
-.rv2-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
-.rv2-swatch {
+.rv2-root .rv2-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.rv2-root .rv2-swatch {
   /* 30px visual, but the ::after expands the hit area to 44px so this is
      comfortably tappable on a phone without inflating the swatch itself. */
   position: relative;
   width: 30px;
   height: 30px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, .22);
+  /* Square, like every other face on the cabinet; a circle was the one round
+     thing left on the panel. */
+  border-radius: 4px;
+  border: 2px solid #2b2bff;
   cursor: pointer;
   padding: 0;
-  transition: transform .12s ease, border-color .12s ease;
+  transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
 }
-.rv2-swatch::after {
+.rv2-root .rv2-swatch::after {
   content: "";
   position: absolute;
   inset: -7px;
   border-radius: 50%;
 }
-.rv2-swatch:hover { transform: scale(1.08); }
-.rv2-swatch.is-on { border-color: #fff; transform: scale(1.12); }
+.rv2-root .rv2-swatch:hover { transform: scale(1.08); }
+.rv2-root .rv2-swatch.is-on {
+  border-color: #ffef5a;
+  transform: scale(1.12);
+  box-shadow: 0 0 0 2px #ffef5a, 0 0 14px rgba(255, 239, 90, .4);
+}
 
-.rv2-range { width: 100%; accent-color: #ffd166; height: 24px; cursor: pointer; }
+.rv2-root .rv2-range { width: 100%; accent-color: #ffef5a; height: 24px; cursor: pointer; }
 
 .rv2-actions { display: grid; gap: 8px; margin-top: 18px; }
 
-.rv2-go {
+/* Green is the cabinet's "go" colour (".cab-tag"), and the only green on the
+   panel -- so the one thing that starts the race is the one thing wearing it. */
+.rv2-root .rv2-go {
   width: 100%;
   min-height: 46px;
   font: inherit;
-  font-size: 15px;
-  font-weight: 650;
-  color: #15181d;
-  background: linear-gradient(180deg, #ffd980, #ffc14d);
-  border: 0;
-  border-radius: 11px;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: .08em;
+  color: #3dff8f;
+  background: #0a0b1e;
+  border: 2px solid #3dff8f;
+  border-radius: 6px;
   cursor: pointer;
-  transition: filter .12s ease, transform .06s ease;
+  text-shadow: 0 0 10px rgba(61, 255, 143, .5);
+  transition: background .12s ease, box-shadow .12s ease, transform .06s ease;
 }
-.rv2-go:hover { filter: brightness(1.06); }
-.rv2-go:active { transform: translateY(1px); }
+.rv2-root .rv2-go:hover { background: #072113; box-shadow: 0 0 0 2px #3dff8f, 0 0 20px rgba(61, 255, 143, .35); }
+.rv2-root .rv2-go:active { transform: translateY(1px); }
 
-.rv2-ghost {
+.rv2-root .rv2-ghost {
   width: 100%;
   min-height: 42px;
   font: inherit;
-  font-size: 13px;
-  color: rgba(255, 255, 255, .72);
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, .16);
-  border-radius: 11px;
+  font-size: 9px;
+  letter-spacing: .06em;
+  color: #8a8fff;
+  background: #0a0b1e;
+  border: 2px solid #2b2bff;
+  border-radius: 6px;
   cursor: pointer;
   transition: background .12s ease, color .12s ease;
 }
-.rv2-ghost:hover { background: rgba(255, 255, 255, .07); color: #fff; }
+.rv2-root .rv2-ghost:hover { background: #101236; color: #fff; }
 
-.rv2-foot { margin: 18px 0 0; font-size: 11px; color: rgba(255, 255, 255, .34); line-height: 1.5; }
+.rv2-foot { margin: 16px 0 0; font-size: 8px; color: #8ea0c9; line-height: 1.9; }
 
 /* ---- help ------------------------------------------------------------- */
 
 .rv2-help { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); pointer-events: auto; }
-.rv2-help-toggle {
+.rv2-root .rv2-help-toggle {
   min-height: 30px;
   padding: 5px 12px;
   font: inherit;
@@ -245,7 +286,7 @@
   border-radius: 99px;
   cursor: pointer;
 }
-.rv2-help-toggle:hover { color: #fff; }
+.rv2-root .rv2-help-toggle:hover { color: #fff; }
 .rv2-keys {
   margin: 8px 0 0;
   padding: 11px 14px;

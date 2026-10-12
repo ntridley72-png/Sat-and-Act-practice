@@ -285,6 +285,9 @@
   var V2_GAMES = { drift: true, racing: true };
   var mountEl = null;
   var hooked = false;
+  /* The host's mode while v1 was last in charge, so teardown can hand it back
+     exactly as it was. */
+  var prevMode = null;
 
   function ensureMount(stage) {
     if (mountEl && mountEl.isConnected) return mountEl;
@@ -309,6 +312,13 @@
     if (stage && stage.classList.contains("racing-v2-active")) {
       stage.classList.remove("racing-v2-active");
       stage.classList.remove("active");
+    }
+    /* Hand the host's mode back exactly as it was. The fallback paths call
+       originalSelect() straight after this, which sets its own mode anyway,
+       but a quit must not leave the cabinet stuck in a state it never set. */
+    if (prevMode !== null) {
+      try { if (typeof arcade !== "undefined" && arcade) arcade.mode = prevMode; } catch (e) {}
+      prevMode = null;
     }
   }
 
@@ -341,6 +351,24 @@
          select() ever added it. Without this the v2 game mounted, ran and was
          never seen: a working canvas inside a hidden container. */
       stage.classList.add("active");
+
+      /* Tell the host it is no longer sitting in its menu.
+       *
+       * v2 never calls originalSelect(), so arcade.mode stayed "menu" for the
+       * whole race, and the page kept behaving as though the cabinet menu were
+       * open on top of the game:
+       *
+       *   - the global keydown handler's menu branch caught Space and re-ran
+       *     select() on the highlighted tile, which tore the game down and
+       *     remounted it -- it read as being thrown out of the race
+       *   - the arrow keys moved the menu cursor instead of only steering
+       *   - a 280ms interval kept repainting the menu behind the 3D canvas
+       *
+       * "racingV2" is deliberately a value none of the host's branches test
+       * for, so every one of them becomes a no-op while the game owns the
+       * screen. arcade.game is null here too, which closes the rest. */
+      if (prevMode === null) prevMode = arcade.mode;
+      try { arcade.mode = "racingV2"; } catch (e) {}
 
       startApp(host, {
         opponents: 6,

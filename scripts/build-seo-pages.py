@@ -214,6 +214,229 @@ def social_life(c, name, state):
     return html_out, (ret, size, loc, commuter)
 
 
+# ---------------------------------------------------------------- verified extras
+def load_js_object(filename, global_name):
+    """Load one of the generated data bundles ({} when it is absent)."""
+    path = ROOT / filename
+    if not path.exists():
+        return {}
+    text = path.read_text(encoding="utf8")
+    marker = "window." + global_name + " = "
+    if marker not in text:
+        return {}
+    blob = text[text.index(marker) + len(marker):].rstrip().rstrip(";")
+    try:
+        return json.loads(blob)
+    except json.JSONDecodeError:
+        return {}
+
+
+def _short_period(period):
+    return (period or "").replace(" (documented in the Scorecard dictionary)", "")
+
+
+def stat_source_line(keys, defs, release, verified):
+    """One visible line under a stats table: what period, what source, when checked."""
+    periods, sources = {}, []
+    for key in keys:
+        d = defs.get(key)
+        if not d:
+            continue
+        periods.setdefault(_short_period(d["period"]), []).append(d["label"])
+        if d["source"] not in sources:
+            sources.append(d["source"])
+    if not periods:
+        return ""
+    bits = ";\n".join("%s &mdash; %s" % (", ".join(labels), period) for period, labels in periods.items())
+    return ('<p class="muted gsrc"><small>Reporting period: ' + bits +
+            ". Source: " + e("; ".join(sources)) + ", " + e(release) +
+            ". Checked " + e(verified) + ".</small></p>")
+
+
+def about_data_section(c, data, keys):
+    """Definitions, statuses and links for the numbers rendered on this page."""
+    defs = data["meta"].get("statsDefs") or {}
+    status_labels = data["meta"].get("statsStatusLabels") or {}
+    prov = c.get("prov") or {}
+    items = "".join(
+        f"<li><strong>{e(defs[k]['label'])}</strong> &mdash; {e(defs[k]['definition'])} "
+        f"<span class=\"muted\">({e(defs[k]['population'])}; {e(_short_period(defs[k]['period']))}; "
+        f"{e(defs[k]['source'])}, unit: {e(defs[k]['unit'])})</span></li>"
+        for k in keys if k in defs)
+    gaps = [k for k in keys if prov.get(k) in ("missing", "suppressed", "unrecognized", "unmapped-code")]
+    gap_html = ""
+    if gaps:
+        gap_html = ("<p class=\"muted\"><small>Not shown on this page: " +
+                    "; ".join(f"{e(defs[k]['label'])} &mdash; {e(status_labels.get(prov.get(k), 'not reported'))}"
+                              for k in gaps if k in defs) + "</small></p>")
+    sources = data["meta"].get("statsDefsSources") or {}
+    return (
+        '<h2>About these numbers</h2>'
+        '<details class="gabout"><summary>Definitions, reporting periods and source list</summary>'
+        f'<ul class="gdefs">{items}</ul>{gap_html}'
+        f'<p class="muted"><small>Values are the most recent each institution reported to the U.S. Department of '
+        f'Education in the <a href="{e(sources.get("scorecardPages", "https://collegescorecard.ed.gov/data/"))}" '
+        f'target="_blank" rel="noopener">College Scorecard</a> release named above. '
+        f'Reporting periods and definitions come from the official '
+        f'<a href="{e(sources.get("dataDictionary", ""))}" target="_blank" rel="noopener">Scorecard data dictionary</a> '
+        f'(retrieved {e(sources.get("dictionaryRetrieved", ""))}); annual measures reflect the institution\'s most recent '
+        f'reported year, and outcome measures use older cohorts by design. Missing values are never shown as zero.</small></p>'
+        "</details>")
+
+
+def bands_table(c):
+    """Net price by family-income band, with privacy-suppression labeled."""
+    bands = c.get("bands") or []
+    if not bands:
+        return ""
+    rows = []
+    for label, value, status in bands:
+        if isinstance(value, (int, float)):
+            shown = f"${value:,.0f}"
+        elif status == "suppressed":
+            shown = "Suppressed for privacy in the source file"
+        elif status == "zero":
+            shown = "$0"
+        else:
+            shown = "Not reported in this release"
+        rows.append((e(label), shown))
+    return ("<p>The average net price changes sharply with family income. These are the reported "
+            "averages per income band:</p>" + table(rows, ("Family income", "Average net price")))
+
+
+def safety_section(s):
+    """Reported campus-crime counts, geographies kept exactly as filed."""
+    if not s:
+        return ""
+    years = s.get("years") or []
+    head_cells = "".join(f'<th scope="col">{e(y)}</th>' for y in years)
+    group_titles = {
+        "criminal": "Criminal offenses",
+        "vawa": "VAWA offenses",
+        "arrests": "Arrests",
+        "disciplinary": "Disciplinary referrals",
+    }
+    geo_labels = {
+        "onCampus": "On campus",
+        "housing": "On-campus student housing (a subset of the on-campus counts; shown separately, never added)",
+        "noncampus": "Noncampus",
+        "publicProperty": "Public property",
+    }
+    parts = ['<section class="gsafety" aria-labelledby="gsafety-h">',
+             '<h2 id="gsafety-h">Campus safety: reported incidents</h2>',
+             ("<p>These tables reproduce the campus crime statistics each institution files with the "
+              "U.S. Department of Education under the Clery Act, for the three most recent calendar years, "
+              "exactly as the Department publishes them. They are <strong>reported incidents within the "
+              "statute&rsquo;s defined geography</strong>: they do not measure the true prevalence of sexual "
+              "assault or any other crime, and they do not establish personal safety. Reporting practices and "
+              "geographic coverage differ between campuses; a blank cell means the filing shows no value, which "
+              "is not the same as zero. Reported counts are not comparable as a safety ranking.</p>")]
+    for group in s.get("groups") or []:
+        key = group.get("key")
+        if key not in group_titles:
+            continue
+        parts.append(f"<h3>{e(group_titles[key])}</h3>")
+        parts.append('<table class="gtable gsafety-table"><thead><tr><th scope="col">Category</th>' +
+                     head_cells + "</tr></thead><tbody>")
+        for geo in ("onCampus", "housing", "noncampus", "publicProperty"):
+            screen = (group.get("screens") or {}).get(geo)
+            if not screen:
+                continue
+            parts.append(f'<tr class="gsub"><th colspan="{len(years) + 1}">{e(geo_labels[geo])}</th></tr>')
+            for row in screen.get("rows") or []:
+                value_cells = ""
+                for value in row.get("values") or []:
+                    if isinstance(value, int):
+                        value_cells += f"<td>{value}</td>"
+                    elif value is None:
+                        value_cells += '<td><span class="muted" title="No value shown in the filing">&mdash;</span></td>'
+                    else:
+                        value_cells += f"<td>{e(str(value))}</td>"
+                parts.append(f'<tr><th scope="row">{e(row.get("label"))}</th>{value_cells}</tr>')
+        parts.append("</tbody></table>")
+    unf = next((g for g in s.get("groups") or [] if g.get("key") == "unfounded"), None)
+    if unf:
+        screen = (unf.get("screens") or {}).get("unfounded") or {}
+        rows = "".join(
+            '<tr><th scope="row">' + e(r.get("label")) + "</th>" +
+            "".join(f"<td>{v if v is not None else '&mdash;'}</td>" for v in r.get("values") or []) +
+            "</tr>" for r in screen.get("rows") or [])
+        parts.append("<h3>Unfounded crimes</h3>")
+        parts.append('<p class="muted"><small>Unfounded means an investigation determined a reported crime did not '
+                     "occur or was not attempted; these counts are preserved separately from the tables above.</small></p>")
+        parts.append('<table class="gtable gsafety-table"><thead><tr><th scope="col">Category</th>' +
+                     head_cells + f"</tr></thead><tbody>{rows}</tbody></table>")
+    notes = {n.get("text") for n in (s.get("notes") or []) if n.get("text")}
+    if notes:
+        parts.append('<p class="muted"><small>' + " ".join(e(n) for n in notes) + "</small></p>")
+    if s.get("resources"):
+        campus = [r for r in s["resources"] if r.get("kind") != "national"]
+        national = [r for r in s["resources"] if r.get("kind") == "national"]
+        parts.append("<h3>Support and reporting resources</h3>")
+        if campus:
+            items = "".join(f'<li><a href="{e(r["url"])}" target="_blank" rel="noopener">{e(r["label"])}</a></li>'
+                            for r in campus)
+            parts.append("<p>The institution&rsquo;s own published contacts:</p><ul>" + items + "</ul>"
+                         '<p class="muted"><small>Links verified at build time.</small></p>')
+        if national:
+            items = "".join(f'<li><a href="{e(r["url"])}" target="_blank" rel="noopener">{e(r["label"])}</a></li>'
+                            for r in national)
+            parts.append("<p>National confidential services (not campus-specific):</p><ul>" + items + "</ul>")
+    meta = s.get("sourceUrl") or ""
+    parts.append(f'<p class="muted gsrc"><small>Source: the U.S. Department of Education&rsquo;s Campus Safety and Security '
+                 f'data (<a href="{e(meta)}" target="_blank" rel="noopener nofollow">ope.ed.gov/campussafety</a>), calendar '
+                 f'years {e("&ndash;".join([years[0], years[-1]])) if len(years) >= 2 else ", ".join(years)}; institution tables '
+                 f'cross-checked cell-by-cell against the Department&rsquo;s official CSV export for the same years.</small></p>')
+    parts.append("</section>")
+    return "".join(parts)
+
+
+def extra_photos_section(x):
+    """Verified campus-activity and nearby-place photos, kept visibly apart."""
+    if not x or not x.get("photos"):
+        return ""
+    acts = [p for p in x["photos"] if p.get("category") == "activity"]
+    nearby = [p for p in x["photos"] if p.get("category") == "nearby"]
+
+    def block(title, note, items):
+        if not items:
+            return ""
+        cells = []
+        for i, shot in enumerate(items):
+            credit_text = f'{shot.get("creator") or "Wikimedia Commons"} · {shot.get("license") or ""}'
+            src_link = shot.get("descriptionUrl") or ""
+            credit = (f'<a href="{e(src_link)}" target="_blank" rel="noopener nofollow">{e(credit_text)}</a>'
+                      if src_link else e(credit_text))
+            fs = shot.get("officialSource") or ""
+            official = (f' · <a href="{e(fs)}" target="_blank" rel="noopener">venue source</a>' if fs else "")
+            cells.append(
+                '<figure class="cg-item">'
+                f'<button type="button" class="cg-open" data-cg="{i}" '
+                f'aria-label="Open photo {i + 1} of {len(items)} larger">'
+                f'<img src="{e(shot.get("thumbUrl") or shot.get("fileUrl"))}" '
+                f'alt="{e(shot.get("caption") or shot.get("depicted"))}" loading="lazy" decoding="async" '
+                f'width="{e(str(shot.get("width")))}" height="{e(str(shot.get("height")))}"></button>'
+                f'<figcaption class="cg-credit">{credit}'
+                f'<br><span class="muted">{e(shot.get("caption"))}{official}</span></figcaption></figure>')
+        data = json.dumps([{"src": s.get("thumbUrl") or s.get("fileUrl"),
+                            "credit": (s.get("creator") or "Wikimedia Commons") + " · " + (s.get("license") or ""),
+                            "license": s.get("descriptionUrl") or ""} for s in items],
+                          separators=(",", ":"), ensure_ascii=False)
+        return (f'<section class="cg" data-college-gallery data-count="{len(items)}" aria-label="{e(title)}">' 
+                f'<h3>{e(title)}</h3><p class="muted"><small>{note}</small></p>'
+                f'<div class="cg-grid">{"".join(cells)}</div>'
+                f'<script type="application/json" class="cg-data">{data}</script></section>')
+
+    return (block("Campus activities",
+                  "Institution-sponsored or institution-recognized places and programs. Each photo names its "
+                  "official source; recognition is stated as the source describes it.",
+                  acts) +
+            block("Nearby places",
+                  "Verified options near campus, with straight-line distances from the campus point where given. "
+                  "These are not school-sanctioned, and a listing is not an endorsement.",
+                  nearby))
+
+
 def college_page(c, data):
     name, st = c["n"], c["st"]
     state = STATES.get(st, st)
@@ -334,6 +557,15 @@ def college_page(c, data):
             out += (f"<p>Students on Pell grants graduate at {pct(c['gpell'])}, essentially "
                     f"level with the {pct(c['gr'])} rate for the class as a whole &mdash; a sign "
                     f"the college supports lower-income students about as well as everyone else.</p>")
+
+    if c.get("_defs"):
+        scores += stat_source_line(("sr", "ar", "satAvg", "test"), c["_defs"], c.get("_release", ""), c.get("_verified", ""))
+        sel += stat_source_line(("adm", "enr", "sfr"), c["_defs"], c.get("_release", ""), c.get("_verified", ""))
+        cost += stat_source_line(("ti", "to", "rb", "np", "t4aid" if False else "bands", "pell", "loan", "debt", "fam", "cdr"), c["_defs"], c.get("_release", ""), c.get("_verified", ""))
+        out += stat_source_line(("gr", "gpell", "ret", "ern", "fg"), c["_defs"], c.get("_release", ""), c.get("_verified", ""))
+    bands = bands_table(c)
+    if bands:
+        cost += bands
 
     # --- social life (from data already in the bundle; see social_life())
     social, social_facts = social_life(c, name, state)
@@ -472,11 +704,15 @@ def college_page(c, data):
            f'institution to the U.S. Department of Education and can lag the current admissions '
            f'cycle by a year or more.</small></p>')
 
+    extras_photos = extra_photos_section(c.get("_photosX"))
+    safety = safety_section(c.get("_safety"))
+    about = about_data_section(c, data, ("adm", "enr", "sr", "ar", "satAvg", "test", "ti", "to", "rb", "np", "bands",
+                                         "gr", "gpell", "ret", "ern", "pell", "loan", "debt", "fam", "cdr", "sfr", "fg")) if c.get("_defs") else ""
     body = (f'<nav class="gnav"><a href="/">&larr; {SITE_NAME}</a>'
             f'<a href="/colleges/">All colleges</a></nav>'
             f'<p class="gkicker">{e(state)} &middot; College profile</p>'
             f'<h1>{e(name)}: SAT &amp; ACT Scores, Acceptance Rate and Costs</h1>'
-            f'{intro}{personal}{img}{scores}{sel}{cost}{out}{social}{majors}{cta}{faq_html}{src}{links}')
+            f'{intro}{personal}{img}{extras_photos}{scores}{sel}{cost}{out}{social}{majors}{safety}{about}{cta}{faq_html}{src}{links}')
 
     schema = [
         {"@type": "CollegeOrUniversity", "name": name,
@@ -1126,6 +1362,14 @@ def main():
 
 
     data, colleges = load_colleges()
+    safety_all = load_js_object("college-safety.js", "COLLEGE_SAFETY")
+    photos_all = load_js_object("college-photos-extra.js", "COLLEGE_PHOTOS_EXTRA")
+    for c in colleges:
+        c["_safety"] = (safety_all.get("colleges") or {}).get(str(c["id"]))
+        c["_photosX"] = (photos_all.get("colleges") or {}).get(str(c["id"]))
+        c["_defs"] = data["meta"].get("statsDefs") or {}
+        c["_release"] = data["meta"].get("release", "")
+        c["_verified"] = data["meta"].get("fetched", "")
     by_state = {}
     for c in colleges:
         by_state.setdefault(STATES.get(c["st"], c["st"]), []).append(c)

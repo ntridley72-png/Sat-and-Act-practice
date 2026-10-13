@@ -1,0 +1,103 @@
+{
+ "generated": "2026-10-13",
+ "discoveryStats": {
+  "197869": {
+   "geotagged": 136,
+   "byReason": {
+    "title looks like a non-photo": 34,
+    "title names no place or activity": 51,
+    "category is not a place/activity photo": 1,
+    "too small": 7,
+    "unsupported mime image/tiff": 16
+   },
+   "approved": 2
+  },
+  "104151": {
+   "geotagged": 500,
+   "byReason": {
+    "title names no place or activity": 288,
+    "title looks like a non-photo": 1,
+    "category is not a place/activity photo": 2,
+    "too small": 1
+   },
+   "approved": 1
+  },
+  "141060": {
+   "geotagged": 500,
+   "byReason": {
+    "title names no place or activity": 249,
+    "too small": 43,
+    "title looks like a non-photo": 93,
+    "unsupported mime image/webp": 1,
+    "unsupported mime video/webm": 1,
+    "unsupported mime image/tiff": 4,
+    "category is not a place/activity photo": 23
+   },
+   "approved": 3
+  },
+  "225511": {
+   "geotagged": 500,
+   "byReason": {
+    "too small": 26,
+    "title names no place or activity": 248,
+    "unsupported mime image/tiff": 6,
+    "title looks like a non-photo": 18,
+    "license outside whitelist Attribution": 5,
+    "category is not a place/activity photo": 8,
+    "license outside whitelist No restrictions": 1,
+    "unsupported mime video/webm": 1
+   },
+   "approved": 2
+  },
+  "236948": {
+   "geotagged": 500,
+   "byReason": {
+    "title names no place or activity": 378,
+    "title looks like a non-photo": 6,
+    "too small": 23,
+    "category is not a place/activity photo": 3,
+    "unsupported mime image/gif": 2,
+    "unsupported mime image/tiff": 1
+   },
+   "approved": 2
+  },
+  "168342": {
+   "geotagged": 500,
+   "byReason": {
+    "title names no place or activity": 115,
+    "too small": 55,
+    "unsupported mime image/tiff": 20,
+    "license outside whitelist No restrictions": 1,
+    "title looks like a non-photo": 215
+   },
+   "approved": 4
+  }
+ },
+ "rejections": [
+  {
+   "unitid": 197869,
+   "title": "File:Jones House 01.JPG",
+   "reason": "No reachable official page for the Jones House Community Center at verification time (town site paths 404; tourism site blocked automated checks) - held rather than published"
+  },
+  {
+   "unitid": 197869,
+   "title": "File:Moses H Cone Park-27527-1.jpg",
+   "reason": "Specific NPS page for Moses H. Cone Memorial Park not reachable (four NPS paths returned 404/403 from this environment) - held rather than published"
+  },
+  {
+   "unitid": 141060,
+   "title": "File:John F. Kennedy Park.JPG",
+   "reason": "City of Atlanta parks page blocked automated verification (403) and no alternate official park page found - held rather than published"
+  },
+  {
+   "unitid": 225511,
+   "title": "File:HEB MacGregor Market.jpg",
+   "reason": "Neighboring grocery store; an official store page exists but the venue adds little for prospective students beyond the two approved Museum District options - not curated"
+  },
+  {
+   "unitid": 236948,
+   "title": "File:College Inn Pub, Seattle, WA.JPG",
+   "reason": "No working official site for the pub (domain redirects to an unrelated for-sale page) - held rather than published"
+  }
+ ]
+}

@@ -17,6 +17,25 @@ const SHOTS = path.join(ROOT, "tests", "screenshots");
   page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
   page.on("console", (msg) => { if (msg.type() === "error") errors.push("console: " + msg.text()); });
 
+  // The arcade display font is fetched from Google Fonts; stub it as well so
+  // the suite never depends on third-party hosts (sandbox networks often
+  // cannot reach them, and the test never asserts on typeface rendering).
+  await page.route("**://fonts.googleapis.com/**", (route) => route.fulfill({
+    status: 200, contentType: "text/css", body: "/* stubbed */",
+  }));
+  await page.route("**://fonts.gstatic.com/**", (route) => route.fulfill({
+    status: 200, contentType: "font/woff2", body: "",
+  }));
+
+  // Commons photos are stubbed so the layout is measured, not the network.
+  // Registered before the first detail panel opens: the sandbox this suite
+  // runs in cannot reach upload.wikimedia.org (IPv6 hang), and the photo
+  // credit assertions below read the DOM, not the pixels.
+  await page.route("**://*.wikimedia.org/**", (route) => route.fulfill({
+    status: 200, contentType: "image/png",
+    body: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/axnLlcAAAAASUVORK5CYII=", "base64"),
+  }));
+
   await page.goto(BASE + PAGE_PATH, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("body[data-workspace]");
 

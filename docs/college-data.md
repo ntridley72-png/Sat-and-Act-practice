@@ -73,6 +73,28 @@ Estimates use answered practice questions only. Skipped questions never lower a
 predicted score or the college estimate, but the app reminds the student how many
 questions they left blank. A blank and a wrong answer both score zero on test day.
 
+## Verified statistics, campus safety and photos (2026-10-13)
+
+The catalog now ships three additional generated bundles alongside
+`college-data.js`, all with provenance rules described in
+`docs/college-verified-data.md`:
+
+- `college-data.js` — every displayed metric carries a definition, documented
+  reporting period, source and a per-college status (reported / zero /
+  privacy-suppressed / not reported); income-band net prices included.
+  Rebuild: `python3 scripts/build-college-data.py`.
+- `college-safety.js` — Clery Act campus-crime tables for a six-school pilot,
+  three labeled years, four geographies kept separate, cross-checked
+  cell-by-cell against the Department's official CSV export.
+  Rebuild: `python3 scripts/build-campus-safety.py`.
+- `college-photos-extra.js` — verified campus-activity and nearby-place
+  photos with full evidence (official source, license, distance, visual
+  check); rejections logged in `docs/college-photos-rejections.json`.
+  Rebuild: `python3 scripts/build-college-photos.py`.
+
+The wrangler build copies the three bundles into `public/`; the generators
+run locally (their sources are cached under `scripts/.cache/`).
+
 ## Official scoring references
 
 - ACT Composite (current): average of English, Math, and Reading, rounded;

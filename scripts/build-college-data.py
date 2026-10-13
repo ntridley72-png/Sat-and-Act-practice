@@ -178,6 +178,120 @@ def build_selection(path):
     return sorted(selective, key=lambda e: e["n"])
 
 
+# --------------------------------------------------------------------------- #
+# Metric provenance: what each displayed number IS, which period it covers,
+# and its exact status (reported / zero / suppressed / missing). Definitions
+# and documented periods come from the official College Scorecard data
+# dictionary (collegescorecard.ed.gov/assets/CollegeScorecardDataDictionary.xlsx,
+# retrieved 2026-10-13); the retrieval date is recorded in the bundle meta.
+# --------------------------------------------------------------------------- #
+SCORECARD_DICT_URL = "https://collegescorecard.ed.gov/assets/CollegeScorecardDataDictionary.xlsx"
+
+# key: (label, unit, definition, documented period, cohort/population, source)
+STATS_DEFS = {
+    "adm": ("Acceptance rate", "% of applicants", "Admission rate.", "Fall 2022 (documented in the Scorecard dictionary)", "First-year applicants", "IPEDS, via College Scorecard"),
+    "enr": ("Undergraduate enrollment", "students", "Enrollment of undergraduate certificate/degree-seeking students.", "Fall 2022 (documented in the Scorecard dictionary)", "All enrolled undergraduates", "IPEDS, via College Scorecard"),
+    "sr": ("SAT middle 50 (EBRW + Math)", "score points", "25th and 75th percentiles of SAT evidence-based reading and writing plus math, combined by the app.", "Fall 2022 (documented in the Scorecard dictionary)", "Enrolled students who submitted scores", "IPEDS, via College Scorecard"),
+    "ar": ("ACT middle 50 (composite)", "score points", "25th and 75th percentiles of the ACT cumulative score.", "Fall 2022 (documented in the Scorecard dictionary)", "Enrolled students who submitted scores", "IPEDS, via College Scorecard"),
+    "satAvg": ("Average SAT (EBRW + Math)", "score points", "Average SAT equivalent score of students admitted, combined by the app.", "Fall 2022 (documented in the Scorecard dictionary)", "Admitted students", "IPEDS, via College Scorecard"),
+    "test": ("Testing policy (as reported)", "policy", "Test score requirements for admission, as coded by IPEDS (1 Required, 2 Recommended, 3 Considered, 4 Not considered).", "Fall 2022 (documented in the Scorecard dictionary)", "Applicants", "IPEDS, via College Scorecard"),
+    "ti": ("In-state tuition and fees", "US$ per academic year", "Published in-state tuition and fees (sticker price before aid).", "AcadYr 2022-23 (documented in the Scorecard dictionary)", "First-year students", "IPEDS, via College Scorecard"),
+    "to": ("Out-of-state tuition and fees", "US$ per academic year", "Published out-of-state tuition and fees (sticker price before aid).", "AcadYr 2022-23 (documented in the Scorecard dictionary)", "First-year students", "IPEDS, via College Scorecard"),
+    "rb": ("Room and board", "US$ per academic year", "Cost of attendance: room and board, on campus when reported, otherwise off campus (label says which).", "AcadYr 2022-23 (documented in the Scorecard dictionary)", "Students living on or off campus as labeled", "IPEDS, via College Scorecard"),
+    "np": ("Average net price", "US$ per academic year", "Average net price for Title IV institutions: what students pay after grant and scholarship aid.", "AcadYr 2021-22 (documented in the Scorecard dictionary)", "First-time, full-time Title IV students", "IPEDS, via College Scorecard"),
+    "bands": ("Average net price by family income", "US$ per academic year", "Average net price for five family-income bands, reported separately for public and private institutions.", "AcadYr 2021-22 (documented in the Scorecard dictionary)", "First-time, full-time Title IV students by family income band", "IPEDS, via College Scorecard"),
+    "gr": ("Graduation rate (150% of time)", "share of the cohort", "Completion rate for first-time, full-time students at four-year institutions, within 150% of expected time.", "Fall 2016 or AcadYr 2016-17 entry cohort, as applicable (documented in the Scorecard dictionary)", "First-time, full-time degree-seeking students", "IPEDS, via College Scorecard"),
+    "gpell": ("Graduation rate, Pell recipients", "share of the cohort", "Completion rate for first-time, full-time Pell-recipient students at four-year institutions, within 150% of expected time.", "Fall 2016 or AcadYr 2016-17 entry cohort, as applicable (documented in the Scorecard dictionary)", "First-time, full-time Pell-recipient students", "IPEDS, via College Scorecard"),
+    "ret": ("First-year retention", "% of first-year students", "First-time, full-time student retention rate at four-year institutions.", "Fall 2021 bachelor's-seeking cohort (documented in the Scorecard dictionary)", "First-time, full-time students returning for a second year", "IPEDS, via College Scorecard"),
+    "ern": ("Median earnings 10 years after entry", "US$ per year", "Median earnings of students working and not enrolled 10 years after entry.", "Treasury AY2009-10/AY2010-11 pooled cohort measured in CY2020-21, inflation adjusted (documented in the Scorecard dictionary)", "Federal-aid recipients working and not enrolled", "U.S. Treasury, via College Scorecard"),
+    "pell": ("Pell Grant recipients", "% of undergraduates", "Percentage of undergraduates who receive a Pell Grant.", "AcadYr 2021-22 (documented in the Scorecard dictionary)", "All enrolled undergraduates", "IPEDS, via College Scorecard"),
+    "loan": ("Federal loan recipients", "% of undergraduates", "Percent of all undergraduate students receiving a federal student loan.", "AcadYr 2021-22 (documented in the Scorecard dictionary)", "All enrolled undergraduates", "IPEDS, via College Scorecard"),
+    "debt": ("Median federal debt at repayment", "US$", "The median original amount of the loan principal upon entering repayment.", "NSLDS FY2020/FY2021 pooled cohorts (documented in the Scorecard dictionary)", "Federal student loan borrowers", "NSLDS, via College Scorecard"),
+    "fam": ("Median family income", "US$ per year", "Median family income of federal-aid recipients.", "NSLDS AY2015-16/AY2016-17 pooled cohorts (documented in the Scorecard dictionary)", "Federal-aid recipient families", "NSLDS, via College Scorecard"),
+    "cdr": ("Federal loan default rate (3-year)", "% of borrowers", "Three-year cohort default rate.", "FSA FY2020 cohort measured in FY2022 (documented in the Scorecard dictionary)", "Federal loan borrowers entering repayment", "FSA, via College Scorecard"),
+    "sfr": ("Student-faculty ratio", "students per instructional faculty", "Undergraduate student to instructional faculty ratio.", "Fall 2022 (documented in the Scorecard dictionary)", "Enrolled undergraduates and instructional faculty", "IPEDS, via College Scorecard"),
+    "fg": ("First-generation students", "% of undergraduates", "Percentage of first-generation students (neither parent attended college).", "NSLDS AY2015-16/AY2016-17 pooled cohorts (documented in the Scorecard dictionary)", "Federal-aid recipients", "NSLDS, via College Scorecard"),
+    "rpp": ("Regional price parity (all items)", "index, U.S. = 100", "BEA Regional Price Parity for the state: the cost of goods and services relative to the national average.", "2024", "All consumers in the state", "U.S. Bureau of Economic Analysis"),
+}
+STATS_STATUS_LABELS = {
+    "ok": "reported",
+    "zero": "reported as zero",
+    "suppressed": "suppressed for privacy in the source file (coded PS)",
+    "missing": "not reported in this release (source value NA or blank)",
+    "unmapped-code": "coded value not enumerated in the published source dictionary",
+}
+BAND_FIELDS = ("NPT41", "NPT42", "NPT43", "NPT44", "NPT45")
+BAND_LABELS = ("$0-$30,000", "$30,001-$48,000", "$48,001-$75,000", "$75,001-$110,000", "$110,000+")
+
+
+def field_status(value):
+    """Distinguish reported numbers from missing, suppressed, and reported zero.
+
+    The Scorecard file uses numeric values, the literal PS (privacy
+    suppression), and NA (not reported / not applicable). Reported zero is a
+    real zero and is kept distinct from a missing value."""
+    v = "" if value is None else str(value).strip()
+    if v == "" or v.upper() == "NA":
+        return "missing"
+    if v.upper() == "PS":
+        return "suppressed"
+    try:
+        number = float(v)
+    except ValueError:
+        return "unrecognized"
+    return "zero" if number == 0 else "ok"
+
+
+def worst_status(*statuses):
+    for s in ("unrecognized", "suppressed", "missing"):
+        if s in statuses:
+            return s
+    if "zero" in statuses:
+        return "zero"
+    return "ok"
+
+
+def enrich_stats(colleges):
+    """Attach per-metric status and income-band net prices for the provenance UI."""
+    for e in colleges:
+        r = e["_raw"]
+        ctrl = "PUB" if e.get("ctrl") == "public" else "PRIV"
+        st = {}
+        for key, field in (("adm", "ADM_RATE"), ("enr", "UGDS"), ("satAvg", "SAT_AVG"),
+                           ("ti", "TUITIONFEE_IN"), ("to", "TUITIONFEE_OUT"),
+                           ("gr", "C150_4"), ("gpell", "C150_4_PELL"), ("ret", "RET_FT4"),
+                           ("ern", "MD_EARN_WNE_P10"), ("pell", "PCTPELL"), ("loan", "PCTFLOAN"),
+                           ("debt", "DEBT_MDN"), ("fam", "MD_FAMINC"), ("cdr", "CDR3"),
+                           ("sfr", "STUFACR"), ("fg", "PAR_ED_PCT_1STGEN")):
+            st[key] = field_status(r.get(field))
+        for key, key_pub, key_priv in (("sr", "SATVR25", "SATVR25"), ("ar", "ACTCM25", "ACTCM25")):
+            subs = ("SATVR25", "SATVR75", "SATMT25", "SATMT75") if key == "sr" else ("ACTCM25", "ACTCM75")
+            st[key] = "ok" if e.get(key) is not None else worst_status(*(field_status(r.get(f)) for f in subs))
+        code = str(r.get("ADMCON7") or "").strip()
+        if code in ("1", "2", "3", "4"):
+            st["test"] = "ok"
+        elif field_status(code) == "missing":
+            st["test"] = "missing"
+        else:
+            st["test"] = "unmapped-code"
+        np_status = field_status(r.get("NPT4_" + ctrl))
+        st["np"] = np_status
+        rb_on, rb_off = field_status(r.get("ROOMBOARD_ON")), field_status(r.get("ROOMBOARD_OFF"))
+        e["rbScope"] = "on campus" if rb_on == "ok" else ("off campus" if rb_off == "ok" else None)
+        st["rb"] = rb_on if rb_on == "ok" else (rb_off if rb_off == "ok" else worst_status(rb_on, rb_off))
+        bands = []
+        for field, label in zip(BAND_FIELDS, BAND_LABELS):
+            raw = r.get(field + "_" + ctrl)
+            status = field_status(raw)
+            value = int(num(raw)) if status in ("ok", "zero") and num(raw) is not None else None
+            bands.append([label, value, status])
+        e["bands"] = bands
+        st["bands"] = worst_status(*(b[2] for b in bands))
+        # Named "prov" (provenance), not "st": st is the state abbreviation.
+        e["prov"] = st
+        e.pop("_raw", None)
+
+
 def enrich_scorecard(colleges):
     """Costs, outcomes, academics, diversity, housing proxy, city type."""
     for e in colleges:
@@ -225,7 +339,8 @@ def enrich_scorecard(colleges):
             e["hbcu"] = True
         if str(r.get("TRIBAL")) == "1":
             e["tribal"] = True
-        e.pop("_raw", None)
+        # _raw is popped by enrich_stats(), which runs after this and still
+        # needs the raw Scorecard row for provenance statuses and bands.
 
 
 CIP_FAMILIES = {
@@ -701,6 +816,7 @@ def main():
     csv_path = sys.argv[1] if len(sys.argv) > 1 else download_csv()
     colleges = build_selection(csv_path)
     enrich_scorecard(colleges)
+    enrich_stats(colleges)
     try:
         fetch_majors(colleges)
     except Exception as exc:
@@ -771,6 +887,20 @@ def main():
                 "Photos: up to six curated Wikimedia Commons images per college, prioritizing athletics, Greek life, architecture, campus life, and surroundings; free-license images only, with per-image attribution.",
                 "Campus context: enrollment size and locale classification from IPEDS, described as context — not a student survey or a social-life rating.",
             ],
+            "statsDefs": {k: {"label": v[0], "unit": v[1], "definition": v[2], "period": v[3],
+                               "population": v[4], "source": v[5]} for k, v in STATS_DEFS.items()},
+            "statsDefsSources": {
+                "scorecardPages": "https://collegescorecard.ed.gov/data/",
+                "dataDictionary": SCORECARD_DICT_URL,
+                "dictionaryRetrieved": "2026-10-13",
+            },
+            "statsStatusLabels": STATS_STATUS_LABELS,
+            "statsNote": ("Every value is the most recent the institution reported to the U.S. Department of Education in this "
+                          "release. The period shown for each measure is the period documented in the official College Scorecard data "
+                          "dictionary (retrieved 2026-10-13); annual measures reflect the institution's most recent reported year in "
+                          "the release file, and outcome measures use older cohorts by design. Missing and privacy-suppressed values "
+                          "are labeled, never shown as zero. Sticker prices (tuition and fees, room and board) are separated from net "
+                          "prices after aid."),
             "note": ("SAT and ACT ranges describe enrolled students, not admitted students. Values are the most recent each "
                      "college reported to the U.S. Department of Education. Verify current testing policies and costs with each college."),
             "count": len(colleges),

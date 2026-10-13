@@ -1,0 +1,195 @@
+{
+ "_note": "Curation gate for scripts/build-college-photos.py. Every entry was verified by a person (agent) on 2026-10-13: the Commons file was viewed at thumbnail size, its description page read, its license/creator confirmed through the Commons API, and the official source URL fetched to confirm the venue or recognition.",
+ "197869": {
+  "photos": [
+   {
+    "title": "File:KiddBrewerStadium(ViewFromSE).jpg",
+    "category": "activity",
+    "depicted": "Kidd Brewer Stadium, Appalachian State University",
+    "relationship": "App State's football stadium on campus; official athletics facility",
+    "officialSource": "https://appstatesports.com/facilities",
+    "officialSourceNote": "Official App State Athletics facilities page names Kidd Brewer Stadium (the stadium sub-page answered 500 at verification time; the facilities index answered 200 and names the stadium)",
+    "caption": "Kidd Brewer Stadium, from the southeast corner.",
+    "verified": "2026-10-13"
+   },
+   {
+    "title": "File:Valle Crucis Park-27527.jpg",
+    "category": "nearby",
+    "depicted": "Valle Crucis Community Park, Watauga County, NC",
+    "relationship": "Community park about 9 km from campus; a verified nearby option, no school affiliation",
+    "officialSource": "https://www.vallecrucispark.org/",
+    "officialSourceNote": "Official park site answered 200 and names Valle Crucis Community Park",
+    "caption": "Valle Crucis Community Park, about 9 km (straight-line) from campus.",
+    "verified": "2026-10-13"
+   }
+  ],
+  "dropped": [
+   {
+    "title": "File:Jones House 01.JPG",
+    "reason": "No reachable official page for the Jones House Community Center at verification time (town site paths 404; tourism site blocked automated checks) - held rather than published"
+   },
+   {
+    "title": "File:Moses H Cone Park-27527-1.jpg",
+    "reason": "Specific NPS page for Moses H. Cone Memorial Park not reachable (four NPS paths returned 404/403 from this environment) - held rather than published"
+   }
+  ]
+ },
+ "104151": {
+  "photos": [
+   {
+    "title": "File:ASU Art Museum (2433179467).jpg",
+    "category": "activity",
+    "depicted": "ASU Art Museum, Arizona State University, Tempe",
+    "relationship": "University-operated museum (ASU Art Museum)",
+    "officialSource": "https://asuartmuseum.asu.edu/",
+    "officialSourceNote": "Official museum site answered 200",
+    "caption": "ASU Art Museum, Tempe campus.",
+    "verified": "2026-10-13"
+   }
+  ]
+ },
+ "168342": {
+  "photos": [
+   {
+    "title": "File:Williams College Museum of Art Exterior.jpg",
+    "category": "activity",
+    "depicted": "Williams College Museum of Art, Williamstown, Massachusetts",
+    "relationship": "College-operated museum on the Williams campus",
+    "officialSource": "https://artmuseum.williams.edu/",
+    "officialSourceNote": "Official museum site answered 200",
+    "caption": "Williams College Museum of Art.",
+    "verified": "2026-10-13"
+   },
+   {
+    "title": "File:'62 Center for Theatre and Dance, Williams College, front entrance.jpg",
+    "category": "activity",
+    "depicted": "'62 Center for Theatre and Dance, Williams College",
+    "relationship": "College performing-arts center at 100 Main Street",
+    "officialSource": "https://62center.williams.edu/",
+    "officialSourceNote": "Official center site answered 200",
+    "caption": "The '62 Center for Theatre and Dance.",
+    "verified": "2026-10-13"
+   },
+   {
+    "title": "File:Images Cinema, Walden Building, 50 Spring Street, Williamstown.jpg",
+    "category": "nearby",
+    "depicted": "Images Cinema, 50 Spring Street, Williamstown",
+    "relationship": "Independent non-profit cinema in downtown Williamstown; a verified nearby option, no school affiliation",
+    "officialSource": "https://imagescinema.org/",
+    "officialSourceNote": "Official cinema site answered 200",
+    "caption": "Images Cinema, downtown Williamstown, about a 5-minute walk from campus.",
+    "verified": "2026-10-13"
+   },
+   {
+    "title": "File:PigPen Theatre Co at Williamstown Theatre Festival.jpg",
+    "category": "nearby",
+    "depicted": "PigPen Theatre Co at the Williamstown Theatre Festival, 2016",
+    "relationship": "Independent professional theatre festival in Williamstown; photo shows its 2016 PigPen Theatre Co performance",
+    "officialSource": "https://wtfestival.org/",
+    "officialSourceNote": "Official festival site answered 200; the Commons description identifies the performance and date",
+    "caption": "Williamstown Theatre Festival (2016 PigPen Theatre Co performance), about a 5-minute walk from campus.",
+    "verified": "2026-10-13"
+   }
+  ]
+ },
+ "225511": {
+  "photos": [
+   {
+    "title": "File:Buffalo Soldiers National Museum interior.jpg",
+    "category": "nearby",
+    "depicted": "Buffalo Soldiers National Museum, Houston",
+    "relationship": "Independent museum in the Houston Museum District, ~3.8 km from campus; a verified nearby option, no school affiliation",
+    "officialSource": "https://buffalosoldiersmuseum.org/",
+    "officialSourceNote": "Official museum site answered 200",
+    "caption": "Buffalo Soldiers National Museum, about 3.8 km (straight-line) from campus.",
+    "verified": "2026-10-13"
+   },
+   {
+    "title": "File:Hermannparkgolfcourse.jpg",
+    "category": "nearby",
+    "depicted": "Hermann Park Golf Course, Houston",
+    "relationship": "City of Houston park course about 3.5 km from campus; a verified nearby option, no school affiliation",
+    "officialSource": "https://www.hermannpark.org/",
+    "officialSourceNote": "Official Hermann Park site answered 200",
+    "caption": "Hermann Park Golf Course, about 3.5 km (straight-line) from campus.",
+    "verified": "2026-10-13"
+   }
+  ],
+  "dropped": [
+   {
+    "title": "File:HEB MacGregor Market.jpg",
+    "reason": "Neighboring grocery store; an official store page exists but the venue adds little for prospective students beyond the two approved Museum District options - not curated"
+   }
+  ]
+ },
+ "141060": {
+  "photos": [
+   {
+    "title": "File:SpelmanMuseum.jpg",
+    "category": "activity",
+    "depicted": "Spelman College Museum of Fine Art, Atlanta",
+    "relationship": "College-operated museum dedicated to art by and about women of the African diaspora",
+    "officialSource": "https://www.spelman.edu/museum-of-fine-art",
+    "officialSourceNote": "Official Spelman museum page answered 200",
+    "caption": "Spelman College Museum of Fine Art.",
+    "verified": "2026-10-13"
+   },
+   {
+    "title": "File:Archives Research Center Atlanta University Center Robert W. Woodruff Library.jpg",
+    "category": "activity",
+    "depicted": "Atlanta University Center Robert W. Woodruff Library, archives research center",
+    "relationship": "The shared Atlanta University Center library that serves Spelman College (Spelman is an AUC member)",
+    "officialSource": "https://research.auctr.edu/",
+    "officialSourceNote": "Official AUC Woodruff Library research site answered 200 (the main auctr.edu homepage blocked automated checks with 403)",
+    "caption": "AUC Robert W. Woodruff Library archives research center.",
+    "verified": "2026-10-13"
+   },
+   {
+    "title": "File:Mercedes-Benz Stadium, December 2024.jpg",
+    "category": "nearby",
+    "depicted": "Mercedes-Benz Stadium, Atlanta",
+    "relationship": "Independently operated stadium about 1.6 km from campus; a verified nearby option, no school affiliation",
+    "officialSource": "https://mercedesbenzstadium.com/",
+    "officialSourceNote": "Official stadium site answered 200",
+    "caption": "Mercedes-Benz Stadium, about 1.6 km (straight-line) from campus.",
+    "verified": "2026-10-13"
+   }
+  ],
+  "dropped": [
+   {
+    "title": "File:John F. Kennedy Park.JPG",
+    "reason": "City of Atlanta parks page blocked automated verification (403) and no alternate official park page found - held rather than published"
+   }
+  ]
+ },
+ "236948": {
+  "photos": [
+   {
+    "title": "File:Meany Hall seen across UW Red Square.jpg",
+    "category": "activity",
+    "depicted": "Meany Hall (Meany Center for the Performing Arts), University of Washington",
+    "relationship": "University performing-arts center on the Seattle campus",
+    "officialSource": "https://meanycenter.org/",
+    "officialSourceNote": "Official center site answered 200",
+    "caption": "Meany Hall, seen across Red Square.",
+    "verified": "2026-10-13"
+   },
+   {
+    "title": "File:Burke Gilman Trail (4048059564).jpg",
+    "category": "nearby",
+    "depicted": "Burke-Gilman Trail in Seattle's University District (University of Washington Botany Greenhouse in the background)",
+    "relationship": "City of Seattle trail passing through the UW district; a verified nearby option",
+    "officialSource": "https://www.seattle.gov/parks/allparks/burke-gilman-trail",
+    "officialSourceNote": "Official Seattle Parks page answered 200",
+    "caption": "Burke-Gilman Trail in the University District; the UW Botany Greenhouse is in the background.",
+    "verified": "2026-10-13"
+   }
+  ],
+  "dropped": [
+   {
+    "title": "File:College Inn Pub, Seattle, WA.JPG",
+    "reason": "No working official site for the pub (domain redirects to an unrelated for-sale page) - held rather than published"
+   }
+  ]
+ }
+}

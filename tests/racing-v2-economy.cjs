@@ -39,6 +39,7 @@ const ROOT = path.join(__dirname, "..");
 const PORT = 8908;
 const PAGE = "/" + encodeURIComponent("SAT & ACT Practice.html");
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".mp3": "audio/mpeg", ".png": "image/png" };
+let debugPage;
 
 function serve() {
   return new Promise((resolve) => {
@@ -67,6 +68,7 @@ function serve() {
   const base = `http://127.0.0.1:${PORT}`;
 
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  debugPage = page;
   const errs = [];
   page.on("pageerror", (e) => errs.push(String(e)));
   await page.goto(base + PAGE, { waitUntil: "domcontentloaded" });
@@ -201,4 +203,18 @@ function serve() {
   await browser.close();
   server.close();
   console.log("PASS: v2 carries the session economy — practice is free and unrecorded, scored runs cost one token and bank records, the clock ends runs unrecorded, broke players fall back to practice, and the workshop path presets the mode.");
-})().catch((e) => { console.error("FAIL:", e.message); process.exit(1); });
+})().catch(async (e) => {
+  console.error("FAIL:", e.message);
+  try {
+    console.error(await debugPage.evaluate(() => ({
+      state: window.__rv2economyProbe?.state(),
+      mode: arcade.mode,
+      ctor: arcade.game?.constructor.name,
+      stage: document.getElementById('arcadeStage')?.className,
+      mount: document.getElementById('racingV2Mount')?.style.display,
+      headings: [...document.querySelectorAll('.rv2-title')].map((h) => h.textContent),
+      resultPanels: document.querySelectorAll('.rv2-panel-sm').length,
+    })));
+  } catch {}
+  process.exit(1);
+});

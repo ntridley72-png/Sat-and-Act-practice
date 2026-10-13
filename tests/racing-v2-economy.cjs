@@ -69,6 +69,9 @@ function serve() {
 
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   debugPage = page;
+  // This suite tests billing and persistence, not the AI field. A single-car
+  // fixture avoids software-renderer shader warmup dominating those checks.
+  page.setDefaultTimeout(60000);
   const errs = [];
   page.on("pageerror", (e) => errs.push(String(e)));
   await page.goto(base + PAGE, { waitUntil: "domcontentloaded" });
@@ -81,13 +84,15 @@ function serve() {
 
   const openGame = async () => {
     await page.evaluate(() => arcade.select("racing"));
-    await page.waitForFunction("window.RacingV2 && RacingV2.appLoaded() === true", { timeout: 20000 });
-    await page.waitForSelector(".rv2-go", { state: "visible", timeout: 20000 });
-    await page.waitForFunction("window.__rv2economyProbe", { timeout: 20000 });
+    await page.waitForFunction("window.RacingV2 && RacingV2.appLoaded() === true", null, { timeout: 60000 });
+    await page.waitForSelector(".rv2-go", { state: "visible", timeout: 60000 });
+    await page.waitForFunction("window.__rv2economyProbe", null, { timeout: 60000 });
+    await page.locator('#rv2-grid').focus();
+    await page.keyboard.press('Home');
   };
   const backToArcade = async () => {
     await page.click(".rv2-ghost");
-    await page.waitForFunction(`document.getElementById("racingV2Mount") === null || document.getElementById("racingV2Mount").style.display === "none"`, { timeout: 10000 });
+    await page.waitForFunction(`document.getElementById("racingV2Mount") === null || document.getElementById("racingV2Mount").style.display === "none"`, null, { timeout: 60000 });
   };
   const chip = (text) => page.locator(".rv2-chip", { hasText: text }).first();
 
@@ -102,11 +107,11 @@ function serve() {
 
   // --- 2. practice: free, finishes, and records nothing --------------------
   await page.click(".rv2-go");
-  await page.waitForSelector(".rv2-mode", { timeout: 10000 });
+  await page.waitForSelector(".rv2-mode", { timeout: 60000 });
   const hudMode = await page.textContent(".rv2-mode");
   if (!hudMode.includes("OPEN PRACTICE")) fail("practice badge missing", hudMode);
   await probe("finish", 95.2, 44.1);
-  await page.waitForSelector(".rv2-panel-sm", { timeout: 10000 });
+  await page.waitForSelector(".rv2-panel-sm", { timeout: 60000 });
   let st = await probe("state");
   if (st.result.mode !== "practice" || st.result.recorded !== false) fail("practice run must not be recorded", st.result);
   if ((await tokens()) !== 3) fail("practice must not spend a token", await tokens());
@@ -125,7 +130,7 @@ function serve() {
   await chip("Scored run").click();
   await page.click(".rv2-go");
   if ((await tokens()) !== 2) fail("a scored run must spend exactly one token", await tokens());
-  await page.waitForSelector(".rv2-mode", { timeout: 10000 });
+  await page.waitForSelector(".rv2-mode", { timeout: 60000 });
   const scoredBadge = await page.textContent(".rv2-mode");
   if (!scoredBadge.includes("SCORED")) fail("scored badge missing", scoredBadge);
   await probe("finish", 95.2, 44.1);
@@ -175,9 +180,11 @@ function serve() {
   await backToArcade();
   await setTokens(1);
   await page.evaluate(() => { RacingSession.request("scored"); arcade.select("racing"); });
-  await page.waitForFunction("window.RacingV2 && RacingV2.appLoaded() === true", { timeout: 20000 });
-  await page.waitForSelector(".rv2-go", { timeout: 20000 });
-  await page.waitForFunction("window.__rv2economyProbe", { timeout: 20000 });
+  await page.waitForFunction("window.RacingV2 && RacingV2.appLoaded() === true", null, { timeout: 60000 });
+  await page.waitForSelector(".rv2-go", { timeout: 60000 });
+  await page.waitForFunction("window.__rv2economyProbe", null, { timeout: 60000 });
+  await page.locator('#rv2-grid').focus();
+  await page.keyboard.press('Home');
   const scoredChipOn = await chip("Scored run").getAttribute("class");
   if (!/is-on/.test(scoredChipOn)) fail("a pending scored request must preselect the scored chip", scoredChipOn);
   if ((await tokens()) !== 1) fail("nothing may be spent before the race starts", await tokens());

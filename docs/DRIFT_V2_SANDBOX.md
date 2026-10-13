@@ -16,6 +16,8 @@ The shared garage retains separate selections: drift reads/writes
 cash remain shared. Existing car-specific mass, drive and power ratios are
 preserved; drift uses a lower rear grip and gentler rear handbrake with bounded
 yaw assistance for controlled breakaway. The chassis remains upright.
+Camera and trail heading are projected from the chassis quaternion instead
+of the folding Euler Y angle, so quarter-turns do not reverse the chase view.
 
 Drift points come from measured vehicle velocity and slip angle, with speed
 and sustained-combo thresholds. Recovery keeps points and breaks the tire
@@ -32,6 +34,7 @@ Verification:
 
 - Build/typecheck: `cd racing-v2 && npm run build`.
 - Garage calibration: `node tools/run.mjs tools/garage-check.mjs`.
+- Full-turn heading regression: `node tools/run.mjs tools/heading-check.mjs`.
 - Real driving, recovery, scoring, geometry, mobile controls and audio:
   `node tests/drift-v2-sandbox.cjs`.
 - Host mode routing: `node tests/racing-v2-arcade.cjs`.

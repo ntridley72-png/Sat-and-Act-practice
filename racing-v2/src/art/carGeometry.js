@@ -119,12 +119,21 @@ function buildStations(car) {
     put(cabR, base(cabR), top(cabR), wAt(cabR), .32);
     archRun(wb, fenderR, false);
     put(tail - .55, base(tail - .55), top(tail - .55), wAt(tail - .55), .38);
-    put(tail - .32, base(tail - .32) + .03, top(tail - .32) - .01, wAt(tail - .32) * .95, .4);
-    // Preserve a full-width rear fascia beneath the lamp housings instead
-    // of pinching the body to a point and leaving lights floating outside it.
-    put(tail - .14, car.baseY + .12, car.tailY - .03, wAt(tail - .14) * .98, .38);
-    put(tail - .02, car.baseY + .14, car.tailY - .05, wAt(tail - .02) * .96, .4);
-    put(tail, car.baseY + .16, car.tailY - .07, wAt(tail) * .94, .42);
+    if (car.tailFull) {
+      /* Design targets 01/03: the tail stays as wide as the body so the
+       * fascia reads as a flat panel over the rear wheels, not a pinch. */
+      put(tail - .32, base(tail - .32) + .03, top(tail - .32) - .01, wAt(tail - .32) * .995, .4);
+      put(tail - .14, car.baseY + .12, car.tailY - .03, wAt(tail - .14) * 1.0, .38);
+      put(tail - .02, car.baseY + .14, car.tailY - .05, wAt(tail - .02) * .99, .4);
+      put(tail, car.baseY + .16, car.tailY - .07, wAt(tail) * .975, .42);
+    } else {
+      put(tail - .32, base(tail - .32) + .03, top(tail - .32) - .01, wAt(tail - .32) * .95, .4);
+      // Preserve a full-width rear fascia beneath the lamp housings instead
+      // of pinching the body to a point and leaving lights floating outside it.
+      put(tail - .14, car.baseY + .12, car.tailY - .03, wAt(tail - .14) * .98, .38);
+      put(tail - .02, car.baseY + .14, car.tailY - .05, wAt(tail - .02) * .96, .4);
+      put(tail, car.baseY + .16, car.tailY - .07, wAt(tail) * .94, .42);
+    }
     return st.sort((a, b) => a[0] - b[0]);
   }
 
@@ -235,11 +244,12 @@ function boxPart(THREE, M, w, h, d, x, y, z, mat, rx, ry) {
 function addDetails(THREE, car, group, M, spec) {
     const nose = -car.len / 2, tail = car.len / 2, wid = car.wid, widR = car.widR || car.wid;
     const belt = car.beltY, key = spec.key || 'sport';
-    const tY = car.tailY + (key === 'sport' ? -.22 : -.3), tZ = tail + .01;
+    const tY = car.tailY + (key === 'sport' ? -.22 : key === 'boxcoupe' ? -.20 : -.3), tZ = tail + .01;
     const add = (w, h, d, x, y, z, mat, rx) => group.add(boxPart(THREE, M, w, h, d, x, y, z, mat, rx));
     // front end
     add(wid * 1.8, .14, .2, 0, .34, nose - .01, M.dark);
     add(wid * .9, .12, .12, 0, .34, nose - .06, M.trim);
+    if (car.blackBumper) add(wid * 1.84, .16, .22, 0, .295, nose - .005, M.dark);
     if (spec.splitter || car.splitter) add(wid * 1.9, .035, .3, 0, .2, nose - .08, M.trim);
     if (car.mud || spec.mud) add(wid * .95, .05, .3, 0, .3, nose - .05, M.trim);
     add(wid * .05, .09, car.len * .42, -wid * .98, car.baseY + .02, 0, M.trim);
@@ -277,7 +287,17 @@ function addDetails(THREE, car, group, M, spec) {
     add(widR * .9, .012, .012, 0, car.deckY - .008, tail - .55, M.paint);         // decklid line
     if (key === 'wedge') add(widR * 1.8, .22, .03, 0, car.tailY - .12, tail + .015, M.dark);   // Kamm panel
     if (key === 'ev') add(widR * 1.75, .13, .12, 0, .3, tail + .02, M.trim);
-    else add(widR * 1.8, .13, .22, 0, .3, tail + .02, M.dark);
+    else if (car.blackBumper) {
+      /* Box Coupe / Compact Classic design targets: a full black lower bumper
+       * inset that reads as a separate piece, and (classic only) a thin black
+       * trunk-edge trim band above it. */
+      add(widR * 1.84, .17, .24, 0, .295, tail + .02, M.dark);
+      if (key === 'compactclassic') add(widR * 1.5, .024, .07, 0, car.deckY + .002, tail - .11, M.dark);
+    } else add(widR * 1.8, .13, .22, 0, .3, tail + .02, M.dark);
+    if (car.rubStrip) {
+      /* Classic side rub strip: one black line at bumper height, both sides. */
+      [-1, 1].forEach((sd) => add(.02, .055, car.len * .78, sd * (wid + .012), car.baseY + .30, .05, M.dark));
+    }
     // diffuser per car
     const diff = (w, d, y) => add(widR * w, .1, d, 0, y == null ? .2 : y, tail - .02, M.trim);
     if (key === 'sport') {
@@ -364,6 +384,42 @@ function addDetails(THREE, car, group, M, spec) {
     } else if (sig === 'barfin') {
       lamp(widR * 1.5, .09, 0, tY);
       add(.026, .2, .55, 0, car.deckY + .1, tail - 1.05, M.paint);
+    } else if (sig === 'quadround') {
+      /* Box Coupe: two round lenses per side sharing one dark housing,
+       * lenses proud of the bezel so they stay readable at chase distance. */
+      [-1, 1].forEach((sd) => {
+        add(widR * .315, .185, .02, sd * widR * .575, tY, tZ - .012, M.dark);
+        [-1, 1].forEach((inner) => {
+          const rl = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, .05, 16), M.tail);
+          rl.rotation.x = Math.PI / 2;
+          rl.position.set(sd * widR * (.575 + inner * .088), tY, tZ + .012);
+          group.add(rl);
+        });
+      });
+    } else if (sig === 'ovalbar') {
+      /* Round Coupe: full-width dark panel, two flattened ovals per side,
+       * white reverse blocks near the centre. */
+      add(widR * 1.62, .15, .025, 0, tY, tZ - .014, M.dark);
+      [-1, 1].forEach((sd) => {
+        [0, 1].forEach((i) => {
+          const lens = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .05, 16), M.tail);
+          lens.rotation.x = Math.PI / 2;
+          lens.scale.x = 1.7;
+          lens.position.set(sd * widR * (.42 + i * .17), tY, tZ + .012);
+          group.add(lens);
+        });
+      });
+      [-1, 1].forEach((sd) => add(.075, .05, .03, sd * widR * .115, tY, tZ + .014, M.head));
+    } else if (sig === 'segments') {
+      /* Compact Classic: dark cluster housing per side with amber (outer),
+       * red (middle) and white (inner) rectangular lenses. */
+      [-1, 1].forEach((sd) => {
+        const x = sd * widR * .56;
+        add(widR * .38, .175, .02, x, tY, tZ - .012, M.dark);
+        add(widR * .095, .14, .05, x - sd * widR * .112, tY, tZ, M.amber);
+        add(widR * .145, .14, .05, x + sd * widR * .004, tY, tZ, M.tail);
+        add(widR * .075, .14, .05, x + sd * widR * .115, tY, tZ, M.head);
+      });
     } else if (sig === 'racetrack') {
       if (key === 'ev') add(widR * 1.4, .08, .03, 0, tY, tZ + .005, M.tail);
       lamp(widR * 1.5, .035, 0, tY + .05); lamp(widR * 1.5, .035, 0, tY - .05);
@@ -384,10 +440,12 @@ function addDetails(THREE, car, group, M, spec) {
       add(.1, .05, .03, 0, tY - .18, tZ, M.amber);
     }
     // exhaust tips (+ socket + heat shield)
-    const exY = car.baseY + (key === 'muscle' || key === 'rally' || key === 'supercar' || key === 'hyper' ? .14 : .1);
+    const exY = car.baseY + (key === 'muscle' || key === 'rally' || key === 'supercar' || key === 'hyper' ? .14
+      : spec.exhaust === 'leftx2' ? .17 : .1);
     const exZ = tail + (key === 'muscle' ? .09 : key === 'hyper' ? .1 : key === 'rally' || key === 'supercar' ? .08 : .06);
-    const tips = spec.exhaust === 'none' ? [] : spec.exhaust === 'single' ? [0] : spec.exhaust === 'dual' ? [-.5, .5] : [-.55, -.25, .25, .55];
-    const r0 = key === 'muscle' || key === 'hyper' ? .07 : key === 'rally' || key === 'supercar' ? .06 : key === 'sport' ? .06 : .05;
+    const tips = spec.exhaust === 'none' ? [] : spec.exhaust === 'single' ? [0] : spec.exhaust === 'dual' ? [-.5, .5] : spec.exhaust === 'leftx2' ? [-.62, -.44] : [-.55, -.25, .25, .55];
+    const r0 = key === 'muscle' || key === 'hyper' ? .07 : key === 'rally' || key === 'supercar' ? .06
+      : key === 'sport' ? .06 : spec.exhaust === 'leftx2' ? .055 : .05;
     const r1 = r0 + .005, len = key === 'muscle' || key === 'hyper' ? .16 : .13;
     tips.forEach((f) => {
       add(r0 * 2 + .02, r0 * 2 + .02, .04, f * widR * 1.15, exY, exZ - .04, M.dark);
@@ -423,6 +481,14 @@ function addDetails(THREE, car, group, M, spec) {
           [-1, 1].forEach((sd) => add(.05, .05, .26, sd * widR * .585, car.tailY + .045, tail - .18, M.paint, .28));
         }
       }
+    } else if (wing === 'straight') {
+      /* Box Coupe: body-colour straight blade on two upright supports, near
+       * roof height so the chase camera sees it over the deck, no end
+       * plates. Blade and supports are body colour, as the target shows. */
+      const wy = car.tailY + .42, wz = tail - .30;
+      [-1, 1].forEach((sd) => add(.07, .40, .13, sd * widR * .60, car.tailY + .20, wz, M.paint));
+      add(widR * 1.34, .055, .36, 0, wy, wz, M.paint);
+      add(widR * 1.34, .016, .36, 0, wy + .036, wz, M.dark);
     } else if (wing === 'gt') {
       const wy = car.tailY + .32, wz = tail - .22;
       [-1, 1].forEach((sd) => add(.07, .36, .16, sd * widR * .5, car.tailY + .16, wz - .04, M.trim));
@@ -595,6 +661,42 @@ const CARS = {
       deckLine: [[-2.05, .44, .9], [-1.2, .70, 1.0], [-.4, .92, 1.0], [.6, .94, 1.02], [1.3, .92, .98], [2.05, .86, .88]],
       wheel: { radius: .33, width: .25, spokes: 5, track: .82, y: .33 },
       signature: 'dual', wing: 'lip', exhaust: 'dual', splitter: true
+    },
+    /* The three approved drift designs (docs/mockups/drift-car-rears-2026-10-13).
+     * Fictional cars; proportions and light signatures follow the design
+     * targets, no licensed badge or copied asset is involved. */
+    boxcoupe: {
+      /* 01 Box Coupe: squared shoulders, flat tail, quad round lamps. */
+      name: 'Box Coupe', paint: '#2f5dff', finish: 'metallic',
+      len: 4.6, wid: .90, widR: .96, wheelbase: 2.66, baseY: .16, archY: .76, archW: .34,
+      noseY: .50, hoodY: .76, hoodT: .34, hoodF: 1.05, cowlT: .50, beltY: .94, deckT: .78, deckY: .90, tailY: .86,
+      cabin: [-1.25, .55], cabinW: .80, roofY: 1.30,
+      sillW: .92, shoulderW: 1.08, deckW: .99, creaseY: .10,
+      deckLine: [[-2.3, .50, .88], [-1.4, .74, 1.0], [-.6, .90, 1.0], [.45, .92, 1.02], [1.35, .90, 1.03], [2.3, .86, .98]],
+      wheel: { radius: .34, width: .26, spokes: 6, track: .84, y: .34 },
+      signature: 'quadround', wing: 'straight', exhaust: 'leftx2', blackBumper: true, tailFull: true
+    },
+    roundcoupe: {
+      /* 02 Round Coupe: low, rounded haunches, full-width dark lamp panel. */
+      name: 'Round Coupe', paint: '#d21f2c', finish: 'metallic',
+      len: 4.35, wid: .90, widR: .97, wheelbase: 2.55, baseY: .13, archY: .72, archW: .34,
+      noseY: .40, hoodY: .62, hoodT: .40, hoodF: 1.15, cowlT: .58, beltY: .82, deckT: .80, deckY: .84, tailY: .80,
+      cabin: [-1.15, .35], cabinW: .84, roofY: 1.18,
+      sillW: .90, shoulderW: 1.06, deckW: 1.0, creaseY: .06,
+      deckLine: [[-2.175, .40, .86], [-1.35, .62, 1.0], [-.6, .80, 1.0], [.5, .82, 1.02], [1.4, .86, 1.06], [2.175, .80, .98]],
+      wheel: { radius: .33, width: .28, spokes: 5, track: .85, y: .33 },
+      signature: 'ovalbar', wing: 'lip', exhaust: 'dual'
+    },
+    compactclassic: {
+      /* 03 Compact Classic: upright cabin, flat trunk, segmented lamps. */
+      name: 'Compact Classic', paint: '#efe9dc', finish: 'gloss',
+      len: 4.35, wid: .84, widR: .88, wheelbase: 2.57, baseY: .17, archY: .70, archW: .30,
+      noseY: .54, hoodY: .74, hoodT: .34, hoodF: 1.10, cowlT: .52, beltY: .90, deckT: .84, deckY: .86, tailY: .84,
+      cabin: [-1.05, .82], cabinW: .82, roofY: 1.36,
+      sillW: .92, shoulderW: .99, deckW: .99, creaseY: .04,
+      deckLine: [[-2.175, .50, .90], [-1.3, .72, 1.0], [-.5, .88, 1.0], [.5, .90, 1.0], [1.3, .90, 1.0], [2.2, .86, .97]],
+      wheel: { radius: .32, width: .21, spokes: 5, track: .78, y: .32 },
+      signature: 'segments', wing: 'none', exhaust: 'leftx2', blackBumper: true, rubStrip: true, tailFull: true
     }
   }
 

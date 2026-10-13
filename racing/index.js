@@ -342,8 +342,8 @@
    * same way.
    */
   var V2_ARCHETYPES = {
-    sport: "sport", hatch: "hatch", coupe90: "roadster", muscle: "muscle",
-    rotary: "wedge", rally: "rally", track: "supercar", straight: "sport",
+    sport: "sport", hatch: "hatch", coupe90: "compactclassic", muscle: "muscle",
+    rotary: "roundcoupe", rally: "rally", track: "supercar", straight: "boxcoupe",
     hyper: "hyper", ev: "ev",
   };
   var rosterPromise = null;

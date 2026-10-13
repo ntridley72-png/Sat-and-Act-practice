@@ -552,7 +552,10 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 <link rel="stylesheet" href="redesign.css">
 <link rel="stylesheet" href="subjects.css">
 </head>
-<body>
+<body data-workspace="exam"><script>
+/* Apply the saved workspace before any visible body content can paint. */
+(()=>{const themes=['exam','notebook','focus'];let theme='exam';try{const saved=localStorage.getItem('funsatWorkspaceTheme');if(themes.includes(saved))theme=saved;}catch(e){}document.body.dataset.workspace=theme;document.documentElement.style.colorScheme=theme==='focus'?'dark':'light';})();
+</script>
 <noscript>
   <main class="noscript-summary">
     <h2>FunSAT SAT and ACT Practice</h2>

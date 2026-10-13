@@ -156,3 +156,5 @@ Useful sources:
 | 2026-10-13 13:27 EDT | OpenCode | `deepseek/deepseek-flash` | split | timed_out | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
 | 2026-10-13 13:57 EDT | `q-20261013-135621` | codex | `gpt-5.6-sol` | reviewer | completed | 103144 | subscription/unavailable |
 | 2026-10-13 13:57 EDT | `q-20261013-135621` | claude | `claude-opus-5` | reviewer | completed | 0 | $0 |
+| 2026-10-13 14:34 EDT | OpenCode | `deepseek/deepseek-flash` | optimize | timed_out | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |
+| 2026-10-13 14:35 EDT | OpenCode | `deepseek/deepseek-flash` | split | timed_out | 0 | 0 | $0.0000 reported aggregate delta; model-rate estimate unavailable |

@@ -45,6 +45,17 @@ def table(rows, head=("", "")):
             f'<th scope="col">{head[1]}</th></tr></thead><tbody>{body}</tbody></table>')
 
 
+def json_script(value):
+    """Serialize for inside <script type="application/json">.
+
+    json.dumps does not escape "</script>", and photo credits/creators come
+    from Wikimedia metadata that can contain arbitrary text. Escaping &, <
+    and > as JSON unicode escapes keeps the element from being terminated and
+    the parse result identical."""
+    text = json.dumps(value, separators=(",", ":"), ensure_ascii=False)
+    return text.replace("&", "\\u0026").replace("<", "\\u003c").replace(">", "\\u003e")
+
+
 LOCALE_LINE = {
     "city": "in a city, so a lot of what students do happens off campus too",
     "suburb": "in a suburb, within reach of a bigger city but with its own centre of gravity",
@@ -425,10 +436,9 @@ def extra_photos_section(x):
                 f'width="{e(str(shot.get("width")))}" height="{e(str(shot.get("height")))}"></button>'
                 f'<figcaption class="cg-credit">{credit}'
                 f'<br><span class="muted">{e(shot.get("caption"))}{official}</span></figcaption></figure>')
-        data = json.dumps([{"src": s.get("thumbUrl") or s.get("fileUrl"),
-                            "credit": (s.get("creator") or "Wikimedia Commons") + " · " + (s.get("license") or ""),
-                            "license": s.get("descriptionUrl") or ""} for s in items],
-                          separators=(",", ":"), ensure_ascii=False)
+        data = json_script([{"src": s.get("thumbUrl") or s.get("fileUrl"),
+                             "credit": (s.get("creator") or "Wikimedia Commons") + " · " + (s.get("license") or ""),
+                             "license": s.get("descriptionUrl") or ""} for s in items])
         return (f'<section class="cg" data-college-gallery data-count="{len(items)}" aria-label="{e(title)}">' 
                 f'<h3>{e(title)}</h3><p class="muted"><small>{note}</small></p>'
                 f'<div class="cg-grid">{"".join(cells)}</div>'
@@ -597,7 +607,7 @@ def college_page(c, data):
         personal = (
             f'<section class="fxcp" id="fxCollegeProfile" hidden></section>'
             f'<script type="application/json" id="fxCollegeData">'
-            f'{json.dumps(payload, separators=(",", ":"), ensure_ascii=False)}</script>')
+            f'{json_script(payload)}</script>')
 
     # --- how to get in with FunSAT
     cta = (f'<div class="gcard"><h2>How your score compares</h2>'
@@ -687,9 +697,8 @@ def college_page(c, data):
                 f'<img src="{e(shot["src"])}" alt="{e(shot["label"])} at {e(name)}" '
                 f'loading="lazy" decoding="async" width="960" height="540"></button>'
                 f'<figcaption class="cg-credit">{credit}</figcaption></figure>')
-        gallery_data = json.dumps(
-            [{"src": x["src"], "credit": x["credit"] + " · " + x["license"], "license": x["source"]} for x in shots],
-            separators=(",", ":"), ensure_ascii=False)
+        gallery_data = json_script(
+            [{"src": x["src"], "credit": x["credit"] + " · " + x["license"], "license": x["source"]} for x in shots])
         img = (f'<section class="cg" data-college-gallery data-count="{len(shots)}" '
                f'aria-label="Photos of {e(name)}">'
                f'<div class="cg-grid">{"".join(cells)}</div>'

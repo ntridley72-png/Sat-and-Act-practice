@@ -142,12 +142,68 @@ def discover(unitid, lat, lon):
         if not (data.get("continue")):
             break
         cont = data["continue"]
-        if len(titles) >= 400:
-            break
     os.makedirs(CACHE, exist_ok=True)
     with open(cached, "w") as handle:
         json.dump(titles, handle)
     return titles
+
+
+SOURCE_STATUS = {}
+# Official venue sites are ordinary web pages for browser visitors; presenting
+# a browser-like UA is what gets the page a human would see. The custom build
+# UA stays for the Wikimedia API calls, which prefer identifying clients.
+BROWSER_UA = {
+    "User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+                   "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"),
+    "Accept": "text/html,application/xhtml+xml",
+}
+
+
+def source_status(url):
+    """One live fetch of an official source, retried briefly."""
+    if url in SOURCE_STATUS:
+        return SOURCE_STATUS[url]
+    status = 0
+    for attempt in range(3):
+        status = 0
+        try:
+            req = urllib.request.Request(url, headers=BROWSER_UA)
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                status = resp.status
+        except urllib.error.HTTPError as exc:
+            status = exc.code
+        except Exception:  # noqa: BLE001 - any transport failure means not verified
+            status = 0
+        if status == 200:
+            break
+        if attempt < 2:
+            time.sleep(2 + 3 * attempt)
+    time.sleep(1.0)
+    SOURCE_STATUS[url] = status
+    return status
+
+
+def source_ok(url, manual_verified):
+    """Decide whether an official source may back a published photo.
+
+    Returns (ok, note): 200 passes cleanly; 404/410 is a dead link and always
+    fails; a blocked or unreachable recheck (403/429/timeout, as bot walls
+    give) falls back to the human verification recorded in the curation file
+    when that verification is recent (<= 30 days), with the recheck outcome
+    stated in the bundle so nothing is silently presented as freshly checked.
+    """
+    live = source_status(url)
+    if live == 200:
+        return True, None
+    if live in (404, 410):
+        return False, None
+    try:
+        age = (__import__("datetime").date.today() - __import__("datetime").date.fromisoformat(str(manual_verified))).days
+    except ValueError:
+        age = 10 ** 6
+    if live != 200 and age <= 30:
+        return True, ("Build-time recheck answered %s (bot wall); last human-verified %s." % (live or "no response", manual_verified))
+    return False, None
 
 
 def info_batch(titles, unitid):
@@ -156,8 +212,8 @@ def info_batch(titles, unitid):
     for i in range(0, len(titles), 50):
         chunk = titles[i:i + 50]
         digest = hashlib.sha1("|".join(chunk).encode("utf-8")).hexdigest()[:12]
-        cache_key = "photoinfo-%d-%s.json" % (unitid, digest)
-        data = api({"action": "query", "titles": "|".join(chunk), "prop": "imageinfo|categories",
+        cache_key = "photoinfo2-%d-%s.json" % (unitid, digest)
+        data = api({"action": "query", "titles": "|".join(chunk), "prop": "imageinfo|categories|coordinates",
                     "iiprop": "url|size|mime|extmetadata", "iiurlwidth": "960", "cllimit": "200",
                     "format": "json", "formatversion": "2"}, cache_key=cache_key)
         for page in ((data.get("query") or {}).get("pages")) or []:
@@ -237,6 +293,11 @@ def main():
         # Tally why the wider candidate pool was not published, so the
         # rejection log reports honest coverage instead of a bare count.
         stats = {"geotagged": len(found), "byReason": {}}
+        if len(found) >= 500:
+            # The Commons geosearch API caps a single radius query at 500
+            # results and offers no continuation beyond it; say so instead of
+            # describing the pool as complete.
+            stats["discoveryCapped"] = True
         for title, g in geometry.items():
             page = info.get(title)
             if not page:
@@ -250,8 +311,16 @@ def main():
             title = entry.get("title")
             page = info.get(title)
             geom = geometry.get(title)
+            # Curated titles outside the capped discovery pool still get a
+            # distance check from the image's own coordinates.
+            if page and not geom:
+                coords = page.get("coordinates") or []
+                if coords:
+                    c0 = coords[0]
+                    if c0.get("lat") is not None and c0.get("lon") is not None:
+                        geom = (c0["lat"], c0["lon"], haversine(lat, lon, c0["lat"], c0["lon"]))
             if not page or not geom:
-                rejections.append({"unitid": unitid, "title": title, "reason": "not found within 10 miles of the campus point"})
+                rejections.append({"unitid": unitid, "title": title, "reason": "no coordinates within 10 miles of the campus point"})
                 continue
             state, reason, record = check_candidate(title, geom, page)
             if state == "reject":
@@ -263,9 +332,24 @@ def main():
             if not (entry.get("officialSource") or "").startswith("http"):
                 rejections.append({"unitid": unitid, "title": title, "reason": "curation entry lacks an official source URL"})
                 continue
+            if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(entry.get("verified") or "")):
+                rejections.append({"unitid": unitid, "title": title, "reason": "curation entry lacks an ISO verification date"})
+                continue
+            source_ok_flag, source_note = source_ok(entry["officialSource"], entry["verified"])
+            if not source_ok_flag:
+                live = SOURCE_STATUS.get(entry["officialSource"])
+                rejections.append({"unitid": unitid, "title": title,
+                                   "reason": ("official source is dead (%s): %s" % (live, entry["officialSource"]))
+                                             if live in (404, 410) else
+                                             "official source answered %s and the human verification is older than 30 days: %s"
+                                             % (live or "no response", entry["officialSource"])})
+                continue
             if not (entry.get("depicted") or "").strip():
                 rejections.append({"unitid": unitid, "title": title, "reason": "curation entry lacks the depicted subject"})
                 continue
+            if source_note:
+                entry = dict(entry)
+                entry["officialSourceNote"] = (entry.get("officialSourceNote") or "") + " " + source_note
             record.update({
                 "category": entry["category"],
                 "depicted": entry["depicted"],

@@ -495,10 +495,18 @@ def build_school(pilot, errors, log, export_dir):
                         "note": ("as filed by the institution; the Department's tool data and CSV export agree, "
                                  "and the values are published as filed rather than reconciled"),
                     })
+    if export_dir is None:
+        errors.append({"school": inst.get("Name") or pilot["name"],
+                       "error": "official CSV export unavailable; refusing to publish an unverified school"})
+        return None
     checked, mismatches = crosscheck({
         "id": unitid,
         "years": years, "groups": groups,
-    }, export_dir) if export_dir else (0, [])
+    }, export_dir)
+    if checked < 150:
+        errors.append({"school": inst.get("Name") or pilot["name"],
+                       "error": "only %d cells cross-checked; refusing to publish" % checked})
+        return None
     if mismatches:
         errors.append({"school": inst.get("Name") or pilot["name"],
                        "error": "cross-check against the official CSV export failed",
@@ -559,7 +567,8 @@ def main():
     try:
         export_dir = fetch_export()
     except Exception as exc:  # noqa: BLE001
-        print("cross-check export unavailable (%r); schools will not pass the check" % exc, file=sys.stderr)
+        # Fail closed: with no export to check against, no school may publish.
+        print("cross-check export unavailable (%r); every school will be dropped" % exc, file=sys.stderr)
     for pilot in PILOT:
         try:
             entry = build_school(pilot, errors, log, export_dir)

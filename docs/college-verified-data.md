@@ -163,6 +163,29 @@ resources only, with the blocked URLs recorded in the bundle meta.
   (`/tmp/clery/pages/` during the session; regenerate with any headless
   runner).
 
+Independent code review (2026-10-13, codex via
+`scripts/ai-review-changes.sh --primary opencode`; Claude hit its weekly
+limit and returned no report): four findings, all verified against the code
+and fixed — (1) the safety cross-check could fail open when the CSV export
+was unavailable, so publishing now aborts unless every school cleared a
+minimum number of cross-checked cells against a freshly fetched export;
+(2) embedded JSON on generated pages is now HTML-safe (`<`, `>`, `&` escaped
+in every `<script type="application/json">`, covering Wikimedia-controlled
+credit text in both the existing and new galleries); (3) the photo builder
+now fetches every official source at build time with a browser user agent
+and retries, refusing dead links (404/410) and only honoring a blocked
+recheck (403/timeout) when the recorded human verification is under 30 days
+old, in which case the recheck outcome is stated visibly in the bundle; (4)
+geosearch's hard 500-result cap per campus is disclosed in the rejection log
+and curated titles outside the pool now get their distance from the image's
+own coordinates instead of being wrongly dropped.
+
+Source-site flakiness worth knowing: Williams College subdomains
+(artmuseum.williams.edu, 62center.williams.edu) intermittently answer 403 to
+automated clients while serving browsers normally; the last build verified
+both at 200, and the blocked-fallback above records the recheck result
+whenever a build catches the block instead.
+
 Environment limitations disclosed: the Exa search MCP was rate-limited
 (direct official fetches were used instead); outbound browser connections
 from this sandbox hang on IPv6-reachable hosts (upload.wikimedia.org,

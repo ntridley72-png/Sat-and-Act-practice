@@ -20,6 +20,7 @@
     "category is not a place/activity photo": 2,
     "too small": 1
    },
+   "discoveryCapped": true,
    "approved": 1
   },
   "131520": {
@@ -30,6 +31,7 @@
     "too small": 28,
     "unsupported mime image/tiff": 1
    },
+   "discoveryCapped": true,
    "approved": 2
   },
   "171100": {
@@ -40,6 +42,7 @@
     "too small": 4,
     "category is not a place/activity photo": 1
    },
+   "discoveryCapped": true,
    "approved": 1
   },
   "193900": {
@@ -51,6 +54,7 @@
     "title looks like a non-photo": 4,
     "license outside whitelist No restrictions": 2
    },
+   "discoveryCapped": true,
    "approved": 2
   },
   "204796": {
@@ -63,6 +67,7 @@
     "unsupported mime image/tiff": 2,
     "unsupported mime application/pdf": 1
    },
+   "discoveryCapped": true,
    "approved": 1
   },
   "141060": {
@@ -76,6 +81,7 @@
     "unsupported mime image/tiff": 4,
     "category is not a place/activity photo": 23
    },
+   "discoveryCapped": true,
    "approved": 3
   },
   "228723": {
@@ -88,6 +94,7 @@
     "too small": 10,
     "title looks like a non-photo": 65
    },
+   "discoveryCapped": true,
    "approved": 1
   },
   "110635": {
@@ -99,6 +106,7 @@
     "title looks like a non-photo": 20,
     "unsupported mime video/webm": 1
    },
+   "discoveryCapped": true,
    "approved": 1
   },
   "225511": {
@@ -113,6 +121,7 @@
     "license outside whitelist No restrictions": 1,
     "unsupported mime video/webm": 1
    },
+   "discoveryCapped": true,
    "approved": 2
   },
   "199120": {
@@ -125,6 +134,7 @@
     "category is not a place/activity photo": 3,
     "unsupported mime application/pdf": 2
    },
+   "discoveryCapped": true,
    "approved": 1
   },
   "236948": {
@@ -137,6 +147,7 @@
     "unsupported mime image/gif": 2,
     "unsupported mime image/tiff": 1
    },
+   "discoveryCapped": true,
    "approved": 2
   },
   "168342": {
@@ -148,6 +159,7 @@
     "license outside whitelist No restrictions": 1,
     "title looks like a non-photo": 215
    },
+   "discoveryCapped": true,
    "approved": 4
   }
  },

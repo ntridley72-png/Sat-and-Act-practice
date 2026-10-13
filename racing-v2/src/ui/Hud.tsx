@@ -118,7 +118,7 @@ export function Hud({ line, opponents, startedAt, mode, clock, sandbox = false, 
         {onFinish && <button type="button" className="rv2-recover rv2-end-run" onClick={onFinish}>End Run</button>}
         <div className="rv2-label">{sandbox ? 'DRIVING TIME' : 'LAP TIME'}</div>
         <div ref={clockEl} className="rv2-clock">0:00.00</div>
-        <div ref={modeEl} className="rv2-mode" />
+        <div ref={modeEl} className="rv2-mode">{mode === 'scored' ? `SCORED · ${fmtCountdown(clock.current.remaining)} LEFT` : 'OPEN PRACTICE'}</div>
       </div>
 
       {!sandbox && <div className="rv2-corner rv2-tr">

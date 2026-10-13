@@ -25,6 +25,7 @@ import type { RacingLine } from '../ai/racingLine'
 import { AudioRig } from '../audio/engine'
 import { Skid } from '../effects/Skid'
 import { Dust } from '../effects/Dust'
+import { planarHeading } from './heading'
 
 const { lerp } = MathUtils
 const v = new Vector3()
@@ -309,7 +310,9 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
     if (chassisBody.current) {
       chassisBody.current.getWorldPosition(v)
       worldPos.current.copy(v)
-      worldHeading.current = chassisBody.current.rotation.y
+      // Euler XYZ's y angle folds back after a quarter-turn and flips the
+      // camera during donuts. Project the quaternion's forward axis instead.
+      worldHeading.current = planarHeading(chassisBody.current.quaternion)
 
       /* Debug probe. Harmless in production -- it writes two numbers to a
          global that nothing reads -- and it is the only way to answer
@@ -329,7 +332,7 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
         y: v.y,
         z: v.z,
         upright: chassisBody.current ? new Vector3(0, 1, 0).applyQuaternion(chassisBody.current.quaternion).y : 1,
-        yaw: chassisBody.current ? chassisBody.current.rotation.y : 0,
+        yaw: worldHeading.current,
         speed: playerMutation.speed,
         /* The resolved garage physics, so a test can prove the right car and
            tune actually reached the solver. Null on bench pages. */
@@ -400,7 +403,7 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
        *
        * The offset is now rotated by the car's own yaw, so "behind" means
        * behind the car rather than south of it. */
-      const yaw = chassisBody.current.rotation.y
+      const yaw = worldHeading.current
       const CAM = CAMERAS[camera] ?? CAMERAS.chase
       // Local offset: along the car's forward axis (negative back = ahead of
       // centre, the cockpit), and up.

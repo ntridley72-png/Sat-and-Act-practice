@@ -46,3 +46,19 @@ Verification:
 Use the available Playwright runtime; do not add a production dependency just
 for browser tests. This work was isolated from concurrent, uncommitted college
 enrichment changes so those are not published by the driving deployment.
+
+## Release verification — 2026-10-13
+
+Deployed from the isolated driving checkout to https://funsat.bid.
+Cloudflare version: `3fb148c3-b7db-432f-9d02-2e1a4eb3aa86`.
+The public sandbox browser test passed real driving, recovery, scoring,
+responsive controls, mute, teardown, billing and the direct launch link.
+Served `app.js`, `racing/index.js` and `racing-v2/racing-v2.js` SHA-256
+hashes exactly matched this checkout. Home, auth-provider API, Drift landing
+page and sitemap returned HTTP 200. Local build/typecheck, heading regression,
+garage calibration, arcade routing, recovery, flag/fallback, garage and economy
+checks passed; generated SEO audit passed for 663 pages.
+
+Browser gameplay checks used Chromium's software renderer. Physical-device
+performance and subjective handling remain a useful follow-up, not a claim
+made by these automated checks.

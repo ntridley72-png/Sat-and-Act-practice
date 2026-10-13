@@ -29,7 +29,8 @@ const executablePath = process.env.PLAYWRIGHT_EXEC || path.join(os.homedir(), 'L
       window.Audio = function (...args) { const el = new AudioConstructor(...args); window.__voices.push(el); return el; };
       window.Audio.prototype = AudioConstructor.prototype;
     });
-    await page.goto(process.env.BASE_URL || `http://127.0.0.1:${server.address().port}/`, { waitUntil: 'domcontentloaded' });
+    const baseUrl = process.env.BASE_URL || `http://127.0.0.1:${server.address().port}/`;
+    await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => typeof RacingV2 !== 'undefined');
     await page.evaluate(() => {
       RacingV2.setLocal(null);
@@ -105,6 +106,9 @@ const executablePath = process.env.PLAYWRIGHT_EXEC || path.join(os.homedir(), 'L
     await page.evaluate(() => arcade.close());
     await page.waitForTimeout(300);
     assert(await page.evaluate(() => window.__voices.every((v) => v.paused)), 'closing/switching must dispose all drift audio');
+    await page.goto(baseUrl + '?play=drift', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('.rv2-root[data-driving-mode="drift-sandbox"]');
+    assert.equal(await page.evaluate(() => arcade.game), null, 'direct game-page links must also open v2, never v1');
     assert.deepEqual(errors, []);
     console.log('PASS: Drift uses v2 cars/physics and an open lot, no laps/opponents, real drift scoring, score-preserving recovery, responsive controls, mute/audio disposal, scored billing/cash and separate garage selections. Screenshot: ' + shot);
   } finally { await browser.close(); await new Promise((resolve) => server.close(resolve)); }

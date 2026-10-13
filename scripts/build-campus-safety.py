@@ -49,6 +49,17 @@ PILOT = [
     {"name": "Spelman College", "state": "GA"},
     # Direct UNITID: a bare name search matched the Bothell campus.
     {"name": "University of Washington", "state": "WA", "unitid": 236948},
+    # Expansion set (2026-10-13): big multi-campus publics, urban privates,
+    # an HBCU, and a small rural residential college; direct UNITIDs are
+    # validated against the payload name/state before anything is published.
+    {"name": "Ohio State University", "state": "OH", "unitid": 204796},
+    {"name": "University of North Carolina at Chapel Hill", "state": "NC", "unitid": 199120},
+    {"name": "New York University", "state": "NY", "unitid": 193900},
+    {"name": "Howard University", "state": "DC", "unitid": 131520},
+    {"name": "Oberlin College", "state": "OH", "unitid": 204501},
+    {"name": "Michigan State University", "state": "MI", "unitid": 171100},
+    {"name": "University of California-Berkeley", "state": "CA", "unitid": 110635},
+    {"name": "Texas A&M University", "state": "TX", "unitid": 228723},
 ]
 
 # Official student-safety resources, verified by HTTP status at build time.
@@ -85,6 +96,49 @@ RESOURCE_CANDIDATES = {
         {"label": "UW Title IX", "url": "https://www.washington.edu/titleix/"},
         {"label": "UW SafeCampus", "url": "https://www.washington.edu/safety/"},
         {"label": "UW Counseling Center", "url": "https://www.washington.edu/counseling/"},
+    ],
+    "204796": [
+        {"label": "Ohio State Title IX", "url": "https://titleix.osu.edu/"},
+        {"label": "Ohio State Department of Public Safety", "url": "https://dps.osu.edu/"},
+        {"label": "Ohio State Counseling and Consultation Service", "url": "https://ccs.osu.edu/"},
+    ],
+    "199120": [
+        {"label": "UNC Police", "url": "https://police.unc.edu/"},
+        {"label": "UNC Counseling and Psychological Services", "url": "https://caps.unc.edu/"},
+        {"label": "UNC Equal Opportunity and Compliance (Title IX)", "url": "https://eoc.unc.edu/"},
+        {"label": "Carolina Safe", "url": "https://safe.unc.edu/"},
+    ],
+    # NYU's pages answer 202 (CDN bot challenge) to automated checks; the
+    # candidates are listed so the rejection log records exactly what was
+    # tried and why those links are not published.
+    "193900": [
+        {"label": "NYU Title IX", "url": "https://www.nyu.edu/about/policies-guidelines-compliance/equal-opportunity/title-ix.html"},
+        {"label": "NYU Counseling Services", "url": "https://www.nyu.edu/students/health-and-wellness/counseling-services.html"},
+        {"label": "NYU Campus Safety", "url": "https://www.nyu.edu/about/policies-guidelines-compliance/policies-and-guidelines/campus-safety.html"},
+    ],
+    "131520": [
+        {"label": "Howard Title IX", "url": "https://www.howard.edu/title-ix/"},
+        {"label": "Howard University Public Safety", "url": "https://publicsafety.howard.edu/"},
+    ],
+    "204501": [
+        {"label": "Oberlin Campus Safety", "url": "https://www.oberlin.edu/campus-safety"},
+        {"label": "Oberlin Counseling Center", "url": "https://www.oberlin.edu/counseling"},
+    ],
+    "171100": [
+        {"label": "MSU Title IX", "url": "https://titleix.msu.edu/"},
+        {"label": "MSU Police", "url": "https://police.msu.edu/"},
+        {"label": "MSU Counseling and Psychiatric Services", "url": "https://caps.msu.edu/"},
+    ],
+    "110635": [
+        {"label": "Berkeley Office for the Prevention of Harassment and Discrimination", "url": "https://ophd.berkeley.edu/"},
+        {"label": "UC Berkeley Police", "url": "https://police.berkeley.edu/"},
+        {"label": "Berkeley University Health Services Counseling", "url": "https://uhs.berkeley.edu/counseling"},
+    ],
+    # tamu.edu subdomains refused automated checks (403/000) during the
+    # build; listed so the log records the attempt.
+    "228723": [
+        {"label": "Texas A&M Title IX", "url": "https://titleix.tamu.edu/"},
+        {"label": "Texas A&M University Police", "url": "https://upd.tamu.edu/"},
     ],
 }
 
@@ -416,6 +470,31 @@ def build_school(pilot, errors, log, export_dir):
         errors.append({"school": inst.get("Name") or pilot["name"],
                        "error": "expected three reporting years, saw %s" % years})
         return None
+    # A source-level consistency check the Department does not perform for us:
+    # on-campus counts INCLUDE student-housing counts, so housing can never
+    # exceed on-campus for the same category and year. Where the filing says
+    # otherwise (both ED artifacts agree), the anomaly is recorded and shown,
+    # never silently reconciled.
+    subset_anomalies = []
+    for g in groups:
+        on = (g.get("screens") or {}).get("onCampus")
+        ho = (g.get("screens") or {}).get("housing")
+        if not on or not ho:
+            continue
+        by_label = {r["label"]: r["values"] for r in ho["rows"]}
+        for row in on["rows"]:
+            hv = by_label.get(row["label"])
+            if not hv:
+                continue
+            for i, year in enumerate(on["years"]):
+                a, b = row["values"][i], hv[i]
+                if isinstance(a, int) and isinstance(b, int) and b > a:
+                    subset_anomalies.append({
+                        "group": g["key"], "category": row["label"], "year": year,
+                        "onCampus": a, "housing": b,
+                        "note": ("as filed by the institution; the Department's tool data and CSV export agree, "
+                                 "and the values are published as filed rather than reconciled"),
+                    })
     checked, mismatches = crosscheck({
         "id": unitid,
         "years": years, "groups": groups,
@@ -428,6 +507,7 @@ def build_school(pilot, errors, log, export_dir):
     return {
         "id": unitid,
         "name": inst.get("Name"),
+        "subsetAnomalies": subset_anomalies,
         "crossCheck": {
             "status": "verified",
             "cellsChecked": checked,
@@ -446,6 +526,30 @@ def build_school(pilot, errors, log, export_dir):
         "resources": verify_resources(unitid, log),
         "sourceUrl": TOOL,
     }
+
+
+# Independent spot-check against original documents, performed 2026-10-13.
+# The institution's own published ASR was read by hand (text-extracted from
+# the PDF) and its Main Campus tables compared with the ED bundle. Other
+# pilot schools' ASRs could not serve this check from the build environment:
+# UH's tables are image-based, App State's/Wiliams' ASR pages are bot-walled.
+ASR_CHECKS = [
+    {
+        "school": "Spelman College",
+        "unitid": 141060,
+        "document": "https://www.spelman.edu/_1_Docs-and-Files/public-safety/2026-annual-security-and-fire-report.pdf",
+        "scope": "Published ASR (2026 edition, updated 2026-08-26), Main Campus crime tables, pp. 42-47",
+        "checked": [
+            "Rape 2023 = 0, 2024 = 0",
+            "Fondling 2023 = 1, 2024 = 2",
+            "Stalking 2023 = 3, 2024 = 2",
+            "Dating violence 2023 = 0, 2024 = 1",
+            "Burglary 2024 = 4 total (residential 1 + campus 3)",
+        ],
+        "result": "matches the Department of Education bundle for every overlapping cell",
+        "verified": "2026-10-13",
+    }
+]
 
 
 def main():
@@ -481,6 +585,7 @@ def main():
                             "not measure the true prevalence of sexual assault or any other crime, and they do not establish personal "
                             "safety. Reporting practices and geographic coverage differ between campuses. A blank cell means the "
                             "institution's filing shows no value for that cell; it is not assumed to be zero unless the source shows 0."),
+            "asrChecks": ASR_CHECKS,
             "errors": errors,
             "rejected": log,
         },

@@ -45,6 +45,10 @@ school, zero mismatches) against the Department's official CSV export for
 the same calendar years. Institution tables are the sum of their campus rows
 in the export — that aggregation rule was verified, not assumed.
 
+Expanded 2026-10-13 from the original six to fourteen schools; every
+addition passed the same 243-cell cross-check (3 402 cells in total, zero
+mismatches).
+
 | School | UNITID | Campuses mapped | Years | Cross-check |
 |---|---|---|---|---|
 | Appalachian State University | 197869 | Boone Main, Hickory, Levine Hall | 2022–24 | 243/243 |
@@ -53,6 +57,14 @@ in the export — that aggregation rule was verified, not assumed.
 | University of Houston | 225511 | 5 campuses incl. Central, Sugar Land, Katy | 2022–24 | 243/243 |
 | Spelman College | 141060 | Main | 2022–24 | 243/243 |
 | University of Washington–Seattle | 236948 | Main | 2022–24 | 243/243 |
+| Ohio State University–Main | 204796 | Main | 2022–24 | 243/243 |
+| UNC Chapel Hill | 199120 | 3 campuses | 2022–24 | 243/243 |
+| New York University | 193900 | 26 campuses (incl. global sites) | 2022–24 | 243/243 |
+| Howard University | 131520 | 3 campuses | 2022–24 | 243/243 |
+| Oberlin College | 204501 | Main | 2022–24 | 243/243 |
+| Michigan State University | 171100 | 5 campuses | 2022–24 | 243/243 |
+| UC Berkeley | 110635 | 2 campuses | 2022–24 | 243/243 |
+| Texas A&M (College Station) | 228723 | 17 campuses | 2022–24 | 243/243 |
 
 Published per school: criminal offenses (including Rape and Fondling
 explicitly), VAWA offenses (dating violence, domestic violence, stalking),
@@ -68,11 +80,29 @@ national confidential resources are listed; every link was fetched (HTTP
 Conflicts and unknowns: none between the two ED artifacts. The page does not
 publish per-student rates (no defensible population/scope match), does not
 merge the housing and on-campus screens, and keeps unfounded counts
-separate. Independent recheck against institutions' own Annual Security
-Report PDFs was attempted but defeated by bot walls/404s from this build
-environment (spelman.edu redirects, nps-style host protections, Cloudflare
-403s); the two-artifact ED cross-check stands in, and rechecking one or two
-ASRs by hand from a normal network is the recommended close-out.
+separate.
+
+Independent spot-check (2026-10-13): Spelman College's own published Annual
+Security Report (2026 edition, Main Campus tables, pp. 42-47) was downloaded
+and text-read; every overlapping cell matched the ED bundle - Rape 0/0,
+Fondling 1 and 2 for 2023/24, Stalking 3 and 2, Dating violence 0 and 1,
+Burglary 4 total. The check is recorded in the bundle's `meta.asrChecks`.
+Caveat discovered while checking: Spelman's appendix also carries
+per-facility tables for auxiliary student housing (Mix Apartments, ITC,
+Gammon Hall) that read all-zero for these categories - those facilities are
+separate Clery geography, and the main-campus table is the comparable one.
+
+Source anomaly found by the pipeline's own subset check (2026-10-13):
+Oberlin College's filing lists student-housing counts that exceed the
+on-campus counts defined to include them - Rape 2022 on campus 1 vs housing
+9, and Burglary 2022 on campus 0 vs housing 1. Both ED artifacts (tool data
+and CSV export) agree, so the values are published exactly as filed, and the
+bundle records them in `subsetAnomalies` with a visible filing note on the
+page instead of silently reconciling them. Oberlin is the only school of the
+fourteen with such a record.
+UH's ASR publishes its statistics as images (no text layer) and App
+State's/Williams' ASR pages are bot-walled from this environment, so the
+remaining schools keep the two-artifact ED cross-check only.
 
 ## 3. Activity and nearby photos (pilot, 14 approved)
 
@@ -84,6 +114,9 @@ point, ≥1000×560 px, JPEG/PNG, reusable license (public domain/CC0/CC BY/CC
 BY-SA only), a title naming the place/activity, a visual check by a person,
 and a fetched official source proving the venue or recognition.
 
+Expanded 2026-10-13 to 23 photos across 13 schools (14th, Oberlin, has
+activities but no photo larger than the 1000-px gate from Commons yet).
+
 | School | Activities | Nearby |
 |---|---|---|
 | Appalachian State | Kidd Brewer Stadium | Valle Crucis Community Park (~9 km) |
@@ -92,16 +125,27 @@ and a fetched official source proving the venue or recognition.
 | Houston | — | Buffalo Soldiers National Museum; Hermann Park Golf Course |
 | Spelman | Spelman College Museum of Fine Art; AUC Robert W. Woodruff Library | Mercedes-Benz Stadium |
 | UW–Seattle | Meany Hall | Burke-Gilman Trail (UW district segment) |
+| Ohio State | Wexner Center for the Arts | — |
+| UNC Chapel Hill | Morehead Planetarium and Science Center | — |
+| NYU | Bobst Library | Judson Memorial Church campanile |
+| Howard | Founders Library | Banneker Recreation Center (courts) |
+| Michigan State | Eli and Edythe Broad Art Museum | — |
+| UC Berkeley | Hertz Hall (interior) | — |
+| Texas A&M | Kyle Field | — |
 
 Rejections and gaps are recorded with reasons in
 `docs/college-photos-rejections.json` (per-school per-reason discovery
 stats plus explicit drops): Jones House and Moses H. Cone Memorial Park
 held for lack of a reachable official page; JFK Park held (city site
-blocked); College Inn Pub held (no working official site); HEB MacGregor
-not curated. Arizona State and Houston have no approved "activity" or
-"nearby" pool beyond what is listed because their geotagged Commons
-coverage is dominated by non-venue content; Williams' campus pages are
-bot-walled so it shows national resources only.
+blocked); College Inn Pub held (no working official site); the Oberlin and
+Berkeley town-venue candidates fell below the size gate; Varsity Theatre
+(Chapel Hill) is 800 px wide; MSU's geotagged Commons coverage is dominated
+by 2023 shooting memorial and press photographs, deliberately excluded as
+inappropriate for an activities listing. Arizona State and Houston have no
+approved "activity" or "nearby" pool beyond what is listed because their
+geotagged Commons coverage is dominated by non-venue content; Williams' and
+NYU's campus pages are bot-walled (403/202) so those two show national
+resources only, with the blocked URLs recorded in the bundle meta.
 
 ## 4. Verification run (2026-10-13)
 
@@ -129,14 +173,20 @@ URL was verified with HTTP 200 and correct content-type via curl.
 
 ## 5. Next steps for the operator
 
-1. Re-run `python3 scripts/build-college-data.py`, `build-campus-safety.py`,
-   `build-college-photos.py` on a normal network (all cache under
-   `scripts/.cache/`), then rebuild the site.
-2. Spot-check one ASR PDF by hand against the tables (App State
-   `police.appstate.edu` or Williams) to close the last verification loop.
-3. Expand the safety pilot: add UNITIDs to `PILOT` in
-   `scripts/build-campus-safety.py`; expansion is a rerun, and every
-   addition must keep 243/243 cross-checked cells.
-4. Expand photos by adding curation entries only after the same evidence
-   work; never lower the filter to hit a quota.
-5. No deployment was performed for this work; deploy separately.
+Completed in the 2026-10-13 follow-up: the three builders were re-run on the
+live network (byte-stable from cache), the ASR spot-check above was closed
+against Spelman's own report, and the safety pilot expanded from six to
+fourteen schools with photo curation expanded to 23 approved photos.
+
+Remaining:
+1. Expand photos further via curation entries only after the same evidence
+   work; never lower the filter to hit a quota (Oberlin's town venues are
+   the first candidates once a larger Commons file appears or a licensed
+   official photo is obtained).
+2. Read one more ASR by hand for a school outside Spelman (UH's is
+   image-only; App State's/Williams' pages are bot-walled).
+3. Re-run the builders whenever the federal release updates; the CSV
+   export in `scripts/.cache/clery/` pins the cross-check artifact and
+   should be refreshed alongside.
+4. No deployment was performed for this work; deploy separately when
+   authorized.

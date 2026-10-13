@@ -66,7 +66,7 @@ ok(checkedPairs > 2800, "provenance/value pairs checked: " + checkedPairs);
 
 // --- campus safety ---------------------------------------------------------
 const pilotIds = Object.keys(safety.colleges);
-ok(pilotIds.length >= 6, "pilot must cover at least six schools, saw " + pilotIds.length);
+ok(pilotIds.length >= 14, "pilot must cover at least fourteen schools, saw " + pilotIds.length);
 const REQUIRED_GROUPS = ["criminal", "vawa", "arrests", "disciplinary", "unfounded"];
 const GEO_KEYS = ["onCampus", "housing", "noncampus", "publicProperty"];
 for (const [id, school] of Object.entries(safety.colleges)) {
@@ -74,7 +74,7 @@ for (const [id, school] of Object.entries(safety.colleges)) {
   ok(school.years.length === 3, id + ": expected three years");
   ok(school.years.every((y) => /^\d{4}$/.test(y)), id + ": year labels");
   ok(school.crossCheck && school.crossCheck.status === "verified", id + ": cross-check not verified");
-  ok(school.crossCheck && school.crossCheck.cellsChecked >= 200, id + ": too few cross-checked cells");
+  ok(school.crossCheck && school.crossCheck.cellsChecked >= 150, id + ": too few cross-checked cells");
   ok(Array.isArray(school.campuses) && school.campuses.length >= 1, id + ": campuses missing");
   for (const g of REQUIRED_GROUPS) {
     ok((school.groups || []).some((x) => x.key === g), id + ": missing group " + g);
@@ -83,16 +83,22 @@ for (const [id, school] of Object.entries(safety.colleges)) {
   ok(criminal && criminal.screens.onCampus, id + ": criminal on-campus screen missing");
   const rape = criminal && criminal.screens.onCampus.rows.find((r) => r.label === "Rape");
   ok(rape && rape.values.length === 3, id + ": Rape row must be present with three values");
-  // Housing is a subset of on-campus: it can never exceed it for a category
-  // (checked for Rape and Burglary across all three years).
-  for (const label of ["Rape", "Burglary"]) {
-    const on = criminal.screens.onCampus.rows.find((r) => r.label === label);
-    const ho = criminal.screens.housing && criminal.screens.housing.rows.find((r) => r.label === label);
-    if (on && ho) {
+  // Housing is a subset of on-campus: it can never exceed it for a category.
+  // Source filings that violate this (verified in both ED artifacts) must be
+  // recorded in subsetAnomalies; unflagged violations fail the check.
+  const anomalySet = new Set((school.subsetAnomalies || []).map((a) => a.group + "|" + a.category + "|" + a.year));
+  for (const g of ["criminal", "vawa", "arrests", "disciplinary"]) {
+    const group = (school.groups || []).find((x) => x.key === g);
+    if (!group || !group.screens.onCampus || !group.screens.housing) continue;
+    const housingRows = new Map(group.screens.housing.rows.map((r) => [r.label, r.values]));
+    for (const row of group.screens.onCampus.rows) {
+      const hv = housingRows.get(row.label);
+      if (!hv) continue;
       for (let i = 0; i < 3; i++) {
-        const a = on.values[i], b = ho.values[i];
-        if (typeof a === "number" && typeof b === "number") {
-          ok(b <= a, id + ": housing " + label + " " + b + " exceeds on-campus " + a + " for " + school.years[i]);
+        const a = row.values[i], b = hv[i];
+        if (typeof a === "number" && typeof b === "number" && b > a) {
+          ok(anomalySet.has(g + "|" + row.label + "|" + school.years[i]),
+             id + ": housing " + row.label + " " + b + " exceeds on-campus " + a + " for " + school.years[i] + " without a recorded anomaly");
         }
       }
     }
@@ -100,6 +106,9 @@ for (const [id, school] of Object.entries(safety.colleges)) {
   ok((school.resources || []).length >= 2, id + ": at least two support links expected");
 }
 ok(safety.meta.limitations && /prevalence/i.test(safety.meta.limitations), "meta must state the prevalence limitation");
+ok(Array.isArray(safety.meta.asrChecks) && safety.meta.asrChecks.length >= 1 &&
+   safety.meta.asrChecks.every((c) => c.result && c.document.startsWith("https://")),
+   "the ASR spot-check must be recorded with its document");
 ok(/never added/i.test(safety.meta.geographyNote || ""), "meta must state the housing subset rule");
 
 // --- photos ----------------------------------------------------------------

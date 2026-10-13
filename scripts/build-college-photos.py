@@ -75,7 +75,8 @@ PLACE_WORDS = re.compile(
     r"stadium|field|center|centre|library|market|square|plaza|zoo|aquarium|"
     r"observatory|river|lake|creek|falls|mountain|ridge|overlook|forest|"
     r"downtown|district|neighborhood|street|avenue|bridge|campus|hall|"
-    r"chapel|church|cathedral|monument|memorial|historic|"
+    r"chapel|church|cathedral|monument|memorial|historic|planetarium|"
+    r"conservatory|arboretum|"
     r"house|inn|bank|brewery|mill|depot|station|club|union", re.I)
 ACTIVITY_WORDS = re.compile(
     r"band|orchestra|choir|ensemble|athletics?|varsity|football|basketball|"

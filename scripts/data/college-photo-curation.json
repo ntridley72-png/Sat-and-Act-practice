@@ -191,5 +191,164 @@
     "reason": "No working official site for the pub (domain redirects to an unrelated for-sale page) - held rather than published"
    }
   ]
+ },
+ "204796": {
+  "photos": [
+   {
+    "title": "File:Wexner Center for the Arts jeh.jpg",
+    "category": "activity",
+    "depicted": "Wexner Center for the Arts, Ohio State University",
+    "relationship": "University-run contemporary arts center on the Ohio State campus",
+    "officialSource": "https://wexarts.org/",
+    "officialSourceNote": "Official Wexner Center site answered 200",
+    "caption": "Wexner Center for the Arts, on the Ohio State campus.",
+    "verified": "2026-10-13"
+   }
+  ]
+ },
+ "199120": {
+  "photos": [
+   {
+    "title": "File:Morehead-Planetarium-at-UNC.jpg",
+    "category": "activity",
+    "depicted": "Morehead Planetarium and Science Center, University of North Carolina at Chapel Hill",
+    "relationship": "University-affiliated planetarium and science center on the Chapel Hill campus",
+    "officialSource": "https://moreheadplanetarium.org/",
+    "officialSourceNote": "Official Morehead Planetarium site answered 200",
+    "caption": "Morehead Planetarium and Science Center.",
+    "verified": "2026-10-13"
+   }
+  ],
+  "dropped": [
+   {
+    "title": "File:Varsity Theatre Franklin Street Chapel Hill NC.jpg",
+    "reason": "Only 800x1200 px; below the 1000-px width gate - held rather than published"
+   }
+  ]
+ },
+ "193900": {
+  "photos": [
+   {
+    "title": "File:Bobst Library entrance.jpg",
+    "category": "activity",
+    "depicted": "Elmer Holmes Bobst Library, New York University",
+    "relationship": "New York University's main library on Washington Square South",
+    "officialSource": "https://library.nyu.edu/",
+    "officialSourceNote": "Official NYU Libraries site answered 200 (nyu.edu policy pages answered 202 to automated checks, so the library site is used)",
+    "caption": "Bobst Library entrance, Washington Square South.",
+    "verified": "2026-10-13"
+   },
+   {
+    "title": "File:Judson Church campanile and NYU School of Law Furman Hall.jpg",
+    "category": "nearby",
+    "depicted": "Judson Memorial Church campanile beside NYU School of Law's Furman Hall, Washington Square South",
+    "relationship": "Independently operated historic church on Washington Square South; a verified nearby option, no school affiliation",
+    "officialSource": "https://www.judson.org/",
+    "officialSourceNote": "Official Judson Memorial Church site answered 200",
+    "caption": "Judson Memorial Church campanile beside Furman Hall, Washington Square South.",
+    "verified": "2026-10-13"
+   }
+  ]
+ },
+ "131520": {
+  "photos": [
+   {
+    "title": "File:Howard University Founders Library.jpg",
+    "category": "activity",
+    "depicted": "Founders Library, Howard University (National Historic Landmark)",
+    "relationship": "Howard University's flagship library",
+    "officialSource": "https://library.howard.edu/",
+    "officialSourceNote": "Official Howard University Libraries site answered 200 (howard.edu/library paths 404)",
+    "caption": "Founders Library, Howard University.",
+    "verified": "2026-10-13"
+   },
+   {
+    "title": "File:Banneker Recreation Center.jpg",
+    "category": "nearby",
+    "depicted": "Tennis courts at Banneker Recreation Center, Washington, D.C.",
+    "relationship": "District of Columbia public recreation center near the campus; a verified nearby option, no school affiliation",
+    "officialSource": "https://dpr.dc.gov/page/banneker-recreation-center",
+    "officialSourceNote": "Official D.C. Department of Parks and Recreation page answered 200; the photo shows the center's courts",
+    "caption": "Tennis courts at Banneker Recreation Center, about a 10-minute walk from campus.",
+    "verified": "2026-10-13"
+   }
+  ]
+ },
+ "171100": {
+  "photos": [
+   {
+    "title": "File:East Lansing Michigan October 2022 - Eli & Edythe Broad Art Museum.jpg",
+    "category": "activity",
+    "depicted": "Eli and Edythe Broad Art Museum, Michigan State University",
+    "relationship": "Michigan State University art museum",
+    "officialSource": "https://broadmuseum.msu.edu/",
+    "officialSourceNote": "Official museum site answered 200",
+    "caption": "Eli and Edythe Broad Art Museum.",
+    "verified": "2026-10-13"
+   }
+  ],
+  "dropped": [
+   {
+    "title": "(11 Commons files) 2023 Michigan State University shooting and memorial photographs",
+    "reason": "Geotagged Commons coverage near this campus is dominated by 2023 shooting memorial and press photographs; deliberately excluded from an activities listing as inappropriate despite passing the mechanical gates"
+   }
+  ]
+ },
+ "110635": {
+  "photos": [
+   {
+    "title": "File:Hertz Hall at UC Berkeley.jpg",
+    "category": "activity",
+    "depicted": "Hertz Hall, UC Berkeley (interior, before a UC Berkeley Symphony Orchestra concert)",
+    "relationship": "UC Berkeley concert hall, home of Cal Performances",
+    "officialSource": "https://calperformances.org/",
+    "officialSourceNote": "Official Cal Performances site answered 200",
+    "caption": "Interior of Hertz Hall before a UC Berkeley Symphony Orchestra concert.",
+    "verified": "2026-10-13"
+   }
+  ],
+  "dropped": [
+   {
+    "title": "File:Berkeley - Sather Gate and Campanile.jpg",
+    "reason": "Only 733x750 px; below the size gate - held rather than published"
+   },
+   {
+    "title": "File:UCB Sather Tower dllu.jpg",
+    "reason": "Title names no venue word from the filter list (Sather Tower); held pending a filter decision rather than published"
+   }
+  ]
+ },
+ "228723": {
+  "photos": [
+   {
+    "title": "File:Kyle Field, Texas A^M. College Station, TX - panoramio.jpg",
+    "category": "activity",
+    "depicted": "Kyle Field, Texas A&M University",
+    "relationship": "Texas A&M's football stadium",
+    "officialSource": "https://12thman.com/facilities/kyle-field",
+    "officialSourceNote": "Official Texas A&M Athletics facilities page answered 200",
+    "caption": "Kyle Field.",
+    "verified": "2026-10-13"
+   }
+  ],
+  "dropped": [
+   {
+    "title": "File:Kyle field panorama (4071924772).jpg and 5 more stadium files",
+    "reason": "Smaller or narrower than the approved Kyle Field photograph; one per venue keeps the gallery non-duplicative"
+   }
+  ]
+ },
+ "204501": {
+  "photos": [],
+  "dropped": [
+   {
+    "title": "File:Apollo Theatre - East College.jpg",
+    "reason": "Only 972x615 px; below the size gate - held rather than published"
+   },
+   {
+    "title": "File:Downtown Oberlin Historic District with people.jpg",
+    "reason": "Only 976x636 px; below the size gate - held rather than published"
+   }
+  ]
  }
 }

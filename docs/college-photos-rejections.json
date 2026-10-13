@@ -22,6 +22,49 @@
    },
    "approved": 1
   },
+  "131520": {
+   "geotagged": 500,
+   "byReason": {
+    "title names no place or activity": 263,
+    "category is not a place/activity photo": 12,
+    "too small": 28,
+    "unsupported mime image/tiff": 1
+   },
+   "approved": 2
+  },
+  "171100": {
+   "geotagged": 500,
+   "byReason": {
+    "title names no place or activity": 184,
+    "title looks like a non-photo": 2,
+    "too small": 4,
+    "category is not a place/activity photo": 1
+   },
+   "approved": 1
+  },
+  "193900": {
+   "geotagged": 500,
+   "byReason": {
+    "category is not a place/activity photo": 8,
+    "title names no place or activity": 306,
+    "too small": 21,
+    "title looks like a non-photo": 4,
+    "license outside whitelist No restrictions": 2
+   },
+   "approved": 2
+  },
+  "204796": {
+   "geotagged": 500,
+   "byReason": {
+    "title names no place or activity": 253,
+    "category is not a place/activity photo": 109,
+    "too small": 8,
+    "title looks like a non-photo": 1,
+    "unsupported mime image/tiff": 2,
+    "unsupported mime application/pdf": 1
+   },
+   "approved": 1
+  },
   "141060": {
    "geotagged": 500,
    "byReason": {
@@ -34,6 +77,29 @@
     "category is not a place/activity photo": 23
    },
    "approved": 3
+  },
+  "228723": {
+   "geotagged": 500,
+   "byReason": {
+    "license outside whitelist CC BY 3.0 us": 2,
+    "title names no place or activity": 267,
+    "unsupported mime image/tiff": 25,
+    "category is not a place/activity photo": 33,
+    "too small": 10,
+    "title looks like a non-photo": 65
+   },
+   "approved": 1
+  },
+  "110635": {
+   "geotagged": 500,
+   "byReason": {
+    "too small": 28,
+    "category is not a place/activity photo": 7,
+    "title names no place or activity": 305,
+    "title looks like a non-photo": 20,
+    "unsupported mime video/webm": 1
+   },
+   "approved": 1
   },
   "225511": {
    "geotagged": 500,
@@ -48,6 +114,18 @@
     "unsupported mime video/webm": 1
    },
    "approved": 2
+  },
+  "199120": {
+   "geotagged": 500,
+   "byReason": {
+    "title names no place or activity": 237,
+    "too small": 8,
+    "title looks like a non-photo": 10,
+    "unsupported mime video/webm": 1,
+    "category is not a place/activity photo": 3,
+    "unsupported mime application/pdf": 2
+   },
+   "approved": 1
   },
   "236948": {
    "geotagged": 500,
@@ -85,14 +163,39 @@
    "reason": "Specific NPS page for Moses H. Cone Memorial Park not reachable (four NPS paths returned 404/403 from this environment) - held rather than published"
   },
   {
+   "unitid": 171100,
+   "title": "(11 Commons files) 2023 Michigan State University shooting and memorial photographs",
+   "reason": "Geotagged Commons coverage near this campus is dominated by 2023 shooting memorial and press photographs; deliberately excluded from an activities listing as inappropriate despite passing the mechanical gates"
+  },
+  {
    "unitid": 141060,
    "title": "File:John F. Kennedy Park.JPG",
    "reason": "City of Atlanta parks page blocked automated verification (403) and no alternate official park page found - held rather than published"
   },
   {
+   "unitid": 228723,
+   "title": "File:Kyle field panorama (4071924772).jpg and 5 more stadium files",
+   "reason": "Smaller or narrower than the approved Kyle Field photograph; one per venue keeps the gallery non-duplicative"
+  },
+  {
+   "unitid": 110635,
+   "title": "File:Berkeley - Sather Gate and Campanile.jpg",
+   "reason": "Only 733x750 px; below the size gate - held rather than published"
+  },
+  {
+   "unitid": 110635,
+   "title": "File:UCB Sather Tower dllu.jpg",
+   "reason": "Title names no venue word from the filter list (Sather Tower); held pending a filter decision rather than published"
+  },
+  {
    "unitid": 225511,
    "title": "File:HEB MacGregor Market.jpg",
    "reason": "Neighboring grocery store; an official store page exists but the venue adds little for prospective students beyond the two approved Museum District options - not curated"
+  },
+  {
+   "unitid": 199120,
+   "title": "File:Varsity Theatre Franklin Street Chapel Hill NC.jpg",
+   "reason": "Only 800x1200 px; below the 1000-px width gate - held rather than published"
   },
   {
    "unitid": 236948,

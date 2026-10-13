@@ -366,6 +366,13 @@ def safety_section(s):
                      "occur or was not attempted; these counts are preserved separately from the tables above.</small></p>")
         parts.append('<table class="gtable gsafety-table"><thead><tr><th scope="col">Category</th>' +
                      head_cells + f"</tr></thead><tbody>{rows}</tbody></table>")
+    if s.get("subsetAnomalies"):
+        rows = "; ".join(f'{e(a["category"])} {e(a["year"])} (on campus {a["onCampus"]}, housing {a["housing"]})'
+                         for a in s["subsetAnomalies"][:6])
+        parts.append('<p class="muted gsrc"><small>Filing note: in this institution&rsquo;s Clery filing, some '
+                     "student-housing counts exceed the on-campus counts that are defined to include them. The "
+                     "Department&rsquo;s tool data and CSV export agree on these values, so they are shown exactly as "
+                     "filed and not reconciled: " + rows + ".</small></p>")
     notes = {n.get("text") for n in (s.get("notes") or []) if n.get("text")}
     if notes:
         parts.append('<p class="muted"><small>' + " ".join(e(n) for n in notes) + "</small></p>")

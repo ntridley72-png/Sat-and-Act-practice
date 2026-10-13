@@ -58,4 +58,7 @@ export const playerMutation = {
   sliding: false,
   boost: 100,
   resetRequest: 0,
+  driftScore: 0,
+  driftCombo: 1,
+  driftAngle: 0,
 }

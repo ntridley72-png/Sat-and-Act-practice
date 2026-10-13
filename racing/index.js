@@ -1,8 +1,7 @@
 /* Racing v2 entry point and feature flag.
  *
  * The rebuilt 3D game is the DEFAULT as of 2026-10-10 (operator decision):
- * a student who opens 'racing' in the arcade gets the v2 game. Drift Circuit
- * intentionally remains the v1 parking-lot sandbox.
+ * both driving games use v2: Racing runs circuits, Drift Circuit an open lot.
  * Every explicit way back still wins, because a shipped default is exactly
  * the thing that needs escape hatches:
  *
@@ -310,6 +309,15 @@
           return { entry: null, improvedRace: false, improvedLap: false };
         }
       },
+      recordDrift: function (score) {
+        if (!Number.isFinite(score) || score < 0) return false;
+        try {
+          if (!profile.highScores) profile.highScores = {};
+          profile.highScores.drift = Math.max(profile.highScores.drift || 0, Math.floor(score));
+          saveProfile();
+          return true;
+        } catch (e) { return false; }
+      },
       toast: function (message) { try { showToast(message); } catch (e) {} },
     };
   }
@@ -360,7 +368,7 @@
       };
     });
   }
-  function makeGarage() {
+  function makeGarage(gameKey) {
     function g() {
       try { return DriftCircuit.garage(); } catch (e) { return null; }
     }
@@ -368,7 +376,7 @@
       cash: function () { try { return g().cash | 0; } catch (e) { return 0; } },
       tokens: function () { try { return profile.tokens | 0; } catch (e) { return 0; } },
       paintPalette: function () { try { return window.CAR_PAINTS || null; } catch (e) { return null; } },
-      car: function () { try { return DriftCircuit.garage().raceCar; } catch (e) { return "sport"; } },
+      car: function () { try { return DriftCircuit.garage()[gameKey === 'drift' ? 'car' : 'raceCar']; } catch (e) { return "sport"; } },
       tune: function () {
         try {
           var t = DriftCircuit.garage().tune;
@@ -422,10 +430,7 @@
         try {
           var garage = DriftCircuit.garage();
           if ((garage.unlocked || []).indexOf(id) < 0) return;
-          /* v2 has no separate drift mode, so the choice follows the student
-             into the v1 drift game too rather than diverging silently. */
-          garage.raceCar = id;
-          garage.car = id;
+          garage[gameKey === 'drift' ? 'car' : 'raceCar'] = id;
           saveProfile();
         } catch (e) {}
       },
@@ -563,11 +568,12 @@
           /* Additive: hosts may request a circuit by id; the game validates
              it and falls back to its default when absent or unknown. */
           track: options.track,
+          sandbox: !!options.sandbox,
           // The host knows where the game was served from; the bundle cannot
           // reliably work it out, because Vite rewrites import.meta.url.
           assetBase: appBase(),
           economy: econ,
-          garage: makeGarage(),
+          garage: makeGarage(options.sandbox ? 'drift' : 'racing'),
           onQuit: options.onQuit,
           onError: function () {
             try { mod.unmount(); } catch (e) {}
@@ -604,7 +610,7 @@
    * gets the v1 game exactly as before. The ONLY way v2 appears is if every
    * check passes.
    */
-  var V2_GAMES = { racing: true };
+  var V2_GAMES = { drift: true, racing: true };
   var mountEl = null;
   var hooked = false;
 
@@ -690,6 +696,7 @@
         if (arcade.game && typeof arcade.game.stopAudio === "function") arcade.game.stopAudio();
       } catch (e) {}
       try { arcade.game = null; } catch (e) {}
+      teardown(stage);
 
       // Open the overlay and try v2. If it declines, fall through to v1 in
       // the same tick so the student never sees a gap.
@@ -718,7 +725,8 @@
       try { arcade.mode = "playing"; } catch (e) {}
 
       startApp(host, {
-        opponents: 6,
+        opponents: game === 'drift' ? 0 : 6,
+        sandbox: game === 'drift',
         seed: "race-" + game,
         onFail: function () {
           /* startApp has already restored any scored request it consumed

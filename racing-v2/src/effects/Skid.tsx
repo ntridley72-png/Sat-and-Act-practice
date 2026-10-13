@@ -14,15 +14,16 @@ import { useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { playerMutation } from '../player/config'
+import { vehicleConfig } from '../player/config'
 
 const MAX_MARKS = 240
 /** Lie the mark just above the road, or z-fighting makes it strobe. Must be
  *  below the lane markings at 0.015 so tyre marks sit UNDER the paint. */
 const Y = 0.008
 /** Half the rear track, metres: where the rubber actually is. */
-const TRACK_HALF = 0.82
+const TRACK_HALF = vehicleConfig.width / 2
 /** Behind the car's centre, metres. */
-const REAR_OFFSET = 1.3
+const REAR_OFFSET = -vehicleConfig.back
 const MARK_WIDTH = 0.24
 /** Minimum travel before a new segment is laid, metres. */
 const MIN_SEGMENT = 0.25
@@ -41,6 +42,8 @@ export function Skid({ target, heading }: SkidProps) {
   const lastX = useRef(0)
   const lastZ = useRef(0)
   const hasLast = useRef(false)
+  const lastYaw = useRef(0)
+  const lastReset = useRef(playerMutation.resetRequest)
 
   // Start every instance scaled to zero so nothing shows before the first
   // slide. An un-initialised InstancedMesh otherwise renders MAX_MARKS quads
@@ -59,10 +62,11 @@ export function Skid({ target, heading }: SkidProps) {
       initialised.current = true
     }
 
-    if (!playerMutation.sliding) {
+    if ((!playerMutation.sliding && playerMutation.driftAngle === 0) || lastReset.current !== playerMutation.resetRequest) {
       // Break the trail so the next slide starts a fresh mark instead of
       // drawing a long streak across wherever the car went in between.
       hasLast.current = false
+      lastReset.current = playerMutation.resetRequest
       return
     }
 
@@ -71,6 +75,7 @@ export function Skid({ target, heading }: SkidProps) {
     if (!hasLast.current) {
       lastX.current = px
       lastZ.current = pz
+      lastYaw.current = heading.current
       hasLast.current = true
       return
     }
@@ -81,6 +86,7 @@ export function Skid({ target, heading }: SkidProps) {
     // Below this the car has barely moved and a mark would just stack on the
     // previous one, darkening a single spot instead of drawing a line.
     if (travelled < MIN_SEGMENT) return
+    if (travelled > 8) { hasLast.current = false; return }
 
     /* Each mark SPANS the distance covered since the last one, so the trail
      * is continuous at any speed.
@@ -92,24 +98,21 @@ export function Skid({ target, heading }: SkidProps) {
     const yaw = heading.current
     const cos = Math.cos(yaw)
     const sin = Math.sin(yaw)
-    const midX = (px + lastX.current) / 2
-    const midZ = (pz + lastZ.current) / 2
     // Orient along the direction actually travelled, not where the car
     // points: in a slide those differ, and that difference is the whole
     // reason the marks are interesting.
-    const travelAngle = Math.atan2(dx, dz)
-
     for (const side of [-1, 1]) {
-      const ox = cos * (side * TRACK_HALF) - sin * -REAR_OFFSET
-      const oz = -sin * (side * TRACK_HALF) - cos * -REAR_OFFSET
-      dummy.position.set(midX + ox, Y, midZ + oz)
+      const x = px + cos * side * TRACK_HALF - sin * REAR_OFFSET
+      const z = pz - sin * side * TRACK_HALF - cos * REAR_OFFSET
+      const prevX = lastX.current + Math.cos(lastYaw.current) * side * TRACK_HALF - Math.sin(lastYaw.current) * REAR_OFFSET
+      const prevZ = lastZ.current - Math.sin(lastYaw.current) * side * TRACK_HALF - Math.cos(lastYaw.current) * REAR_OFFSET
+      const length = Math.hypot(x - prevX, z - prevZ)
+      const travelAngle = Math.atan2(x - prevX, z - prevZ)
+      dummy.position.set((x + prevX) / 2, Y, (z + prevZ) / 2)
       dummy.rotation.set(-Math.PI / 2, 0, -travelAngle)
-      // Slight overlap on length so consecutive segments butt together
-      // rather than leaving hairline gaps as the car turns.
-      // 1.6x so consecutive segments overlap rather than butt together.
-      // At 1.15 the trail still read as dashes when the car was turning,
-      // because a rotating segment leaves a wedge-shaped gap at the outside.
-      dummy.scale.set(MARK_WIDTH, travelled * 1.6, 1)
+      // Contact-patch endpoints already follow the turning axle. A small
+      // overlap hides seams without stretching rubber far past each tire.
+      dummy.scale.set(MARK_WIDTH, length * 1.12, 1)
       dummy.updateMatrix()
       m.setMatrixAt(next.current, dummy.matrix)
       next.current = (next.current + 1) % MAX_MARKS
@@ -118,6 +121,7 @@ export function Skid({ target, heading }: SkidProps) {
 
     lastX.current = px
     lastZ.current = pz
+    lastYaw.current = yaw
   })
 
   return (

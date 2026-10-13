@@ -24,6 +24,8 @@ function formatTime(seconds: number): string {
 }
 
 export interface HudProps {
+  sandbox?: boolean
+  onFinish?: () => void
   line: RacingLine
   opponents: number
   /** Null until the race has started. */
@@ -40,13 +42,15 @@ function fmtCountdown(seconds: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
-export function Hud({ line, opponents, startedAt, mode, clock }: HudProps) {
+export function Hud({ line, opponents, startedAt, mode, clock, sandbox = false, onFinish }: HudProps) {
   const speedEl = useRef<HTMLDivElement>(null)
   const boostEl = useRef<HTMLDivElement>(null)
   const clockEl = useRef<HTMLDivElement>(null)
   const modeEl = useRef<HTMLDivElement>(null)
   const boardEl = useRef<HTMLOListElement>(null)
   const mapEl = useRef<HTMLCanvasElement>(null)
+  const scoreEl = useRef<HTMLDivElement>(null)
+  const comboEl = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let raf = 0
@@ -59,6 +63,8 @@ export function Hud({ line, opponents, startedAt, mode, clock }: HudProps) {
       if (speedEl.current) {
         speedEl.current.textContent = String(Math.round(playerMutation.speed * 3.6))
       }
+      if (scoreEl.current) scoreEl.current.textContent = Math.floor(playerMutation.driftScore).toLocaleString()
+      if (comboEl.current) comboEl.current.textContent = 'x' + playerMutation.driftCombo.toFixed(1)
       if (boostEl.current) {
         boostEl.current.style.width = `${Math.max(0, Math.min(100, playerMutation.boost))}%`
       }
@@ -109,19 +115,24 @@ export function Hud({ line, opponents, startedAt, mode, clock }: HudProps) {
     <div className="rv2-hud">
       <div className="rv2-corner rv2-tl">
         <button type="button" className="rv2-recover" onClick={() => { playerMutation.resetRequest++ }}>Reset Position</button>
-        <div className="rv2-label">LAP TIME</div>
+        {onFinish && <button type="button" className="rv2-recover rv2-end-run" onClick={onFinish}>End Run</button>}
+        <div className="rv2-label">{sandbox ? 'DRIVING TIME' : 'LAP TIME'}</div>
         <div ref={clockEl} className="rv2-clock">0:00.00</div>
         <div ref={modeEl} className="rv2-mode" />
       </div>
 
-      <div className="rv2-corner rv2-tr">
+      {!sandbox && <div className="rv2-corner rv2-tr">
         <canvas ref={mapEl} width={168} height={168} className="rv2-map" />
-      </div>
+      </div>}
 
       <div className="rv2-corner rv2-bl">
-        <ol ref={boardEl} className="rv2-board">
+        {sandbox ? <>
+          <div className="rv2-label">DRIFT SCORE</div>
+          <div ref={scoreEl} className="rv2-clock">0</div>
+          <div ref={comboEl} className="rv2-mode">x1.0</div>
+        </> : <ol ref={boardEl} className="rv2-board">
           {Array.from({ length: opponents + 1 }, (_, i) => <li key={i} />)}
-        </ol>
+        </ol>}
       </div>
 
       <div className="rv2-corner rv2-br">

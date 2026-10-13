@@ -21,6 +21,7 @@ import { Canvas } from '@react-three/fiber'
 import { ACESFilmicToneMapping, sRGBEncoding } from 'three'
 import { Physics } from '@react-three/cannon'
 import { TrackMesh } from './art/TrackMesh'
+import { ParkingLot } from './art/ParkingLot'
 import { Scenery } from './art/Scenery'
 import { Sky } from './art/Sky'
 import { Grid } from './ai/Grid'
@@ -59,6 +60,7 @@ export type AppProps = {
   /** Track id requested by the host. Wins over the saved selection; an
    *  unknown id falls back to the default with no error. */
   track?: string
+  sandbox?: boolean
   /** The host's session economy. Absent (e.g. in isolation) means practice
    *  only: nothing spends and nothing is recorded. */
   economy?: EconomyBridge
@@ -74,6 +76,7 @@ type Phase = 'intro' | 'racing' | 'finished'
 const RACE_LAPS = 2
 
 export interface RunOutcome {
+  driftScore?: number
   time: string
   position: number
   total: number
@@ -107,7 +110,7 @@ const EMPTY_OUTCOME: RunOutcome = {
   improvedRace: false, improvedLap: false, best: null, lap: null, payout: 0,
 }
 
-export function App({ opponents: initialOpponents, seed, skill = 'medium', paint: initialPaint, archetype: initialArchetype = 'sport', onQuit, assetBase, track: initialTrack, economy, garage }: AppProps) {
+export function App({ opponents: initialOpponents, seed, skill = 'medium', paint: initialPaint, archetype: initialArchetype = 'sport', onQuit, assetBase, track: initialTrack, sandbox = false, economy, garage }: AppProps) {
   /* Selection precedence: explicit host request > saved choice > default.
    * trackById validates: an id from localStorage or a host option is not
    * trusted, and anything unknown lands on a working circuit. */
@@ -307,7 +310,16 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
       lap: lapBest == null ? null : formatRunTime(lapBest),
     }
 
-    if (r.mode === 'scored' && !timeUp && economy) {
+    if (sandbox) outcome.driftScore = Math.floor(playerMutation.driftScore)
+    if (sandbox && r.mode === 'scored' && endReason !== 'idle' && economy && pay) {
+      outcome.recorded = economy.recordDrift?.(outcome.driftScore ?? 0) ?? false
+      if (outcome.recorded && garage) {
+        outcome.payout = Math.floor((outcome.driftScore ?? 0) / 400)
+        if (outcome.payout > 0) garage.addCash(outcome.payout)
+        setCash(garage.cash())
+      }
+    }
+    if (!sandbox && r.mode === 'scored' && !timeUp && economy) {
       const res = economy.record(r.trackId, r.weather, {
         race: Math.round(elapsed * 1000) / 1000,
         lap: lapBest == null ? null : Math.round(lapBest * 1000) / 1000,
@@ -324,7 +336,7 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
        nothing, matching v1 where only scored runs banked cash. The table
        lives in one place (garage.ts) and is unit-tested. `pay === false` is
        reserved for the test seam below: it must never mint cash. */
-    if (r.mode === 'scored' && !timeUp && garage && pay) {
+    if (!sandbox && r.mode === 'scored' && !timeUp && garage && pay) {
       outcome.payout = racePayout({
         seconds: elapsed,
         position: outcome.position,
@@ -338,11 +350,12 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
     resultRef.current = outcome
     setResult(outcome)
     setPhase('finished')
-  }, [economy, garage, line, setPhase])
+  }, [economy, garage, line, sandbox, setPhase])
 
   /* Called by the player car each lap. Kept here rather than in Vehicle so
      the lifecycle lives in one place. */
   const onLap = useCallback((lap: number) => {
+    if (sandbox) return
     if (finishedRef.current) return
     const r = run.current
     const elapsed = (performance.now() - r.startedAt) / 1000
@@ -350,9 +363,10 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
     r.lastLapAt = elapsed
     r.bestLap = r.bestLap == null ? split : Math.min(r.bestLap, split)
     if (lap >= RACE_LAPS) finishRun(false)
-  }, [finishRun])
+  }, [finishRun, sandbox])
 
   const start = useCallback(({ paint: p, archetype: a, opponents: n }: { paint: string; archetype: string; opponents: number }, modeOverride?: RunMode) => {
+    if (sandbox) n = 0
     let mode: RunMode = modeOverride ?? runMode
     if (mode === 'scored') {
       /* Practice is the fallback in every failure direction: no bridge, no
@@ -380,6 +394,9 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
     resetOpponents()
     playerMutation.boost = 100
     playerMutation.speed = 0
+    playerMutation.driftScore = 0
+    playerMutation.driftCombo = 1
+    playerMutation.driftAngle = 0
     mutation.player.lap = 0
     mutation.player.progress = 0
     finishedRef.current = false
@@ -392,7 +409,7 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
     setRunId((r) => r + 1)
     setStartedAt(performance.now())
     setPhase('racing')
-  }, [runMode, economy, track, activeWeather, garage, paintHex, carSpec])
+  }, [runMode, economy, track, activeWeather, garage, paintHex, carSpec, sandbox])
 
   /* C cycles the camera while racing, as v1 did. Kept here rather than in
      useControls because the camera is React state, and this runs only while
@@ -496,12 +513,12 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
   const pole = useMemo(() => gridSlot(line, 0, track.grid), [line, track])
 
   const best = useMemo(
-    () => (economy ? economy.best(track.id, activeWeather) : null),
-    [economy, track.id, activeWeather],
+    () => (!sandbox && economy ? economy.best(track.id, activeWeather) : null),
+    [economy, track.id, activeWeather, sandbox],
   )
 
   return (
-    <div className="rv2-root">
+    <div className="rv2-root" data-driving-mode={sandbox ? 'drift-sandbox' : 'racing'}>
       <Canvas
         // Explicit DPR cap. A retina display would otherwise render at 2x and
         // spend the opponent frame budget on pixels instead of cars.
@@ -555,13 +572,16 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
         {/* stepSize must match FIXED_DT in Opponent.tsx: the driver and the
             solver have to advance together or a replay drifts. */}
         <Physics gravity={[0, -9.81, 0]} broadphase="SAP" allowSleep={false} stepSize={1 / 60}>
-          <TrackMesh line={line} theme={theme} hazards={track.hazards} />
-          <Scenery def={track} line={line} />
+          {sandbox ? <ParkingLot theme={theme} /> : <>
+            <TrackMesh line={line} theme={theme} hazards={track.hazards} />
+            <Scenery def={track} line={line} />
+          </>}
           {activeWeather === 'rain' && <Rain />}
-          <Vehicle
+          {(!sandbox || phase === 'racing') && <Vehicle
             key={`player-${runId}`}
-            position={[pole.x, 1, pole.z]}
-            rotation={[0, yawForZForward(pole.heading), 0]}
+            position={sandbox ? [0, .85, 0] : [pole.x, 1, pole.z]}
+            rotation={sandbox ? [0, 0, 0] : [0, yawForZForward(pole.heading), 0]}
+            sandbox={sandbox}
             archetype={archetype}
             paint={paint}
             assetBase={assetBase}
@@ -577,19 +597,20 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
             finish={styleState.finish}
             spoiler={styleState.spoiler}
             neon={styleState.neon}
-          />
-          <Grid key={`grid-${runId}`} line={line} count={opponents} raceSeed={`${seed}:${runId}`} skill={skill} gates={gates} cornerBudget={track.ai.cornerBudget} grip={grip} />
+          />}
+          {!sandbox && <Grid key={`grid-${runId}`} line={line} count={opponents} raceSeed={`${seed}:${runId}`} skill={skill} gates={gates} cornerBudget={track.ai.cornerBudget} grip={grip} />}
         </Physics>
       </Canvas>
 
       {phase === 'racing' && (
         <>
-          <Hud line={line} opponents={opponents} startedAt={startedAt} mode={runMode} clock={clock} />
+          <Hud sandbox={sandbox} onFinish={sandbox ? () => finishRun(false) : undefined} line={line} opponents={opponents} startedAt={startedAt} mode={runMode} clock={clock} />
           <Help />
         </>
       )}
       {phase === 'intro' && (
         <Intro
+          sandbox={sandbox}
           onStart={start}
           initialPaint={initialPaint}
           initialArchetype={initialArchetype}
@@ -628,6 +649,7 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
       )}
       {phase === 'finished' && (
         <Finished
+          sandbox={sandbox}
           outcome={result}
           trackName={track.name}
           weather={activeWeather}

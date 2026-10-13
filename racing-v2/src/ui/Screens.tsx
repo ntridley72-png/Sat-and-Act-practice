@@ -57,6 +57,7 @@ export interface GarageView {
 }
 
 export interface IntroProps {
+  sandbox?: boolean
   onStart: (opts: { paint: string; archetype: string; opponents: number }) => void
   /* Seeded from the mount options so a host that asks for a 12-car grid gets
      one. An earlier version hardcoded these defaults, which silently ignored
@@ -126,7 +127,7 @@ function TuneSliders({ tune, onTune, onReset }: { tune: TuneSpec; onTune: (k: ke
   )
 }
 
-export function Intro({ onStart, initialPaint, initialArchetype, initialOpponents, tracks, trackId, onTrackChange, weatherOptions, weather, onWeatherChange, mode, onModeChange, tokens, tokenCost, affordable, best, garage }: IntroProps) {
+export function Intro({ onStart, initialPaint, initialArchetype, initialOpponents, tracks, trackId, onTrackChange, weatherOptions, weather, onWeatherChange, mode, onModeChange, tokens, tokenCost, affordable, best, garage, sandbox = false }: IntroProps) {
   /* Bench fallbacks (no host garage): the raw archetype and paint chips. */
   const [paint, setPaint] = useState<string>(initialPaint ?? PALETTE[0])
   const [archetype, setArchetype] = useState<string>(initialArchetype ?? 'sport')
@@ -141,10 +142,10 @@ export function Intro({ onStart, initialPaint, initialArchetype, initialOpponent
   return (
     <div className="rv2-screen">
       <div className="rv2-panel">
-        <h1 className="rv2-title">{track ? track.name : 'Race'}</h1>
-        <p className="rv2-sub">{track ? track.blurb : 'A quick race.'} Arrow keys or WASD, Shift to boost, Space to handbrake.</p>
+        <h1 className="rv2-title">{sandbox ? 'Drift Circuit · Parking Lot' : track ? track.name : 'Race'}</h1>
+        <p className="rv2-sub">{sandbox ? 'An open asphalt playground with parking bays, cones and tire stacks. No laps or race opponents.' : track ? track.blurb : 'A quick race.'} Arrow keys or WASD, Shift to boost, Space to handbrake.</p>
 
-        <div className="rv2-field">
+        {!sandbox && <div className="rv2-field">
           <span className="rv2-field-label">Track</span>
           <div className="rv2-chips">
             {tracks.map((t) => (
@@ -160,7 +161,7 @@ export function Intro({ onStart, initialPaint, initialArchetype, initialOpponent
             ))}
           </div>
           <p className="rv2-note">All six tracks are open from the start.</p>
-        </div>
+        </div>}
 
         {weatherOptions.length > 1 && (
           <div className="rv2-field">
@@ -202,7 +203,7 @@ export function Intro({ onStart, initialPaint, initialArchetype, initialOpponent
           </div>
           <p className="rv2-note">
             {mode === 'scored'
-              ? 'Scored run: five minutes of driving; the run is recorded and pays cash.'
+              ? sandbox ? 'Scored drift: five active minutes; your drift score is recorded and earns cash. End Run banks your current score.' : 'Scored run: five minutes of driving; the run is recorded and pays cash.'
               : 'Open Practice is free and unlimited — nothing recorded, no cash.'}
             {' '}You have <strong>{tokens}</strong> token{tokens === 1 ? '' : 's'}.
             {!affordable && ' Answer questions to earn more.'}
@@ -399,7 +400,7 @@ export function Intro({ onStart, initialPaint, initialArchetype, initialOpponent
           <p className="rv2-note">Press C while driving to cycle the view.</p>
         </div>
 
-        <div className="rv2-field">
+        {!sandbox && <div className="rv2-field">
           <label className="rv2-field-label" htmlFor="rv2-grid">
             Opponents <strong>{opponents}</strong>
           </label>
@@ -412,10 +413,10 @@ export function Intro({ onStart, initialPaint, initialArchetype, initialOpponent
             onChange={(e) => setOpponents(Number(e.target.value))}
             className="rv2-range"
           />
-        </div>
+        </div>}
 
-        <button type="button" className="rv2-go" onClick={() => onStart({ paint, archetype, opponents })}>
-          Race
+        <button type="button" className="rv2-go" onClick={() => onStart({ paint, archetype, opponents: sandbox ? 0 : opponents })}>
+          {sandbox ? 'Drive' : 'Race'}
         </button>
 
         <p className="rv2-foot">
@@ -427,7 +428,9 @@ export function Intro({ onStart, initialPaint, initialArchetype, initialOpponent
 }
 
 export interface FinishedProps {
+  sandbox?: boolean
   outcome: {
+    driftScore?: number
     time: string
     position: number
     total: number
@@ -450,23 +453,23 @@ export interface FinishedProps {
   onQuit: () => void
 }
 
-export function Finished({ outcome, trackName, weather, restartMode, tokenCost, onRestart, onQuit }: FinishedProps) {
+export function Finished({ outcome, trackName, weather, restartMode, tokenCost, onRestart, onQuit, sandbox = false }: FinishedProps) {
   const { time, position, total, mode, timeUp, endReason, recorded, improvedRace, improvedLap, best, lap, payout } = outcome
   return (
     <div className="rv2-screen">
       <div className="rv2-panel rv2-panel-sm">
         <h2 className="rv2-title">Finished</h2>
         <p className="rv2-result">
-          <strong>P{position}</strong> of {total}
+          {sandbox ? <><strong>{outcome.driftScore?.toLocaleString() ?? 0}</strong> drift points</> : <><strong>P{position}</strong> of {total}</>}
         </p>
         <p className="rv2-sub">
-          Race time {time}
+          {sandbox ? 'Driving time' : 'Race time'} {time}
           {lap ? ` · best lap ${lap}` : ''}
         </p>
         {mode === 'practice' && (
           <p className="rv2-note">Open Practice — not scored. Start a scored run to set a record.</p>
         )}
-        {mode === 'scored' && timeUp && (
+        {mode === 'scored' && timeUp && !recorded && (
           <p className="rv2-note">
             {endReason === 'idle' ? 'Ended after three idle minutes' : 'Five-minute allowance used'} — this run was not recorded.
           </p>
@@ -489,7 +492,7 @@ export function Finished({ outcome, trackName, weather, restartMode, tokenCost, 
         )}
         <div className="rv2-actions">
           <button type="button" className="rv2-go" onClick={onRestart}>
-            Race again{restartMode === 'scored' ? ` · ${tokenCost} token` : ' · free'}
+            {sandbox ? 'Drive again' : 'Race again'}{restartMode === 'scored' ? ` · ${tokenCost} token` : ' · free'}
           </button>
           <button type="button" className="rv2-ghost" onClick={onQuit}>Back to the arcade</button>
         </div>

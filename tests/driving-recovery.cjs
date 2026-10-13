@@ -34,6 +34,7 @@ const executablePath = process.env.PLAYWRIGHT_EXEC || path.join(os.homedir(), 'L
     await page.goto(process.env.BASE_URL || `http://127.0.0.1:${server.address().port}/`);
     await page.waitForFunction(() => typeof RacingV2 !== 'undefined');
     const lot = await page.evaluate(() => {
+      RacingV2.setLocal(false);
       profile.soundOn = true; window.FunSATAudio.muted = false;
       arcade.select('drift'); arcade.play();
       const g = arcade.game; const safe = g.obstacles.every((o) => Math.hypot(o.x - g.x, o.y - g.y) > o.r + 13);
@@ -48,7 +49,7 @@ const executablePath = process.env.PLAYWRIGHT_EXEC || path.join(os.homedir(), 'L
     assert.equal(lot.score, 1234); assert.equal(lot.earned, 3);
     assert.equal(lot.x, lot.cx); assert.equal(lot.speed, 0); assert.equal(lot.audio, null);
 
-    await page.evaluate(() => { arcade.select('racing'); arcade.close(); });
+    await page.evaluate(() => { RacingV2.setLocal(null); arcade.select('racing'); arcade.close(); });
     await page.waitForTimeout(1500);
     assert.equal(await page.locator('#racingV2Mount canvas').count(), 0, 'closing during import must cancel the mount');
     await page.evaluate(() => arcade.select('racing'));

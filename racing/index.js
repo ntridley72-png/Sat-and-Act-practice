@@ -231,7 +231,13 @@
   function webglSupported() {
     try {
       var c = document.createElement("canvas");
-      return !!(c.getContext("webgl2") || c.getContext("webgl") || c.getContext("experimental-webgl"));
+      var gl = c.getContext("webgl2") || c.getContext("webgl") || c.getContext("experimental-webgl");
+      if (!gl) return false;
+      // A support probe is not a game renderer. Release it immediately so
+      // repeated garage/game switches cannot exhaust the browser's contexts.
+      var release = gl.getExtension("WEBGL_lose_context");
+      if (release) release.loseContext();
+      return true;
     } catch (e) {
       return false;
     }

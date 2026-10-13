@@ -45,6 +45,8 @@ export type MountOptions = {
   /* Track id the host wants, e.g. from a URL parameter. Validated inside the
      game; an unknown id falls back to the default circuit silently. */
   track?: string
+  /** Dedicated open parking-lot mode, with the same v2 cars and physics. */
+  sandbox?: boolean
   /* The host's session economy (tokens, records). Absent means practice-only:
      nothing spends and nothing is recorded. */
   economy?: EconomyBridge
@@ -101,7 +103,7 @@ export function mount(container: HTMLElement, options: MountOptions = {}): void 
     root.render(
       <StrictMode>
         <ErrorBoundary onError={options.onError}>
-          <App opponents={options.opponents ?? 0} seed={options.seed ?? 'default'} onQuit={options.onQuit} assetBase={options.assetBase} track={options.track} economy={options.economy} garage={options.garage} />
+          <App key={options.sandbox ? 'drift' : 'racing'} sandbox={options.sandbox} opponents={options.opponents ?? 0} seed={options.seed ?? 'default'} onQuit={options.onQuit} assetBase={options.assetBase} track={options.track} economy={options.economy} garage={options.garage} />
         </ErrorBoundary>
       </StrictMode>,
     )

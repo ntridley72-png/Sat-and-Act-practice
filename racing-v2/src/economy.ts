@@ -51,6 +51,7 @@ export interface EconomyBridge {
   spendScored(): boolean
   best(trackId: string, weather: string): RecordEntry | null
   record(trackId: string, weather: string, run: RunResult): RecordOutcome
+  recordDrift?(score: number): boolean
   toast(message: string): void
 }
 

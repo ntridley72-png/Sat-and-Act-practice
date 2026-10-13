@@ -59,6 +59,7 @@ const BOOST_DRAIN = 30   // units per second while held
 const BOOST_REFILL = 7   // units per second while not
 
 export interface VehicleProps {
+  sandbox?: boolean
   position?: [number, number, number]
   rotation?: [number, number, number]
   archetype?: string
@@ -95,11 +96,12 @@ export interface VehicleProps {
   neon?: string
 }
 
-export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype = 'sport', paint, line, onLap, assetBase, startDistance = 0, gates = [], topSpeed, grip = 1, physics, camera = 'chase', volume = 1, finish, spoiler, neon }: VehicleProps) {
+export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype = 'sport', paint, line, onLap, assetBase, startDistance = 0, gates = [], topSpeed, grip = 1, physics, camera = 'chase', volume = 1, finish, spoiler, neon, sandbox = false }: VehicleProps) {
   const laps = useLapTracker(line, startDistance, gates)
   const lastLap = useRef(0)
   const defaultCamera = useThree((state) => state.camera)
   const controls = useControls()
+  const velocity = useRef(new Vector3())
   const env = useEnvironment()
 
   const [chassisBody, chassisApi] = useBox(() => ({
@@ -136,7 +138,7 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
       /* Weather scales the tyre's peak grip, and the car+tune's grip factor
        * scales it too (physics.frictionSlip is already absolute; the ratio
        * against the shipped 1.5 keeps this a multiplier). */
-      frictionSlip: wheelInfo.frictionSlip * grip * (physics ? physics.frictionSlip / wheelInfo.frictionSlip : 1),
+      frictionSlip: wheelInfo.frictionSlip * grip * (physics ? physics.frictionSlip / wheelInfo.frictionSlip : 1) * (sandbox && index >= 2 ? .72 : 1),
       chassisConnectionPointLocal: [width * sideMulti, height, length],
       isFrontWheel: index < 2,
     }
@@ -166,6 +168,7 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
   useLayoutEffect(
     () =>
       chassisApi.velocity.subscribe(([vx, vy, vz]) => {
+        velocity.current.set(vx, vy, vz)
         playerMutation.speed = Math.hypot(vx, vy, vz)
       }),
     [chassisApi],
@@ -215,12 +218,14 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
     const dt = Math.min(Math.max(delta, 0), 0.05)
     if ((c.reset && !s.wasReset) || s.resetRequest !== playerMutation.resetRequest) {
       const point = line.at(laps.progress)
-      chassisApi.position.set(point.x, 0.85, point.y)
-      chassisApi.rotation.set(0, Math.PI / 2 - point.heading, 0)
+      chassisApi.position.set(sandbox ? 0 : point.x, 0.85, sandbox ? 0 : point.y)
+      chassisApi.rotation.set(0, sandbox ? 0 : Math.PI / 2 - point.heading, 0)
       chassisApi.velocity.set(0, 0, 0)
       chassisApi.angularVelocity.set(0, 0, 0)
       s.engineValue = 0; s.steeringValue = 0; s.swayValue = 0; s.swaySpeed = 0
       playerMutation.speed = 0
+      playerMutation.sliding = false
+      velocity.current.set(0, 0, 0)
       controls.current.forward = false; controls.current.backward = false
       controls.current.left = false; controls.current.right = false
       controls.current.handbrake = false; controls.current.boost = false
@@ -271,7 +276,12 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
      * so a held Space at speed rotates the car instead of stopping it dead.
      * Braking while moving is Down/S (reverse engine force), exactly v1. */
     const offRoadBrake = offTrack.current ? OFF_TRACK_BRAKE : 0
-    const handbrake = c.handbrake ? (physics?.handbrakeBrake ?? maxBrake) : 0
+    // Drift practice uses a short rear-brake breakaway instead of the race
+    // brake's full lock, allowing throttle to sustain a controlled slide.
+    const handbrake = c.handbrake ? (physics?.handbrakeBrake ?? maxBrake) * (sandbox ? .35 : 1) : 0
+    if (sandbox && c.handbrake && speed > 5 && Math.abs(s.steeringValue) > .02) {
+      chassisApi.applyTorque([0, -s.steeringValue * (physics?.mass ?? 500) * Math.min(speed, 20) * .08, 0])
+    }
     for (const i of [0, 1]) api.setBrake(offRoadBrake, i)
     for (const i of [2, 3]) api.setBrake(Math.max(offRoadBrake, handbrake), i)
 
@@ -307,6 +317,14 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
          screenshot cannot and a speed readout is unsigned. */
       const probe = window as unknown as { __rv2probe?: () => unknown }
       probe.__rv2probe = () => ({
+        sandbox,
+        archetype,
+        driftScore: Math.floor(playerMutation.driftScore),
+        driftCombo: playerMutation.driftCombo,
+        driftAngle: playerMutation.driftAngle,
+        velocity: { x: velocity.current.x, z: velocity.current.z },
+        throttle: controls.current.forward,
+        steering: s.steeringValue,
         x: v.x,
         y: v.y,
         z: v.z,
@@ -335,7 +353,7 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
 
       // Publish the player's progress so the AI avoids it and the leaderboard
       // can rank it against the field on the same scale.
-      const lap = laps.update(v.x, v.z)
+      const lap = sandbox ? 0 : laps.update(v.x, v.z)
 
       /* OFF-TRACK PENALTY.
        *
@@ -346,8 +364,8 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
        * without the frustration of an instant reset. */
       const lp = line.at(laps.progress)
       const cross = Math.abs((v.x - lp.x) * -Math.sin(lp.heading) + (v.z - lp.y) * Math.cos(lp.heading))
-      offTrack.current = cross > lp.half + 0.3
-      mutation.player.progress = laps.progress
+      offTrack.current = !sandbox && cross > lp.half + 0.3
+      mutation.player.progress = sandbox ? 0 : laps.progress
       mutation.player.lap = lap
       if (lap > lastLap.current) {
         lastLap.current = lap
@@ -358,6 +376,18 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
       mutation.player.x = v.x
       mutation.player.y = v.z
       mutation.player.active = true
+      if (sandbox) {
+        const yaw = worldHeading.current
+        const forward = velocity.current.x * Math.sin(yaw) + velocity.current.z * Math.cos(yaw)
+        const lateral = velocity.current.x * Math.cos(yaw) - velocity.current.z * Math.sin(yaw)
+        const angle = Math.atan2(Math.abs(lateral), Math.max(1, Math.abs(forward)))
+        const drifting = forward > 3 && speed > 5 && angle > .12 && angle < 1.2
+        playerMutation.driftAngle = drifting ? angle : 0
+        if (drifting) {
+          playerMutation.driftCombo = Math.min(10, playerMutation.driftCombo + dt * 1.5)
+          playerMutation.driftScore += speed * angle * playerMutation.driftCombo * 12 * dt
+        } else playerMutation.driftCombo = Math.max(1, playerMutation.driftCombo - dt * .55)
+      }
 
       /* CHASE CAMERA, in the CAR'S frame.
        *

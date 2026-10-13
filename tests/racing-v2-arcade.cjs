@@ -74,24 +74,23 @@ function serve() {
     return { page, errs };
   };
 
-  // --- DEFAULT: Drift Circuit is the dedicated v1 parking-lot sandbox ------
+  // --- DEFAULT: Drift Circuit uses the v2 parking lot and modern cars ------
   {
     const { page, errs } = await open("");
     const r = await page.evaluate(() => RacingV2.enabled());
     if (r !== true) fail("racingV2 must default on for the arcade path", r);
 
+    await page.evaluate(() => arcade.select("drift"));
+    await page.waitForSelector('.rv2-root[data-driving-mode="drift-sandbox"]');
     const drift = await page.evaluate(() => {
-      arcade.select("drift");
       const host = document.getElementById("racingV2Mount");
       return {
         ctor: arcade.game && arcade.game.constructor && arcade.game.constructor.name,
-        sandbox: !!(arcade.game && arcade.game.sandbox),
-        track: arcade.game && arcade.game.trackDef().name,
+        sandbox: !!document.querySelector('.rv2-root[data-driving-mode="drift-sandbox"]'),
         mountHidden: !host || host.style.display === "none",
       };
     });
-    if (drift.ctor !== "DriftCircuit" || !drift.sandbox || drift.track !== "Parking Lot Sandbox") fail("Drift Circuit must be the parking-lot sandbox", drift);
-    if (!drift.mountHidden) fail("Drift Circuit must not mount the v2 circuit game", drift);
+    if (drift.ctor || !drift.sandbox || drift.mountHidden) fail("Drift Circuit must mount the v2 parking-lot sandbox without a v1 game", drift);
     if (errs.length) fail("page errors on the default path", errs);
     await page.close();
   }
@@ -169,5 +168,5 @@ function serve() {
 
   await browser.close();
   server.close();
-  console.log("PASS: Drift Circuit stays a parking-lot sandbox, Neon Racing mounts v2, the opt-out remains transparent, and other games are untouched.");
+  console.log("PASS: Drift Circuit mounts the v2 parking lot, Neon Racing keeps circuits, the opt-out remains transparent, and other games are untouched.");
 })().catch((e) => { console.error("FAIL:", e.message); process.exit(1); });

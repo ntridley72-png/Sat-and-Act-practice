@@ -558,6 +558,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 <link rel="stylesheet" href="progress-desk.css">
 </head>
 <body class="pd-shell" data-workspace="exam"><script>
+/* Apply the saved workspace before visible content; appearance was applied in head. */
 (()=>{try{const saved=localStorage.getItem('funsatWorkspaceTheme');if(['exam','notebook','focus'].includes(saved))document.body.dataset.workspace=saved;}catch(e){}})();
 </script>
 <noscript>

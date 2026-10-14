@@ -7,11 +7,79 @@ const EXEC = path.join(os.homedir(), "Library/Caches/ms-playwright/chromium_head
 const BASE = process.env.BASE_URL || "http://localhost:8899";
 const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent("SAT & ACT Practice.html") : "/";
 const SHOTS = path.join(__dirname, "screenshots");
+const THEMES = ["exam", "notebook", "focus"];
+const EXPECTED_BACKGROUND = {
+  exam: "rgb(255, 255, 255)",
+  notebook: "rgb(244, 241, 232)",
+  focus: "rgb(18, 18, 16)",
+};
 
 function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); return (a + 0.05) / (b + 0.05); }
 
 (async () => {
   const browser = await chromium.launch({ executablePath: EXEC, args: ["--no-sandbox"] });
+
+  async function captureStartupFrames({ label, theme = null, blockStorage = false, warm = false, reload = false, slow = false }) {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 960 } });
+    await context.addInitScript(({ savedTheme, shouldBlockStorage }) => {
+      if (shouldBlockStorage) {
+        const originalGetItem = Storage.prototype.getItem;
+        Storage.prototype.getItem = function (key) {
+          if (key === "funsatWorkspaceTheme") throw new DOMException("Storage is blocked", "SecurityError");
+          return originalGetItem.call(this, key);
+        };
+      } else if (savedTheme) {
+        localStorage.setItem("funsatWorkspaceTheme", savedTheme);
+      } else {
+        localStorage.removeItem("funsatWorkspaceTheme");
+      }
+    }, { savedTheme: theme, shouldBlockStorage: blockStorage });
+
+    const page = await context.newPage();
+    const session = await context.newCDPSession(page);
+    if (slow) await session.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+    await page.route("**/app.js", async (route) => {
+      if (slow) await new Promise((resolve) => setTimeout(resolve, 600));
+      await route.continue();
+    });
+
+    const navigate = async (kind) => {
+      if (kind === "reload") await page.reload({ waitUntil: "commit" });
+      else await page.goto(BASE + PAGE_PATH, { waitUntil: "commit" });
+      await page.waitForSelector("body");
+      const frames = [];
+      const started = Date.now();
+      for (const at of [0, 40, 100, 250, 500, 1000, 2000]) {
+        const remaining = at - (Date.now() - started);
+        if (remaining > 0) await page.waitForTimeout(remaining);
+        await page.screenshot({ type: "png" });
+        frames.push(await page.evaluate(() => ({
+          workspace: document.body.dataset.workspace || null,
+          background: getComputedStyle(document.body).backgroundColor,
+          colorScheme: document.documentElement.style.colorScheme,
+        })));
+      }
+      const expectedTheme = theme || "exam";
+      for (const [index, frame] of frames.entries()) {
+        if (frame.workspace !== expectedTheme) throw new Error(`${label}/${kind} frame ${index} painted workspace ${frame.workspace}, expected ${expectedTheme}`);
+        if (frame.background !== EXPECTED_BACKGROUND[expectedTheme]) throw new Error(`${label}/${kind} frame ${index} painted ${frame.background}, expected ${EXPECTED_BACKGROUND[expectedTheme]}`);
+        const expectedScheme = expectedTheme === "focus" ? "dark" : "light";
+        if (frame.colorScheme !== expectedScheme) throw new Error(`${label}/${kind} frame ${index} used color-scheme ${frame.colorScheme}, expected ${expectedScheme}`);
+      }
+    };
+
+    await navigate("cold");
+    if (warm) await navigate("warm");
+    if (reload) await navigate("reload");
+    await context.close();
+  }
+
+  for (const theme of THEMES) {
+    await captureStartupFrames({ label: `saved-${theme}`, theme, warm: true, reload: true, slow: true });
+  }
+  await captureStartupFrames({ label: "empty-storage", slow: true });
+  await captureStartupFrames({ label: "blocked-storage", blockStorage: true, slow: true });
+
   const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
   const errors = [];
   page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
@@ -45,7 +113,7 @@ function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); re
   reached = await page.locator("#routingCard").isVisible().catch(() => false);
   if (!reached) throw new Error("could not reach the module-transition card");
 
-  for (const theme of ["exam", "notebook", "focus"]) {
+  for (const theme of THEMES) {
     await page.selectOption("#workspaceTheme", theme);
     await page.waitForTimeout(120);
     await page.evaluate(() => render());
@@ -72,5 +140,5 @@ function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); re
 
   await browser.close();
   if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
-  console.log("PASS: module-transition card is readable in all three themes (WCAG AA text contrast).");
+  console.log("PASS: startup frames keep the selected theme on cold, warm, reload, slow, empty-storage, and blocked-storage loads; module-transition contrast passes in all three themes.");
 })().catch((error) => { console.error(error); process.exit(1); });

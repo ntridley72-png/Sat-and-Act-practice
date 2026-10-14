@@ -431,6 +431,7 @@ PHOTO_LABELS = {
     "campus": "Campus life",
     "social": "Student life & traditions",
     "history": "School history",
+    "landmark": "Campus landmark",
 }
 
 
@@ -446,6 +447,10 @@ def photo_kind(text):
     if any(k in low for k in ("aerial", "skyline", "panorama", "downtown", "overview", "bird's-eye",
                               "mountain", "lake", "river", "beach", "arboretum", "botanical garden")):
         return "surroundings"
+    # A statue, sculpture, or monument is a landmark, not "Campus life": the
+    # old default label put a cropped statue photo under student life.
+    if any(k in low for k in ("statue", "sculpture", "monument", "bust of", "bishop buddy", "bishopbuddy")):
+        return "landmark"
     if any(k in low for k in ("hall", "library", "chapel", "center", "building", "museum", "tower",
                               "laboratory", "institute", "auditorium", "theatre", "theater", "architecture")):
         return "architecture"
@@ -472,6 +477,9 @@ LEGACY_REJECT = ("logo", "seal", "crest", "coat of arms", "coat_of_arms", "wordm
 FILLER_WORDS = {"file", "the", "of", "and", "at", "a", "an", "is", "in", "on", "for", "to", "with", "by"}
 
 
+EXT_WORDS = {"jpg", "jpeg", "png", "gif", "webp", "tif", "tiff", "file"}
+
+
 def photo_fingerprint(p):
     """Near-duplicate key: the first six meaningful words of the file page name
     (filler dropped), so three scans of the same building collapse to the first
@@ -480,6 +488,36 @@ def photo_fingerprint(p):
     name = urllib.parse.unquote(raw.split("/wiki/")[-1] if "/wiki/" in raw else raw.rsplit("/", 1)[-1])
     words = [w for w in re.findall(r"[a-z]+", name.lower()) if w not in FILLER_WORDS]
     return " ".join(words[:6]) or str(p.get("u"))
+
+
+def photo_key(p):
+    """One concatenated key for the file page name (filler and extension words
+    dropped). Pair it with photo_is_duplicate: "WarrenHall.jpg" -> "warrenhall"
+    is a prefix of "Warren Hall, USD.JPG" -> "warrenhallusd", so the same
+    building re-uploaded under a spelled-out name collapses, while two
+    different photos that merely share a college name do not."""
+    raw = str(p.get("l") or p.get("u") or "")
+    name = urllib.parse.unquote(raw.split("/wiki/")[-1] if "/wiki/" in raw else raw.rsplit("/", 1)[-1])
+    words = [w for w in re.findall(r"[a-z]+", name.lower())
+             if w not in FILLER_WORDS and w not in EXT_WORDS]
+    return "".join(words)[:48] or str(p.get("u"))
+
+
+def photo_is_duplicate(key, seen_keys, min_len=8, max_suffix=6):
+    """Duplicate test for gallery slots. Exact keys always collapse. A prefix
+    match also collapses, but only when the extra tail is short ("warrenhall"
+    vs "warrenhallusd"): that catches the same subject re-uploaded under a
+    spelled-out or suffixed file name without merging unrelated photos that
+    merely share a long college-name prefix."""
+    if not key:
+        return True
+    for seen in seen_keys:
+        if key == seen:
+            return True
+        short, long = (seen, key) if len(seen) <= len(key) else (key, seen)
+        if len(short) >= min_len and long.startswith(short) and len(long) - len(short) <= max_suffix:
+            return True
+    return False
 
 
 def photo_only_filter():
@@ -644,6 +682,18 @@ def fetch_photos(colleges):
                 print("photos: %d/%d colleges processed" % (progress["done"], progress["total"]), flush=True)
                 json.dump(cache, open(cache_path, "w"))
 
+    def dedupe(items):
+        """Drop near-duplicates with the prefix-aware key so the same building
+        under a spelled-out file name does not fill a second gallery slot."""
+        out, keys = [], []
+        for item in items:
+            key = photo_key(item)
+            if photo_is_duplicate(key, keys):
+                continue
+            keys.append(key)
+            out.append(item)
+        return out
+
     def crawl(e):
         key = str(e["id"])
         cached = cache.get(key, {})
@@ -651,11 +701,11 @@ def fetch_photos(colleges):
         # fingerprint and object-photo filters). Older generic results
         # only survive if they pass today's reject filters, and they never
         # crowd out a fresh crawl.
-        legacy = [normalize_photo(p) for p in (cached.get("imgs") or []) if legacy_ok(p)][:6]
+        legacy = dedupe([normalize_photo(p) for p in (cached.get("imgs") or []) if legacy_ok(p)])[:6]
         # v8 adds the action-shot and venue filters. A v7 entry is still usable,
         # but every cached photo now has to clear today's filters, so a college
         # holding game-action shots falls short of six and gets re-crawled.
-        photos = ([normalize_photo(p) for p in (cached.get("imgs") or []) if legacy_ok(p)]
+        photos = (dedupe([normalize_photo(p) for p in (cached.get("imgs") or []) if legacy_ok(p)])
                   if cached.get("v") in (7, 8) else [])
         if len(photos) >= 6:
             e["imgs"] = photos
@@ -755,6 +805,7 @@ def fetch_photos(colleges):
                 # alone has several) must not fill the gallery. The selection
                 # step keeps only the best-scoring variant per fingerprint.
                 fingerprint = photo_fingerprint({"l": title})
+                dedupe_key = photo_key({"l": title})
                 candidates.append((score, bucket, {
                     "u": url,
                     "a": ((artist + " · ") if artist else "") + (license_name or "Wikimedia Commons"),
@@ -765,20 +816,21 @@ def fetch_photos(colleges):
                     "kind": bucket,
                     "label": PHOTO_LABELS[bucket],
                     "fp": fingerprint,
+                    "key": dedupe_key,
                 }))
             known = {p.get("u") for p in photos}
             ranked = sorted(candidates, key=lambda item: -item[0])
             # Socially useful variety first; unavailable subjects are simply omitted.
             chosen, chosen_fp = set(), set()
-            for want in ("athletics", "greek", "social", "history", "architecture", "surroundings", "campus"):
+            for want in ("athletics", "greek", "social", "history", "landmark", "architecture", "surroundings", "campus"):
                 for score, bucket, photo in ranked:
-                    if bucket == want and photo["u"] not in known and photo["u"] not in chosen and photo.get("fp") not in chosen_fp:
-                        photos.append(photo); known.add(photo["u"]); chosen.add(photo["u"]); chosen_fp.add(photo.get("fp")); break
+                    if bucket == want and photo["u"] not in known and photo["u"] not in chosen and not photo_is_duplicate(photo.get("key"), chosen_fp):
+                        photos.append(photo); known.add(photo["u"]); chosen.add(photo["u"]); chosen_fp.add(photo.get("key")); break
                 if len(photos) >= 6: break
             for score, bucket, photo in ranked:
                 if len(photos) >= 6: break
-                if photo["u"] in known or photo.get("fp") in chosen_fp: continue
-                photos.append(photo); known.add(photo["u"]); chosen_fp.add(photo.get("fp"))
+                if photo["u"] in known or photo_is_duplicate(photo.get("key"), chosen_fp): continue
+                photos.append(photo); known.add(photo["u"]); chosen_fp.add(photo.get("key"))
         except Exception:
             fetch_failed = True
             photos = []
@@ -837,15 +889,14 @@ def main():
             info = cached_photos.get(str(e["id"]))
             if not info:
                 continue
-            seen_fp = set()
+            seen_fp = []
             imgs = []
             for p in (info.get("imgs") or []):
                 if not legacy_ok(p):
                     continue
-                fp = photo_fingerprint(p)
-                if fp in seen_fp:
+                if photo_is_duplicate(photo_key(p), seen_fp):
                     continue
-                seen_fp.add(fp)
+                seen_fp.append(photo_key(p))
                 imgs.append(normalize_photo(p))
             imgs = imgs[:6]
             if imgs:

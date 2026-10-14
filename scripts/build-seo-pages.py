@@ -135,7 +135,7 @@ def social_life(c, name, state):
         rows.append(("Undergraduates", f"{enr:,}",
                      "U.S. Dept. of Education, College Scorecard"))
     if loc:
-        rows.append(("Setting", f"{str(loc).title()} &middot; {e(c.get('city') or '')}, {e(c.get('st') or '')}",
+        rows.append(("Setting", f"{str(loc).title()} · {e(c.get('city') or '')}, {e(c.get('st') or '')}",
                      "IPEDS locale classification"))
     if ret is not None:
         rows.append(("Come back after first year", f"{ret:.0f}%",
@@ -153,7 +153,7 @@ def social_life(c, name, state):
         rows.append(("Students per faculty member", f"{sfr:.0f}:1",
                      "College Scorecard"))
     if rpp:
-        rent = f" &middot; rent {rpph:.0f}" if rpph else ""
+        rent = f" · rent {rpph:.0f}" if rpph else ""
         rows.append(("Local prices (U.S. = 100)", f"{rpp:.0f}{rent}",
                      f"BEA Regional Price Parities, {e(state)}, 2024"))
 
@@ -167,7 +167,7 @@ def social_life(c, name, state):
         head = "Largely a non-residential student body"
     else:
         setting = {"city": "city", "suburb": "suburban", "town": "college-town", "rural": "rural"}.get(loc, "campus")
-        head = f"{(size or 'Campus').title()} &middot; {setting} setting"
+        head = f"{(size or 'Campus').title()} · {setting} setting"
     badge = ""
 
     raw_url = str(c.get("url") or "").strip()
@@ -686,7 +686,7 @@ def college_page(c, data):
     if shots:
         cells = []
         for i, shot in enumerate(shots):
-            credit_text = f'{shot["credit"]} &middot; {shot["license"]}'
+            credit_text = f'{shot["credit"]} · {shot["license"]}'
             credit = (f'<a href="{e(shot["source"])}" target="_blank" rel="noopener nofollow">'
                       f'{e(credit_text)}</a>') if shot["source"] else e(credit_text)
             cells.append(
@@ -726,7 +726,7 @@ def college_page(c, data):
                                          "gr", "gpell", "ret", "ern", "pell", "loan", "debt", "fam", "cdr", "sfr", "fg")) if c.get("_defs") else ""
     body = (f'<nav class="gnav"><a href="/">&larr; {SITE_NAME}</a>'
             f'<a href="/colleges/">All colleges</a></nav>'
-            f'<p class="gkicker">{e(state)} &middot; College profile</p>'
+            f'<p class="gkicker">{e(state)} · College profile</p>'
             f'<h1>{e(name)}: SAT &amp; ACT Scores, Acceptance Rate and Costs</h1>'
             f'{intro}{personal}{img}{extras_photos}{scores}{sel}{cost}{out}{social}{majors}{safety}{about}{cta}{faq_html}{src}{links}')
 
@@ -1053,7 +1053,7 @@ def game_page(g, others):
 
     body = (f'<nav class="gnav"><a href="/">&larr; {SITE_NAME}</a>'
             f'<a href="/unblocked-games/">All games</a></nav>'
-            f'<p class="gkicker">{e(g["genre"])} &middot; Unblocked games</p>'
+            f'<p class="gkicker">{e(g["genre"])} · Unblocked games</p>'
             f'<h1>{e(name)} Unblocked</h1>'
             f'<p>{e(name)} is one of the {len(others) + 1} browser games in the {SITE_NAME} '
             f'arcade. It loads in the page, needs no download, and runs on a school Chromebook '
@@ -1202,7 +1202,7 @@ def state_cost_page(state_name, cols, national):
 
     body = (f'<nav class="gnav"><a href="/">&larr; {SITE_NAME}</a>'
             f'<a href="/college-costs/">All states</a></nav>'
-            f'<p class="gkicker">{e(state_name)} &middot; College costs</p>'
+            f'<p class="gkicker">{e(state_name)} · College costs</p>'
             f'<h1>What College Actually Costs in {e(state_name)}</h1>'
             f'<p>Sticker price is close to meaningless. The number that matters is <strong>net '
             f'price</strong>: what a typical first-year family pays after grants and scholarships '
@@ -1292,7 +1292,7 @@ def costs_hub(by_state, colleges):
 
     body = (f'<nav class="gnav"><a href="/">&larr; {SITE_NAME}</a>'
             f'<a href="/colleges/">All colleges</a></nav>'
-            f'<p class="gkicker">For parents &middot; College costs</p>'
+            f'<p class="gkicker">For parents · College costs</p>'
             f'<h1>What College Actually Costs, by State</h1>'
             f'<p>If you are working out what a degree will cost your family, published tuition is '
             f'the wrong number to start from. Most students do not pay it. The figure below is '

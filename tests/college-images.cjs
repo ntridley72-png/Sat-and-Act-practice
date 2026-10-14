@@ -15,7 +15,10 @@ const LABELS = {
   campus: "Campus life",
   social: "Student life & traditions",
   history: "School history",
+  landmark: "Campus landmark",
 };
+// A statue, sculpture, or monument is a landmark — never "Campus life".
+const LANDMARK = /statue|sculpture|monument|bust of/i;
 const BAD = /logo|seal|crest|coat_of_arms|coat%20of%20arms|wordmark|bookplate|contact.?sheet|placeholder/i;
 const SOURCE = /^https:\/\/commons\.wikimedia\.org\/wiki\//;
 
@@ -75,6 +78,13 @@ for (const c of colleges) {
       fail(where + ": filed as athletics but the file name names no venue");
     }
     if (seen.has(im.u)) fail(where + ": duplicate photo inside the college");
+    const name2 = fileName(im).toLowerCase();
+    if (LANDMARK.test(name2) && im.kind !== "landmark") {
+      fail(where + ": a statue/sculpture/monument must be labeled Campus landmark, saw " + JSON.stringify(im.kind));
+    }
+    if (LANDMARK.test(name2) && im.kind === "landmark" && !/landmark/i.test(im.label)) {
+      fail(where + ": landmark label mismatch, saw " + JSON.stringify(im.label));
+    }
     seen.add(im.u);
     if (LABELS[im.kind]) coverage[im.label]++;
   }

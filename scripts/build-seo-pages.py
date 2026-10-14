@@ -454,6 +454,27 @@ def extra_photos_section(x):
                   nearby))
 
 
+def standing(c):
+    """Where this college sits nationally and in its state, from the other profiles."""
+    r = c.get("_ranks") or {}
+    state = STATES.get(c["st"], c["st"])
+    lines = []
+    for key, label, hi_first, fmt in (
+            ("sr50", "Median SAT", True, lambda v: f"{v}"),
+            ("adm", "Acceptance rate", False, lambda v: f"{v:.0f}%"),
+            ("np", "Average net price", True, lambda v: money(v)),
+            ("gr", "Graduation rate", True, lambda v: f"{v:.0f}%")):
+        if key in r:
+            n_nat, tot_nat, n_st, tot_st = r[key]
+            word = "highest" if hi_first else "lowest"
+            lines.append(f"<li>{label} {fmt(c[key])}: {ordinal(n_nat)} {word} of "
+                         f"{tot_nat} profiled colleges and {ordinal(n_st)} {word} of {tot_st} "
+                         f"in {e(state)}.</li>")
+    if not lines:
+        return ""
+    return (f'<h2>How {e(c["n"])} compares</h2><ul>' + "".join(lines) + "</ul>")
+
+
 def college_page(c, data):
     name, st = c["n"], c["st"]
     state = STATES.get(st, st)
@@ -728,7 +749,7 @@ def college_page(c, data):
             f'<a href="/colleges/">All colleges</a></nav>'
             f'<p class="gkicker">{e(state)} &middot; College profile</p>'
             f'<h1>{e(name)}: SAT &amp; ACT Scores, Acceptance Rate and Costs</h1>'
-            f'{intro}{personal}{img}{extras_photos}{scores}{sel}{cost}{out}{social}{majors}{safety}{about}{cta}{faq_html}{src}{links}')
+            f'{intro}{personal}{img}{extras_photos}{scores}{sel}{cost}{out}{social}{majors}{safety}{about}{standing(c)}{cta}{faq_html}{src}{links}')
 
     schema = [
         {"@type": "CollegeOrUniversity", "name": name,
@@ -749,6 +770,30 @@ def college_page(c, data):
                       schema=schema, extra_head=extra)
 
 
+def state_summary(state, cols):
+    """State-specific facts computed from the profiles so no two state hubs read alike."""
+    pub = [c for c in cols if c.get("ctrl") == "public"]
+    adm = [c for c in cols if c.get("adm")]
+    sat = [c for c in cols if c.get("sr50")]
+    net = [c for c in cols if c.get("np")]
+    out = []
+    out.append(f'{len(pub)} of the {len(cols)} are public and {len(cols) - len(pub)} are private.')
+    if adm:
+        lo = min(adm, key=lambda c: c["adm"]); hi = max(adm, key=lambda c: c["adm"])
+        out.append(f'Acceptance rates run from {lo["adm"]:.0f}% at <a href="/colleges/{lo["slug"]}/">{e(lo["n"])}</a> '
+                   f'to {hi["adm"]:.0f}% at <a href="/colleges/{hi["slug"]}/">{e(hi["n"])}</a>; '
+                   f'the median is {_mid([c["adm"] for c in adm]):.0f}%.')
+    if sat:
+        lo = min(sat, key=lambda c: c["sr50"]); hi = max(sat, key=lambda c: c["sr50"])
+        out.append(f'Typical SAT midpoints span {lo["sr50"]} ({e(lo["n"])}) to {hi["sr50"]} ({e(hi["n"])}), '
+                   f'so a score near {_mid([c["sr50"] for c in sat])} is mid-pack for {e(state)}.')
+    if net:
+        out.append(f'Average net price after aid ranges from {money(min(c["np"] for c in net))} to '
+                   f'{money(max(c["np"] for c in net))} a year; see '
+                   f'<a href="/college-costs/{slugify(state)}/">college costs in {e(state)}</a>.')
+    return '<h2>' + e(state) + ' at a glance</h2><ul>' + "".join(f"<li>{t}</li>" for t in out) + '</ul>'
+
+
 def state_hub(state, cols):
     path = f"/colleges/{slugify(state)}/"
     cols = sorted(cols, key=lambda c: -(c.get("enr") or 0))
@@ -765,6 +810,7 @@ def state_hub(state, cols):
             f'colleges in {e(state)}, from the U.S. Department of Education College Scorecard. '
             f'Ranges are the middle 50% of enrolled students &mdash; a quarter scored below the '
             f'low number and a quarter above the high one.</p>'
+            f'{state_summary(state, cols)}'
             f'<table class="gtable"><thead><tr><th scope="col">College</th>'
             f'<th scope="col">SAT (mid 50%)</th><th scope="col">ACT (mid 50%)</th>'
             f'<th scope="col">Acceptance</th></tr></thead><tbody>{rows}</tbody></table>'
@@ -848,6 +894,69 @@ TAG_LABELS = {"need": "need-based", "merit": "merit-based", "firstgen": "first-g
               "service": "community service", "nocollege": "no-essay / easy entry"}
 
 
+_SCH_ITEMS = []
+MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August",
+          "September", "October", "November", "December"]
+TAG_FIT = {
+    "need": "Need-based awards read your FAFSA or household income first, so file the FAFSA as soon as it opens and keep tax documents handy.",
+    "merit": "Merit awards compare you with the other applicants: GPA, course rigor, and often an SAT or ACT score. A higher practice score is leverage here.",
+    "firstgen": "First-generation awards usually ask you to say that neither parent completed a four-year degree; check how the provider defines it.",
+    "identity": "Identity-based awards ask you to document eligibility and often want an essay about your background, so allow time for the personal statement.",
+    "stem": "STEM awards favor advanced math and science coursework, so list those classes and any projects, research, or competitions.",
+    "arts": "Arts awards are judged on a portfolio or audition more than on grades, so start assembling samples early.",
+    "essay": "Essay-based awards are won on the writing. Plan on at least two full drafts and one outside reader.",
+    "local": "Local or regional awards draw a smaller pool, which is why they are worth the effort even when the dollar amount is modest.",
+    "military": "Military-connected awards ask for service or family-service documentation; request those records well before the deadline.",
+    "service": "Service awards want hours and impact, not just a list, so keep dates, supervisors, and concrete results.",
+    "state": "State awards require residency and usually a FAFSA, and the money often can only be used at in-state schools.",
+    "nocollege": "Easy-entry awards are drawings or short applications, so enter, but do not count on them to cover tuition.",
+}
+
+
+def scholarship_insights(s, items):
+    """Data-derived sections that differ for every scholarship."""
+    name = s["n"]
+    out = []
+    top = lambda x: x.get("hi") or x.get("lo") or 0
+    priced = [x for x in items if top(x)]
+    if top(s) and priced and not s.get("amtNote"):
+        rank = 1 + sum(1 for x in priced if top(x) > top(s))
+        out.append(f"At {amount_text(s)}, it ranks #{rank} of {len(priced)} scholarships in our list "
+                   f"that publish a dollar amount.")
+    else:
+        out.append("The award is not a single fixed dollar figure, so compare it against the cost "
+                   "of the school you plan to attend rather than against flat-dollar awards.")
+    dl = s.get("deadline") or ""
+    month = next((m for m in MONTHS if m.lower() in dl.lower()), None)
+    if month:
+        same = [x for x in items if x is not s and month.lower() in (x.get("deadline") or "").lower()]
+        out.append(f"Its deadline falls in {month}; {len(same)} other scholarships in our list "
+                   f"are also due then" + (f", including {same[0]['n']}." if same else "."))
+    grades = s.get("grades") or []
+    if grades:
+        peers = [x for x in items if x is not s and set(x.get("grades") or []) & set(grades)]
+        out.append(f"It is open to grade {'/'.join(str(g) for g in grades)}; {len(peers)} other "
+                   f"scholarships here accept the same grade level.")
+    fit = [TAG_FIT[t] for t in s.get("tags", []) if t in TAG_FIT]
+    shared = [x for x in items if x is not s and set(x.get("tags", [])) & set(s.get("tags", []))]
+    html = '<h2>How {} compares</h2><ul>{}</ul>'.format(
+        e(name), "".join(f"<li>{e(t)}</li>" for t in out))
+    if fit:
+        html += f'<h2>What to prepare for this type of award</h2><ul>{"".join(f"<li>{e(t)}</li>" for t in fit)}</ul>'
+    if month:
+        i = MONTHS.index(month)
+        plan = [(MONTHS[(i - 3) % 12], "Open the official page, confirm eligibility, and list what the application needs."),
+                (MONTHS[(i - 2) % 12], "Request recommendation letters and any transcripts; start the first essay draft."),
+                (MONTHS[(i - 1) % 12], "Finish the second draft, get one outside read, and gather financial documents."),
+                (month, "Submit several days before the deadline, then save the confirmation.")]
+        html += f'<h2>Working back from the {e(month)} deadline</h2><ol>' + "".join(
+            f"<li><strong>{e(m)}:</strong> {e(t)}</li>" for m, t in plan) + '</ol>'
+    if shared:
+        html += ('<h2>Similar scholarships</h2><p>Other awards with the same focus: '
+                 + ", ".join(f'<a href="/scholarships/{x["slug"]}/">{e(x["n"])}</a>' for x in shared[:5]) + '.</p>')
+    return html
+
+
 def scholarship_page(s, related):
     slug = s["slug"]
     path = f"/scholarships/{slug}/"
@@ -868,7 +977,7 @@ def scholarship_page(s, related):
 
     faqs = [
         (f"How much is the {name} worth?",
-         f"The {name} awards {amt}. Amounts are set by {org} and change from cycle to cycle, "
+         f"The {name} award is {amt}. Amounts are set by {org} and change from cycle to cycle, "
          f"so confirm the current figure on the provider's official page before applying."),
         (f"When is the {name} deadline?",
          f"The typical deadline is {s.get('deadline', 'announced each cycle')}. Deadlines move "
@@ -885,6 +994,7 @@ def scholarship_page(s, related):
             f'<p>{e(s.get("desc", ""))}</p>'
             f'{table(rows, ("Detail", "Information"))}'
             f'<h2>Who qualifies</h2><p>{e(s.get("elig", "See the provider\'s official page."))}</p>'
+            + scholarship_insights(s, _SCH_ITEMS) +
             f'<h2>How to apply</h2>'
             f'<ol><li>Open the official {e(org)} application page and confirm this cycle\'s '
             f'deadline and award amount &mdash; both change yearly.</li>'
@@ -1413,6 +1523,13 @@ def main():
                   and STATES.get(o["st"], o["st"]) != STATES.get(c["st"], c["st"])]
         others.sort(key=lambda o: (abs((o.get("sr50") or 0) - (c.get("sr50") or 0)), o["slug"]))
         c["_related"] = near + others[:3]
+    # 1-based rank among every profile and within the state, for the "how it compares" section.
+    for key, hi_first in (("sr50", True), ("adm", False), ("np", True), ("gr", True)):
+        have = [c for c in colleges if c.get(key)]
+        ordered = sorted(have, key=lambda c: (-c[key] if hi_first else c[key], c["slug"]))
+        for i, c in enumerate(ordered, 1):
+            mates = [o for o in ordered if STATES.get(o["st"], o["st"]) == STATES.get(c["st"], c["st"])]
+            c.setdefault("_ranks", {})[key] = (i, len(ordered), mates.index(c) + 1, len(mates))
 
     entries = [("/", "1.0", "weekly")]
 
@@ -1432,6 +1549,7 @@ def main():
 
     sdata = load_scholarships()
     items = sdata["scholarships"]
+    _SCH_ITEMS[:] = items
     p, h = scholarships_hub(items)
     write(out / "scholarships" / "index.html", h)
     entries.append((p, "0.9", "weekly"))
@@ -1535,6 +1653,51 @@ def score_buckets(colleges, score, key25, key75):
     return above, within, below
 
 
+def _mid(xs):
+    xs = sorted(xs)
+    return xs[len(xs) // 2] if xs else None
+
+
+def score_insights(colleges, score, test, above, within, below, label):
+    """Numbers that differ for every score: where the strength colleges are, how selective the
+    in-range schools are, and what the next step up changes."""
+    k25, k75 = ("sr25", "sr75") if test == "sat" else ("ar25", "ar75")
+    step = 10 if test == "sat" else 1
+    html = f'<h2>What a {score} {label} looks like in practice</h2><ul>'
+    reach = [c for c in within + above if c.get("adm")]
+    med = _mid([c["adm"] for c in reach])
+    if med is not None:
+        html += (f'<li>Among the {len(reach)} colleges where a {score} is in range or higher, the '
+                 f'median acceptance rate is {med:.0f}%.</li>')
+    hard = [c for c in within if c.get("adm") and c["adm"] < 25]
+    if hard:
+        html += (f'<li>{len(hard)} of the in-range colleges admit fewer than 1 in 4 applicants, so '
+                 f'a score inside the range still leaves them as reaches, e.g. '
+                 f'<a href="/colleges/{hard[0]["slug"]}/">{e(hard[0]["n"])}</a>.</li>')
+    up = score + step
+    ua, uw, ub = score_buckets(colleges, up, k25, k75)
+    if ua or uw:
+        html += (f'<li>Raising it by {step} point{"s" if step != 1 else ""} to {up} moves '
+                 f'{abs(len(ua) - len(above))} more colleges into the "at or above 75th percentile" group '
+                 f'and takes {abs(len(below) - len(ub))} out of the "reach" group.</li>')
+    bystate = {}
+    for c in above:
+        bystate.setdefault(STATES.get(c["st"], c["st"]), []).append(c)
+    html += '</ul>'
+    if bystate:
+        top = sorted(bystate.items(), key=lambda kv: (-len(kv[1]), kv[0]))[:6]
+        html += (f'<h3>Where a {score} is a strength, by state</h3><ul>' + "".join(
+            f'<li><a href="/colleges/{slugify(st)}/">{e(st)}</a>: {len(v)} '
+            f'college{"s" if len(v) != 1 else ""}</li>' for st, v in top) + '</ul>')
+    pub = sum(1 for c in above + within if c.get("ctrl") == "public")
+    tot = len(above) + len(within)
+    if tot:
+        html += (f'<p>Of the {tot} colleges where a {score} is in range or higher, {pub} are public '
+                 f'and {tot - pub} are private, so check the in-state versus sticker price on each '
+                 f'profile before judging affordability.</p>')
+    return html
+
+
 def score_page(colleges, concordance, score, test):
     """test is 'sat' or 'act'."""
     if test == "sat":
@@ -1593,6 +1756,7 @@ def score_page(colleges, concordance, score, test):
             + (f'<h2>Colleges where a {score} is a strength</h2><ul>{lst(above)}</ul>' if above else "")
             + (f'<h2>Colleges where a {score} is right in range</h2><ul>{lst(within)}</ul>' if within else "")
             + (f'<h2>Reach colleges with a {score}</h2><ul>{lst(below, 8)}</ul>' if below else "")
+            + score_insights(colleges, score, test, above, within, below, label)
             + f'<div class="gcard"><h2>Want to move this number?</h2>'
               f'<p>Take a free adaptive practice test, get an unofficial estimate, and see the '
               f'college list shift as your score does.</p>'

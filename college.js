@@ -525,7 +525,39 @@
     return list;
   }
   let selectedId = null;
+  // Which school-life section (inside FunSAT) the detail popup is showing, or
+  // null for the college overview. Reflected in the URL hash so refresh and
+  // sharing keep the college and the section.
+  let collegeSection = null;
   function selectedCollege() { return selectedId == null ? null : BY_ID.get(selectedId) || null; }
+  function collegeHashFor(id, section) {
+    if (id == null) return "";
+    return "#college/" + id + (section ? "/" + section : "");
+  }
+  function syncCollegeHash() {
+    try {
+      const next = collegeHashFor(selectedId, collegeSection);
+      const current = location.hash || "";
+      if (next && current !== next) history.replaceState(null, "", location.pathname + location.search + next);
+      else if (!next && /^#college\//.test(current)) history.replaceState(null, "", location.pathname + location.search);
+    } catch (e) {}
+  }
+  // Section opens push a history entry so the browser Back gesture returns to
+  // the college overview; the in-app Back button does the same without relying
+  // on browser history depth.
+  function openLifeSection(key) {
+    if (!selectedCollege() || !lifeSectionFor(key)) return;
+    collegeSection = key;
+    try { location.hash = collegeHashFor(selectedId, key); } catch (e) {}
+    try { renderCollegeScreen(); } catch (e) {}
+    const host = $("collegeDetailHost");
+    if (host) host.scrollTop = 0;
+  }
+  function closeLifeSection() {
+    collegeSection = null;
+    syncCollegeHash();
+    if (selectedId != null) { try { renderCollegeScreen(); } catch (e) {} }
+  }
 
   // ---- Groq chat for college planning ----
   let collegeChat = [];
@@ -565,6 +597,124 @@
       recordTutorHelp(synthetic, question, replyEl.textContent, "college-planning", "failed");
     }
     collegeChatBusy = false;
+  }
+
+  // ---- School-life sections (inside FunSAT) ----
+  // Each campus-life button opens the section here rather than bouncing the
+  // student to a search engine. A section shows what it covers, the official
+  // page our discovery pass verified for THIS college when one exists (with
+  // the date it was checked), and an honest empty state when it does not.
+  // Nothing here invents campus-life facts.
+  // All 354 discovery records in scripts/.cache/college-links.json carry the
+  // same checked date; a future regeneration can override per college via
+  // college.linksChecked (the generator now emits it).
+  const LINKS_CHECKED = "2026-10-10";
+  const LIFE_SECTIONS = [
+    { key: "clubs", label: "Student organizations", terms: "student organizations clubs directory",
+      what: "The official directory or index of recognized clubs and student organizations.",
+      look: "Browse by category, note how many groups are active, and check whether any relate to your intended major or interests." },
+    { key: "greek", label: "Greek life", terms: "fraternity sorority Greek life",
+      what: "Official pages for fraternities, sororities, and their governing councils, when the college has them.",
+      look: "Check which councils exist, recruitment timing, and costs. Many colleges have no Greek system at all — an empty state here may mean that." },
+    { key: "athletics", label: "Athletics & recreation", terms: "athletics recreation intramural sports",
+      what: "Varsity athletics and campus recreation: club sports, intramurals, and fitness facilities.",
+      look: "Look for intramural and club options if you want to play without a varsity commitment." },
+    { key: "events", label: "Events & traditions", terms: "student events campus traditions",
+      what: "The official events calendar and pages describing recurring traditions.",
+      look: "An active calendar with events during your intended term is a useful signal of campus energy." },
+    { key: "housing", label: "Housing & dining", terms: "student housing dining",
+      what: "Official residence life, housing options, and dining services pages.",
+      look: "Check first-year housing guarantees, room types, and meal-plan requirements." },
+    { key: "paper", label: "Student newspaper", terms: "student newspaper",
+      what: "The college's independent student newspaper, when it publishes one online.",
+      look: "Recent issues are the closest thing to unfiltered student perspective." },
+  ];
+  function lifeSectionFor(key) { return LIFE_SECTIONS.find((s) => s.key === key) || null; }
+  function verifiedLinkFor(college, key) {
+    const links = college.links || {};
+    const url = links[key];
+    return typeof url === "string" && /^https?:\/\//i.test(url) ? url : null;
+  }
+  function lifeSectionHtml(college) {
+    const section = lifeSectionFor(collegeSection);
+    if (!section) return "";
+    const url = verifiedLinkFor(college, section.key);
+    let host = "";
+    try { host = new URL(collegeUrl(college)).hostname.replace(/^www\./, ""); } catch (e) {}
+    const checked = college.linksChecked || LINKS_CHECKED;
+    const evidence = url
+      ? '<div class="life-source"><span class="life-badge">Verified official page</span>' +
+        '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' + escapeHtml(url.replace(/^https?:\/\//, "").replace(/\/$/, "")) + "</a>" +
+        '<span class="small muted">Checked ' + escapeHtml(checked) + " against this college's own site.</span></div>"
+      : '<div class="life-source empty"><span class="life-badge">No verified page yet</span>' +
+        '<p class="small muted">Our discovery pass could not confirm an official ' + escapeHtml(section.label.toLowerCase()) + ' page for this college, so this section does not claim one exists. That is a coverage gap, not evidence that the college lacks it.</p>' +
+        (host ? '<a class="cf-link" href="https://www.google.com/search?q=' + encodeURIComponent("site:" + host + " " + college.n + " " + section.terms) + '" target="_blank" rel="noopener">Search ' + escapeHtml(host) + " (search results, not a verified section)</a>" : "") +
+        "</div>";
+    return '<section class="life-section" aria-label="' + escapeHtml(section.label + " at " + college.n) + '">' +
+      '<div class="life-head"><button type="button" class="secondary life-back" data-life-back="1">← Back to ' + escapeHtml(college.n) + '</button>' +
+      '<h3>' + escapeHtml(section.label) + " · " + escapeHtml(college.n) + "</h3></div>" +
+      '<p class="life-what">' + escapeHtml(section.what) + "</p>" +
+      evidence +
+      '<p class="life-look"><b>What to look for:</b> ' + escapeHtml(section.look) + "</p>" +
+      '<p class="small muted">Sections show official sources only. This app does not merge review sites, social posts, or generic search results into the section content.</p>' +
+      "</section>";
+  }
+  function lifeButtonsHtml(college) {
+    return '<h5 class="cf-subhead">Campus life, in the app</h5><div class="cf-links life-btns">' +
+      LIFE_SECTIONS.map((s) => {
+        const url = verifiedLinkFor(college, s.key);
+        return '<button type="button" class="cf-link life-btn" data-life-section="' + s.key + '">' + s.label +
+          (url ? '<span class="life-dot" title="Verified official page available"></span>' : "") + "</button>";
+      }).join("") + "</div>" +
+      '<p class="cf-note">Each section opens here with the official page we verified for this college when one exists, or an honest gap notice. A dot means a verified link is inside.</p>';
+  }
+  // ---- Campus safety disclosure (app side) ----
+  // Detailed Clery data stays behind a default-collapsed, keyboard-accessible
+  // disclosure. Only the verified pilot is shown; other colleges get an honest
+  // coverage note instead of partial numbers. Calendar-year 2025 is not in the
+  // official release yet and is labeled as unavailable, never as zero.
+  function safetyDisclosureHtml(college) {
+    const all = (typeof window !== "undefined" && window.COLLEGE_SAFETY) || {};
+    const data = (all.colleges || all)[college.id];
+    if (!data) {
+      return '<details class="safety-disclosure"><summary>Campus safety data</summary><div class="safety-body">' +
+        '<p class="small muted">This app currently carries cell-by-cell cross-checked Clery Act tables for a verified pilot of 14 colleges. This college is not in that pilot yet, so no numbers are shown here — we do not publish partial or unverified safety figures. The U.S. Department of Education&rsquo;s Campus Safety and Security tool has the college&rsquo;s own filings.</p>' +
+        '<p class="small muted">Calendar-year 2025 official data is not yet available in the federal release; the newest verified data in this app is 2022–2024.</p>' +
+        '<a class="cf-link" href="https://ope.ed.gov/campussafety/#/" target="_blank" rel="noopener">Open the official Campus Safety tool ↗</a></div></details>';
+    }
+    const yearList = data.years || [];
+    const years = yearList.length > 1 ? yearList[0] + "–" + yearList[yearList.length - 1] : String(yearList[0] || "");
+    const retrieved = all.meta && all.meta.retrieved ? String(all.meta.retrieved) : "";
+    const criminal = (data.groups || []).find((g) => g.key === "criminal");
+    const vawa = (data.groups || []).find((g) => g.key === "vawa");
+    const arrests = (data.groups || []).find((g) => g.key === "arrests");
+    const disc = (data.groups || []).find((g) => g.key === "disciplinary");
+    const unfounded = (data.groups || []).find((g) => g.key === "unfounded");
+    const rowTable = (group, screen, title, note) => {
+      const sc = group && group.screens && group.screens[screen];
+      if (!sc || !sc.rows || !sc.rows.length) return "";
+      const ys = sc.years || data.years || [];
+      return '<div class="safety-table"><h5>' + escapeHtml(title) + "</h5>" +
+        (note ? '<p class="small muted">' + escapeHtml(note) + "</p>" : "") +
+        '<table><thead><tr><th scope="col">Category</th>' + ys.map((y) => '<th scope="col">' + escapeHtml(y) + "</th>").join("") + "</tr></thead><tbody>" +
+        sc.rows.map((r) => "<tr><th scope=\"row\">" + escapeHtml(r.label) + "</th>" + r.values.map((v) => "<td>" + v + "</td>").join("") + "</tr>").join("") +
+        "</tbody></table></div>";
+    };
+    return '<details class="safety-disclosure"><summary>Campus safety data (' + escapeHtml(years) + ', official Clery filings)</summary><div class="safety-body">' +
+      '<p class="small muted">Reported incidents from this college&rsquo;s Clery Act filings, cross-checked cell-by-cell against the Department&rsquo;s official export (' + escapeHtml(String((data.crossCheck && data.crossCheck.cellsChecked) || "")) + " cells" + (retrieved ? "; retrieved " + escapeHtml(retrieved) : "") + "). Reported incidents are not total prevalence, individual risk, or proof that one campus is safer than another. Calendar-year 2025 official data is not yet available in the federal release." +
+      (data.subsetAnomalies && data.subsetAnomalies.length ? " Some rows are published exactly as the institution filed them; see the public profile page for notes." : "") + "</p>" +
+      rowTable(criminal, "onCampus", "Criminal offenses — on campus") +
+      rowTable(vawa, "onCampus", "VAWA offenses — on campus") +
+      rowTable(criminal, "housing", "Criminal offenses — residential facilities (a subset of on-campus; do not add the two)", "These rows can overlap the on-campus table above.") +
+      rowTable(arrests, "onCampus", "Arrests — on campus") +
+      rowTable(disc, "onCampus", "Disciplinary referrals — on campus") +
+      rowTable(unfounded, "unfounded", "Unfounded crimes") +
+      '<p class="small muted">Noncampus and public-property scopes are kept separate and are shown on the full public profile page. Source: <a href="' + escapeHtml(data.sourceUrl || "https://ope.ed.gov/campussafety/#/") + '" target="_blank" rel="noopener">U.S. Department of Education Campus Safety and Security</a>. If you or someone you know needs help, start with the National Domestic Violence Hotline (24/7) at <a href="https://www.thehotline.org/" target="_blank" rel="noopener">thehotline.org</a>.</p>' +
+      (function () {
+        const r = (data.resources || []).filter((x) => x && x.kind === "campus").slice(0, 3);
+        return r.length ? '<div class="cf-links">' + r.map((x) => '<a class="cf-link" href="' + escapeHtml(x.url) + '" target="_blank" rel="noopener">' + escapeHtml(x.label) + " ↗</a>").join("") + "</div>" : "";
+      })() +
+      "</div></details>";
   }
 
   // ---- Rendering ----
@@ -642,19 +792,6 @@
     const setting = ({ city: "City", suburb: "Suburban", town: "College-town", rural: "Rural" }[college.loc] || "Campus");
     const size = college.enr >= 25000 ? "Very large" : college.enr >= 12000 ? "Large" : college.enr >= 4000 ? "Mid-sized" : college.enr >= 1200 ? "Small" : "Very small";
     const socialSnapshot = size + " · " + setting.toLowerCase();
-    const official = collegeUrl(college);
-    let officialHost = ""; try { officialHost = new URL(official).hostname.replace(/^www\./, ""); } catch (e) {}
-    const discover = (label, terms) => '<a class="cf-link" href="https://www.google.com/search?q=' + encodeURIComponent((officialHost ? "site:" + officialHost + " " : "") + college.n + " " + terms) + '" target="_blank" rel="noopener">' + label + "</a>";
-    // Prefer the official page our discovery pass verified for this college;
-    // fall back to a search limited to the official site when we could not
-    // confirm one.
-    const officialLinks = college.links || {};
-    const campusLink = (cat, label, terms) => {
-      const url = officialLinks[cat];
-      return url
-        ? '<a class="cf-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' + label + "</a>"
-        : discover(label, terms);
-    };
     const forum = (label, href) => '<a class="cf-link" href="' + href + '" target="_blank" rel="noopener">' + label + "</a>";
     return photo +
       '<div class="college-facts">' +
@@ -695,16 +832,23 @@
       '<div class="cf-line"><span>Setting</span><b>' + ({ city: "City", suburb: "Suburban", town: "Small town", rural: "Rural" }[college.loc] || "—") + " · " + escapeHtml(college.city) + ", " + college.st + "</b></div>" +
       '<div class="cf-line"><span>Students living on campus</span><b>Not reported</b></div>' +
       '<div class="cf-line"><span>Athletics division</span><b>Not reported</b></div>' +
-      '<div class="cf-note">Retention is official College Scorecard data, not a satisfaction rating. Club popularity and campus traditions change, so use the current official directories below.</div>' +
-      '<h5 class="cf-subhead">Clubs & campus life</h5><div class="cf-links">' + campusLink("clubs", "Student organizations", "student organizations clubs directory") + campusLink("greek", "Greek life", "fraternity sorority Greek life") + campusLink("athletics", "Athletics & recreation", "athletics recreation intramural sports") + campusLink("events", "Events & traditions", "student events campus traditions") + campusLink("housing", "Housing & dining", "student housing dining") + campusLink("paper", "Student newspaper", "student newspaper") + "</div>" +
-      (Object.keys(officialLinks).length ? '<p class="cf-note">Links we could confirm open the college’s own official pages; the rest open a search limited to its official website.</p>' : "") +
-      '<div class="cf-links">' + forum("Professor ratings", "https://www.ratemyprofessors.com/search/professors?q=" + encodeURIComponent(college.n)) + forum("Student reviews", "https://www.niche.com/search/?q=" + encodeURIComponent(college.n)) + forum("Student discussions", "https://www.reddit.com/search/?q=" + encodeURIComponent(college.n + " student experience")) + "</div></section>" +
+      '<div class="cf-note">Retention is official College Scorecard data, not a satisfaction rating. Club popularity and campus traditions change, so treat the sections below as starting points and re-check each link.</div>' +
+      lifeButtonsHtml(college) +
+      safetyDisclosureHtml(college) +
+      '<div class="cf-links">' + forum("Professor ratings", "https://www.ratemyprofessors.com/search/professors?q=" + encodeURIComponent(college.n)) + forum("Student reviews", "https://www.niche.com/search/?q=" + encodeURIComponent(college.n)) + forum("Student discussions", "https://www.reddit.com/search/?q=" + encodeURIComponent(college.n + " student experience")) + "</div>" +
+      '<p class="cf-note">External review links above open third-party sites and are not part of the verified sections.</p></section>' +
       "</div>";
   }
 
   function detailHtml() {
     const college = selectedCollege();
     if (!college) return '<div class="college-card college-detail"><h3>Pick a college</h3><p class="small muted">Search on the left, then choose a college to see score ranges, a target, and an unofficial estimate.</p></div>';
+    if (collegeSection) {
+      if (!lifeSectionFor(collegeSection)) collegeSection = null;
+      else return '<div class="college-card college-detail" id="collegeDetail">' +
+        '<div class="college-detail-head"><div><h3>' + escapeHtml(college.n) + '</h3><p class="small muted">' + escapeHtml(college.city) + ", " + college.st + ' · school-life section</p></div></div>' +
+        lifeSectionHtml(college) + "</div>";
+    }
     const c = cp();
     const est = estimateCollege(college);
     const target = est.target;
@@ -980,9 +1124,16 @@
   }
 
   let detailReturnsHome = false;
-  function selectCollege(id) { selectedId = id; document.body.classList.toggle("cpop-open", id != null); try { renderCollegeScreen(); } catch (e) {} }
+  function selectCollege(id) {
+    selectedId = id;
+    collegeSection = null;
+    syncCollegeHash();
+    document.body.classList.toggle("cpop-open", id != null);
+    try { renderCollegeScreen(); } catch (e) {}
+  }
   function closeDetail() {
-    selectedId = null; document.body.classList.remove("cpop-open");
+    selectedId = null; collegeSection = null; syncCollegeHash();
+    document.body.classList.remove("cpop-open");
     if (detailReturnsHome) { detailReturnsHome = false; closeCollege(); } else { try { renderCollegeScreen(); } catch (e) {} }
   }
   // Open a college's details as a popup from anywhere (e.g., the home screen's college tabs).
@@ -1187,6 +1338,8 @@
   }
   function closeCollege() {
     selectedId = null;
+    collegeSection = null;
+    syncCollegeHash();
     detailReturnsHome = false;
     document.body.classList.remove("cpop-open");
     state.view = collegeReturnView === "test" || collegeReturnView === "routing" ? collegeReturnView : collegeReturnView === "results" ? "results" : "start";
@@ -1207,6 +1360,9 @@
     const open = e.target.closest("[data-college-open]");
     if (open) { e.preventDefault(); openCollege(open.dataset.collegeOpen || ""); return; }
     if (!e.target.closest("#screen-college")) return;
+    if (e.target.closest("[data-life-back]")) { e.preventDefault(); e.stopPropagation(); closeLifeSection(); return; }
+    const lifeBtn = e.target.closest("[data-life-section]");
+    if (lifeBtn) { e.preventDefault(); e.stopPropagation(); openLifeSection(lifeBtn.dataset.lifeSection); return; }
     if (e.target.closest("[data-close-detail]") || e.target.id === "collegeDetailHost") { e.preventDefault(); closeDetail(); return; }
     const save = e.target.closest("[data-save]");
     if (save) {
@@ -1224,4 +1380,37 @@
   if (startBtn) startBtn.addEventListener("click", () => openCollege(""));
   const topBtn = $("btnCollege");
   if (topBtn) topBtn.addEventListener("click", () => openCollege(""));
+
+  // ---- Deep links: #college/<id>[/section] ----
+  // Refresh and sharing keep the college and the open school-life section.
+  // Assigning location.hash pushes an entry, so the browser Back gesture walks
+  // from a section back to the college overview; the in-app Back button does
+  // the same via replaceState.
+  function collegeFromHash() {
+    let hash = "";
+    try { hash = typeof location !== "undefined" ? String(location.hash || "") : ""; } catch (e) { return null; }
+    const m = hash.match(/^#college\/(\d+)(?:\/([a-z-]+))?$/);
+    if (!m) return null;
+    const college = BY_ID.get(Number(m[1]));
+    if (!college) return null;
+    const section = m[2] && lifeSectionFor(m[2]) ? m[2] : null;
+    return { college, section };
+  }
+  let applyingHash = false;
+  function applyCollegeHash() {
+    if (applyingHash) return;
+    const st = collegeFromHash();
+    if (!st) return;
+    applyingHash = true;
+    try {
+      if (state.view !== "college") openCollege("");
+      selectedId = st.college.id;
+      collegeSection = st.section;
+      detailReturnsHome = false;
+      document.body.classList.toggle("cpop-open", true);
+      renderCollegeScreen();
+    } finally { applyingHash = false; }
+  }
+  if (typeof window.addEventListener === "function") window.addEventListener("hashchange", applyCollegeHash);
+  if (collegeFromHash()) applyCollegeHash();
 })();

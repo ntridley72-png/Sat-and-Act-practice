@@ -306,6 +306,30 @@ body[data-workspace] .college-row-main:hover:not(:disabled){background:var(--ws-
 .cf-subhead{margin:14px 0 8px;font-size:13px;color:var(--ws-ink)}
 .college-photo{position:relative}
 .college-photo-label{position:absolute;z-index:1;top:8px;left:8px;padding:4px 7px;background:rgba(15,23,42,.82);color:#fff;border-radius:2px;font-size:11px;font-weight:700;letter-spacing:.02em}
+/* School-life sections open inside the college detail. */
+.life-btn{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.life-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ws-accent);flex:none}
+.life-section .life-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:8px}
+.life-section .life-head h3{margin:0;font-size:18px}
+.life-back{min-height:40px}
+.life-what{margin:6px 0 10px;font-size:14px}
+.life-source{display:grid;gap:6px;padding:10px 12px;border:1px solid var(--ws-line);background:var(--ws-soft);margin:8px 0}
+.life-source a{color:var(--ws-accent)!important;overflow-wrap:anywhere}
+.life-source p{margin:0}
+.life-badge{display:inline-block;width:max-content;padding:2px 8px;border:1px solid var(--ws-line);background:var(--ws-surface);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ws-muted)}
+.life-look{margin:10px 0 6px;font-size:13px;line-height:1.6}
+/* Campus-safety disclosure: default collapsed, keyboard accessible. */
+.safety-disclosure{margin:14px 0 4px;border:1px solid var(--ws-line);background:var(--ws-surface)}
+.safety-disclosure>summary{cursor:pointer;padding:11px 12px;font-size:13px;font-weight:600;min-height:44px;display:flex;align-items:center}
+.safety-disclosure>summary:focus-visible{outline:2px solid var(--ws-accent);outline-offset:2px}
+.safety-body{padding:0 12px 12px;min-width:0}
+.safety-table{margin:10px 0;overflow-x:auto;min-width:0}
+.safety-table h5{margin:0 0 6px;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ws-muted)}
+.safety-table table{border-collapse:collapse;width:100%;font-size:12px;min-width:420px}
+.safety-table th,.safety-table td{border:1px solid var(--ws-line);padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums}
+.safety-table th[scope="row"]{text-align:left;font-weight:500}
+.safety-table thead th{background:var(--ws-soft);text-align:right}
+.safety-table thead th:first-child{text-align:left}
 .maj-list{display:flex;flex-direction:column;gap:7px}
 .maj-row{display:grid;grid-template-columns:minmax(80px,1.5fr) minmax(30px,1fr) 34px;align-items:center;gap:8px;font-size:12px}
 .maj-row span{overflow-wrap:anywhere}

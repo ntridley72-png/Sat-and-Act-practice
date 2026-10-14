@@ -861,6 +861,11 @@ def main():
         info = links_cache.get(str(e["id"]))
         if info and info.get("links"):
             e["links"] = info["links"]
+            # The discovery pass records when it verified each link; keep that
+            # date with the data so the app can show dated evidence instead of
+            # implying the link was checked today.
+            if info.get("checked"):
+                e["linksChecked"] = str(info["checked"])
     rpp, rpp_year = load_rpp()
     for e in colleges:
         state = rpp.get(e["st"], {})

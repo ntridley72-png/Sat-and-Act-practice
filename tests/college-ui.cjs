@@ -153,33 +153,124 @@ const SHOTS = path.join(ROOT, "tests", "screenshots");
     throw new Error("size/setting snapshot missing or malformed: " + social.snapshot);
   }
 
-  // Campus-life links stay on the official host, and photo credits link to the Commons file page.
-  const links = await page.evaluate(() => {
-    const sub = document.querySelector("#collegeDetail h5.cf-subhead");
-    const block = sub ? sub.nextElementSibling : null;
-    const clubs = block ? Array.from(block.querySelectorAll("a")).map((a) => decodeURIComponent(a.getAttribute("href"))) : [];
+  // Photo credits link to the Commons file page with photographer plus license.
+  const photoCredit = await page.evaluate(() => {
     const fig = document.querySelector("#collegeDetail .college-photo");
     const a = fig ? fig.querySelector("figcaption a") : null;
     const cap = fig ? (fig.querySelector("figcaption") || {}).textContent || "" : "";
-    return { clubs, creditHref: a ? a.getAttribute("href") : "", caption: cap };
+    return { creditHref: a ? a.getAttribute("href") : "", caption: cap };
   });
-  if (links.clubs.length < 6) throw new Error("campus-life block needs its six official links, saw " + links.clubs.length);
-  // Every link must be either a verified page on the college's own domain or a
-  // search limited to it. Nothing else is allowed in this block.
-  const official = (h) => {
-    if (/google\./i.test(h)) return h.includes("site:auburn.edu");
-    try {
-      const host = new URL(h).hostname.replace(/^www\./, "");
-      return host === "auburn.edu" || host.endsWith(".auburn.edu");
-    } catch (e) { return false; }
-  };
-  if (!links.clubs.every(official)) throw new Error("campus-life links must stay on the official host: " + JSON.stringify(links.clubs.slice(0, 2)));
-  if (links.clubs.some((h) => /niche|reddit|ratemyprofessors|unigo/i.test(h))) throw new Error("third-party link leaked into the campus-life block");
-  if (!links.clubs.some((h) => !/google\./i.test(h))) throw new Error("expected at least one verified direct official link for Auburn, got only searches");
-  if (links.creditHref && !/^https:\/\/commons\.wikimedia\.org\//.test(links.creditHref)) {
-    throw new Error("photo credit must link to the Commons file page, saw: " + links.creditHref);
+  if (photoCredit.creditHref && !/^https:\/\/commons\.wikimedia\.org\//.test(photoCredit.creditHref)) {
+    throw new Error("photo credit must link to the Commons file page, saw: " + photoCredit.creditHref);
   }
-  if (!/ · /.test(links.caption)) throw new Error("photo credit needs photographer plus license: " + links.caption);
+  if (!/ · /.test(photoCredit.caption)) throw new Error("photo credit needs photographer plus license: " + photoCredit.caption);
+
+  // School-life buttons open verified sections INSIDE FunSAT.
+  const lifeButtons = await page.evaluate(() => Array.from(document.querySelectorAll("#collegeDetail [data-life-section]")).map((b) => b.dataset.lifeSection + ":" + b.textContent.trim()));
+  if (lifeButtons.length !== 6) throw new Error("six school-life buttons expected, saw " + lifeButtons.length + " " + JSON.stringify(lifeButtons));
+  const wantSections = [["clubs", "Student organizations"], ["greek", "Greek life"], ["athletics", "Athletics & recreation"], ["events", "Events & traditions"], ["housing", "Housing & dining"], ["paper", "Student newspaper"]];
+  wantSections.forEach(([key, label]) => {
+    if (!lifeButtons.some((b) => b.startsWith(key + ":") && b.includes(label))) throw new Error("missing school-life button " + key + " in " + JSON.stringify(lifeButtons));
+  });
+
+  await page.click('#collegeDetail [data-life-section="greek"]');
+  await page.waitForTimeout(180);
+  const greekSection = await page.evaluate(() => {
+    const s = document.querySelector("#collegeDetail .life-section");
+    const a = s && s.querySelector(".life-source a");
+    return {
+      present: !!s,
+      label: s ? s.querySelector("h3").textContent.trim() : "",
+      href: a ? a.getAttribute("href") : "",
+      verified: !!s && /Verified official page/.test(s.textContent),
+      dated: !!s && /Checked 2026-10-10/.test(s.textContent),
+      hash: location.hash,
+      back: !!(s && s.querySelector("[data-life-back]")),
+    };
+  });
+  if (!greekSection.present) throw new Error("the school-life section must open inside FunSAT");
+  if (!/Greek life · Auburn University/.test(greekSection.label)) throw new Error("section heading lost the college identity: " + greekSection.label);
+  if (!/^https:\/\/auburn\.edu\//.test(greekSection.href)) throw new Error("verified link must open on the official host: " + greekSection.href);
+  if (!greekSection.verified || !greekSection.dated) throw new Error("verified link needs its badge and checked date");
+  if (greekSection.hash !== "#college/100858/greek") throw new Error("the section must be reflected in the URL hash, saw " + greekSection.hash);
+  if (!greekSection.back) throw new Error("the section needs working Back navigation");
+
+  // Refresh with the hash keeps the college and the open section.
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForSelector("body[data-workspace]");
+  await page.waitForTimeout(250);
+  const afterReload = await page.evaluate(() => ({
+    section: !!document.querySelector("#collegeDetail .life-section"),
+    name: (document.querySelector("#collegeDetail h3") || {}).textContent || "",
+    hash: location.hash,
+  }));
+  if (!afterReload.section || afterReload.hash !== "#college/100858/greek") throw new Error("refresh must reopen the section: " + JSON.stringify(afterReload));
+  if (!/Auburn University/.test(afterReload.name)) throw new Error("refresh must keep the college identity");
+
+  // Back returns to the overview and clears the section hash.
+  await page.click("#collegeDetail [data-life-back]");
+  await page.waitForTimeout(160);
+  const afterBack = await page.evaluate(() => ({
+    section: !!document.querySelector("#collegeDetail .life-section"),
+    overview: !!document.querySelector("#collegeDetail .college-stats"),
+    hash: location.hash,
+  }));
+  if (afterBack.section || !afterBack.overview) throw new Error("Back must return to the college overview");
+  if (/#college\/100858\/greek/.test(afterBack.hash)) throw new Error("Back must clear the section from the URL: " + afterBack.hash);
+
+  // The newspaper section (Auburn has no verified link) is an honest gap.
+  await page.click('#collegeDetail [data-life-section="paper"]');
+  await page.waitForTimeout(160);
+  const paperSection = await page.evaluate(() => {
+    const s = document.querySelector("#collegeDetail .life-section");
+    const direct = s ? Array.from(s.querySelectorAll(".life-source a")).map((a) => a.getAttribute("href")) : [];
+    return { text: s ? s.textContent : "", direct, present: !!s };
+  });
+  if (!paperSection.present) throw new Error("the newspaper section must still open");
+  if (!/No verified page yet/.test(paperSection.text)) throw new Error("missing coverage must be an honest empty state");
+  if (!/coverage gap/.test(paperSection.text)) throw new Error("the empty state must say it is a coverage gap");
+  if (paperSection.direct.some((h) => h && !/google\./i.test(h))) throw new Error("no unverified direct link may be presented as the section");
+  if (paperSection.direct.some((h) => h && !decodeURIComponent(h).includes("site:auburn.edu"))) throw new Error("search fallback must be limited to the official host: " + JSON.stringify(paperSection.direct));
+  await page.click("#collegeDetail [data-life-back]");
+  await page.waitForTimeout(160);
+
+  // Safety disclosure: collapsed by default; Auburn is outside the pilot.
+  const safety = await page.evaluate(() => {
+    const d = document.querySelector("#collegeDetail .safety-disclosure");
+    return { present: !!d, open: d ? d.open : null, text: d ? d.textContent : "" };
+  });
+  if (!safety.present) throw new Error("the safety disclosure must exist");
+  if (safety.open) throw new Error("safety details must be collapsed by default");
+  if (!/2025 official data is not yet available/i.test(safety.text)) throw new Error("the disclosure must state that 2025 data is unavailable");
+  if (!/not in that pilot/.test(safety.text)) throw new Error("a non-pilot college must show the honest coverage note, not numbers");
+
+  // A pilot college (Berkeley) shows the cross-checked tables in the app too.
+  await page.click("[data-close-detail]");
+  await page.waitForTimeout(160);
+  // The reload reset the in-memory drawer state; reopen it before searching.
+  const drawerOpen = await page.evaluate(() => { const d = document.getElementById("ccSearchDrawer"); return !!(d && !d.hidden); });
+  if (!drawerOpen) await page.click("#ccAdd");
+  await page.fill("#collegeQuery", "Berkeley");
+  await page.waitForTimeout(400);
+  await page.locator('.college-row:has(.college-name:text-is("University of California-Berkeley")) .college-row-main').click();
+  await page.waitForTimeout(220);
+  const pilotSafety = await page.evaluate(() => {
+    const d = document.querySelector("#collegeDetail .safety-disclosure");
+    if (!d) return null;
+    d.open = true;
+    const tables = d.querySelectorAll(".safety-table table").length;
+    return {
+      tables,
+      housingNote: /subset of on-campus/i.test(d.textContent),
+      rescope: /Noncampus and public-property scopes are kept separate/i.test(d.textContent),
+      unfounded: /Unfounded crimes/i.test(d.textContent),
+      summary: d.querySelector("summary").textContent,
+    };
+  });
+  if (!pilotSafety || pilotSafety.tables < 4) throw new Error("pilot safety tables must render, saw " + JSON.stringify(pilotSafety && pilotSafety.tables));
+  if (!pilotSafety.housingNote) throw new Error("housing must stay labeled as a subset of on-campus");
+  if (!pilotSafety.rescope || !pilotSafety.unfounded) throw new Error("scopes and unfounded must stay distinct");
+  if (!/2022–2024/.test(pilotSafety.summary)) throw new Error("the summary must show the covered years: " + pilotSafety.summary);
   await page.click("[data-close-detail]");
 
   // AI reply polish: greetings removed, LaTeX converted, doubled parentheses collapsed, math typeset.

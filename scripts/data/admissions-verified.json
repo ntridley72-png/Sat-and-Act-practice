@@ -1,0 +1,33 @@
+{
+  "_note": "Hand-verified institution-published figures that are NEWER than the IPEDS ADM2023 bulk file. Every record was read from the cited official page on retrievedDate. Do not add a record that was not read from its source.",
+  "retrievedDate": "2026-10-14",
+  "records": [
+    {"id": 110662, "applicants": 145085, "admitted": 13659, "year": 2025, "cohortLabel": "Fall 2025 first-year applications",
+     "sourceName": "UCLA Undergraduate Admission, First-year Profile",
+     "sourceUrl": "https://admission.ucla.edu/apply/first-year/first-year-profile/2025",
+     "population": "Table titled 'First-year Applications for Fall 2025'; whether all rounds are included is not stated",
+     "publishedDate": null, "releaseStatus": "Institution web page; no publication or update date shown"}
+  ],
+  "ucSnapshot": {
+    "year": 2026, "cohortLabel": "Fall 2026 admitted first-year class (snapshot)",
+    "sourceName": "UC Admissions, first-year admit data",
+    "urlPattern": "https://admission.universityofcalifornia.edu/campuses-majors/{slug}/first-year-admit-data.html",
+    "population": "Page states: 'This is a snapshot of the admitted first-year class for fall 2026.' Residency scope is not stated",
+    "publishedDate": null, "releaseStatus": "Institution web page snapshot; no update date shown; may change before final reporting",
+    "campuses": [
+      {"id": 110635, "slug": "berkeley", "applicants": 133154, "admitted": 13967},
+      {"id": 110644, "slug": "davis", "applicants": 104864, "admitted": 48015},
+      {"id": 110653, "slug": "irvine", "applicants": 126005, "admitted": 38165},
+      {"id": 110671, "slug": "riverside", "applicants": 72542, "admitted": 63958},
+      {"id": 110680, "slug": "san-diego", "applicants": 141767, "admitted": 38571},
+      {"id": 110705, "slug": "santa-barbara", "applicants": 108512, "admitted": 47716},
+      {"id": 110714, "slug": "santa-cruz", "applicants": 79048, "admitted": 64867}
+    ]
+  },
+  "testPolicy": [
+    {"ids": [110635, 110644, 110653, 110662, 110671, 110680, 110705, 110714], "policy": "blind",
+     "sourceUrl": "https://admission.universityofcalifornia.edu/counselors/preparing-freshman-students/freshman-requirements.html",
+     "quote": "UC does not consider SAT or ACT test scores when making admissions decisions or awarding scholarships.",
+     "retrievedDate": "2026-10-14"}
+  ]
+}

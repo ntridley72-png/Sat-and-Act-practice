@@ -788,6 +788,16 @@ def colleges_hub(colleges, by_state):
     state_links = "".join(
         f'<li><a href="/colleges/{slugify(s)}/">{e(s)}</a> ({len(v)})</li>'
         for s, v in sorted(by_state.items()))
+    groups = {}
+    for c in sorted(colleges, key=lambda c: c["n"].lower()):
+        groups.setdefault(c["n"][:1].upper(), []).append(c)
+    az = ('<p class="gnote">' + " &middot; ".join(
+              f'<a href="#az-{k}">{k}</a>' for k in sorted(groups)) + '</p>'
+          + "".join(
+              f'<h3 id="az-{k}">{k}</h3><ul class="gcols">' + "".join(
+                  f'<li><a href="/colleges/{c["slug"]}/">{e(c["n"])}</a> '
+                  f'({e(STATES.get(c["st"], c["st"]))})</li>' for c in v) + '</ul>'
+              for k, v in sorted(groups.items())))
     top = sorted([c for c in colleges if c.get("sr75")], key=lambda c: -c["sr75"])[:25]
     rows = "".join(
         f'<tr><td><a href="/colleges/{c["slug"]}/">{e(c["n"])}</a></td>'
@@ -806,6 +816,9 @@ def colleges_hub(colleges, by_state):
             f'<th scope="col">State</th><th scope="col">SAT (mid 50%)</th>'
             f'<th scope="col">Acceptance</th></tr></thead><tbody>{rows}</tbody></table>'
             f'<h2>Browse by state</h2><ul class="gcols">{state_links}</ul>'
+            f'<h2>All {len(colleges)} colleges, A to Z</h2>'
+            f'<p class="gnote">Every profile in one list, so you can jump straight to any school.</p>'
+            f'{az}'
             f'<div class="gcard"><p>Practice, get an unofficial score estimate, and see which '
             f'of these colleges your score already clears.</p>'
             f'<a class="cta" href="/">Start free practice &rarr;</a></div>')
@@ -1392,8 +1405,14 @@ def main():
     # Three in-state peers per profile, for crawl depth and genuine usefulness.
     for c in colleges:
         peers = [o for o in by_state[STATES.get(c["st"], c["st"])] if o is not c]
-        peers.sort(key=lambda o: abs((o.get("sr50") or 0) - (c.get("sr50") or 0)))
-        c["_related"] = peers[:3]
+        peers.sort(key=lambda o: (abs((o.get("sr50") or 0) - (c.get("sr50") or 0)), o["slug"]))
+        near = peers[:3]
+        # Plus three similarly selective schools elsewhere, so a profile in a small state is
+        # still linked from several others instead of hanging off one state hub.
+        others = [o for o in colleges if o is not c and o not in near
+                  and STATES.get(o["st"], o["st"]) != STATES.get(c["st"], c["st"])]
+        others.sort(key=lambda o: (abs((o.get("sr50") or 0) - (c.get("sr50") or 0)), o["slug"]))
+        c["_related"] = near + others[:3]
 
     entries = [("/", "1.0", "weekly")]
 

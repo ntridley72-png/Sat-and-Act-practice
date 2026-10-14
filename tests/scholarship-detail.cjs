@@ -32,6 +32,10 @@ async function openDetail(browser, { stripImage, width }) {
   await page.goto(BASE + APP, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("body[data-workspace]");
   await page.evaluate(() => { try { arcade.close(); } catch (e) {} });
+  // Below 900px the Progress Desk sidebar is behind the Menu button; the nav
+  // controls are still reachable, just disclosed. Open the menu first.
+  const needsMenu = await page.evaluate(() => window.innerWidth <= 900 && !document.body.classList.contains("pd-menu-open"));
+  if (needsMenu) { await page.click("#deskMenu"); await page.waitForTimeout(160); }
   await page.click("#btnScholarships");
   await page.waitForSelector("#screen-scholarships", { state: "visible" });
   await page.locator(".schl-card").first().click();
@@ -57,6 +61,7 @@ async function openDetail(browser, { stripImage, width }) {
       lazy: fig ? fig.getAttribute("loading") : "",
       dims: fig ? !!(fig.getAttribute("width") && fig.getAttribute("height")) : false,
       radius: fig ? getComputedStyle(fig).borderTopLeftRadius : "",
+      radiusToken: fig ? getComputedStyle(fig).getPropertyValue("--fx-r-md").trim() : "",
       credit: (document.querySelector(".schl-hero-credit") || {}).textContent || "",
       officialW: official ? Math.round(official.getBoundingClientRect().width) : 0,
       paneW: Math.round(document.querySelector(".schl-detail").clientWidth),
@@ -73,7 +78,7 @@ async function openDetail(browser, { stripImage, width }) {
   ok(Math.abs(withImg.ratio - 16 / 9) < 0.04, "header image must be 16:9, got " + withImg.ratio);
   ok(withImg.fit === "cover", "header image must use object-fit:cover");
   ok(withImg.lazy === "lazy" && withImg.dims, "header image must be lazy with width and height set");
-  ok(withImg.radius === "14px", "header image rounding should match --fx-r-md, got " + withImg.radius);
+  ok(withImg.radius === withImg.radiusToken, "header image rounding should match --fx-r-md (" + withImg.radiusToken + "), got " + withImg.radius);
   ok(withImg.credit.trim().length > 0, "header image needs its credit");
   ok(withImg.officialW < withImg.paneW * 0.75, `"Official page" should be sized to its label, not the pane (${withImg.officialW} of ${withImg.paneW})`);
   ok(withImg.officialH === withImg.starH, `the primary action and the star should match height (${withImg.officialH} vs ${withImg.starH})`);

@@ -84,7 +84,40 @@
     return { value: range.hi, label: "75th percentile of enrolled students" };
   }
 
-  // ---- Estimate ----
+  // ---- Comparison index ----
+  // The app does not predict admission. It computes an EXPERIMENTAL comparison
+  // index from published anchors only: the institution's reported admit rate,
+  // the student's position in the reported enrolled-student range (only when
+  // the institution considers tests), and GPA read against the published
+  // selectivity level. Everything else a student enters is shown as context,
+  // never as a numeric boost: there are no validated weights for essays,
+  // activities, hardship, legacy, early-decision, athletics, residency, or
+  // major, so those inputs cannot move the index.
+  //
+  // The index is a comparison, not a probability. `probability` is null and
+  // `calibrated` is false until admissions-model.js can report a consent-based
+  // outcome evaluation for the current feature version.
+  const AM = (typeof window !== "undefined" && window.AdmissionsModel) || null;
+
+  function publishedRateFor(college) {
+    if (AM) return AM.reportedRate(college);
+    const adm = college && college.adm;
+    return {
+      rate: Number.isFinite(adm) && adm >= 0 && adm <= 100 ? adm : null,
+      year: null, countsKnown: false, applicants: null, admitted: null,
+      sourceUrl: null, verifiedAt: null, population: null,
+      releaseStatus: "released-percentage", flags: ["admissions-model-missing"],
+    };
+  }
+  function testPolicyFor(college) {
+    if (AM) return AM.testPolicy(college);
+    return { key: isTestBlind(college) ? "not-considered" : "unknown", label: "", source: "none" };
+  }
+  function calibrationState() {
+    if (AM) return AM.calibrationStatus();
+    return { calibrated: false, confidence: "uncalibrated" };
+  }
+
   // Weighted GPAs add about +1.0 per AP/IB/dual class and +0.5 per honors class, averaged over every class taken.
   // Remove that average boost to get an unweighted-style GPA instead of shrinking the whole number.
   function weightBump(c) {
@@ -111,35 +144,37 @@
   function sigmoid(x) { return 1 / (1 + Math.exp(-x)); }
   function clamp(x, lo, hi) { return Math.max(lo, Math.min(hi, x)); }
 
-  function activityStrength(c) {
-    const list = Array.isArray(c.activities) ? c.activities : [];
-    const leadership = list.filter((a) => a && a.leadership).length;
-    const longTerm = list.filter((a) => a && Number(a.years) >= 2).length;
-    return Math.min(0.3, 0.05 * list.length + 0.08 * leadership + 0.04 * longTerm);
-  }
-  function rigorStrength(c) {
-    const r = c.rigor || {};
-    return Math.min(0.4, 0.05 * (Number(r.ap) || 0) + 0.05 * (Number(r.ib) || 0) + 0.03 * (Number(r.honors) || 0) + 0.05 * (Number(r.dual) || 0));
-  }
-  function circumstanceStrength(c) {
-    return (c.firstGen ? 0.06 : 0) + (c.hardship ? 0.04 : 0) + (c.working ? 0.03 : 0) + (c.caregiving ? 0.03 : 0);
+  function rateNote(rateInfo) {
+    if (rateInfo.rate == null) return "No published admit rate in the current federal release.";
+    if (rateInfo.countsKnown && rateInfo.admitted != null) {
+      return "Reported from " + rateInfo.admitted.toLocaleString() + " admitted of " + rateInfo.applicants.toLocaleString() + " applicants" + (rateInfo.year ? " (" + rateInfo.year + " cohort)" : "") + ".";
+    }
+    return "Published percentage in the current federal release" + (rateInfo.year ? " (" + rateInfo.year + ")" : "") + ".";
   }
 
   function estimateCollege(college) {
     const c = cp();
+    const rateInfo = publishedRateFor(college);
+    const rate = rateInfo.rate;
     const testType = displayTestFor(college);
     const range = rangeFor(college, testType);
     const score = scoreFor(testType);
-    const prior = clamp(college.adm / 100, 0.01, 0.95);
+    const policy = testPolicyFor(college);
+    const scoresIgnored = policy.key === "not-considered";
     const factors = [];
+    const prior = rate != null ? clamp(rate / 100, 0.01, 0.99) : 0.5;
     let logit = Math.log(prior / (1 - prior));
-    factors.push({ label: "College selectivity", detail: "Reported admit rate " + college.adm + "%. This is the starting point for every applicant.", effect: "base" });
-    // Each factor records how much it moved the log-odds, so the card can show its effect in percentage points.
+    factors.push({ label: "Published admit rate", detail: (rate != null ? (rateInfo.countsKnown ? "Calculated from " + rateInfo.applicants.toLocaleString() + " applicants and " + rateInfo.admitted.toLocaleString() + " admits. " : "") + "This describes the whole applicant pool, not your personal chance. " : "This college has no published admit rate in the current release, so the comparison starts neutral. ") , effect: "base" });
+    // Each scored anchor records how much it moved the comparison, so the card
+    // can show its effect in percentage points.
     let mark = logit;
     const addF = (f) => { if (f.delta == null) { f.delta = logit - mark; mark = logit; } factors.push(f); };
 
     let scoreDelta = 0;
-    if (range && score) {
+    if (scoresIgnored) {
+      addF({ label: "Tests not considered", detail: (policy.label ? policy.label + ". " : "") + "SAT/ACT cannot move this comparison even though a historical range may still be shown.", effect: "context" });
+      if (range) addF({ label: testType.toUpperCase() + " range (not used)", detail: "The reported range describes earlier enrolled classes. This college does not use test scores now, so it is shown for context only.", effect: "context" });
+    } else if (range && score) {
       const span = Math.max(1, range.hi - range.lo);
       const pos = (score.value - range.lo) / span;
       const z = clamp((pos - 0.5) * 2.2, -2.2, 2.2);
@@ -147,131 +182,71 @@
       const where = score.value >= range.hi ? "at or above the 75th percentile" : score.value <= range.lo ? "below the 25th percentile" : Math.round(pos * 100) + "% of the way across the middle range";
       addF({ delta: scoreDelta, label: testType.toUpperCase() + " score", detail: "Your " + score.value + (score.converted ? " (converted from your other test)" : "") + " is " + where + " (" + range.lo + "–" + range.hi + ").", effect: scoreDelta > 0.15 ? "up" : scoreDelta < -0.15 ? "down" : "even" });
     } else {
-      if (isTestBlind(college)) addF({ label: "Test policy", detail: "This university is test-blind, so SAT/ACT scores aren't considered. GPA, course rigor, and the rest of your application carry the decision.", effect: "context" });
-      else addF({ label: testType.toUpperCase() + " score", detail: "Add your score to include test-position in the estimate.", effect: "missing" });
+      addF({ label: testType.toUpperCase() + " score", detail: "Add your score to include its position in the reported enrolled-student range.", effect: "missing" });
     }
     logit += scoreDelta; mark = logit;
 
     const gpa4 = gpaOn4(c);
     let gpaDelta = 0;
-    if (gpa4 != null) {
-      const bench = expectedGpa(college.adm);
+    if (gpa4 != null && rate != null) {
+      const bench = expectedGpa(rate);
       gpaDelta = 0.55 * clamp((gpa4 - bench) / 0.25, -2, 2);
-      addF({ delta: gpaDelta, label: "GPA", detail: "Your " + gpa4.toFixed(2) + " on a 4.0 scale compared with an app benchmark of about " + bench.toFixed(1) + " for a college admitting " + college.adm + "%.", effect: gpaDelta > 0.12 ? "up" : gpaDelta < -0.12 ? "down" : "even" });
+      addF({ delta: gpaDelta, label: "GPA", detail: "Your " + gpa4.toFixed(2) + " on a 4.0 scale compared with an app benchmark of about " + bench.toFixed(1) + " for a college admitting " + rate + "%.", effect: gpaDelta > 0.12 ? "up" : gpaDelta < -0.12 ? "down" : "even" });
+    } else if (gpa4 != null) {
+      addF({ label: "GPA", detail: "Saved. It will be compared against the published rate once this college has one.", effect: "context" });
     } else {
-      addF({ label: "GPA", detail: "Add your GPA to include academic performance in the estimate.", effect: "missing" });
+      addF({ label: "GPA", detail: "Add your GPA to include academic performance in the comparison.", effect: "missing" });
     }
     logit += gpaDelta; mark = logit;
 
-    // Personal context (reviewed by the AI tutor): colleges use it to explain a dip in grades,
-    // not as a bonus, so it can offset part of a GPA shortfall, up to a cap set by its likely impact.
-    const review = contextReviewFor(c);
-    if (review) {
-      const cap = ({ high: 0.45, moderate: 0.3, low: 0.12, none: 0 })[review.impact] || 0;
-      const offset = gpaDelta < 0 ? Math.min(-gpaDelta * 0.6, cap) : 0;
-      logit += offset;
-      addF({ label: "Your context: " + review.category,
-        detail: (offset > 0 ? "Counts as partly explaining your lower GPA (worth about +" + Math.round(offset * 100) / 100 + " log-odds here). " : "Your grades are already at or above this college's typical level, so it doesn't change the number, but it still helps your application read in context. ") +
-          "Only counts if you tell the college about it.", effect: offset > 0.04 ? "up" : "context" });
-    }
+    // Everything else the student entered is listed once, plainly, as context
+    // with no numeric effect. These factors matter to real applications, but no
+    // validated outcome weights exist for them in this app.
+    const contextLabels = [];
+    if (c.appStrength === "strong") contextLabels.push("essays/recommendations (self-rated strong)");
+    else if (c.appStrength === "developing") contextLabels.push("essays/recommendations (self-rated still developing)");
+    if (c.applyPlan === "ed") contextLabels.push("Early Decision plan");
+    else if (c.applyPlan === "ea" || c.applyPlan === "early") contextLabels.push("Early Action plan");
+    if (c.athlete) contextLabels.push("recruited athlete");
+    if (c.legacy) contextLabels.push("legacy");
+    if (c.major) contextLabels.push("intended major (\u201c" + c.major + "\u201d)");
+    if (c.homeState) contextLabels.push("home state (" + c.homeState + ")");
+    if (c.classRank) contextLabels.push("class rank");
+    if (c.firstGen || c.hardship || c.working || c.caregiving || String(c.circumstanceOther || "").trim()) contextLabels.push("personal context");
+    if (contextLabels.length) addF({ label: "Not scored by this comparison", detail: "These affect how a real application reads, but they have no validated numeric weight here, so they do not change the index: " + contextLabels.join(", ") + ".", effect: "context" });
 
-    const rigor = rigorStrength(c);
-    logit += rigor;
-    if (rigor > 0) addF({ label: "Course rigor", detail: "AP/IB/honors/dual-enrollment coursework adds a small readiness signal.", effect: "up" });
-
-    const activity = activityStrength(c);
-    logit += activity;
-    if (activity > 0) addF({ label: "Activities", detail: "Sustained involvement and leadership add a small holistic signal.", effect: "up" });
-
-    const circ = circumstanceStrength(c);
-    logit += circ;
-    if (circ > 0) addF({ label: "Context", detail: "First-generation status, work, caregiving, and hardship are treated as context, not as score boosts. Colleges review them individually.", effect: "context" });
-
-    // Factors scale with selectivity: they matter more where the admit rate is low.
-    const sel = 0.5 + (1 - clamp(college.adm / 100, 0, 1));
-
-    // Residency: public universities admit in-state applicants at much higher rates.
-    if (c.homeState && college.ctrl === "public") {
-      if (c.homeState === college.st) { logit += 0.45 * sel; addF({ label: "In-state applicant", detail: "Public universities usually admit residents of their state at a higher rate than out-of-state applicants.", effect: "up" }); }
-      else { logit -= 0.2 * sel; addF({ label: "Out-of-state applicant", detail: "Public universities usually hold out-of-state applicants to a higher bar than residents.", effect: "down" }); }
-    }
-
-    // Class rank adds to GPA: it shows where your grades sit at your own school.
-    const RANK = { top5: [0.45, "Top 5% of your class"], top10: [0.3, "Top 10% of your class"], top25: [0.12, "Top 25% of your class"], top50: [-0.1, "Top half of your class"], below: [-0.35, "Lower half of your class"] };
-    if (RANK[c.classRank]) {
-      const [w, label] = RANK[c.classRank];
-      logit += w * sel;
-      addF({ label: "Class rank", detail: label + ". Rank shows how your grades compare at your own school, which colleges read alongside GPA.", effect: w > 0 ? "up" : "down" });
-    }
-
-    // Competitive majors at selective schools (computer science, engineering, nursing, business, data science).
-    if (c.major && college.adm < 70 && /comput|\bcs\b|software|engineer|nursing|business|data sci|finance/i.test(c.major)) {
-      logit -= 0.3 * sel;
-      addF({ label: "Competitive major", detail: "\u201c" + c.major + "\u201d is often capped or more competitive than the college overall, so the estimate is lowered a little.", effect: "down" });
-    } else if (c.major) addF({ label: "Intended major", detail: "Your major isn't one that's usually capped, so it doesn't change the estimate.", effect: "context" });
-
-    // Application round: Early Decision (binding) helps much more than Early Action.
-    const plan = c.applyPlan === "early" ? "ea" : c.applyPlan;
-    if (plan === "ed" && college.ctrl === "private") {
-      logit += 0.5;
-      addF({ label: "Early Decision", detail: "Binding Early Decision usually has a noticeably higher admit rate at private colleges.", effect: "up" });
-    } else if (plan === "ed" || plan === "ea") {
-      logit += 0.12;
-      addF({ label: "Early Action", detail: "Applying early (non-binding) gives a small edge at many colleges." + (plan === "ed" ? " Most public universities don't offer binding ED, so this counts as early action." : ""), effect: "up" });
-    }
-
-    // Hooks colleges openly weigh.
-    if (c.athlete) { logit += 1.2; addF({ label: "Recruited athlete", detail: "Recruited athletes supported by a coach are admitted at far higher rates than other applicants.", effect: "up" }); }
-    if (c.legacy && college.ctrl === "private") { logit += college.adm < 50 ? 0.3 : 0.1; addF({ label: "Legacy", detail: "Some private colleges give weight to a parent who attended. Many have dropped this, so the boost is small.", effect: "up" }); }
-    if (c.appStrength === "strong") {
-      logit += 0.18;
-      addF({ label: "Essays and recommendations", detail: "You rated these strong. Self-reported holistic factors get a small, bounded weight; colleges review them in context.", effect: "up" });
-    } else if (c.appStrength === "developing") {
-      logit -= 0.18;
-      addF({ label: "Essays and recommendations", detail: "You rated these as still developing. This is self-reported and gets a small, bounded weight.", effect: "down" });
-    }
-
-    const estimate = clamp(sigmoid(logit), 0.005, 0.97);
-    factors.forEach((f) => { if (f.delta) f.pts = (estimate - clamp(sigmoid(logit - f.delta), 0.005, 0.97)) * 100; });
-    let half = 0.06;
-    if (!range || !score) half += 0.05;
+    const estimate = clamp(sigmoid(logit), 0.01, 0.99);
+    factors.forEach((f) => { if (f.delta) f.pts = (estimate - clamp(sigmoid(logit - f.delta), 0.01, 0.99)) * 100; });
+    let half = 0.08;
+    if (rate == null) half += 0.06;
+    if (ignoredRange(scoresIgnored, range, score)) half += 0.05;
     if (gpa4 == null) half += 0.04;
     if (c.grade === "9" || c.grade === "10") half += 0.03;
-    if (RANK[c.classRank]) half -= 0.01;
-    if (c.homeState) half -= 0.005;
     const lo = clamp(estimate - half, 0.005, 0.975);
     const hi = clamp(estimate + half, 0.005, 0.98);
 
-    const selectivity = 1 - clamp(college.adm / 100, 0, 1);
-    const zEst = Math.log(estimate / (1 - estimate));
-    const borderline = Math.exp(-Math.pow(zEst / 1.15, 2));
-    const waitlistRate = 0.01 + 0.06 * selectivity + 0.05 * borderline;
-    let waitlist = clamp((1 - estimate) * waitlistRate, 0, 0.5);
-    if (waitlist < 0.01) waitlist = 0;
-    const deny = clamp(1 - estimate - waitlist, 0, 1);
-    factors.push({
-      label: "Waitlist estimate",
-      detail: "About " + pct(waitlist) + " of the remaining chances are modeled as a waitlist offer: selective colleges use waitlists more, and borderline applicants are the most likely to receive one. Waitlist placement rarely converts to admission, and some colleges admit none off the waitlist.",
-      effect: "context",
-    });
-
-    let conf = "low";
-    if (range && score && gpa4 != null) conf = (c.grade === "12" || c.grade === "11") ? "high" : "medium";
-    else if (range && score) conf = "medium";
+    const cal = calibrationState();
     const confNotes = [];
-    if (!range || !score) confNotes.push("add a test score and choose a college that reports ranges");
+    if (rate == null) confNotes.push("this college has no published admit rate in the current release");
+    if (scoresIgnored) confNotes.push("this college does not consider test scores");
+    else if (!range || !score) confNotes.push("add a test score and choose a college that reports ranges");
     if (gpa4 == null) confNotes.push("add your GPA");
-    if (c.grade === "9" || c.grade === "10") confNotes.push("estimates are less certain before junior year");
+    if (c.grade === "9" || c.grade === "10") confNotes.push("comparisons are less certain before junior year");
 
     return {
-      testType, range, score, estimate, lo, hi, waitlist, deny, factors, confidence: conf, confNotes,
+      testType, range, score, estimate, lo, hi, factors,
+      confidence: cal.confidence, calibrated: cal.calibrated, probability: null,
+      confNotes, rateInfo, testPolicy: policy, scoresIgnored,
       target: range ? targetFor(college, range, testType) : null,
       source: CD.meta,
     };
   }
+  function ignoredRange(scoresIgnored, range, score) { return scoresIgnored || !range || !score; }
 
-  // California's public universities (UC and CSU) are test-blind: SAT/ACT scores aren't considered.
-  function isTestBlind(college) { return !!college && college.st === "CA" && college.ctrl === "public"; }
+  // Test-blind means the institution does not consider SAT/ACT: explicit
+  // institutional policy ("Not considered"), with California's public
+  // universities (UC and CSU) as a documented system-level case.
+  function isTestBlind(college) { return testPolicyFor(college).key === "not-considered"; }
   // National averages by grade, College Board SAT Suite of Assessments Annual Report, total group.
   // The PSATs share the SAT's score scale, so each grade compares with the test it usually takes.
   const NATIONAL_BY_GRADE = {
@@ -286,11 +261,14 @@
   function fitOf(p) {
     return p < 0.25 ? { key: "reach", label: "Reach" } : p < 0.55 ? { key: "target", label: "Target" } : p < 0.85 ? { key: "likely", label: "Likely" } : { key: "safety", label: "Safety" };
   }
-  function splitBar(est) {
-    return '<div class="college-split" role="img" aria-label="Accept ' + pct(est.estimate) + ", waitlist " + pct(est.waitlist) + ", deny " + pct(est.deny) + '">' +
-      '<span style="width:' + (est.estimate * 100).toFixed(1) + "%;background:" + OUTCOME_COLORS.accept + '"></span>' +
-      '<span style="width:' + (est.waitlist * 100).toFixed(1) + "%;background:" + OUTCOME_COLORS.waitlist + '"></span>' +
-      '<span style="width:' + (est.deny * 100).toFixed(1) + "%;background:" + OUTCOME_COLORS.deny + '"></span></div>';
+  // Published admit rate as a share of the newest reported applicant cohort.
+  // This is institution data, not a personalized probability.
+  function rateBar(est) {
+    const rate = est.rateInfo && est.rateInfo.rate != null ? est.rateInfo.rate : null;
+    if (rate == null) return '<div class="college-split empty" role="img" aria-label="No published admit rate in the current release"><span style="width:100%;background:var(--fx-deny)"></span></div>';
+    return '<div class="college-split" role="img" aria-label="Published admit rate ' + Math.round(rate) + ' percent of reported applicants">' +
+      '<span style="width:' + Math.max(0, Math.min(100, rate)).toFixed(1) + "%;background:" + OUTCOME_COLORS.accept + '"></span>' +
+      '<span style="width:' + Math.max(0, 100 - rate).toFixed(1) + "%;background:" + OUTCOME_COLORS.deny + '"></span></div>';
   }
   // Re-run the estimate with one profile change, to show which improvement would move it most.
   function whatIf(college, change) {
@@ -311,37 +289,39 @@
     const fs = est.factors.filter((f) => f.pts != null && Math.abs(f.pts) >= 0.5).sort((a, b) => Math.abs(b.pts) - Math.abs(a.pts));
     if (!fs.length) return "";
     const fmt = (p) => (p > 0 ? "+" : "−") + (Math.abs(p) < 1 ? Math.abs(p).toFixed(1) : Math.round(Math.abs(p))) + "%";
-    return '<div class="chance-factors"><div class="cg-k">What moves your estimate</div><ul>' +
+    return '<div class="chance-factors"><div class="cg-k">What moves the comparison</div><ul>' +
       fs.map((f) => '<li class="' + (f.pts > 0 ? "f-up" : "f-down") + '" title="' + escapeHtml(f.detail || "") + '"><span>' + (f.pts > 0 ? "▲ " : "▼ ") + escapeHtml(f.label) + '</span><b>' + fmt(f.pts) + "</b></li>").join("") +
-      '</ul><p class="chance-note" style="margin-top:6px">Each number is how much that one factor changes this estimate. They don\'t add up exactly, because each effect depends on the others.</p></div>';
+      '</ul><p class="chance-note" style="margin-top:6px">Each number is how much that one published-data factor changes the comparison index. They don\'t add up exactly, because each effect depends on the others.</p></div>';
   }
   function chanceCardHtml(college, est, c, gpa4) {
     const fit = fitOf(est.estimate), testType = est.testType;
-    const up = est.factors.filter((f) => f.effect === "up").map((f) => f.label);
-    const down = est.factors.filter((f) => f.effect === "down").map((f) => f.label);
-    const boostScore = est.score && !isTestBlind(college) && est.range ? whatIf(college, (p) => { if (testType === "act") p.act = Math.min(36, (Number(p.act) || est.score.value) + 2); else p.sat = Math.min(1600, (Number(p.sat) || est.score.value) + 50); }) : null;
-    const boostGpa = gpa4 != null ? whatIf(college, (p) => { const g = Number(p.gpa); p.gpa = Math.min(p.gpaScale === "100" ? 100 : p.gpaScale === "5w" ? 5 : 4.0, g + (p.gpaScale === "100" ? 5 : 0.2)); }) : null;
-    const bench = expectedGpa(college.adm);
-    const scoreWhere = est.range && est.score ? (est.score.value >= est.range.hi ? "Above their 75th percentile" : est.score.value <= est.range.lo ? "Below their 25th percentile" : "Inside their middle 50%") : isTestBlind(college) ? "Test-blind: scores aren't considered" : est.score ? "No score range reported" : "Add your score";
+    const boostScore = est.score && !est.scoresIgnored && est.range ? whatIf(college, (p) => { if (testType === "act") p.act = Math.min(36, (Number(p.act) || est.score.value) + 2); else p.sat = Math.min(1600, (Number(p.sat) || est.score.value) + 50); }) : null;
+    const boostGpa = gpa4 != null && est.rateInfo && est.rateInfo.rate != null ? whatIf(college, (p) => { const g = Number(p.gpa); p.gpa = Math.min(p.gpaScale === "100" ? 100 : p.gpaScale === "5w" ? 5 : 4.0, g + (p.gpaScale === "100" ? 5 : 0.2)); }) : null;
+    const bench = est.rateInfo && est.rateInfo.rate != null ? expectedGpa(est.rateInfo.rate) : null;
+    const scoreWhere = est.scoresIgnored ? "Tests not considered by this college" : est.range && est.score ? (est.score.value >= est.range.hi ? "Above their 75th percentile" : est.score.value <= est.range.lo ? "Below their 25th percentile" : "Inside their middle 50%") : est.score ? "No score range reported" : "Add your score";
     const gain = (val) => val != null && val - est.estimate >= 0.005;
-    const lever = (label, val) => !gain(val) ? "" : '<li><span>' + label + '</span><b class="up">' + pct(est.estimate) + " → " + pct(val) + "</b></li>";
+    const lever = (label, val) => !gain(val) ? "" : '<li><span>' + label + '</span><b class="up">' + Math.round(est.estimate * 100) + " → " + Math.round(val * 100) + " index pts</b></li>";
+    const rate = est.rateInfo && est.rateInfo.rate != null ? est.rateInfo.rate : null;
     return '<li class="chance-item fitb-' + fit.key + '">' +
       '<div class="chance-head"><div><div class="chance-name">' + escapeHtml(college.n) + '</div><div class="chance-loc">' + escapeHtml(college.city || "") + (college.city ? ", " : "") + college.st + " · " + (college.ctrl === "public" ? "Public" : "Private") + (college.enr ? " · " + Number(college.enr).toLocaleString() + " undergrads" : "") + '</div></div><span class="fit fit-' + fit.key + '">' + fit.label + "</span></div>" +
-      '<div class="chance-big"><span class="chance-pct">' + pct(est.estimate) + '</span><span class="chance-pct-l">chance of admission<br><span class="muted">likely range ' + pct(est.lo) + "–" + pct(est.hi) + " · " + est.confidence + " confidence</span></span></div>" +
-      splitBar(est) +
-      '<div class="chance-legend"><span><i style="background:' + OUTCOME_COLORS.accept + '"></i>Accept ' + pct(est.estimate) + '</span><span><i style="background:' + OUTCOME_COLORS.waitlist + '"></i>Waitlist ' + pct(est.waitlist) + '</span><span><i style="background:' + OUTCOME_COLORS.deny + '"></i>Deny ' + pct(est.deny) + "</span></div>" +
+      '<div class="chance-big">' + (rate != null
+        ? '<span class="chance-pct">' + (rate < 10 ? rate.toFixed(1) : Math.round(rate)) + '%</span><span class="chance-pct-l">published admit rate<br><span class="muted">' + escapeHtml(rateNote(est.rateInfo)) + "</span></span>"
+        : '<span class="chance-pct muted">—</span><span class="chance-pct-l">no published admit rate<br><span class="muted">' + escapeHtml(rateNote(est.rateInfo)) + "</span></span>") + "</div>" +
+      rateBar(est) +
+      '<div class="chance-legend"><span><i style="background:' + OUTCOME_COLORS.accept + '"></i>' + (rate != null ? "Admitted " + Math.round(rate) + "%" : "Admitted data unavailable") + '</span><span><i style="background:' + OUTCOME_COLORS.deny + '"></i>' + (rate != null ? "Not admitted " + Math.round(100 - rate) + "%" : "Not admitted data unavailable") + "</span></div>" +
       '<div class="chance-grid">' +
-        '<div class="cg-cell"><div class="cg-k">Admit rate</div><div class="cg-v">' + college.adm + '%</div></div>' +
-        '<div class="cg-cell"><div class="cg-k">Your GPA vs typical</div><div class="cg-v">' + (gpa4 != null ? gpa4.toFixed(2) + ' <span class="muted">vs ~' + bench.toFixed(1) + "</span>" : '<span class="muted">add GPA</span>') + "</div></div>" +
-        '<div class="cg-cell"><div class="cg-k">SAT middle 50%</div><div class="cg-v">' + (college.sr25 != null ? college.sr25 + "–" + college.sr75 : '<span class="muted">' + (isTestBlind(college) ? "test-blind" : "not reported") + "</span>") + "</div></div>" +
-        '<div class="cg-cell"><div class="cg-k">ACT middle 50%</div><div class="cg-v">' + (college.ar25 != null ? college.ar25 + "–" + college.ar75 : '<span class="muted">' + (isTestBlind(college) ? "test-blind" : "not reported") + "</span>") + "</div></div>" +
+        '<div class="cg-cell"><div class="cg-k">Comparison index</div><div class="cg-v">' + Math.round(est.estimate * 100) + ' <span class="muted">/ 100 · experimental</span></div></div>' +
+        '<div class="cg-cell"><div class="cg-k">Your GPA vs typical</div><div class="cg-v">' + (gpa4 != null && bench != null ? gpa4.toFixed(2) + ' <span class="muted">vs ~' + bench.toFixed(1) + "</span>" : gpa4 != null ? gpa4.toFixed(2) : '<span class="muted">add GPA</span>') + "</div></div>" +
+        '<div class="cg-cell"><div class="cg-k">SAT middle 50%</div><div class="cg-v">' + (college.sr25 != null ? college.sr25 + "–" + college.sr75 : '<span class="muted">' + (est.scoresIgnored ? "not used" : "not reported") + "</span>") + "</div></div>" +
+        '<div class="cg-cell"><div class="cg-k">ACT middle 50%</div><div class="cg-v">' + (college.ar25 != null ? college.ar25 + "–" + college.ar75 : '<span class="muted">' + (est.scoresIgnored ? "not used" : "not reported") + "</span>") + "</div></div>" +
       "</div>" +
       '<div class="chance-sub">' + scoreWhere + "</div>" +
-      (est.range ? rangeBarHtml(est.range.lo, est.range.hi, est.score ? est.score.value : null, testType.toUpperCase()) : "") +
+      (est.range && !est.scoresIgnored ? rangeBarHtml(est.range.lo, est.range.hi, est.score ? est.score.value : null, testType.toUpperCase()) : "") +
       factorListHtml(est) +
-      ((boostScore != null || boostGpa != null) ? '<div class="chance-what"><div class="cg-k">What would raise it</div>' +
+      '<p class="chance-note" style="margin-top:6px">The comparison index is an app calculation from published figures, not a chance of admission. No applicant-outcome study has validated it, so it is labeled experimental everywhere.</p>' +
+      ((boostScore != null || boostGpa != null) ? '<div class="chance-what"><div class="cg-k">What would move the index</div>' +
         (gain(boostScore) || gain(boostGpa) ? "<ul>" + lever(testType === "act" ? "+2 ACT points" : "+50 SAT points", boostScore) + lever("+" + (c.gpaScale === "100" ? "5" : "0.2") + " GPA", boostGpa) + "</ul>" :
-          '<p class="chance-note" style="margin-top:4px">' + (est.estimate >= 0.85 ? "You're already well placed here. Strong essays and keeping your grades up matter most now." : "Small score or GPA changes barely move this one. It's very selective, so essays, activities, and recommendations carry the most weight.") + "</p>") + "</div>" : "") +
+          '<p class="chance-note" style="margin-top:4px">' + (est.estimate >= 0.85 ? "Your scored inputs are already well placed here. Strong essays and keeping your grades up matter most now, and the app deliberately does not turn those into points." : "Small score or GPA changes barely move this one. It's very selective, so essays, activities, and recommendations carry the most weight — inputs this index does not score.") + "</p>") + "</div>" : "") +
       '<div class="chance-actions"><button type="button" class="secondary" data-select="' + college.id + '">Full details</button>' +
       (college.url ? '<a class="chance-link" href="' + escapeHtml(/^https?:/.test(college.url) ? college.url : "https://" + college.url) + '" target="_blank" rel="noopener">Website ↗</a>' : "") +
       '<button type="button" class="ghost chance-remove" data-save="' + college.id + '" aria-label="Remove ' + escapeHtml(college.n) + '">Remove</button></div>' +
@@ -353,7 +333,7 @@
     const sort = c.chanceSort || "chance";
     const add = '<div class="chance-add"><label for="chanceAdd">Add a college</label><div class="chance-add-row"><input type="search" id="chanceAdd" placeholder="Name, state, or abbreviation (USF, UCLA, MIT)…" autocomplete="off" value="' + escapeHtml(c.chanceQuery || "") + '"></div><div id="chanceAddResults" class="chance-add-results">' + chanceAddResultsHtml(c.chanceQuery) + "</div></div>";
     let body;
-    if (!saved.length) body = add + '<p class="chance-empty">Add colleges above and your chances at each one show up here, based on your GPA, test score, course rigor, activities, and application plan.</p>';
+    if (!saved.length) body = add + '<p class="chance-empty">Add colleges above and each one\'s published admit rate, reported score range, and an experimental comparison index show up here. The index uses your GPA and (where the college considers them) test scores. It is not a prediction.</p>';
     else {
       const rows = saved.map((college) => ({ college, est: estimateCollege(college) }));
       rows.sort(sort === "name" ? (a, b) => a.college.n.localeCompare(b.college.n) : sort === "admit" ? (a, b) => a.college.adm - b.college.adm : (a, b) => a.est.estimate - b.est.estimate);
@@ -368,10 +348,10 @@
         '<label class="chance-sort">Sort <select id="chanceSort"><option value="chance"' + (sort === "chance" ? " selected" : "") + '>Hardest first</option><option value="admit"' + (sort === "admit" ? " selected" : "") + '>Admit rate</option><option value="name"' + (sort === "name" ? " selected" : "") + ">Name</option></select></label></div>" +
         '<p class="chance-advice">' + advice + "</p>" + add +
         '<ul class="chance-list">' + rows.map(({ college, est }) => chanceCardHtml(college, est, c, gpa4)).join("") + "</ul>" +
-        (gpa4 == null || !score ? '<p class="chance-note">Add your ' + (gpa4 == null ? "GPA" : "") + (gpa4 == null && !score ? " and " : "") + (!score ? "test score" : "") + " above to make these estimates sharper.</p>" : "") +
-        '<p class="chance-note">Reach under 25%, Target 25–54%, Likely 55–84%, Safety 85% and up. App estimates from each college\'s admit rate and reported score ranges plus your profile, not official predictions.</p>';
+        (gpa4 == null || !score ? '<p class="chance-note">Add your ' + (gpa4 == null ? "GPA" : "") + (gpa4 == null && !score ? " and " : "") + (!score ? "test score" : "") + " above to make the comparison sharper.</p>" : "") +
+        '<p class="chance-note">Groups: Reach under 25, Target 25–54, Likely 55–84, Safety 85+ on the experimental comparison index — a relative label for list balance, not an admission prediction. The index uses each college\'s published admit rate plus your GPA and score position; it excludes essays, activities, and other holistic factors.</p>';
     }
-    return '<fieldset class="college-chances college-wide"><legend>Your chances</legend>' + body + "</fieldset>";
+    return '<fieldset class="college-chances college-wide"><legend>Compare your list</legend>' + body + "</fieldset>";
   }
   function chanceAddResultsHtml(query) {
     const q = String(query || "").trim();
@@ -402,7 +382,7 @@
     "Every college decides for itself how much weight context gets. There's no fixed bonus.",
     "Context explains a dip in grades; it doesn't replace grades or make up for missing coursework.",
     "It only counts if the college knows about it, so you have to tell them in your application.",
-    "This app's adjustment is a rough estimate based on how colleges generally treat context."
+    "This app records the context for your planning notes but does not add any points for it, because no validated outcome weights exist for hardship or circumstances."
   ];
   const CONTEXT_SHARE = [
     "Use the Common App “Additional Information” section (up to 650 words) to explain what happened, when, and how it affected school. Keep it factual and short.",
@@ -430,7 +410,7 @@
     } catch (e) { r = localContextReview(text); r.source = "local"; }
     r.forText = text; r.at = Date.now();
     c.contextReview = r; saveCollege(); renderCollegeScreen();
-    try { showToast("Context reviewed and added to your estimates"); } catch (e) {}
+    try { showToast("Context reviewed and saved to your notes"); } catch (e) {}
   }
   function contextReviewHtml() {
     const c = cp(), text = String(c.circumstanceOther || "").trim(), r = c.contextReview;
@@ -446,18 +426,28 @@
         '<div class="context-head"><span class="context-cat">' + escapeHtml(r.category) + '</span><span class="context-impact impact-' + r.impact + '">' + impactWord + "</span></div>" +
         (r.summary ? '<p class="context-sum">' + escapeHtml(r.summary) + (r.affectedYears ? ' <span class="muted">(' + escapeHtml(r.affectedYears) + ")</span>" : "") + "</p>" : "") +
         (r.howCollegesView ? '<p class="context-sum">' + escapeHtml(r.howCollegesView) + "</p>" : "") +
-        '<p class="context-applied">' + (stale ? "Not applied." : "Applied to your chances: it can offset part of a GPA shortfall at each college, never more than a set limit.") + "</p>" +
+        '<p class="context-applied">' + (stale ? "Not saved to your notes." : "Saved to your planning notes and shown to the AI tutor for advice. It does not change the comparison index, and no points are added for it.") + "</p>" +
         '<div class="context-cols"><div><h4>Limitations</h4>' + li(CONTEXT_LIMITS.concat(r.limitations || []).slice(0, 6)) + '</div><div><h4>How to make sure colleges recognize it</h4>' + li((r.howToShare && r.howToShare.length ? r.howToShare : []).concat(CONTEXT_SHARE).filter((s, i, a) => a.findIndex((x) => x.slice(0, 30) === s.slice(0, 30)) === i).slice(0, 6)) + "</div></div>" +
         (r.source === "local" ? '<p class="small muted">The AI tutor wasn\'t available, so this was read automatically from keywords. Try again later for a fuller review.</p>' : "") +
       "</div>" + btn + privacy + "</div>";
   }
 
+  // Published admit rate for the newest reported cohort, shown as a share of
+  // reported applicants. This is institution data. When the release has no
+  // rate, the chart shows an explicit empty state instead of a prior.
   function pieHtml(est) {
     const R = 66, r = 40, C = 80;
+    const rate = est.rateInfo && est.rateInfo.rate != null ? est.rateInfo.rate : null;
+    if (rate == null) {
+      return '<div class="college-pie-wrap"><svg class="college-pie" viewBox="0 0 160 160" width="150" height="150" role="img" aria-label="No published admit rate in the current federal release">' +
+        '<circle cx="80" cy="80" r="53" fill="none" stroke="var(--fx-deny)" stroke-width="26" opacity="0.25"></circle>' +
+        '<text x="80" y="78" text-anchor="middle" class="pie-center">—</text><text x="80" y="96" text-anchor="middle" class="pie-center-sub">no rate</text></svg>' +
+        '<ul class="college-pie-legend"><li><span class="pie-dot" style="background:var(--fx-deny)"></span><span>No published admit rate in this release. This is a data gap, not zero.</span></li></ul></div>';
+    }
+    const admitted = Math.max(0, Math.min(100, rate)) / 100;
     const slices = [
-      { label: "Accept", value: est.estimate, color: OUTCOME_COLORS.accept },
-      { label: "Waitlist", value: est.waitlist, color: OUTCOME_COLORS.waitlist },
-      { label: "Deny", value: est.deny, color: OUTCOME_COLORS.deny },
+      { label: "Admitted", value: admitted, color: OUTCOME_COLORS.accept },
+      { label: "Not admitted", value: 1 - admitted, color: OUTCOME_COLORS.deny },
     ].filter((x) => x.value > 0.0005);
     let angle = -Math.PI / 2;
     const paths = slices.map((x) => {
@@ -468,10 +458,11 @@
       const d = "M" + x0 + " " + y0 + " A" + R + " " + R + " 0 " + large + " 1 " + x1 + " " + y1 + " L" + x2 + " " + y2 + " A" + r + " " + r + " 0 " + large + " 0 " + x3 + " " + y3 + " Z";
       return '<path d="' + d + '" fill="' + x.color + '"></path>';
     }).join("");
-    const legend = slices.map((x) => '<li><span class="pie-dot" style="background:' + x.color + '"></span><span><strong>' + x.label + "</strong> " + pct(x.value) + (x.label === "Accept" ? ' <span class="small muted">(' + pct(est.lo) + "–" + pct(est.hi) + ")</span>" : "") + "</span></li>").join("");
-    return '<div class="college-pie-wrap"><svg class="college-pie" viewBox="0 0 160 160" width="150" height="150" role="img" aria-label="Estimated accept, waitlist, and deny shares">' +
-      paths + '<text x="80" y="78" text-anchor="middle" class="pie-center">' + pct(est.estimate) + '</text><text x="80" y="96" text-anchor="middle" class="pie-center-sub">accept</text></svg>' +
-      '<ul class="college-pie-legend">' + legend + "</ul></div>";
+    const legend = slices.map((x) => '<li><span class="pie-dot" style="background:' + x.color + '"></span><span><strong>' + x.label + "</strong> " + pct(x.value) + "</span></li>").join("");
+    const label = rate < 10 ? rate.toFixed(1) + "%" : Math.round(rate) + "%";
+    return '<div class="college-pie-wrap"><svg class="college-pie" viewBox="0 0 160 160" width="150" height="150" role="img" aria-label="Published admit rate: ' + label + ' of reported applicants">' +
+      paths + '<text x="80" y="78" text-anchor="middle" class="pie-center">' + label + '</text><text x="80" y="96" text-anchor="middle" class="pie-center-sub">admit rate</text></svg>' +
+      '<ul class="college-pie-legend">' + legend + '<li><span class="small muted">' + escapeHtml(rateNote(est.rateInfo)) + "</span></li></ul></div>";
   }
 
   // ---- Reminder: unanswered questions never change the estimate ----
@@ -547,9 +538,9 @@
       "Student: grade " + (c.grade || "unknown") + ", GPA " + (c.gpa != null ? c.gpa + " (" + c.gpaScale + " scale)" : "not entered") +
       ", SAT " + (a.sat != null ? a.sat : "not entered") + ", ACT " + (a.act != null ? a.act : "not entered") +
       ", major interest " + (c.major || "undecided") + ". Activities: " + ((c.activities || []).map((x) => x.name).filter(Boolean).join(", ") || "none entered") + "." +
-      "\nCollege: " + college.n + " (" + college.city + ", " + college.st + "), admit rate " + college.adm + "%, undergraduate enrollment " + college.enr + "." +
-      (est.range ? " Reported enrolled-student " + est.testType.toUpperCase() + " range: " + est.range.lo + "-" + est.range.hi + "." : " No test range reported.") +
-      "\nApp estimate: " + Math.round(est.estimate * 100) + "% (range " + Math.round(est.lo * 100) + "-" + Math.round(est.hi * 100) + "%). Remind the student this is an unofficial planning estimate.";
+      "\nCollege: " + college.n + " (" + college.city + ", " + college.st + "), published admit rate " + (est.rateInfo && est.rateInfo.rate != null ? (est.rateInfo.rate < 10 ? est.rateInfo.rate.toFixed(1) : Math.round(est.rateInfo.rate)) + "%" + (est.rateInfo.year ? " (" + est.rateInfo.year + ")" : "") : "not available in the current release") + ", undergraduate enrollment " + college.enr + "." +
+      (est.scoresIgnored ? " This college does not consider SAT/ACT scores." : est.range ? " Reported enrolled-student " + est.testType.toUpperCase() + " range: " + est.range.lo + "-" + est.range.hi + " (enrolled students, not applicants)." : " No test range reported.") +
+      "\nApp comparison index (experimental, from published rate + GPA + score position, NOT a probability): " + Math.round(est.estimate * 100) + "/100. Never describe it as a chance of admission and never invent statistics.";
   }
   async function askCollegeGroq(college, est, question, statusEl, replyEl) {
     if (collegeChatBusy) return;
@@ -736,7 +727,7 @@
         (score.converted ? '<p class="small muted">Your score was converted with the official ACT/College Board concordance table because this college reports the other test.</p>' : "");
     }
     const factorHtml = est.factors.map((f) => '<li>' + effectTag(f.effect) + '<div><strong>' + escapeHtml(f.label) + '.</strong> <span class="small">' + escapeHtml(f.detail) + "</span></div></li>").join("");
-    const level = est.estimate >= 0.75 ? "likely range" : est.estimate >= 0.4 ? "competitive range" : est.estimate >= 0.15 ? "reach range" : "far reach";
+    const level = est.estimate >= 0.75 ? "compares well with typical applicants" : est.estimate >= 0.4 ? "middling comparison" : est.estimate >= 0.15 ? "below the typical comparison" : "far below the typical comparison";
     return '<div class="college-card college-detail" id="collegeDetail">' +
       '<div class="college-detail-head"><div><h3>' + escapeHtml(college.n) + '</h3><p class="small muted">' + escapeHtml(college.city) + ", " + college.st + " · " + college.ctrl + ' · <a href="' + escapeHtml(collegeUrl(college)) + '" target="_blank" rel="noopener">official site</a> · <a href="https://collegescorecard.ed.gov/school/?' + college.id + '" target="_blank" rel="noopener">source data</a></p></div>' +
       '<button type="button" class="secondary" data-save="' + college.id + '" aria-pressed="' + saved + '">' + (saved ? "★ Saved" : "☆ Save") + "</button></div>" +
@@ -755,10 +746,10 @@
       (c.targetMode === "custom" ? '<input type="number" id="collegeCustomTarget" min="' + SAT_MIN + '" max="' + SAT_MAX + '" step="10" value="' + (c.customTarget != null ? c.customTarget : "") + '" aria-label="Custom target score">' : "") +
       "</div>" + targetBlock + "</div>" +
       '<div class="college-estimate">' + pieHtml(est) +
-      '<div><strong>Estimated outcomes</strong> <span class="college-conf college-conf-' + est.confidence + '">' + est.confidence + ' confidence</span> <span class="small muted">(' + level + ')</span>' +
-      '<p class="small muted">Accept, waitlist, and deny shares come from an app model using the factors below. The accept range is ' + pct(est.lo) + ' – ' + pct(est.hi) + '. Waitlist placement is an estimate: it is more common at selective colleges and for borderline applicants, but rarely converts to admission, and some colleges admit none off the waitlist. This is not an admission decision or a guarantee.</p>' +
-      (est.confNotes.length ? '<p class="small muted">Improve accuracy: ' + escapeHtml(est.confNotes.join('; ')) + '.</p>' : '') + '</div></div>' +
-      '<div class="college-equation-row"><code>estimate = sigmoid(' + "selectivity log-odds" + ' + score + GPA + rigor + activities + context)</code></div>' +
+      '<div><strong>Published admit rate, not a prediction</strong> <span class="college-conf college-conf-' + est.confidence + '">' + est.confidence + '</span> <span class="small muted">(' + level + ')</span>' +
+      '<p class="small muted">The chart shows the rate the institution reported to the federal government (' + escapeHtml(rateNote(est.rateInfo)) + '). The app also computes an experimental comparison index (currently ' + Math.round(est.estimate * 100) + ' / 100, band ' + Math.round(est.lo * 100) + '–' + Math.round(est.hi * 100) + ') from that rate plus your GPA and score position. It has not been validated against applicant outcomes, so it is never shown as a percent chance of admission.</p>' +
+      (est.confNotes.length ? '<p class="small muted">To sharpen the comparison: ' + escapeHtml(est.confNotes.join('; ')) + '.</p>' : '') + '</div></div>' +
+      '<div class="college-equation-row"><code>comparison index = sigmoid(published-rate log-odds' + (est.scoresIgnored ? '' : ' + score position') + ' + GPA position)</code></div>' +
       '<p class="small muted">Sources: ' + escapeHtml(CD.meta.source || "College Scorecard") + " (" + escapeHtml(CD.meta.release || "") + "); IPEDS Completions 2024 (majors); BEA Regional Price Parities 2024 (living costs); Wikimedia Commons (photos). Admit rate and ranges describe enrolled students and are the most recent figures the college reported to the U.S. Department of Education. Verify current test policies, costs, and campus life with the college.</p></details>" +
       '<div class="college-groq"><label for="collegeAsk">Ask the Groq tutor about this college plan</label>' +
       '<div class="college-groq-row"><input type="text" id="collegeAsk" maxlength="300" placeholder="e.g., What should I do this semester to improve?"><button type="button" id="collegeAskBtn">Ask</button></div>' +
@@ -833,7 +824,7 @@
     return '<div class="cc-card" data-cc-id="' + college.id + '">' +
       '<a class="cc-link" href="/colleges/' + SLUGS.get(college.id) + '/" aria-label="' + escapeHtml(college.n) + ' info page">' +
       '<div class="cc-card-head"><h3>' + escapeHtml(college.n) + '</h3>' +
-      '<span class="cc-fitgroup"><span class="cc-fitpct">' + Math.round(est.estimate * 100) + '% fit</span>' +
+      '<span class="cc-fitgroup"><span class="cc-fitpct">' + (est.rateInfo && est.rateInfo.rate != null ? (est.rateInfo.rate < 10 ? est.rateInfo.rate.toFixed(1) : Math.round(est.rateInfo.rate)) + '% admit rate' : "no published rate") + '</span>' +
       '<span class="cc-verdict v-' + v.key + '">' + v.label + "</span></span></div>" +
       '<p class="cc-sub">' + escapeHtml(sub) + "</p>" +
       ccBarHtml(r ? r.lo : null, r ? r.hi : null, you, college.n + " " + (est.testType === "act" ? "ACT" : "SAT") + " range " + (r ? r.lo + " to " + r.hi : "not reported") + (you != null ? ", you " + you : "")) +

@@ -129,7 +129,7 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   await page.waitForTimeout(350);
   await page.click(".college-row-main");
   await page.waitForSelector(".college-detail .college-pie");
-  if ((await page.locator(".college-detail .college-pie-legend li").count()) < 3) throw new Error("acceptance pie should show accept, waitlist, and deny");
+  if ((await page.locator(".college-detail .college-pie-legend li").count()) < 3) throw new Error("published admit-rate chart should show the admitted share, the rest, and its data note");
   await page.click("[data-close-detail]");
   await page.click("#collegeBack");
 

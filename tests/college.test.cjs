@@ -27,6 +27,7 @@ function loadFeature(profile) {
   });
   context.window = context;
   context.globalThis = context;
+  vm.runInContext(fs.readFileSync("admissions-model.js", "utf8"), context, { filename: "admissions-model.js" });
   vm.runInContext(fs.readFileSync("college-data.js", "utf8"), context, { filename: "college-data.js" });
   vm.runInContext(fs.readFileSync("college.js", "utf8"), context, { filename: "college.js" });
   return context.collegeFeature;
@@ -103,23 +104,35 @@ const feature = loadFeature(profile);
   assert.equal(feature.estimateCollege({ ...base }).estimate, withoutHistory, "unanswered questions do not change the estimate");
   assert(/unanswered|blank/i.test(feature.unansweredReminder()), "unanswered questions are still surfaced as a reminder");
 
-  // Three-way outcome model: accept + waitlist + deny = 1, bounded, and responsive to context.
+  // The comparison index is explicitly experimental: no probability, no
+  // waitlist/deny shares, and no unsupported numeric boosts.
   profile.college = { testType: "sat", sat: 1300, gpa: 3.5, gpaScale: "4uw", grade: "11" };
   const base3 = { id: 3, n: "Test U", st: "TX", city: "Test", ctrl: "private", adm: 20, enr: 10000, sr25: 1200, sr50: 1300, sr75: 1400, url: "example.edu" };
   const oct = feature.estimateCollege({ ...base3 });
-  assert(Math.abs(oct.estimate + oct.waitlist + oct.deny - 1) < 1e-9, "accept + waitlist + deny must sum to 1");
-  assert(oct.waitlist >= 0 && oct.waitlist <= 0.5, "waitlist share stays bounded");
-  assert(["low", "medium", "high"].includes(oct.confidence), "confidence is labeled");
+  assert.equal(oct.probability, null, "no personalized probability until a consented outcome evaluation calibrates the model");
+  assert.equal(oct.calibrated, false, "calibration requires real outcome data");
+  assert.equal(oct.confidence, "uncalibrated", "confidence label reflects missing outcome validation");
+  assert.equal(oct.waitlist, undefined, "no personalized waitlist share");
+  assert.equal(oct.deny, undefined, "no personalized deny share");
   assert(Array.isArray(oct.confNotes), "confidence notes exist");
-  profile.college.applyPlan = "early";
+  assert(oct.rateInfo && Math.abs(oct.rateInfo.rate - 20) < 1e-9, "published rate is exposed as institution data");
+  // Inputs with no validated outcome weights must not move the index, but they
+  // must still be listed as context so students see they are not ignored.
+  profile.college.applyPlan = "ed";
   const early = feature.estimateCollege({ ...base3 });
-  assert(early.estimate > oct.estimate, "early application raises the estimate");
+  assert.equal(early.estimate, oct.estimate, "early decision cannot change an unvalidated index");
+  assert(early.factors.some((f) => /not scored/i.test(f.label) && /Early Decision/i.test(f.detail)), "early decision is disclosed as not scored");
   profile.college.appStrength = "strong";
-  const strong = feature.estimateCollege({ ...base3 });
-  assert(strong.estimate > early.estimate, "strong essays/recs raise the estimate");
-  profile.college.appStrength = "developing";
-  const developing = feature.estimateCollege({ ...base3 });
-  assert(developing.estimate < strong.estimate, "developing essays/recs lower the estimate");
+  profile.college.athlete = true;
+  profile.college.legacy = true;
+  profile.college.homeState = "CA";
+  profile.college.major = "Computer science";
+  profile.college.firstGen = true;
+  profile.college.hardship = true;
+  const loaded = feature.estimateCollege({ ...base3 });
+  assert.equal(loaded.estimate, oct.estimate, "essays, athletics, legacy, residency, major, and hardship are context, not boosts");
+  const ctx = loaded.factors.find((f) => /not scored/i.test(f.label));
+  assert(ctx && /essays|athlete|legacy|major|residency|context/i.test(ctx.detail), "unscored context is disclosed with its labels");
   const pieSource = fs.readFileSync("college.js", "utf8");
   assert(pieSource.includes("function pieHtml"), "pie renderer present");
   assert(pieSource.includes("function ccFilterBarHtml"), "list filters live over the list");

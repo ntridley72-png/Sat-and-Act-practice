@@ -60,6 +60,11 @@ body.calc-open.calc-wide{padding-left:min(900px,100vw)}
 .auth-msg{font-size:.85rem;margin-top:10px;min-height:1.2em}
 .auth-msg.err{color:var(--red)}.auth-msg.ok{color:var(--green)}
 .auth-sec{border-top:1px solid var(--line);margin-top:16px;padding-top:12px}
+.auth-sec-title{font-size:.95rem;margin:0 0 4px}
+#aiByokDetails{margin-top:6px}
+#aiByokDetails > summary{cursor:pointer;font-size:.88rem;padding:6px 0;list-style-position:inside}
+#aiByokDetails > summary:focus-visible{outline:2px solid var(--accent, #2563eb);outline-offset:2px;border-radius:6px}
+.ai-byok{margin-top:8px;display:grid;gap:8px}
 .modal.auth-modal{text-align:left;max-height:calc(100dvh - 40px);overflow-y:auto}
 #authModal{align-items:center}
 @media (max-width:640px){#authModal{padding:10px}.modal.auth-modal{padding:20px 18px}}
@@ -905,9 +910,16 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
     </div>
     <div class="auth-msg" id="authMsg"></div>
     <div class="auth-sec">
-      <label for="aiProvider">AI tutor</label>
-      <select id="aiProvider"><option value="free">Built-in AI tutor (free, no key needed)</option><option value="groq">My own Groq key</option></select>
-      <div id="groqKeyWrap" style="display:none"><label for="groqKey">Groq API key</label><input id="groqKey" type="text" class="pw-mask" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore placeholder="gsk_…"><div class="small muted" style="margin-top:4px">Get a free key at console.groq.com. It is stored only on this device.</div></div>
+      <h3 class="auth-sec-title">AI tutor</h3>
+      <p class="small muted">The built-in tutor is on by default. It needs no account with an AI provider and no API key.</p>
+      <details id="aiByokDetails">
+        <summary id="aiByokSummary">Optional: use your own Groq key instead</summary>
+        <div class="ai-byok">
+          <label for="aiProvider">Tutor AI source</label>
+          <select id="aiProvider"><option value="free">Built-in AI tutor (no key needed)</option><option value="groq">My own Groq key</option></select>
+          <div id="groqKeyWrap" style="display:none"><label for="groqKey">Groq API key</label><input id="groqKey" type="text" class="pw-mask" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore placeholder="gsk_…"><div class="small muted" style="margin-top:4px">Get a free key at console.groq.com. It is stored only on this device. If it stops working, the built-in tutor is used again automatically.</div></div>
+        </div>
+      </details>
     </div>
   </div>
 </div>

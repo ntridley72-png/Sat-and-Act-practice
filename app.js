@@ -5614,9 +5614,22 @@ function refreshGoogleButton() {
     if (or) or.style.display = on ? "" : "none";
   }).catch(() => { btn.style.display = "none"; if (or) or.style.display = "none"; });
 }
+// The built-in tutor is the default. A personal Groq key lives in a collapsed
+// optional disclosure so it never dominates the account pane, and a stored
+// provider of "groq" with no usable key falls back to the built-in tutor.
+function paintAiSettings() {
+  const sel = $("aiProvider"); if (!sel) return;
+  const s = aiSettings();
+  const usePersonal = s.provider === "groq";
+  sel.value = usePersonal ? "groq" : "free";
+  const keyInput = $("groqKey"); if (keyInput) keyInput.value = s.groqKey || "";
+  const wrap = $("groqKeyWrap"); if (wrap) wrap.style.display = usePersonal ? "block" : "none";
+  const det = $("aiByokDetails"); if (det) det.open = usePersonal;
+  const sum = $("aiByokSummary");
+  if (sum) sum.textContent = usePersonal ? "Using your own Groq key" + (s.groqKey ? "" : " (no key entered yet — the built-in tutor is used meanwhile)") : "Optional: use your own Groq key instead";
+}
 $("btnAccount").addEventListener("click", () => {
-  setAuthMsg(""); paintAccount(); refreshGoogleButton();
-  const s = aiSettings(); $("aiProvider").value = s.provider; $("groqKey").value = s.groqKey || ""; $("groqKeyWrap").style.display = s.provider === "groq" ? "block" : "none";
+  setAuthMsg(""); paintAccount(); paintAiSettings(); refreshGoogleButton();
   $("authModal").classList.add("show");
 });
 {
@@ -5675,8 +5688,8 @@ async function openHelpHistory() {
 $("btnHelpHistory").addEventListener("click", openHelpHistory);
 $("closeHelpHistory").addEventListener("click", () => { $("helpHistoryPanel").hidden=true; });
 $("helpHistoryFilter").addEventListener("change", renderHelpHistory);
-$("aiProvider").addEventListener("change", () => { const s = aiSettings(); s.provider = $("aiProvider").value; saveAiSettings(s); $("groqKeyWrap").style.display = s.provider === "groq" ? "block" : "none"; });
-$("groqKey").addEventListener("change", () => { const s = aiSettings(); s.groqKey = $("groqKey").value.trim(); saveAiSettings(s); });
+$("aiProvider").addEventListener("change", () => { const s = aiSettings(); s.provider = $("aiProvider").value; saveAiSettings(s); paintAiSettings(); });
+$("groqKey").addEventListener("change", () => { const s = aiSettings(); s.groqKey = $("groqKey").value.trim(); saveAiSettings(s); paintAiSettings(); });
 $("groqKey").addEventListener("keydown", (e) => e.stopPropagation());
 $("authEmail").addEventListener("keydown", (e) => e.stopPropagation());
 $("authPass").addEventListener("keydown", (e) => e.stopPropagation());

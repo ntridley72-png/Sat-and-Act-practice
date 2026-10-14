@@ -1366,3 +1366,20 @@ body.calc-resizing iframe,body.calc-resizing .dcg-container{pointer-events:none}
 body .cmsgs,body[data-workspace] .cmsgs{height:var(--cmsgs-h,260px);min-height:120px;max-height:80vh;overflow:auto;resize:vertical}
 body .modal.auth-modal{resize:both;min-width:min(320px,100%);max-width:min(96vw,900px);min-height:260px}
 body #helpHistoryList{max-height:45vh;min-height:120px;overflow:auto;resize:vertical}
+
+/* Admissions analysis: official statistics first; the experimental estimate is visually secondary and always carries its warning. */
+.adm-official{margin:8px 0}
+.adm-line{margin:4px 0;overflow-wrap:anywhere}
+.adm-prov{margin:2px 0 6px;overflow-wrap:anywhere}
+.adm-toggles{display:grid;gap:6px;margin:10px 0}
+.adm-toggle{display:flex;gap:8px;align-items:flex-start;min-height:44px;cursor:pointer}
+.adm-toggle input{width:20px;height:20px;margin-top:2px;flex:none}
+.adm-exp{margin:8px 0;padding:10px 12px;border:1px dashed var(--fx-warn,#b26a00);border-radius:10px}
+.adm-exp-row{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline}
+.adm-exp-num{font-size:1.4rem;font-weight:700;font-variant-numeric:tabular-nums}
+.adm-exp-warn{font-size:.85rem;font-weight:600;color:var(--fx-warn,#b26a00);text-wrap:pretty}
+.adm-exp-na{border-style:solid;border-color:var(--fx-line,#8884)}
+.adm-how summary{cursor:pointer;min-height:44px;display:flex;align-items:center}
+.adm-whatif{margin:4px 0}
+.cc-exp{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.fit-unknown{background:var(--fx-line,#8883);color:inherit}

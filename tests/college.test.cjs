@@ -28,6 +28,8 @@ function loadFeature(profile) {
   context.window = context;
   context.globalThis = context;
   vm.runInContext(fs.readFileSync("college-data.js", "utf8"), context, { filename: "college-data.js" });
+  vm.runInContext(fs.readFileSync("admissions-data.js", "utf8"), context, { filename: "admissions-data.js" });
+  vm.runInContext(fs.readFileSync("admissions-model.js", "utf8"), context, { filename: "admissions-model.js" });
   vm.runInContext(fs.readFileSync("college.js", "utf8"), context, { filename: "college.js" });
   return context.collegeFeature;
 }
@@ -60,29 +62,41 @@ const feature = loadFeature(profile);
   assert(CD.colleges.some((c) => !c.sr25 && !c.ar25), "colleges without reported ranges are included, not invented");
 
   // ---- Algorithm ----
-  const base = { id: 1, n: "Test U", st: "TX", city: "Test", ctrl: "private", adm: 20, enr: 10000, sr25: 1200, sr50: 1300, sr75: 1400, url: "example.edu" };
-  profile.college = { testType: "sat", sat: 1200, gpa: 3.4, gpaScale: "4uw" };
+  const base = { id: 1, n: "Test U", st: "TX", city: "Test", ctrl: "private", test: "Required", adm: 20, enr: 10000, sr25: 1200, sr50: 1300, sr75: 1400, url: "example.edu" };
+  profile.college = { testType: "sat", sat: 1100, gpa: 3.4, gpaScale: "4uw" };
   const low = feature.estimateCollege({ ...base });
-  profile.college.sat = 1400;
+  profile.college.sat = 1500;
   const high = feature.estimateCollege({ ...base });
-  assert(high.estimate > low.estimate, "higher SAT must raise the estimate");
+  assert(low.analysis.score.status === "below" && high.analysis.score.status === "above", "score comparison is below/above the published range");
+  assert(high.estimate > low.estimate, "a score above the enrolled range moves the experimental estimate above one below it");
 
+  // GPA has no comparable institutional scale in the data, so it must not move any number.
   profile.college.sat = 1300; profile.college.gpa = 3.0;
   const lowGpa = feature.estimateCollege({ ...base });
   profile.college.gpa = 3.9;
   const highGpa = feature.estimateCollege({ ...base });
-  assert(highGpa.estimate > lowGpa.estimate, "higher GPA must raise the estimate");
+  assert.equal(highGpa.estimate, lowGpa.estimate, "GPA is not an input to the estimate");
+  assert.equal(highGpa.analysis.gpa.status, "unknown", "GPA comparison stays visibly unknown");
 
-  const selective = feature.estimateCollege({ ...base, adm: 8 });
-  const open = feature.estimateCollege({ ...base, adm: 80 });
-  assert(open.estimate > selective.estimate, "higher admit rate must raise the estimate for the same profile");
+  // Unsupported context (grade, rigor, activities, essays, hardship, early application) is never a boost.
+  const plain = feature.estimateCollege({ ...base }).estimate;
+  Object.assign(profile.college, { applyPlan: "early", appStrength: "strong", firstGen: true, hardship: true, rigor: { ap: 8, ib: 0, honors: 0, dual: 0 }, activities: [{ name: "Robotics", leadership: true, years: 4 }] });
+  assert.equal(feature.estimateCollege({ ...base }).estimate, plain, "early application, essays, rigor, activities and circumstances are not quantified");
+  profile.college = { testType: "sat", sat: 1300, gpa: 3.4, gpaScale: "4uw" };
 
-  assert(low.estimate >= 0 && high.estimate <= 1, "estimate stays in 0..1");
-  assert(low.lo <= low.estimate && low.estimate <= low.hi, "estimate inside its range");
-  const noScore = feature.estimateCollege({ ...base });
+  const rate20 = feature.estimateCollege({ ...base, adm: 20 });
+  const rate80 = feature.estimateCollege({ ...base, adm: 80 });
+  assert(rate80.estimate > rate20.estimate, "a higher official rate gives a higher estimate for the same profile");
+  const tooSelective = feature.estimateCollege({ ...base, adm: 8 });
+  assert.equal(tooSelective.estimate, null, "below the assumed rate cutoff the estimate is unavailable, not a tiny number");
+  assert(tooSelective.unavailableReason, "unavailable estimates explain why");
+
+  assert(rate20.estimate > 0 && rate20.estimate < 1 && Number.isInteger(Math.round(rate20.estimate * 100)), "estimate is a whole percent in (0,1)");
+  for (const k of ["lo", "hi", "waitlist", "deny"]) assert(!(k in rate20), "invented field removed: " + k);
   profile.college.sat = null;
   const missing = feature.estimateCollege({ ...base });
-  assert((missing.hi - missing.lo) > (noScore.hi - noScore.lo), "missing score widens the uncertainty range");
+  assert.equal(missing.estimate, null, "no score means no estimate");
+  assert.equal(missing.analysis.score.status, "unknown", "missing score stays unknown");
 
   // ACT student compared with an SAT-only college uses the official concordance.
   profile.college = { testType: "act", act: 30, gpa: 3.7, gpaScale: "4uw" };
@@ -106,22 +120,20 @@ const feature = loadFeature(profile);
   // Three-way outcome model: accept + waitlist + deny = 1, bounded, and responsive to context.
   profile.college = { testType: "sat", sat: 1300, gpa: 3.5, gpaScale: "4uw", grade: "11" };
   const base3 = { id: 3, n: "Test U", st: "TX", city: "Test", ctrl: "private", adm: 20, enr: 10000, sr25: 1200, sr50: 1300, sr75: 1400, url: "example.edu" };
-  const oct = feature.estimateCollege({ ...base3 });
-  assert(Math.abs(oct.estimate + oct.waitlist + oct.deny - 1) < 1e-9, "accept + waitlist + deny must sum to 1");
-  assert(oct.waitlist >= 0 && oct.waitlist <= 0.5, "waitlist share stays bounded");
-  assert(["low", "medium", "high"].includes(oct.confidence), "confidence is labeled");
-  assert(Array.isArray(oct.confNotes), "confidence notes exist");
+  const oct = feature.estimateCollege({ ...base3, test: "Required" });
+  // No invented waitlist/deny split and no confidence levels: the estimate is uncalibrated and says so.
+  assert(!("waitlist" in oct) && !("deny" in oct), "no waitlist or deny shares are modeled");
+  assert.equal(oct.confidence, "uncalibrated", "confidence is never low/medium/high");
+  assert.equal(oct.calibrated, false);
+  assert.equal(oct.probability, null);
   profile.college.applyPlan = "early";
-  const early = feature.estimateCollege({ ...base3 });
-  assert(early.estimate > oct.estimate, "early application raises the estimate");
   profile.college.appStrength = "strong";
-  const strong = feature.estimateCollege({ ...base3 });
-  assert(strong.estimate > early.estimate, "strong essays/recs raise the estimate");
+  assert.equal(feature.estimateCollege({ ...base3, test: "Required" }).estimate, oct.estimate, "early plan and essay strength are not boosts");
   profile.college.appStrength = "developing";
-  const developing = feature.estimateCollege({ ...base3 });
-  assert(developing.estimate < strong.estimate, "developing essays/recs lower the estimate");
+  assert.equal(feature.estimateCollege({ ...base3, test: "Required" }).estimate, oct.estimate, "developing essays are not a penalty");
   const pieSource = fs.readFileSync("college.js", "utf8");
-  assert(pieSource.includes("function pieHtml"), "pie renderer present");
+  assert(!pieSource.includes("function pieHtml"), "accept/waitlist/deny pie is gone");
+  assert(!pieSource.includes("function expectedGpa") && !pieSource.includes("function activityStrength"), "arbitrary GPA benchmarks and activity boosts are gone");
   assert(pieSource.includes("function ccFilterBarHtml"), "list filters live over the list");
   assert(!pieSource.includes("function profileHtml"), "the stacked duplicate profile block is gone");
 
@@ -134,5 +146,5 @@ const feature = loadFeature(profile);
   assert(appSource.includes("unansweredReminderHtml"), "unanswered questions are surfaced without changing estimates");
   assert(appSource.includes('data-college-open="predicted"'), "predicted-score screen links into College Score Goals");
 
-  console.log("PASS: college dataset is sourced and internally consistent; the estimate rises with scores, GPA, and admit rate; conversions, targets, and the unanswered-questions rule behave.");
+  console.log("PASS: college dataset is sourced and internally consistent; the estimate responds to the score comparison and official rate (never GPA or unsupported context); conversions, targets, and the unanswered-questions rule behave.");
 })().catch((error) => { console.error(error); process.exit(1); });

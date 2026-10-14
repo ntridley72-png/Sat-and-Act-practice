@@ -55,14 +55,14 @@ const SHOTS = path.join(ROOT, "tests", "screenshots");
   await page.waitForSelector("#collegeDetail");
   await page.fill("#ccSat", "1400");
   await page.dispatchEvent("#ccSat", "change");
-  await page.waitForSelector(".college-detail .college-pie");
-  const firstEstimate = await page.textContent(".college-detail .pie-center");
+  await page.waitForSelector(".college-detail .adm-official");
+  const firstEstimate = (await page.textContent(".college-detail .adm-official .adm-line")).replace(/\s+/g, " ").trim();
   await page.click(".college-detail [data-save]");
   await page.click("[data-close-detail]");
   await page.fill("#collegeQuery", "University of Michigan");
   await page.waitForTimeout(300);
   await page.click(".college-row-main");
-  await page.waitForSelector(".college-detail .college-pie");
+  await page.waitForSelector(".college-detail .adm-official");
   await page.click(".college-detail [data-save]");
   await page.waitForSelector(".cc-card");
   if ((await page.locator(".cc-card").count()) < 2) throw new Error("saved colleges did not render as comparison cards");
@@ -199,5 +199,5 @@ const SHOTS = path.join(ROOT, "tests", "screenshots");
 
   await browser.close();
   if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
-  console.log("PASS: college UI loads, searches by abbreviation, estimates, saves, compares, themes, and persists. Estimate seen: " + firstEstimate);
+  console.log("PASS: college UI loads, searches by abbreviation, estimates, saves, compares, themes, and persists. Official line seen: " + firstEstimate);
 })().catch((error) => { console.error(error); process.exit(1); });

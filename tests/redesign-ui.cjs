@@ -128,8 +128,12 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   await page.fill("#collegeQuery", "UCLA");
   await page.waitForTimeout(350);
   await page.click(".college-row-main");
-  await page.waitForSelector(".college-detail .college-pie");
-  if ((await page.locator(".college-detail .college-pie-legend li").count()) < 3) throw new Error("acceptance pie should show accept, waitlist, and deny");
+  await page.waitForSelector(".college-detail .adm-official");
+  {
+    const detail = await page.textContent(".college-detail");
+    if (!/acceptance rate/i.test(detail)) throw new Error("detail must show the official acceptance rate");
+    if (/waitlist|deny/i.test(await page.textContent(".college-detail .college-estimate"))) throw new Error("invented waitlist/deny shares must not be shown");
+  }
   await page.click("[data-close-detail]");
   await page.click("#collegeBack");
 

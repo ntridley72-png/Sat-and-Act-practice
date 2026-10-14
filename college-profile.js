@@ -34,6 +34,8 @@
   // No score on file, or no reported range to compare against: show nothing at all
   // rather than an empty bar.
   if (!mode) return;
+  // A test-blind college does not consider scores, so a score comparison would mislead.
+  if (/not considered|test[- ]blind/i.test(String(D.test || ""))) return;
 
   var score = mode === "sat" ? sat : act;
   var lo = mode === "sat" ? D.sr25 : D.ar25;
@@ -49,15 +51,15 @@
 
   var verdict, verdictClass, note;
   if (score >= hi) {
-    verdict = "Likely";
+    verdict = "Above range";
     verdictClass = "good";
-    note = "Above their typical range.";
+    note = "Above the middle 50% of enrolled students. Not an admission cutoff or prediction.";
   } else if (score >= lo) {
-    verdict = "Target";
+    verdict = "Within range";
     verdictClass = "mid";
-    note = "Right inside their middle 50%.";
+    note = "Inside the middle 50% of enrolled students. Not an admission cutoff or prediction.";
   } else {
-    verdict = "Reach";
+    verdict = "Below range";
     verdictClass = "warn";
     var gap = hi - score;
     if (mode === "sat") {

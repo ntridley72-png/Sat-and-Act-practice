@@ -142,11 +142,6 @@
     const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
     return z > 0 ? 1 - p : p;
   }
-  function admittedPercentile(score, lo, hi) {
-    if (score == null || lo == null || hi == null) return null;
-    const mid = (lo + hi) / 2, sigma = Math.max(20, (hi - lo) / 1.349);
-    return Math.max(1, Math.min(99, Math.round(normCdf((score - mid) / sigma) * 100)));
-  }
 
   // ---- Home score card + college comparison ----
   const hsc = { open: false, selected: null, stats: null, statsKey: "", loading: false, avgKey: "" };
@@ -174,7 +169,6 @@
         const bandL = lo != null ? Math.max(0, Math.min(100, ((lo - 1000) / 600) * 100)) : 0;
         const bandW = lo != null ? Math.max(0, Math.min(100 - bandL, ((hi - lo) / 600) * 100)) : 0;
         const youX = Math.max(0, Math.min(100, ((avg.score - 1000) / 600) * 100));
-        const inClass = admittedPercentile(avg.score, lo, hi);
         const gradeTile = (() => {
           if (!grade) return tile("—", "Set your grade in College to compare with your class");
           if (hsc.stats && hsc.stats.topPercent != null) return tile("Top " + hsc.stats.topPercent + "%", "Among FunSAT users in grade " + esc(grade) + " (n=" + hsc.stats.count + ")");
@@ -193,14 +187,14 @@
           '<span class="hsc-you" style="left:' + youX.toFixed(1) + '%" title="Your average: ' + avg.score + '"></span></div>' +
           '<div class="hsc-scale-labels"><span>1000</span><span>1200</span><span>1400</span><span>1600</span></div></div>' +
           '<div class="hsc-tiles">' +
-          tile(lo != null ? lo + "–" + hi : blind ? "Test-blind" : "Not reported", lo != null ? "Admitted middle 50% (SAT, enrolled)" : blind ? "SAT/ACT not considered for admission" : "College didn't report an SAT range") +
-          tile(inClass != null ? "~" + inClass + "%" : "—", "Your estimated percentile within their admitted class") +
+          tile(lo != null ? lo + "–" + hi : blind ? "Test-blind" : "Not reported", lo != null ? "Enrolled middle 50% (SAT); not an admission cutoff" : blind ? "SAT/ACT not considered for admission" : "College didn't report an SAT range") +
+          tile(blind || lo == null ? "—" : avg.score > hi ? "Above" : avg.score < lo ? "Below" : "Within", blind || lo == null ? "No score comparison available" : "Your average vs the published enrolled range (no exact percentile can be derived from two endpoints)") +
           gradeTile +
           pointsTile +
           "</div>" +
-          (window.collegeFeature && collegeFeature.estimateCollege ? (() => { const e2 = collegeFeature.estimateCollege(college); return '<div class="college-split" aria-label="Estimated accept, waitlist, deny"><span style="width:' + Math.round(e2.estimate * 100) + '%;background:var(--fx-accept)"></span><span style="width:' + Math.round(e2.waitlist * 100) + '%;background:var(--fx-waitlist)"></span><span style="width:' + Math.round(e2.deny * 100) + '%;background:var(--fx-deny)"></span></div><div class="hsc-scale-labels"><span>Accept ' + Math.round(e2.estimate * 100) + '%</span><span>Waitlist ' + Math.round(e2.waitlist * 100) + '%</span><span>Deny ' + Math.round(e2.deny * 100) + "%</span></div>"; })() : "") +
+          (window.collegeFeature && collegeFeature.estimateCollege ? (() => { const o = collegeFeature.estimateCollege(college).analysis.official; return '<p class="hsc-note">Official acceptance rate: ' + (o.rate == null ? "unknown" : AdmissionsModel.fmtRate(o.rate) + " (" + esc(o.cohortLabel) + (o.countsKnown ? "" : "; counts unavailable") + ")") + ". Source: " + esc(o.sourceName || "not available") + ".</p>"; })() : "") +
           '<div class="hsc-tabs" role="tablist" aria-label="Saved colleges">' + saved.map((x) => '<button type="button" role="tab" aria-selected="' + (x.id === hsc.selected) + '" class="hsc-tab' + (x.id === hsc.selected ? " active" : "") + '" data-college-tab="' + x.id + '">' + esc(x.n) + "</button>").join("") + "</div>" +
-          '<p class="hsc-note">Percentiles use an estimate from the college\'s reported enrolled range. Same-grade comparison is computed on FunSAT\'s server and hidden until enough users share your grade.</p>' +
+          '<p class="hsc-note">Ranges describe students who enrolled, not admission cutoffs. Same-grade comparison is computed on FunSAT\'s server and hidden until enough users share your grade.</p>' +
           "</div>";
       }
     }

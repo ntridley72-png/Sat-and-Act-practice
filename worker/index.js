@@ -24,7 +24,15 @@ const MAX_PROGRESS_BYTES = 900 * 1024;
 const RESET_MINUTES = 60, MAX_RESETS_PER_HOUR = 3;
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
+    const res = await this.handle(request, env, ctx);
+    // Preview deployments set PREVIEW_MODE so crawlers skip them. This is not access control.
+    if (env.PREVIEW_MODE !== "1") return res;
+    const out = new Response(res.body, res);
+    out.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+    return out;
+  },
+  async handle(request, env) {
     const url = new URL(request.url);
     if (!url.pathname.startsWith("/api/")) {
       const canonical = canonicalRedirect(url);
@@ -413,9 +421,10 @@ async function workersAi(env, messages, teaching, schema) {
   return { attempts };
 }
 async function aiTutor(req, env) {
-  if (!env.AI && !env.GROQ_API_KEY) return json({ code: "no_key" }, 503, req);
+  if (!env.AI && !env.GROQ_API_KEY && env.AI_MODE !== "mock") return json({ code: "no_key" }, 503, req);
   // Only the app's own pages may use the tutor, so the key can't be borrowed by other sites.
-  if (!AI_ORIGINS.test(req.headers.get("Origin") || "")) { console.log("AI tutor refused origin", req.headers.get("Origin")); return json({ code: "forbidden" }, 403, req); }
+  const origin = req.headers.get("Origin") || "";
+  if (!AI_ORIGINS.test(origin) && !(env.EXTRA_AI_ORIGIN && origin === env.EXTRA_AI_ORIGIN)) { console.log("AI tutor refused origin", req.headers.get("Origin")); return json({ code: "forbidden" }, 403, req); }
   let body; try { body = await req.json(); } catch { return json({ error: "Bad request." }, 400, req); }
   const messages = Array.isArray(body.messages) ? body.messages.slice(-12)
     .filter((m) => m && ["system", "user", "assistant"].includes(m.role) && typeof m.content === "string")
@@ -429,6 +438,14 @@ async function aiTutor(req, env) {
   const row = await env.DB.prepare("INSERT INTO ai_usage (ip, win, n) VALUES (?, ?, 1) ON CONFLICT(ip, win) DO UPDATE SET n = n + 1 RETURNING n").bind(ip, win).first();
   if (row && row.n > AI_PER_WINDOW) return json({ code: "app_rate_limited", retryAfter: Math.ceil(((win + 1) * AI_WINDOW_MIN * 60000 - Date.now()) / 1000) }, 429, req);
   if (Math.random() < 0.02) await env.DB.prepare("DELETE FROM ai_usage WHERE win < ?").bind(win - 1).run();
+  // Preview-only canned reply: no model, key, or Workers AI binding is touched, and it cannot invent odds.
+  if (env.AI_MODE === "mock") {
+    const note = "[Mock AI reply for the isolated preview. No language model was called.]";
+    const content = body.teaching
+      ? JSON.stringify({ shortAnswer: "", detailedSteps: [note], simpleSteps: [note], memoryTip: "", equations: [], verification: "", nextPractice: "" })
+      : note + " I can only discuss the numbers shown by the admissions estimator.";
+    return json({ content, provider: "mock", model: "mock", usage: normalizeUsage(null), requestId: makeRequestId() }, 200, req);
+  }
   // 1) Groq is primary because its interactive latency is substantially lower. Try every model so
   // a retired model or a per-model quota still resolves. A caller may pass a model hint (used by
   // diagnostics) to try one model first, or onlyModel to prove that exact Groq model works.

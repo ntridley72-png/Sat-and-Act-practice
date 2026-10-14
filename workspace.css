@@ -1058,6 +1058,17 @@ body[data-workspace] button.fxav-none.on{border-color:var(--fx-accent);color:var
 body[data-workspace] .acct-btn .av.has-avatar .fxav{width:30px;height:30px;flex:none;max-width:none}
 body[data-workspace] .fxav-picker button.fxav-opt .fxav{width:76px;height:76px;flex:none;max-width:none}
 body[data-workspace] .fxav-picker button.fxav-opt{flex:0 0 auto;width:auto;box-sizing:content-box}
+/* Uploaded photo preview sits in the same grid as the silhouettes. */
+body[data-workspace] .fxav-opt.fxav-photo-tile{position:relative;display:inline-block;padding:4px;background:var(--fx-surface-2);
+  border:2px solid var(--fx-accent);border-radius:var(--fx-r-md);line-height:0}
+body[data-workspace] .fxav-opt.fxav-photo-tile .fxav-photo{width:76px;height:76px;border-radius:50%;object-fit:cover}
+.fxav-photo-tag{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);padding:1px 7px;border-radius:999px;
+  background:var(--fx-accent);color:#fff;font-size:10px;font-weight:700;letter-spacing:.04em;line-height:1.6}
+.fxav-upload{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:14px}
+.fxav-upload .small{flex:1 1 220px;margin:0}
+.fxav-upload .small.err{color:var(--ws-error,#a62d29)}
+img.fxav-photo{object-fit:cover}
+body[data-workspace] .acct-btn .av.has-avatar img.fxav-photo{width:30px;height:30px;border-radius:50%}
 
 /* ---------- One accent, one primary action ----------
    body[data-workspace] button paints every unmarked button in the accent, so a

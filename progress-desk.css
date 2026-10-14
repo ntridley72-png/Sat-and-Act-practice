@@ -88,7 +88,7 @@ body.pd-shell .topbar #btnCollege {order:5}
 body.pd-shell .topbar #btnScholarships {order:6}
 body.pd-shell .topbar #btnArcade {order:7}
 body.pd-shell .topbar .pd-appearance {order:12;margin-top:auto;padding-top:20px;border-top:1px solid var(--desk-line)}
-body.pd-shell .topbar .workspace-theme-label {order:13}
+body.pd-shell .topbar .workspace-theme-label {order:13;margin-top:10px}
 body.pd-shell .topbar #btnSound {order:14;font-size:0}
 body.pd-shell .topbar #btnSound::after {content:"Sound";font-size:14px}
 body.pd-shell .topbar #btnAccount {order:15}

@@ -21,7 +21,8 @@
   notesButton.innerHTML=icon('notes')+'<span>Notes</span>'; notesButton.onclick=()=>selectLearningTab('notes'); toolbar.append(notesButton);
   const select = document.createElement('select'); select.id='workspaceTheme'; select.setAttribute('aria-label','Workspace layout');
   themes.forEach((t)=>{const option=document.createElement('option');option.value=t;option.textContent=labels[t];select.append(option);}); select.value=theme;
-  const themeLabel=document.createElement('label');themeLabel.className='workspace-theme-label';themeLabel.innerHTML='<span class="theme-label-text">Theme</span>';themeLabel.append(select);
+  const themeLabel=document.createElement('label');themeLabel.className='workspace-theme-label';themeLabel.innerHTML='<span class="theme-label-text">Layout</span>';themeLabel.append(select);
+  themeLabel.title='Exam, Notebook, and Focus are study layouts. Appearance (dark or light) is a separate control.';
   const badges=document.querySelector('.badges'),account=document.getElementById('btnAccount');badges.insertBefore(themeLabel,account);
   document.querySelector('.brand').innerHTML='Fun<span class="brand-sat">SAT</span>';
   const applyTheme=()=>{document.body.dataset.workspace=theme;document.documentElement.style.colorScheme=document.documentElement.dataset.deskAppearance||(theme==='focus'?'dark':'light');};

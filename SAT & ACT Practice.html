@@ -896,8 +896,14 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
       <p style="margin:6px 0 4px">Signed in as <strong id="authWho"></strong></p>
       <section class="fxav-picker" id="avatarPicker" aria-labelledby="avatarPickerTitle" hidden>
         <h3 id="avatarPickerTitle">Pick an avatar</h3>
-        <p class="small muted">Drawn in your browser from your account name. Nothing is uploaded.</p>
+        <p class="small muted">Built-in silhouettes, or upload your own photo. A photo is cropped square, saved only to your account, and never shown publicly.</p>
         <div class="fxav-grid" id="avatarChoices" role="radiogroup" aria-labelledby="avatarPickerTitle"></div>
+        <div class="fxav-upload">
+          <button type="button" class="secondary" id="avatarUploadBtn" aria-describedby="avatarUploadStatus">Upload a photo</button>
+          <button type="button" class="secondary" id="avatarRemovePhoto" hidden>Remove photo</button>
+          <input type="file" id="avatarUpload" accept="image/png,image/jpeg,image/webp" hidden aria-label="Upload a profile photo">
+          <p class="small muted" id="avatarUploadStatus" aria-live="polite">PNG, JPEG, or WebP · up to 5 MB · cropped square and stored on your account</p>
+        </div>
       </section>
       <p class="small muted" id="authSync">Your progress syncs automatically.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" id="authSyncNow">Sync now</button><button type="button" class="secondary" id="btnHelpHistory">Help history</button><button type="button" class="secondary" id="authOutBtn">Sign out</button></div>

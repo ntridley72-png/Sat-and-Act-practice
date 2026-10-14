@@ -5520,16 +5520,27 @@ addEventListener("online", () => { if (cloud.user) cloud.pull(); });
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") cloud.push(true); });
 window.addEventListener("pagehide", () => { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch (e) {} cloud.push(true); });
 function setAuthMsg(t, err) { const m = $("authMsg"); m.textContent = t || ""; m.className = "auth-msg" + (t ? (err ? " err" : " ok") : ""); }
-/* ---- Generated avatars (avatar.js) ----
-   profile.avatar holds the chosen variant, or null for "no avatar". Nothing is
-   assigned until the person picks one, and signed out there is no stable id to
-   draw from, so both cases fall back to the letter badge. */
+/* ---- Avatars (avatar.js) ----
+   profile.avatar holds the chosen silhouette variant, or null for "no avatar".
+   profile.avatarImage holds a small square JPEG data URL the app produced from
+   an uploaded PNG/JPEG/WebP (canvas re-encode strips metadata and rejects
+   SVG/HTML by construction). Nothing is assigned until the person picks it,
+   the photo is stored only in the signed-in account's own profile, and signed
+   out there is no seed or account to attach either to, so the letter badge
+   remains the fallback. */
 function avatarSeed() { const u = cloud.user; return window.FunSATAvatar ? FunSATAvatar.seedFor(u) : null; }
 function avatarChoice() { return profile.avatar == null ? null : Number(profile.avatar); }
-function avatarSvg(size, decorative) {
-  const seed = avatarSeed(), pick = avatarChoice();
-  if (seed == null || pick == null || !window.FunSATAvatar) return "";
-  return FunSATAvatar.svg(seed, pick, size, { decorative: !!decorative, label: "Your avatar" });
+function avatarPhoto() {
+  const src = profile.avatarImage;
+  return window.FunSATAvatar && FunSATAvatar.validPhoto(src) ? src : null;
+}
+function avatarArt(size, decorative) {
+  if (avatarSeed() == null || !window.FunSATAvatar) return "";
+  const photo = avatarPhoto();
+  if (photo) return FunSATAvatar.photoMarkup(photo, size, { decorative: !!decorative, label: "Your photo" });
+  const pick = avatarChoice();
+  if (pick == null) return "";
+  return FunSATAvatar.svg(avatarSeed(), pick, size, { decorative: !!decorative, label: "Your avatar" });
 }
 function renderAvatarPicker() {
   const host = $("avatarChoices"), panel = $("avatarPicker");
@@ -5537,36 +5548,107 @@ function renderAvatarPicker() {
   const seed = avatarSeed();
   panel.hidden = !seed;
   if (!seed) { host.innerHTML = ""; return; }
-  const pick = avatarChoice();
+  const pick = avatarChoice(), photo = avatarPhoto();
   const count = window.FunSATAvatar ? FunSATAvatar.VARIANTS : 8;
   let html = "";
+  if (photo) {
+    html += '<span class="fxav-opt fxav-photo-tile on" role="radio" aria-checked="true" aria-label="Your uploaded photo">' +
+      FunSATAvatar.photoMarkup(photo, 76, { decorative: true }) + '<span class="fxav-photo-tag">Photo</span></span>';
+  }
   for (let i = 0; i < count; i++) {
-    html += '<button type="button" role="radio" class="fxav-opt' + (pick === i ? " on" : "") + '" data-avatar="' + i +
-      '" aria-checked="' + (pick === i) + '" aria-label="Avatar ' + (i + 1) + ' of ' + count + '">' +
+    html += '<button type="button" role="radio" class="fxav-opt' + (!photo && pick === i ? " on" : "") + '" data-avatar="' + i +
+      '" aria-checked="' + (!photo && pick === i) + '" aria-label="Avatar ' + (i + 1) + ' of ' + count + '">' +
       FunSATAvatar.svg(seed, i, 76, { decorative: true }) + "</button>";
   }
-  html += '<button type="button" role="radio" class="fxav-opt fxav-none' + (pick == null ? " on" : "") +
-    '" data-avatar="none" aria-checked="' + (pick == null) + '">No avatar</button>';
+  html += '<button type="button" role="radio" class="fxav-opt fxav-none' + (!photo && pick == null ? " on" : "") +
+    '" data-avatar="none" aria-checked="' + (!photo && pick == null) + '">No avatar</button>';
   host.innerHTML = html;
+  const rm = $("avatarRemovePhoto");
+  if (rm) rm.hidden = !photo;
+  const status = $("avatarUploadStatus");
+  if (status && !photo) status.textContent = "PNG, JPEG, or WebP · up to 5 MB · cropped square and stored on your account";
 }
 function paintAvatar() {
   const slot = $("btnAccount").querySelector(".av");
   const u = cloud.user;
-  const art = avatarSvg(30, true);
+  const art = avatarArt(30, true);
   slot.classList.toggle("has-avatar", !!art);
   slot.innerHTML = art || "";
   if (!art) slot.textContent = u ? (u.email[0] || "?").toUpperCase() : "👤";
   slot.setAttribute("aria-hidden", "true");
   renderAvatarPicker();
 }
+function loadImageFile(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("decode")); };
+    img.src = url;
+  });
+}
+// Square center crop, re-encoded as JPEG. Re-encoding through a canvas drops
+// EXIF/GPS and any embedded payload, and the allowlist above means SVG or HTML
+// can never reach this point.
+function cropToSquareDataUrl(img, size) {
+  const canvas = document.createElement("canvas");
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  const side = Math.min(img.naturalWidth, img.naturalHeight);
+  ctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, size, size);
+  return canvas.toDataURL("image/jpeg", 0.82);
+}
+function setAvatarStatus(msg, isError) {
+  const status = $("avatarUploadStatus");
+  if (!status) return;
+  status.textContent = msg;
+  status.classList.toggle("err", !!isError);
+}
+async function handleAvatarUpload(file) {
+  if (!file) return;
+  if (!/^image\/(png|jpeg|webp)$/.test(file.type || "")) { setAvatarStatus("That file type isn't supported. Use PNG, JPEG, or WebP.", true); return; }
+  if (file.size > 5 * 1024 * 1024) { setAvatarStatus("That image is larger than 5 MB. Choose a smaller file.", true); return; }
+  let img;
+  try { img = await loadImageFile(file); } catch (err) { setAvatarStatus("That image couldn't be decoded as a photo. Try another file.", true); return; }
+  if (img.naturalWidth < 64 || img.naturalHeight < 64) { setAvatarStatus("That image is too small. Use at least 64 × 64 pixels.", true); return; }
+  let data;
+  try { data = cropToSquareDataUrl(img, 128); } catch (err) { setAvatarStatus("That image couldn't be processed. Try another photo.", true); return; }
+  if (!window.FunSATAvatar.validPhoto(data)) { setAvatarStatus("That image couldn't be processed safely. Try another photo.", true); return; }
+  profile.avatarImage = data;
+  try { saveProfile(); } catch (err) {}
+  cloud.push(true);
+  paintAvatar();
+  setAvatarStatus("Photo saved to your account. Only you see it.", false);
+}
+function removeAvatarPhoto(silent) {
+  profile.avatarImage = null;
+  try { saveProfile(); } catch (err) {}
+  cloud.push(true);
+  paintAvatar();
+  if (!silent) setAvatarStatus("Photo removed.", false);
+}
 document.addEventListener("click", (e) => {
   const opt = e.target.closest("[data-avatar]");
   if (!opt) return;
   profile.avatar = opt.dataset.avatar === "none" ? null : Number(opt.dataset.avatar);
+  if (avatarPhoto()) profile.avatarImage = null;
   try { saveProfile(); } catch (err) {}
+  cloud.push(true);
   paintAvatar();
   const again = $("avatarChoices").querySelector('[data-avatar="' + opt.dataset.avatar + '"]');
   if (again) again.focus();
+});
+document.addEventListener("click", (e) => {
+  if (e.target.closest("#avatarUploadBtn")) { const input = $("avatarUpload"); if (input) input.click(); }
+});
+document.addEventListener("change", (e) => {
+  if (e.target && e.target.id === "avatarUpload") {
+    const input = e.target;
+    handleAvatarUpload(input.files && input.files[0]).then(() => { input.value = ""; });
+  }
+});
+document.addEventListener("click", (e) => {
+  if (e.target.closest("#avatarRemovePhoto")) removeAvatarPhoto(false);
 });
 
 function paintAccount() {

@@ -40,11 +40,16 @@ Existing cached official Wrangler 4.150.0 succeeds at:
 Do not delete user files to free space. Generated public/ may be rebuilt safely
 by its existing scoped build command; old SEO-output stash is recoverable.
 
-Remaining: finish contrast findings in both appearances, final combined-source
-visual comparison/design-qa.md; capture mobile and public pages; rerun final build,
-syntax/diff/security checks. Commit only task files and QA evidence, not unrelated
-test screenshot churn. Safely integrate UI commits into primary and push verified
-branch without deploying. Re-read git status first; another agent may have advanced it.
+Implementation and local QA are complete. See design-qa.md for the final passing
+combined comparison, all five fidelity surfaces, suite results and verification
+limits. Final source/build stamp is c81d7346. New UI sources and evidence are
+committed; incidental legacy screenshots and earlier generated outputs remain
+recoverable in named git stashes. The primary checkout receives a fast-forward
+of the verified UI branch, preserving the car release and unrelated docs/prompts.
+Remaining operator decision: authorize a live Cloudflare deployment, followed by
+public-path and production account-sync smoke checks. Do not deploy automatically.
+With explicit user approval, only /Users/noahridley/.npm/_cacache was removed
+to resolve ENOSPC; npm can reconstruct that download cache. No personal data removed.
 
 Optimizer and split free-helper calls already attempted once and timed out; do
 not repeat them recursively. Read-only feature inventory agent finished. No further

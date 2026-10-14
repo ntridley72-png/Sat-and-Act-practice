@@ -1340,7 +1340,7 @@ def asset_version():
     invalidates every cached copy without waiting for max-age to expire."""
     import hashlib
     h = hashlib.sha1()
-    for name in ("app.js", "redesign.css", "workspace.css", "ads.js",
+    for name in ("app.js", "redesign.css", "workspace.css", "ads.js", "progress-desk.css", "progress-desk.js",
                  "guides/guide.css", "subjects.css", "college.js"):
         f = ROOT / name
         if f.exists():

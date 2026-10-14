@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes">
+<!doctype html><html lang="en" data-desk-appearance="dark"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="FunSAT">
 <meta name="theme-color" content="#1D6FE0">
@@ -551,8 +551,15 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 <link rel="stylesheet" href="racing/racing.css">
 <link rel="stylesheet" href="redesign.css">
 <link rel="stylesheet" href="subjects.css">
+<script>
+/* Appearance is independent of the three study layouts and applied before paint. */
+(()=>{let value='dark';try{const saved=localStorage.getItem('funsatDeskAppearance');if(saved==='light'||saved==='dark')value=saved;}catch(e){}document.documentElement.dataset.deskAppearance=value;document.documentElement.style.colorScheme=value;})();
+</script>
+<link rel="stylesheet" href="progress-desk.css">
 </head>
-<body>
+<body class="pd-shell" data-workspace="exam"><script>
+(()=>{try{const saved=localStorage.getItem('funsatWorkspaceTheme');if(['exam','notebook','focus'].includes(saved))document.body.dataset.workspace=saved;}catch(e){}})();
+</script>
 <noscript>
   <main class="noscript-summary">
     <h2>FunSAT SAT and ACT Practice</h2>
@@ -562,10 +569,11 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
   </main>
 </noscript>
 <div class="wrap">
-  <div class="topbar">
+  <div class="topbar" role="navigation" aria-label="Main navigation">
     <button class="icon-btn" id="btnHome" type="button" title="Home" aria-label="Go to home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button>
     <div class="brand">Fun<span class="brand-sat">SAT</span></div>
-    <div class="badges">
+    <button id="deskMenu" type="button" aria-expanded="false" aria-controls="deskNavigation">Menu</button>
+    <div class="badges" id="deskNavigation">
       <span class="badge" id="badgeTimer">Time 0:00</span>
       <button class="icon-btn" id="btnPause" type="button" title="Pause the timer" aria-label="Pause">⏸</button>
       <span class="badge" id="badgeAcc">—</span>
@@ -578,7 +586,9 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
       <button class="arcade-btn" id="btnCollege" type="button" title="Compare your scores with colleges"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5L2 9z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/></svg><span>College</span></button>
       <button class="arcade-btn" id="btnScholarships" type="button" title="Search scholarships"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M8.6 13.4 7 22l5-3 5 3-1.6-8.6"/></svg><span>Scholarships</span></button>
       <button class="arcade-btn" id="btnArcade" title="Play mini-games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h4M9 10v4"/><circle cx="15.5" cy="11" r="1"/><circle cx="17.5" cy="13.5" r="1"/><path d="M4 8h16a2 2 0 0 1 2 2v5a3 3 0 0 1-3 3 3 3 0 0 1-2.4-1.2L15 15H9l-1.6 1.8A3 3 0 0 1 5 18a3 3 0 0 1-3-3v-5a2 2 0 0 1 2-2z"/></svg><span>Arcade</span></button>
-      <button class="sound-btn" id="btnSound" title="Toggle sound">🔊</button>
+      <button class="arcade-btn" id="deskReview" type="button">Review</button>
+      <label class="pd-appearance" for="deskAppearance">Appearance<select id="deskAppearance" data-desk-appearance-control><option value="dark">Dark</option><option value="light">Light</option></select></label>
+      <button class="sound-btn" id="btnSound" title="Toggle sound" aria-label="Toggle sound">🔊</button>
       <span class="autosave" id="autosave">✓ Autosaved</span>
       <button class="acct-btn" id="btnAccount" type="button" title="Sign in to save your progress"><span class="av" id="acctAvatar"></span><span id="acctLabel">Sign in</span></button>
     </div>
@@ -588,7 +598,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
     <section id="screen-start" class="start" style="display:none">
       <header class="st-head">
         <div class="st-kicker">FunSAT — SAT &amp; ACT prep, college &amp; scholarships · scored like the real tests</div>
-        <h1>Set up your practice</h1>
+        <h1>Your practice desk</h1>
         <div class="st-chips">
       <span class="st-chip"><svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3 3.5 5.5 6 5.5 9.5A5.5 5.5 0 0 1 12 18a5.5 5.5 0 0 1-5.5-5.5C6.5 9 9 6.5 12 3z"/><path d="M12 18c-1.4 0-2.5-1-2.5-2.3 0-1.4 1-2.2 2.5-4 1.5 1.8 2.5 2.6 2.5 4C14.5 17 13.4 18 12 18z"/></svg> 3-correct answer combo = bonus token</span>
           <span class="st-chip"><svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10.5h5M9.5 13.5h5"/></svg> Every 3 questions = 1 arcade credit</span>
@@ -597,12 +607,25 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
       </header>
       <div class="st-grid">
         <div class="st-main card" id="practice-setup">
-          <div id="homeScoreCard" class="home-score-card" style="display:none" role="region" aria-label="Your average score and college comparison"></div>
           <div id="resumeBox" class="st-resume" style="display:none">
             <div id="resumeInfo"></div>
             <div class="st-resume-btns"><button id="btnResume">Resume</button><button id="btnDiscard" class="danger">Discard</button></div>
           </div>
 
+          <section class="pd-summary" aria-label="Your progress">
+            <div class="pd-stat"><span>Practice estimate</span><strong id="deskEstimate">Not yet</strong></div>
+            <div class="pd-stat"><span>Personal SAT target</span><strong id="deskTarget">Not set</strong><button id="deskSetTarget" type="button" class="ghost">Set in College</button></div>
+            <div class="pd-stat"><span>Tests completed</span><strong id="deskTests">0</strong></div>
+            <p class="pd-stat-note" id="deskEstimateNote">Practice estimates are unofficial. Subject drills do not change them.</p>
+          </section>
+          <section class="pd-skills" id="deskSkills" aria-labelledby="deskSkillsTitle">
+            <h2 id="deskSkillsTitle">What to work on next</h2>
+            <table><thead><tr><th scope="col">Skill</th><th scope="col">Recent accuracy</th><th scope="col">Practice</th></tr></thead><tbody id="deskSkillRows"></tbody></table>
+            <p id="deskSkillEmpty">Complete a few subject drills to see your weakest practised skills here. No accuracy is shown before you practise.</p>
+            <button class="ghost" id="deskReviewAnswers" type="button">Review previous answers</button>
+            <p id="deskStatus" role="status"></p>
+            <p>Subject drills do not change your score estimate.</p>
+          </section>
           <details class="st-setup" id="setupDetails" open>
         <summary class="st-setup-sum"><span class="st-setup-line"><b id="setupSumText">Set up your practice</b><span class="st-setup-hint" id="setupSumHint"></span></span><span class="st-setup-act">Change</span></summary>
         <div class="st-setup-body">
@@ -663,10 +686,14 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
         <div class="st-go">
             <div class="st-summary"><strong id="stSummary">SAT · Both sections</strong><span id="stTime"></span></div>
             <button id="btnStart">Start practice →</button>
-          </div>
+        </div>
+          <div id="historyStart" class="card st-mini" style="display:none"></div>
         </div>
 
         <aside class="st-side">
+          <details class="pd-comparison"><summary>Score details and college comparisons</summary>
+            <div id="homeScoreCard" class="home-score-card" style="display:none" role="region" aria-label="Your average score and college comparison"></div>
+          </details>
           <div id="predStart"></div>
           <div class="card st-mini" id="bankStats"></div>
           <div class="card st-mini" id="vocabStart" style="display:none"></div>
@@ -685,7 +712,6 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
             <div class="st-mini-h"><svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.5 5.9.8-4.3 4.2 1 6-5.2-2.9L6.8 20l1-6L3.5 9.8l5.9-.8z"/></svg> Bookmarks</div>
             <button type="button" class="secondary" id="btnRetryBookmarks"></button>
           </div>
-          <div id="historyStart" class="card st-mini" style="display:none"></div>
           <div class="card st-mini st-empty" id="stEmpty">
             <div class="st-mini-h"><svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l5-5 4 3 6-7"/><path d="M3 21h18"/></svg> Your predicted score</div>
             <p class="small muted" style="margin:0">Finish a practice set and your predicted SAT or ACT score shows up here. It gets more accurate the more you practice.</p>
@@ -919,4 +945,5 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 <script defer src="subjects.js"></script>
 <script defer src="scholarships-data.js"></script>
 <script defer src="scholarships.js"></script>
+<script defer src="progress-desk.js"></script>
 </body></html>

@@ -1,0 +1,227 @@
+/* Progress Desk: shared appearance, live app shell and public reading pages.
+   Study-layout preferences and game-owned art stay independent of appearance. */
+:root {
+  --desk-bg:#171b1d;--desk-surface:#202629;--desk-soft:#293236;
+  --desk-ink:#eef2f3;--desk-muted:#b1bec4;--desk-line:#3b484e;
+  --desk-accent:#73c6bb;--desk-on-accent:#122525;--desk-tint:#243c3c;
+  color-scheme:dark;background:var(--desk-bg);
+}
+html[data-desk-appearance="light"] {
+  --desk-bg:#f4f7f7;--desk-surface:#ffffff;--desk-soft:#eaf0f0;
+  --desk-ink:#182c30;--desk-muted:#52676d;--desk-line:#c8d4d7;
+  --desk-accent:#176a62;--desk-on-accent:#ffffff;--desk-tint:#e0efec;
+  color-scheme:light;
+}
+html[data-desk-appearance] body[data-workspace] {
+  --ws-bg:var(--desk-bg);--ws-surface:var(--desk-surface);--ws-soft:var(--desk-soft);
+  --ws-ink:var(--desk-ink);--ws-muted:var(--desk-muted);--ws-line:var(--desk-line);
+  --ws-rule:var(--desk-line);--ws-accent:var(--desk-accent);--ws-tint:var(--desk-tint);
+  --ws-on-accent:var(--desk-on-accent);--ws-overlay:rgba(3,12,15,.82);
+  --ws-success:#85d3aa;--ws-error:#ffaaa3;--ws-warn:#efcb83;
+  --ws-success-bg:#20382d;--ws-error-bg:#3a2729;
+  --fx-bg:var(--desk-bg);--fx-surface:var(--desk-surface);--fx-surface-2:var(--desk-soft);
+  --fx-surface-3:var(--desk-soft);--fx-text:var(--desk-ink);--fx-muted:var(--desk-muted);
+  --fx-border:var(--desk-line);--fx-border-2:var(--desk-line);
+  --fx-accent:var(--desk-accent);--fx-on-accent:var(--desk-on-accent);
+  --fx-accent-soft:var(--desk-tint);--fx-overlay:rgba(3,12,15,.82);
+  --fx-text-2:var(--desk-ink);--fx-border-hover:var(--desk-accent);
+  --fx-accent-bg:var(--desk-tint);--fx-accent-line:var(--desk-accent);
+  --fx-good:#85d3aa;--fx-good-lt:#a2e2be;--fx-good-bg:#20382d;--fx-good-line:#588d71;--fx-on-good:#10221a;
+  --fx-warn:#efcb83;--fx-warn-bg:#3a3221;--fx-warn-line:#ad955f;
+  --fx-gold:#efcb83;--fx-gold-bg:#3a3221;--fx-gold-line:#ad955f;
+  --fx-info:#a9c9f4;--fx-info-text:#c6dcf7;--fx-info-bg:#253346;--fx-info-line:#7395bf;
+  --fx-violet:#cfb5ec;--fx-violet-bg:#33283f;--fx-track:var(--desk-soft);
+  --fx-accept:#85d3aa;--fx-waitlist:#a9c9f4;--fx-deny:#ffaaa3;
+  --fx-cat-1:#a9c9f4;--fx-cat-2:#efcb83;--fx-cat-3:#efa3c3;--fx-cat-4:#cfb5ec;--fx-cat-5:#85d3aa;--fx-cat-6:#bdc8ce;
+  --fx-r-sm:4px;--fx-r-md:6px;--fx-r-lg:6px;
+  --bg:var(--desk-bg);--panel:var(--desk-surface);--text:var(--desk-ink);
+  --ink:var(--desk-ink);--muted:var(--desk-muted);--line:var(--desk-line);
+  --mint:var(--desk-accent);--mint2:var(--desk-accent);--blue:var(--desk-accent);
+  background:var(--desk-bg);color:var(--desk-ink);color-scheme:dark;
+  transition:none;font-family:Archivo,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;scroll-padding-top:24px;
+}
+html[data-desk-appearance="light"] body[data-workspace] {
+  color-scheme:light;--ws-success:#176341;--ws-error:#a62d29;--ws-warn:#775414;
+  --ws-success-bg:#e7f4ec;--ws-error-bg:#fbece9;
+  --fx-good:#176341;--fx-good-lt:#176341;--fx-good-bg:#e7f4ec;--fx-good-line:#74a58a;--fx-on-good:#fff;
+  --fx-warn:#775414;--fx-warn-bg:#faf1df;--fx-warn-line:#aa956d;
+  --fx-gold:#775414;--fx-gold-bg:#faf1df;--fx-gold-line:#aa956d;
+  --fx-info:#285b92;--fx-info-text:#285b92;--fx-info-bg:#edf3fa;--fx-info-line:#88a7c9;
+  --fx-violet:#694294;--fx-violet-bg:#f3ecfa;--fx-accept:#176341;--fx-waitlist:#285b92;--fx-deny:#a62d29;
+  --fx-cat-1:#285b92;--fx-cat-2:#775414;--fx-cat-3:#93375e;--fx-cat-4:#694294;--fx-cat-5:#176341;--fx-cat-6:#52676d;
+}
+body.pd-shell .wrap,body.pd-shell.wide-test .wrap {
+  max-width:1800px;margin:0 auto;padding:32px 32px 40px 252px;width:auto;
+}
+body.pd-shell .topbar {
+  position:fixed;inset:0 auto 0 0;width:216px;max-width:none;height:100dvh;
+  display:flex;flex-direction:column;align-items:stretch;gap:8px;
+  margin:0;padding:24px 16px!important;border:0;border-right:1px solid var(--desk-line);
+  background:var(--desk-bg);box-shadow:none;overflow:auto;z-index:60;
+}
+body.pd-shell .topbar .brand {order:0;margin:0 8px 22px;font-size:25px;letter-spacing:-.7px;line-height:1.2;color:var(--desk-ink)}
+body.pd-shell .brand-sat {background:none;color:var(--desk-ink);-webkit-text-fill-color:currentColor}
+body.pd-shell .topbar .badges {display:contents;container-type:normal;container-name:none;overflow:visible}
+body.pd-shell .topbar :is(.arcade-btn,.icon-btn,.sound-btn,.acct-btn) {
+  position:relative;display:flex;align-items:center;justify-content:flex-start;gap:12px;
+  width:100%;min-width:44px;height:44px;min-height:44px;border:1px solid transparent;
+  border-radius:4px;margin:0;padding:10px 12px!important;font-size:14px;font-weight:500;
+  background:transparent;color:var(--desk-ink);box-shadow:none;white-space:nowrap;
+}
+body.pd-shell .topbar :is(.arcade-btn,.icon-btn,.sound-btn,.acct-btn):hover {background:var(--desk-soft);box-shadow:none;color:var(--desk-ink)}
+body.pd-shell .topbar .arcade-btn.active {color:var(--desk-accent);background:var(--desk-tint);border-left-color:var(--desk-accent)}
+body.pd-shell .topbar .arcade-btn.active::after {display:none}
+body.pd-shell .topbar :is(.arcade-btn,.acct-btn)>span {
+  position:static;width:auto;height:auto;clip:auto;overflow:visible;margin:0;
+}
+body.pd-shell .topbar :is(.arcade-btn,.icon-btn) svg {width:18px;height:18px;flex:none}
+body.pd-shell .topbar #acctLabel {display:inline}
+body.pd-shell .topbar #btnHome {order:1}
+body.pd-shell .topbar #btnHome::after {content:"Home"}
+body.pd-shell .topbar #btnPractice {order:2}
+body.pd-shell .topbar #btnSubjectPractice {order:3}
+body.pd-shell .topbar #deskReview {order:4}
+body.pd-shell .topbar #btnCollege {order:5}
+body.pd-shell .topbar #btnScholarships {order:6}
+body.pd-shell .topbar #btnArcade {order:7}
+body.pd-shell .topbar .pd-appearance {order:12;margin-top:auto;padding-top:20px;border-top:1px solid var(--desk-line)}
+body.pd-shell .topbar .workspace-theme-label {order:13}
+body.pd-shell .topbar #btnSound {order:14;font-size:0}
+body.pd-shell .topbar #btnSound::after {content:"Sound";font-size:14px}
+body.pd-shell .topbar #btnAccount {order:15}
+body.pd-shell .topbar :is(#badgeTimer,#badgeAcc,#hudStreak,#tokenBadge,#autosave,#btnPause) {
+  order:10;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--desk-muted);
+}
+body.pd-shell .topbar :is(#badgeTimer,#badgeAcc,#btnPause) {display:none}
+body.pd-shell.pd-testing .topbar :is(#badgeTimer,#badgeAcc,#btnPause) {display:flex}
+body.pd-shell .topbar #btnPause {width:100%;height:40px;min-height:40px}
+body.pd-shell .workspace-theme-label,.pd-appearance {display:grid;grid-template-columns:1fr;gap:6px;font-size:12px;color:var(--desk-muted)}
+body.pd-shell .theme-label-text {display:block}
+body.pd-shell .workspace-theme-label select,.pd-appearance select {
+  width:100%;min-height:40px;padding:8px;border:1px solid var(--desk-line);border-radius:4px;
+  background:var(--desk-surface);color:var(--desk-ink);
+}
+body.pd-shell #deskMenu {display:none}
+body.pd-shell :is(#app,.modal) {color:var(--desk-ink)}
+body.pd-shell #app {min-width:0}
+body.pd-shell :is(#btnStart,#btnResume,#btnFinish,.sk-drill) {color:var(--desk-on-accent)}
+body.pd-shell :is(#app,.modal) :is(button,input,select,textarea) {border-radius:4px}
+body.pd-shell :is(#app,.modal) :is(button,a,input,select,textarea,summary):focus-visible,
+.topbar :is(button,a,select):focus-visible {
+  outline:2px solid var(--desk-accent);outline-offset:3px;
+}
+body.pd-shell .st-head {padding:0;margin:0 0 24px;background:transparent;border:0}
+body.pd-shell .st-head h1 {font:700 clamp(25px,3vw,32px)/1.25 Archivo,sans-serif;letter-spacing:-.7px;margin:0}
+body.pd-shell .st-kicker {font-size:12px;letter-spacing:0;text-transform:none;margin:0 0 8px;color:var(--desk-muted)}
+body.pd-shell .st-chips {display:flex;gap:20px;flex-wrap:wrap;margin-top:12px}
+body.pd-shell .st-chip {font-size:12px;padding:0;min-height:0;background:none;border:0}
+body.pd-shell .st-grid {display:block}
+body.pd-shell .st-main {padding:0;background:none;border:0;display:grid;gap:20px;grid-template-columns:minmax(0,1.7fr) minmax(300px,1fr);align-items:start}
+body.pd-shell .st-resume {grid-column:1/-1;grid-row:1;border:1px solid var(--desk-line);padding:20px 24px;display:flex;align-items:center;gap:20px}
+body.pd-shell #resumeBox[style*="block"] {display:flex!important}
+body.pd-shell #resumeInfo {flex:1;font-size:15px;line-height:1.6}
+body.pd-shell .st-resume-btns {display:flex;align-items:center;gap:12px;margin:0;flex-wrap:wrap}
+body.pd-shell #btnResume {min-height:44px;white-space:nowrap}
+body.pd-shell #btnDiscard {background:transparent;border-color:transparent;color:var(--desk-muted)!important;text-decoration:underline;padding:8px}
+.pd-summary {grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:18px 24px;background:var(--desk-surface);border:1px solid var(--desk-line);border-radius:6px}
+.pd-stat {padding:0 20px;border-left:1px solid var(--desk-line)}
+.pd-stat:first-child {padding-left:0;border-left:0}
+.pd-stat span {display:block;font-size:12px;color:var(--desk-muted)}
+.pd-stat strong {display:block;margin-top:7px;font-size:27px;line-height:1.2;font-variant-numeric:tabular-nums}
+.pd-stat-note {grid-column:1/-1;font-size:12px;color:var(--desk-muted);margin:12px 0 0}
+.pd-skills {grid-column:1;grid-row:3;background:var(--desk-surface);border:1px solid var(--desk-line);border-radius:6px;padding:20px;min-width:0}
+.pd-skills h2,.pd-history-title {font-size:18px;line-height:1.4;margin:0 0 16px}
+.pd-skills table {width:100%;border-collapse:collapse;font-size:14px}
+.pd-skills th,.pd-skills td {text-align:left;padding:12px 8px;border-bottom:1px solid var(--desk-line);overflow-wrap:anywhere}
+.pd-skills th {color:var(--desk-muted);font-size:12px;font-weight:500}
+.pd-skills th:first-child,.pd-skills td:first-child {padding-left:0}
+.pd-skills td:last-child {text-align:right}
+body.pd-shell .pd-skills button {background:transparent;border:0;text-decoration:underline;color:var(--desk-accent)!important;min-height:40px;padding:6px}
+.pd-skills p {font-size:12px;color:var(--desk-muted);line-height:1.6;margin:16px 0 0}
+body.pd-shell .st-setup {grid-column:2;grid-row:3 / span 2;border:1px solid var(--desk-line);background:var(--desk-surface);border-radius:6px;padding:18px;min-width:0}
+body.pd-shell .st-setup-sum {padding:0 0 14px;border:0;gap:8px}
+body.pd-shell .st-setup-line {min-width:0}
+body.pd-shell .st-setup-line b {font-size:14px}
+body.pd-shell .st-setup-hint {font-size:12px}
+body.pd-shell .st-setup-act {padding:6px;min-height:32px;font-size:12px}
+body.pd-shell .st-setup-body {padding:0}
+body.pd-shell .st-step {font-size:13px;gap:8px;margin:16px 0 10px}
+body.pd-shell .st-n {font-size:11px;width:20px;height:20px}
+body.pd-shell .st-tests {display:flex;gap:8px}
+body.pd-shell .st-tests .pick {padding:10px;min-width:0;flex:1}
+body.pd-shell .st-tests .st-logo,body.pd-shell .st-tests .d {display:none}
+body.pd-shell .pick {min-height:40px}
+body.pd-shell .seg {display:flex;flex-wrap:wrap;gap:4px;background:transparent;padding:0}
+body.pd-shell .seg .pick {flex:1 1 auto;white-space:normal;overflow:visible;font-size:12px;padding:8px;min-width:52px}
+body.pd-shell .st-custom {flex:1 1 90px;min-width:0}
+body.pd-shell #customLen {width:100%;max-width:100%;min-height:40px}
+body.pd-shell .st-go {grid-column:2;grid-row:5;margin:0;padding:0;border:0;background:none;position:static;display:block}
+body.pd-shell .st-go .st-summary {display:none}
+body.pd-shell #btnStart {width:100%;min-height:46px;font-size:15px}
+body.pd-shell #historyStart {grid-column:1;grid-row:4 / span 2;padding:20px;border-radius:6px;margin:0;min-width:0}
+body.pd-shell #historyStart h3 {font-size:18px}
+body.pd-shell .history-strip {display:grid;gap:8px}
+body.pd-shell .history-item {padding:12px;min-width:0}
+body.pd-shell .hi-head,.pd-shell .hi-stats {gap:10px;flex-wrap:wrap}
+body.pd-shell .st-side {margin-top:24px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:0;border:0;background:none}
+body.pd-shell .st-side>* {margin:0;min-width:0}
+.pd-comparison {grid-column:1/-1;background:var(--desk-surface);border:1px solid var(--desk-line);padding:16px;border-radius:6px}
+.pd-comparison>summary {font-size:15px;font-weight:600;cursor:pointer;min-height:24px}
+body.pd-shell .home-score-card {margin:16px 0 0}
+body.pd-shell .home-score-card .fxring {border-radius:0;background:none}
+body.pd-shell .home-score-card .fxring svg {display:none}
+body.pd-shell .home-score-card .fxring-val {position:static}
+body.pd-shell .seo-overview {margin-top:32px;border-top:1px solid var(--desk-line);padding-top:24px}
+body.pd-shell :is(.college-screen,.subjects-screen,.results-screen) {margin-top:0}
+body.pd-shell :is(.college-head h1,.subjects-head h1,.sch-head h1) {font-size:30px;letter-spacing:-.6px}
+body.pd-shell.zen-mode .topbar {display:none}
+body.pd-shell.zen-mode .wrap {padding-left:0}
+/* Public profiles, guides and calculators keep their content and citations. */
+html[data-desk-appearance] .gwrap {max-width:1060px;padding:32px 28px 60px}
+html[data-desk-appearance] .gcard {border-radius:6px;padding:20px;background:var(--desk-surface)}
+html[data-desk-appearance] .gnav {gap:16px;padding-bottom:20px}
+html[data-desk-appearance] .gtable {font-variant-numeric:tabular-nums}
+.pd-public-appearance {display:flex;align-items:center;gap:8px;justify-content:flex-end;font-size:12px;margin:0 0 20px;color:var(--desk-muted)}
+.pd-public-appearance select {min-height:40px}
+.pd-public-nav {display:flex;flex-direction:column;gap:8px;position:fixed;inset:0 auto 0 0;width:216px;padding:24px 16px;border-right:1px solid var(--desk-line);background:var(--desk-bg);overflow:auto}
+.pd-public-nav a {color:var(--desk-ink);text-decoration:none;padding:12px;border-radius:4px}
+.pd-public-nav a:hover {background:var(--desk-tint);color:var(--desk-accent)}
+.pd-public-nav a:first-child {font-size:25px;font-weight:700;margin-bottom:18px}
+html[data-desk-appearance] body:has(.pd-public-nav) .gwrap {margin-left:216px;max-width:1200px}
+@media(max-width:1199px) {
+  body.pd-shell .wrap,body.pd-shell.wide-test .wrap {padding:24px 20px 32px 220px}
+  body.pd-shell .topbar {width:192px;padding:22px 12px!important}
+  body.pd-shell .st-main {grid-template-columns:minmax(0,1fr) minmax(270px,.9fr)}
+}
+@media(max-width:900px) {
+  body.pd-shell .wrap,body.pd-shell.wide-test .wrap {padding:92px 16px 32px}
+  body.pd-shell .topbar {inset:0 0 auto;width:100%;height:auto;min-height:64px;max-height:90dvh;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px 16px!important;overflow-y:auto;border:0;border-bottom:1px solid var(--desk-line)}
+  body.pd-shell .topbar .brand {margin:0;order:0;flex:1}
+  body.pd-shell .topbar #deskMenu {display:flex;order:1;width:auto;gap:8px;min-height:40px;height:40px;font-size:14px;background:transparent;color:var(--desk-ink);border:1px solid var(--desk-line);border-radius:4px;padding:8px 12px}
+  body.pd-shell .topbar #btnHome {display:none}
+  body.pd-shell .topbar .badges {display:none;width:100%;order:2;margin:8px 0 0;container-type:normal}
+  body.pd-shell.pd-menu-open .topbar .badges {display:flex;flex-direction:column;flex-wrap:nowrap;gap:4px;overflow:visible}
+  body.pd-shell .topbar .pd-appearance {margin-top:12px}
+  body.pd-shell .topbar :is(.arcade-btn,.acct-btn,.sound-btn) {width:100%}
+  body.pd-shell .st-main {grid-template-columns:minmax(0,1fr)}
+  body.pd-shell .st-resume {grid-column:1;grid-row:1;flex-wrap:wrap;padding:18px}
+  body.pd-shell #resumeInfo {flex:1 1 100%}
+  body.pd-shell .st-resume-btns {width:100%}
+  body.pd-shell #btnResume {flex:1}
+  .pd-summary {grid-column:1;grid-row:2;padding:18px}
+  .pd-stat {padding:0 10px}
+  .pd-stat strong {font-size:23px}
+  .pd-skills {grid-column:1;grid-row:3;padding:18px}
+  body.pd-shell .st-setup {grid-column:1;grid-row:4;padding:18px}
+  body.pd-shell .st-go {grid-column:1;grid-row:5}
+  body.pd-shell #historyStart {grid-column:1;grid-row:6}
+  body.pd-shell .st-side {grid-template-columns:minmax(0,1fr)}
+  body.pd-shell .st-head h1 {font-size:26px}
+  html[data-desk-appearance] .gwrap {padding:22px 16px 40px}
+  .pd-public-nav {position:static;width:auto;flex-direction:row;flex-wrap:wrap;border:0;border-bottom:1px solid var(--desk-line);padding:0 0 14px;margin-bottom:18px;gap:4px}
+  .pd-public-nav a {padding:10px;font-size:13px}
+  .pd-public-nav a:first-child {font-size:20px;flex-basis:100%;margin:0}
+  html[data-desk-appearance] body:has(.pd-public-nav) .gwrap {margin-left:auto}
+}
+@media(prefers-reduced-motion:reduce) {body.pd-shell *,body.pd-shell *::before,body.pd-shell *::after {scroll-behavior:auto!important}}

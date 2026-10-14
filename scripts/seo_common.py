@@ -51,6 +51,27 @@ FONT_PRELOAD = (
     'href="/fonts/archivo-400-700.woff2" crossorigin>'
 )
 
+# Shared appearance for generated and hand-written public surfaces.
+DESK_ASSETS = """<script>(()=>{let value='dark';try{const saved=localStorage.getItem('funsatDeskAppearance');if(saved==='light'||saved==='dark')value=saved;}catch(e){}document.documentElement.dataset.deskAppearance=value;document.documentElement.style.colorScheme=value;})();</script>
+<link rel="stylesheet" href="/progress-desk.css">
+<script defer src="/progress-desk.js"></script>"""
+
+DESK_NAV = """<nav class="pd-public-nav" aria-label="Main navigation">
+<a href="/">FunSAT</a><a href="/">Practice</a><a href="/?view=subjects">Subjects</a>
+<a href="/?view=review">Review</a><a href="/?view=college">College</a>
+<a href="/?view=scholarships">Scholarships</a><a href="/?view=arcade">Arcade</a>
+</nav><label class="pd-public-appearance">Appearance <select data-desk-appearance-control aria-label="Appearance"><option value="dark">Dark</option><option value="light">Light</option></select></label>"""
+
+
+def inject_desk(html_text):
+    """Idempotent presentation enhancement; preserve all page data and schemas."""
+    if 'href="/progress-desk.css"' in html_text:
+        return html_text
+    html_text = html_text.replace("</head>", DESK_ASSETS + "\n</head>", 1)
+    html_text = html_text.replace('<html lang="en">', '<html lang="en" data-desk-appearance="dark">', 1)
+    html_text = html_text.replace('<div class="gwrap">', '<div class="gwrap">' + DESK_NAV, 1)
+    return html_text
+
 
 # Adsterra units shared by every generated page. The native widget mounts into
 # one container that migrates to the visible in-content slot (see ads.js), so
@@ -82,8 +103,8 @@ def ad_slot(name):
 def inject_fonts(html_text):
     """Preload the self-hosted text face on a hand-written content page."""
     if "archivo-400-700.woff2" in html_text:
-        return html_text
-    return html_text.replace("</head>", FONT_PRELOAD + "\n</head>", 1)
+        return inject_desk(html_text)
+    return inject_desk(html_text.replace("</head>", FONT_PRELOAD + "\n</head>", 1))
 
 
 def inject_ads(html_text):
@@ -243,7 +264,7 @@ def page(*, path, title, description, body, schema, extra_head=""):
     midroll_body = _insert_midroll(body)
     graph = json.dumps({"@context": "https://schema.org", "@graph": schema},
                        separators=(",", ":"), ensure_ascii=False)
-    return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
+    return f"""<!doctype html><html lang="en" data-desk-appearance="dark"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{e(title)}</title>
 <meta name="description" content="{e(description)}">
@@ -265,9 +286,11 @@ def page(*, path, title, description, body, schema, extra_head=""):
 {FONT_PRELOAD}
 <link rel="stylesheet" href="/workspace.css">
 <link rel="stylesheet" href="/guides/guide.css">
+{DESK_ASSETS}
 {AD_CONFIG}
 {extra_head}<script type="application/ld+json">{graph}</script>
 </head><body data-workspace="exam"><div class="gwrap">
+{DESK_NAV}
 {midroll_body}
 <div class="sponsor-slot" data-ad-slot="article-bottom" hidden></div>
 <p class="gfoot">{SITE_NAME} is a free browser-based SAT and ACT prep app: digital SAT and ACT practice tests, unofficial score calculators, a built-in graphing calculator, college admissions chances from official U.S. Department of Education data, and a scholarship search. <a href="/">Start free practice &rarr;</a></p>

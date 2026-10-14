@@ -224,16 +224,23 @@
   // Sandboxed iframes are cross-origin by design, so their inner text cannot be
   // inspected — that is why the dashboard block matters.
   const FLIRTY = /\b(dating|flirt[a-z]*|hookup|hook-up|singles|milf|horny|webcam[s]?|camgirl[s]?|escort[a-z]*|sugar\s?(bab[a-z]*|daddy|mama)|naughty|xxx+|porn[a-z]*|sexy|lonely|she\s+is\s+waiting|waiting\s+for\s+you|wants?\s+to\s+meet|meet\s+(me|you|tonight|women|girls|singles|local)|near\s+you|no\s+strings|casual\s+(fun|dating|encounter)|come\s+(over|see\s+me)|bad\s+girl[s]?|onlyfans|nsfw|lingerie|fetish|booty|bdsm|adult\s?dating|local\s?(women|singles|girls)|hot\s?(girls|singles|women)|single\s?(girls|women|ladies|moms))\b/i;
+  // Gambling is not appropriate for a student site either. This catches ads
+  // that inject into our own DOM; sandboxed third-party iframes cannot be
+  // inspected, so the ad network's dashboard category blocks remain the
+  // first line of defense there.
+  const GAMBLING = /\b(casino[s]?|gambl[a-z]*|sportsbook[s]?|poker|roulette|jackpot[s]?|lottery|blackjack|baccarat|wager[a-z]*|free\s?spins?|slots?\s?(machines?|bonus|games?|casino|jackpot|spin|spins|free|play)|betting|bet\s?now|bookmaker[s]?)\b/i;
   // URL-safe: matches the term only between non-letters, so "updating" and
   // "validating" are not blocked as "dating".
-  const BLOCKED_HOSTS = /(^|[^a-z])(dating|flirt[a-z]*|hookup|escort[a-z]*|milf|xxx+|porn[a-z]*|camgirl[s]?|webcam[s]?)([^a-z]|$)/i;
+  const BLOCKED_HOSTS = /(^|[^a-z])(dating|flirt[a-z]*|hookup|escort[a-z]*|milf|xxx+|porn[a-z]*|camgirl[s]?|webcam[s]?|casino[s]?|gambl[a-z]*|poker|sportsbook[s]?|jackpot[s]?|betnow)([^a-z]|$)/i;
 
   function urlIsUnsafe(url) { return BLOCKED_HOSTS.test(String(url || "")); }
 
+  function textIsUnsafe(text) { const t = String(text || ""); return FLIRTY.test(t) || GAMBLING.test(t); }
+
   function elementIsUnsafe(el) {
     const tag = el.tagName;
-    if (tag === "IMG") return FLIRTY.test(el.alt || "") || urlIsUnsafe(el.src);
-    if (tag === "A") return FLIRTY.test((el.textContent || "").slice(0, 240)) || urlIsUnsafe(el.href);
+    if (tag === "IMG") return textIsUnsafe(el.alt) || urlIsUnsafe(el.src);
+    if (tag === "A") return textIsUnsafe((el.textContent || "").slice(0, 240)) || urlIsUnsafe(el.href);
     if (tag === "IFRAME") return urlIsUnsafe(el.src);
     return false;
   }
@@ -255,7 +262,7 @@
       const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
       let node = walker.nextNode();
       while (node) {
-        if (FLIRTY.test((node.textContent || "").slice(0, 240))) return violateAd(container, host);
+        if (textIsUnsafe((node.textContent || "").slice(0, 240))) return violateAd(container, host);
         node = walker.nextNode();
       }
     }
@@ -282,7 +289,7 @@
 
   function creativeIsUnsafe(creative) {
     if (!creative) return false;
-    return FLIRTY.test(String(creative.label || "")) || FLIRTY.test(String(creative.alt || "")) || urlIsUnsafe(creative.href) || urlIsUnsafe(creative.image);
+    return textIsUnsafe(creative.label) || textIsUnsafe(creative.alt) || urlIsUnsafe(creative.href) || urlIsUnsafe(creative.image);
   }
 
   function mount() {
@@ -300,10 +307,17 @@
       const box = host.parentElement;
       if (box && !box.offsetWidth && !box.getClientRects().length) return;
       host.dataset.adMounted = "true";
-      const label = document.createElement("span");
-      label.className = "sponsor-label";
+      // One host carries at most one SPONSORED label. A slot whose native unit
+      // migrated to another screen is remounted later, so stale labels from the
+      // previous mount have to be cleared before adding the current one.
+      host.querySelectorAll(".sponsor-label").forEach((node, index) => { if (index > 0) node.remove(); });
+      let label = host.querySelector(".sponsor-label");
+      if (!label) {
+        label = document.createElement("span");
+        label.className = "sponsor-label";
+        host.appendChild(label);
+      }
       label.textContent = "Sponsored";
-      host.appendChild(label);
       const rendered = PREVIEW
         ? renderPlaceholder(host, name)
         : config.provider === "direct"

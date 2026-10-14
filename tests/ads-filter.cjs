@@ -37,6 +37,12 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
       safeLabel: t.creativeIsUnsafe({ label: "Scholarship search", href: "https://example.com", image: "https://cdn.example.com/s.png" }),
       unsafeLabel: t.creativeIsUnsafe({ label: "Flirty chat now", href: "https://example.com" }),
       unsafeImage: t.creativeIsUnsafe({ label: "Study tools", href: "https://example.com", image: "https://dating.example.com/x.png" }),
+      casinoText: t.elementIsUnsafe(anchor("Play casino games now", "https://example.com")),
+      sportsbookHref: t.elementIsUnsafe(anchor("Learn more", "https://best-sportsbook.example.com/x")),
+      lotteryText: t.elementIsUnsafe(anchor("Win the lottery today", "https://example.com")),
+      betterStudy: t.elementIsUnsafe(anchor("Better study habits for the SAT", "https://example.com/guides/better")),
+      saferCreative: t.creativeIsUnsafe({ label: "Free SAT practice tools", href: "https://example.com", image: "https://cdn.example.com/tools.png" }),
+      gamblingCreative: t.creativeIsUnsafe({ label: "Slots bonus inside", href: "https://example.com" }),
     };
   });
 
@@ -55,6 +61,25 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   expect("safeLabel", pred.safeLabel, false);
   expect("unsafeLabel", pred.unsafeLabel, true);
   expect("unsafeImage", pred.unsafeImage, true);
+  expect("casinoText", pred.casinoText, true);
+  expect("sportsbookHref", pred.sportsbookHref, true);
+  expect("lotteryText", pred.lotteryText, true);
+  expect("betterStudy (no false positive on 'better')", pred.betterStudy, false);
+  expect("saferCreative", pred.saferCreative, false);
+  expect("gamblingCreative", pred.gamblingCreative, true);
+
+  // One host carries at most one SPONSORED label, even after the native unit
+  // migrates between screens and the slot remounts.
+  const labelCount = await page.evaluate(() => {
+    const host = document.querySelector('[data-ad-slot="home-sidebar"]');
+    if (!host) return -1;
+    delete host.dataset.adMounted;
+    window.FunSatAds.mount();
+    delete host.dataset.adMounted;
+    window.FunSatAds.mount();
+    return host.querySelectorAll(".sponsor-label").length;
+  });
+  if (labelCount !== 1) throw new Error("expected exactly one SPONSORED label after remounts, saw " + labelCount);
 
   // Async behavior: the widget fills late, so a listing injected after the first
   // sweep must still be caught, and the slot must end up hidden.

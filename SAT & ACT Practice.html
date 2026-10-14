@@ -645,6 +645,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
             </div>
           </div>
           <div id="satModuleWrap" style="display:none">
+            <details class="pd-modules"><summary>Optional SAT module settings</summary>
             <div class="st-sub">Module <span class="muted">· optional, jump into one module instead of the full adaptive flow</span></div>
             <div class="pick-row seg" id="satModulePicker">
               <button class="pick selected" data-module="full"><span class="t">Full adaptive</span></button>
@@ -652,6 +653,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
               <button class="pick" data-module="m2std"><span class="t">Module 2 · Standard</span></button>
               <button class="pick" data-module="m2hard"><span class="t">Module 2 · Harder</span></button>
             </div>
+            </details>
           </div>
           <div id="actSectionWrap" style="display:none">
             <div class="st-step"><span class="st-n">2</span>Pick a section</div>
@@ -674,10 +676,9 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
             <label class="st-custom"><span class="sr">Custom number of questions</span><input type="number" id="customLen" min="4" step="1" placeholder="Custom"></label>
           </div>
 
-          <p class="small muted">Fresh questions each attempt: we avoid your last 50 questions and prioritize different passages, problem structures, and skills. Smaller topic pools may rotate sooner.</p>
-
           <details class="st-more">
-            <summary>Scoring options</summary>
+            <summary>Scoring and question options</summary>
+            <p class="small muted">Fresh questions each attempt: we avoid your last 50 questions and prioritize different passages, problem structures, and skills. Smaller topic pools may rotate sooner.</p>
             <label class="st-sub" for="curveSelect">Score curve</label>
             <select id="curveSelect"></select>
             <div class="curve-note" id="curveNote"></div>

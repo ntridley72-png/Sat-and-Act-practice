@@ -9,9 +9,8 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
 const SHOTS = path.join(__dirname, "screenshots");
 const THEMES = ["exam", "notebook", "focus"];
 const EXPECTED_BACKGROUND = {
-  exam: "rgb(255, 255, 255)",
-  notebook: "rgb(244, 241, 232)",
-  focus: "rgb(18, 18, 16)",
+  dark: "rgb(23, 27, 29)",
+  light: "rgb(244, 247, 247)",
 };
 
 function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); return (a + 0.05) / (b + 0.05); }
@@ -19,13 +18,14 @@ function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); re
 (async () => {
   const browser = await chromium.launch({ executablePath: EXEC, args: ["--no-sandbox"] });
 
-  async function captureStartupFrames({ label, theme = null, blockStorage = false, warm = false, reload = false, slow = false }) {
+  async function captureStartupFrames({ label, theme = null, appearance = 'dark', blockStorage = false, warm = false, reload = false, slow = false }) {
     const context = await browser.newContext({ viewport: { width: 1440, height: 960 } });
-    await context.addInitScript(({ savedTheme, shouldBlockStorage }) => {
+    await context.addInitScript(({ savedTheme, appearance, shouldBlockStorage }) => {
+      localStorage.setItem('funsatDeskAppearance', appearance);
       if (shouldBlockStorage) {
         const originalGetItem = Storage.prototype.getItem;
         Storage.prototype.getItem = function (key) {
-          if (key === "funsatWorkspaceTheme") throw new DOMException("Storage is blocked", "SecurityError");
+          if (key === "funsatWorkspaceTheme" || key === 'funsatDeskAppearance') throw new DOMException("Storage is blocked", "SecurityError");
           return originalGetItem.call(this, key);
         };
       } else if (savedTheme) {
@@ -33,7 +33,7 @@ function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); re
       } else {
         localStorage.removeItem("funsatWorkspaceTheme");
       }
-    }, { savedTheme: theme, shouldBlockStorage: blockStorage });
+    }, { savedTheme: theme, appearance, shouldBlockStorage: blockStorage });
 
     const page = await context.newPage();
     const session = await context.newCDPSession(page);
@@ -62,8 +62,8 @@ function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); re
       const expectedTheme = theme || "exam";
       for (const [index, frame] of frames.entries()) {
         if (frame.workspace !== expectedTheme) throw new Error(`${label}/${kind} frame ${index} painted workspace ${frame.workspace}, expected ${expectedTheme}`);
-        if (frame.background !== EXPECTED_BACKGROUND[expectedTheme]) throw new Error(`${label}/${kind} frame ${index} painted ${frame.background}, expected ${EXPECTED_BACKGROUND[expectedTheme]}`);
-        const expectedScheme = expectedTheme === "focus" ? "dark" : "light";
+        const expectedScheme = blockStorage ? 'dark' : appearance;
+        if (frame.background !== EXPECTED_BACKGROUND[expectedScheme]) throw new Error(`${label}/${kind} frame ${index} painted ${frame.background}, expected ${EXPECTED_BACKGROUND[expectedScheme]}`);
         if (frame.colorScheme !== expectedScheme) throw new Error(`${label}/${kind} frame ${index} used color-scheme ${frame.colorScheme}, expected ${expectedScheme}`);
       }
     };
@@ -75,7 +75,9 @@ function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); re
   }
 
   for (const theme of THEMES) {
-    await captureStartupFrames({ label: `saved-${theme}`, theme, warm: true, reload: true, slow: true });
+    for (const appearance of ['dark', 'light']) {
+      await captureStartupFrames({ label: `saved-${theme}-${appearance}`, theme, appearance, warm: true, reload: true, slow: true });
+    }
   }
   await captureStartupFrames({ label: "empty-storage", slow: true });
   await captureStartupFrames({ label: "blocked-storage", blockStorage: true, slow: true });

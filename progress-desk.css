@@ -54,6 +54,8 @@ html[data-desk-appearance="light"] body[data-workspace] {
 body.pd-shell .wrap,body.pd-shell.wide-test .wrap {
   max-width:1800px;margin:0 auto;padding:32px 32px 40px 252px;width:auto;
 }
+body.pd-shell:has(#screen-start[style*="block"]) .wrap {max-width:1600px}
+html[data-desk-appearance] body.pd-shell .workspace-question-number.current {color:var(--desk-on-accent)}
 body.pd-shell .topbar {
   position:fixed;inset:0 auto 0 0;width:216px;max-width:none;height:100dvh;
   display:flex;flex-direction:column;align-items:stretch;gap:8px;
@@ -105,18 +107,21 @@ body.pd-shell .workspace-theme-label select,.pd-appearance select {
 body.pd-shell #deskMenu {display:none}
 body.pd-shell :is(#app,.modal) {color:var(--desk-ink)}
 body.pd-shell #app {min-width:0}
-body.pd-shell :is(#btnStart,#btnResume,#btnFinish,.sk-drill) {color:var(--desk-on-accent)}
+body.pd-shell :is(#btnStart,#btnResume,.sk-drill) {color:var(--desk-on-accent)}
+body.pd-shell #btnFinish {color:var(--desk-ink)}
 body.pd-shell :is(#app,.modal) :is(button,input,select,textarea) {border-radius:4px}
 body.pd-shell :is(#app,.modal) :is(button,a,input,select,textarea,summary):focus-visible,
 .topbar :is(button,a,select):focus-visible {
   outline:2px solid var(--desk-accent);outline-offset:3px;
 }
-body.pd-shell .st-head {padding:0;margin:0 0 24px;background:transparent;border:0}
+body.pd-shell .st-head {padding:0;margin:0 0 16px;background:transparent;border:0}
 body.pd-shell .st-head h1 {font:700 clamp(25px,3vw,32px)/1.25 Archivo,sans-serif;letter-spacing:-.7px;margin:0}
 body.pd-shell .st-kicker {font-size:12px;letter-spacing:0;text-transform:none;margin:0 0 8px;color:var(--desk-muted)}
 body.pd-shell .st-chips {display:flex;gap:20px;flex-wrap:wrap;margin-top:12px}
 body.pd-shell .st-chip {font-size:12px;padding:0;min-height:0;background:none;border:0}
 body.pd-shell .st-grid {display:block}
+body.pd-shell #screen-start {max-width:1200px;margin-inline:auto}
+body.pd-shell #screen-start .st-main {background:transparent!important}
 body.pd-shell .st-main {padding:0;background:none;border:0;display:grid;gap:20px;grid-template-columns:minmax(0,1.7fr) minmax(300px,1fr);align-items:start}
 body.pd-shell .st-resume {grid-column:1/-1;grid-row:1;border:1px solid var(--desk-line);padding:20px 24px;display:flex;align-items:center;gap:20px}
 body.pd-shell #resumeBox[style*="block"] {display:flex!important}
@@ -128,7 +133,8 @@ body.pd-shell #btnDiscard {background:transparent;border-color:transparent;color
 .pd-stat {padding:0 20px;border-left:1px solid var(--desk-line)}
 .pd-stat:first-child {padding-left:0;border-left:0}
 .pd-stat span {display:block;font-size:12px;color:var(--desk-muted)}
-.pd-stat strong {display:block;margin-top:7px;font-size:27px;line-height:1.2;font-variant-numeric:tabular-nums}
+.pd-stat strong {display:inline-block;margin-top:7px;font-size:27px;line-height:1.2;font-variant-numeric:tabular-nums;vertical-align:middle}
+#deskSetTarget {display:inline-flex;align-items:center;vertical-align:middle;margin:7px 0 0 10px;min-height:40px;font-size:12px}
 .pd-stat-note {grid-column:1/-1;font-size:12px;color:var(--desk-muted);margin:12px 0 0}
 .pd-skills {grid-column:1;grid-row:3;background:var(--desk-surface);border:1px solid var(--desk-line);border-radius:6px;padding:20px;min-width:0}
 .pd-skills h2,.pd-history-title {font-size:18px;line-height:1.4;margin:0 0 16px}
@@ -146,7 +152,10 @@ body.pd-shell .st-setup-line b {font-size:14px}
 body.pd-shell .st-setup-hint {font-size:12px}
 body.pd-shell .st-setup-act {padding:6px;min-height:32px;font-size:12px}
 body.pd-shell .st-setup-body {padding:0}
-body.pd-shell .st-step {font-size:13px;gap:8px;margin:16px 0 10px}
+body.pd-shell .pd-modules {margin-top:14px;font-size:12px}
+body.pd-shell .pd-modules>summary {cursor:pointer;min-height:40px;display:list-item;margin-left:14px;padding:12px 0;color:var(--desk-muted)}
+body.pd-shell .pd-modules .st-sub {margin-top:0}
+body.pd-shell .st-step {font-size:13px;gap:8px;margin:10px 0 8px}
 body.pd-shell .st-n {font-size:11px;width:20px;height:20px}
 body.pd-shell .st-tests {display:flex;gap:8px}
 body.pd-shell .st-tests .pick {padding:10px;min-width:0;flex:1}
@@ -184,9 +193,9 @@ html[data-desk-appearance] .gnav {gap:16px;padding-bottom:20px}
 html[data-desk-appearance] .gtable {font-variant-numeric:tabular-nums}
 .pd-public-appearance {display:flex;align-items:center;gap:8px;justify-content:flex-end;font-size:12px;margin:0 0 20px;color:var(--desk-muted)}
 .pd-public-appearance select {min-height:40px}
-.pd-public-nav {display:flex;flex-direction:column;gap:8px;position:fixed;inset:0 auto 0 0;width:216px;padding:24px 16px;border-right:1px solid var(--desk-line);background:var(--desk-bg);overflow:auto}
-.pd-public-nav a {color:var(--desk-ink);text-decoration:none;padding:12px;border-radius:4px}
-.pd-public-nav a:hover {background:var(--desk-tint);color:var(--desk-accent)}
+.pd-public-nav {box-sizing:border-box;display:flex;flex-direction:column;gap:8px;position:fixed;inset:0 auto 0 0;width:216px;padding:24px 16px;border-right:1px solid var(--desk-line);background:var(--desk-bg);overflow:auto}
+html[data-desk-appearance] .pd-public-nav a {color:var(--desk-ink);text-decoration:none;padding:12px;border-radius:4px}
+html[data-desk-appearance] .pd-public-nav a:hover {background:var(--desk-tint);color:var(--desk-accent)}
 .pd-public-nav a:first-child {font-size:25px;font-weight:700;margin-bottom:18px}
 html[data-desk-appearance] body:has(.pd-public-nav) .gwrap {margin-left:216px;max-width:1200px}
 @media(max-width:1199px) {
@@ -200,6 +209,7 @@ html[data-desk-appearance] body:has(.pd-public-nav) .gwrap {margin-left:216px;ma
   body.pd-shell .topbar .brand {margin:0;order:0;flex:1}
   body.pd-shell .topbar #deskMenu {display:flex;order:1;width:auto;gap:8px;min-height:40px;height:40px;font-size:14px;background:transparent;color:var(--desk-ink);border:1px solid var(--desk-line);border-radius:4px;padding:8px 12px}
   body.pd-shell .topbar #btnHome {display:none}
+  body.pd-shell.pd-menu-open .topbar #btnHome {display:flex}
   body.pd-shell .topbar .badges {display:none;width:100%;order:2;margin:8px 0 0;container-type:normal}
   body.pd-shell.pd-menu-open .topbar .badges {display:flex;flex-direction:column;flex-wrap:nowrap;gap:4px;overflow:visible}
   body.pd-shell .topbar .pd-appearance {margin-top:12px}

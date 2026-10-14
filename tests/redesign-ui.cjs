@@ -13,6 +13,8 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   const errors = [];
   page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
   page.on("console", (m) => { if (m.type() === "error" && !/\/api\/|501|404/.test(m.text())) errors.push("console: " + m.text()); });
+  // The static fixture has no account backend; never POST test data to live APIs.
+  await page.route('**/api/**', route => route.fulfill({status:200,contentType:'application/json',body:'{}'}));
 
   await page.goto(BASE + PAGE_PATH, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("body[data-workspace]");
@@ -27,7 +29,7 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
     tabs: Array.from(document.querySelectorAll(".arcade-btn, .icon-btn, .sound-btn")).filter((el) => el.offsetParent).map((el) => Math.round(el.getBoundingClientRect().height)),
     icons: Array.from(document.querySelectorAll(".arcade-btn svg, .icon-btn svg")).filter((el) => el.offsetParent).map((el) => ({ w: Math.round(el.getBoundingClientRect().width), h: Math.round(el.getBoundingClientRect().height) })),
   }));
-  if (new Set(toolbarSizing.tabs).size !== 1 || toolbarSizing.tabs[0] !== 54) throw new Error("top tabs should share a 54px height: " + JSON.stringify(toolbarSizing));
+  if (new Set(toolbarSizing.tabs).size !== 1 || toolbarSizing.tabs[0] !== 44) throw new Error("sidebar tabs should share an accessible 44px height: " + JSON.stringify(toolbarSizing));
   if (toolbarSizing.icons.some((icon) => icon.w !== 18 || icon.h !== 18)) throw new Error("top tab icons should share an 18px box: " + JSON.stringify(toolbarSizing));
   const pageWidth = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, document: document.documentElement.scrollWidth }));
   if (pageWidth.document > pageWidth.viewport) throw new Error("page must not scroll horizontally: " + JSON.stringify(pageWidth));
@@ -56,6 +58,7 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
     profile.college = { saved: [170976, 204796], grade: "11", gpa: 3.8, gpaScale: "4uw", sat: 1340, act: null, targetMode: "p75" };
     saveProfile(); render();
   });
+  await page.locator('.pd-comparison > summary').click();
   await page.waitForSelector("#homeScoreCard .ring-num", { state: "visible" });
   const pctText = await page.textContent("#homeScoreCard .ring-num");
   // The ring reads as a number with PCTL beneath it; the ordinal is on the aria-label.

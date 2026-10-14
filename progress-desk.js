@@ -19,6 +19,10 @@
   if (!isApp) return;
 
   const menu = document.getElementById('deskMenu');
+  // Keep the original Home control reachable inside the collapsed mobile menu.
+  document.getElementById('deskNavigation').prepend(document.getElementById('btnHome'));
+  const reviewIcon = document.querySelector('#stEmpty .ui-icon');
+  if (reviewIcon) document.getElementById('deskReview').prepend(reviewIcon.cloneNode(true));
   function closeMenu() {
     document.body.classList.remove('pd-menu-open');
     menu.setAttribute('aria-expanded', 'false');

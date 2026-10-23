@@ -475,6 +475,19 @@ def standing(c):
     return (f'<h2>How {e(c["n"])} compares</h2><ul>' + "".join(lines) + "</ul>")
 
 
+def safety_pointer(c):
+    """Colleges without a published incident table still answer the safety question: where the
+    official numbers are and how to read them, instead of leaving the topic to someone else."""
+    name = e(c["n"])
+    return ('<section class="gsafety-note"><h2>Campus safety at ' + name + '</h2>'
+            f'<p>We do not yet publish campus-crime tables for {name}. The official numbers are in the '
+            'college\'s Annual Security Report and in the U.S. Department of Education\'s '
+            '<a href="https://ope.ed.gov/campussafety/" target="_blank" rel="noopener nofollow">Campus Safety and Security tool</a>. '
+            'Reported counts do not measure how safe a campus feels, so read '
+            '<a href="/guides/is-a-college-campus-safe/">how to check whether a college campus is safe</a> '
+            'before comparing schools.</p></section>')
+
+
 def college_page(c, data):
     name, st = c["n"], c["st"]
     state = STATES.get(st, st)
@@ -737,6 +750,11 @@ def college_page(c, data):
              f'<a href="/colleges/">All colleges</a>'
              f'<a href="/guides/what-is-a-good-sat-score/">What is a good SAT score?</a>'
              f'<a href="/guides/college-admissions-chances/">Admissions chances</a>'
+             f'<a href="/guides/is-a-college-campus-safe/">Is a college campus safe?</a>'
+             f'<a href="/guides/how-much-does-college-really-cost/">What college really costs</a>'
+             f'<a href="/guides/college-graduation-rates-and-earnings/">Graduation rates and earnings</a>'
+             f'<a href="/guides/test-optional-colleges-explained/">Test-optional colleges</a>'
+             f'<a href="/guides/how-to-build-a-college-list/">Build a college list</a>'
              f'{related}</div>')
 
     src = (f'<p class="muted"><small>Source: {e(data["meta"]["source"])}. '
@@ -752,7 +770,7 @@ def college_page(c, data):
             f'<a href="/colleges/">All colleges</a></nav>'
             f'<p class="gkicker">{e(state)} &middot; College profile</p>'
             f'<h1>{e(name)}: SAT &amp; ACT Scores, Acceptance Rate and Costs</h1>'
-            f'{intro}{personal}{img}{extras_photos}{scores}{sel}{cost}{out}{social}{majors}{safety}{about}{standing(c)}{cta}{faq_html}{src}{links}')
+            f'{intro}{personal}{img}{extras_photos}{scores}{sel}{cost}{out}{social}{majors}{safety or safety_pointer(c)}{about}{standing(c)}{cta}{faq_html}{src}{links}')
 
     schema = [
         {"@type": "CollegeOrUniversity", "name": name,
@@ -1070,6 +1088,16 @@ def scholarships_hub(items):
 GUIDE_TITLES = {}
 
 
+def safety_school_list():
+    """Links to every college profile that carries a campus-safety table, built from the data."""
+    colleges = [x for x in load_colleges() if isinstance(x, dict) and "colleges" in x][0]["colleges"]
+    safety = load_js_object("college-safety.js", "COLLEGE_SAFETY").get("colleges") or {}
+    rows = sorted((c for c in colleges if str(c["id"]) in safety), key=lambda c: c["n"])
+    return ('<ul class="gcols">' + "".join(
+        f'<li><a href="/colleges/{c["slug"]}/">{e(c["n"])}</a> ({e(STATES.get(c["st"], c["st"]))})</li>'
+        for c in rows) + "</ul>")
+
+
 def rewrite_guides(out):
     """Copy guides/*.html to extensionless directories, rewrite internal links,
     canonicals and og:urls, and inject BreadcrumbList schema."""
@@ -1087,6 +1115,8 @@ def rewrite_guides(out):
         html_text = re.sub(r'(<meta property="og:url" content=")[^"]*(")', rf'\g<1>{ORIGIN}{path}\g<2>', html_text)
         html_text = re.sub(r'("mainEntityOfPage":")[^"]*(")', rf'\g<1>{ORIGIN}{path}\g<2>', html_text)
 
+        if "<!--SAFETY_LIST-->" in html_text:
+            html_text = html_text.replace("<!--SAFETY_LIST-->", safety_school_list())
         html_text = inject_fonts(inject_ads(html_text))
 
         m = re.search(r"<h1>(.*?)</h1>", html_text, re.S)
@@ -1793,6 +1823,7 @@ def score_page(colleges, concordance, score, test):
               '<a href="/guides/what-is-a-good-sat-score/">What is a good SAT score?</a>'
               '<a href="/guides/how-to-improve-your-sat-score/">How to improve your score</a>'
               '<a href="/guides/desmos-calculator-digital-sat/">SAT Desmos calculator guide</a>'
+              '<a href="/guides/sat-desmos-tips-and-tricks/">SAT Desmos tips and tricks</a>'
               '<a href="/colleges/">All colleges</a></div>')
 
     return path, page(path=path, title=title, description=description, body=body, schema=[

@@ -707,7 +707,10 @@ def college_page(c, data):
     if shots:
         cells = []
         for i, shot in enumerate(shots):
-            credit_text = f'{shot["credit"]} &middot; {shot["license"]}'
+            who = shot["credit"]
+            if len(who) > 70:  # some Commons credits are a whole paragraph of contact notes
+                who = who[:70].rsplit(" ", 1)[0].rstrip(" ,;(") + "\u2026"
+            credit_text = f'{who} \u00b7 {shot["license"]}'
             credit = (f'<a href="{e(shot["source"])}" target="_blank" rel="noopener nofollow">'
                       f'{e(credit_text)}</a>') if shot["source"] else e(credit_text)
             cells.append(

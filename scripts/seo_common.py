@@ -67,6 +67,7 @@ AD_SLOTS = {
     "article-mid": '{kind:"native"}',
     "article-bottom": '{kind:"native"}',
     "article-grid": '{kind:"grid"}',
+    "article-rail": '{unit:"sky"}',
 }
 AD_CONFIG = (
     '<script>window.FUNSAT_ADS={provider:"adsterra",units:' + AD_UNITS + ',slots:{'
@@ -77,6 +78,12 @@ AD_CONFIG = (
 
 def ad_slot(name):
     return f'<div class="sponsor-slot" data-ad-slot="{name}" hidden></div>'
+
+
+# Desktop-only 160x600 in the empty margin beside the article. It is a fixed-width
+# column that only exists where the page has 200px of spare gutter (1240px+), so
+# it never covers or reflows the text and never mounts on phones or tablets.
+RAIL_SLOT = '<div class="sponsor-slot sponsor-rail" data-ad-slot="article-rail" data-min-width="1240" hidden></div>'
 
 
 def inject_fonts(html_text):
@@ -94,6 +101,7 @@ def inject_ads(html_text):
     if "FUNSAT_ADS" in html_text:
         return html_text
     html_text = html_text.replace("</head>", AD_CONFIG + "\n</head>", 1)
+    html_text = html_text.replace('<div class="gwrap">', '<div class="gwrap">' + RAIL_SLOT, 1)
     # Grid sits above the bottom unit: grid, then article-bottom, then gfoot.
     html_text = html_text.replace('<p class="gfoot">', ad_slot("article-grid") + '\n<p class="gfoot">', 1)
     # Bottom unit above the footer line, anchor last so it closes over the page.
@@ -237,9 +245,33 @@ def _insert_midroll(body):
     return head + (_insert_after_nth(rest, ad_slot("article-mid"), "</p>", 6) or rest)
 
 
+def fit_title(title, limit=60):
+    """Search results cut titles near 60 characters; when the brand suffix is what pushes
+    one over, drop it (the site name is already declared through WebSite structured data)."""
+    suffix = f" | {SITE_NAME}"
+    if len(title) > limit and title.endswith(suffix):
+        return title[: -len(suffix)]
+    return title
+
+
+def fit_description(text, limit=158):
+    """Trim at a sentence or clause boundary instead of letting search cut mid-word."""
+    text = " ".join(str(text).split())
+    if len(text) <= limit:
+        return text
+    cut = text[:limit]
+    for sep in (". ", "; ", ", ", " \u2014 ", " "):
+        i = cut.rfind(sep)
+        if i >= 90:
+            return cut[:i].rstrip(" ,;\u2014") + ("." if sep == ". " else "")
+    return cut.rstrip() + "\u2026"
+
+
 def page(*, path, title, description, body, schema, extra_head=""):
     """Render a complete document. `path` is origin-relative and ends with '/'."""
     canonical = ORIGIN + path
+    title = fit_title(title)
+    description = fit_description(description)
     midroll_body = _insert_midroll(body)
     graph = json.dumps({"@context": "https://schema.org", "@graph": schema},
                        separators=(",", ":"), ensure_ascii=False)
@@ -267,7 +299,7 @@ def page(*, path, title, description, body, schema, extra_head=""):
 <link rel="stylesheet" href="/guides/guide.css">
 {AD_CONFIG}
 {extra_head}<script type="application/ld+json">{graph}</script>
-</head><body data-workspace="exam"><div class="gwrap">
+</head><body data-workspace="exam"><div class="gwrap">{RAIL_SLOT}
 {midroll_body}
 <div class="sponsor-slot" data-ad-slot="article-bottom" hidden></div>
 <p class="gfoot">{SITE_NAME} is a free browser-based SAT and ACT prep app: digital SAT and ACT practice tests, unofficial score calculators, a built-in graphing calculator, college admissions chances from official U.S. Department of Education data, and a scholarship search. <a href="/">Start free practice &rarr;</a></p>

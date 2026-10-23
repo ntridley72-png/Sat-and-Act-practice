@@ -175,7 +175,8 @@
     "college-grid": [300, 250, "Grid square 300x250"],
     "scholarships-grid": [300, 250, "Grid square 300x250"],
     "subjects-grid": [300, 250, "Grid square 300x250"],
-    "article-grid": [300, 250, "Grid square 300x250"]
+    "article-grid": [300, 250, "Grid square 300x250"],
+    "article-rail": [160, 600, "Margin rail 160x600"]
   };
 
   function renderPlaceholder(host, name) {
@@ -291,6 +292,9 @@
       const name = host.dataset.adSlot;
       const isAnchor = host.classList.contains("sponsor-anchor");
       if (isAnchor && anchorDismissed()) { host.remove(); return; }
+      // Margin units only mount where the margin exists, so a narrow window never loads
+      // (and never bills) an impression nobody can see. A later resize mounts them.
+      if (host.dataset.minWidth && window.innerWidth < Number(host.dataset.minWidth)) return;
       // Every app screen starts display:none. An adsbygoogle unit pushed while its
       // container is hidden measures zero width, comes back unfilled and does not
       // retry, so leave the slot unmounted until its screen is actually laid out.
@@ -337,6 +341,9 @@
       }
     });
   }
+
+  let resizeTimer = 0;
+  window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(mount, 250); });
 
   window.FunSatAds = { mount, setPracticeMode };
   if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {

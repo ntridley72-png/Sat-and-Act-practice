@@ -119,6 +119,46 @@ const ok = (c, m) => { if (!c) fails.push(m); };
   await page.selectOption("[name=pCost]", "");
   await page.selectOption("[name=pGrad]", "");
 
+  // Location, environment and the extra metrics.
+  await page.evaluate(() => { document.querySelector("details.cm-fs").open = true; });
+  const metaOf = async () => page.evaluate(() => {
+    const data = JSON.parse(document.getElementById("cm-data").textContent);
+    const by = Object.fromEntries(data.map((c) => [c.sl, c]));
+    return [...document.querySelectorAll("#cm-results > li")].map((li) => by[li.querySelector("a").getAttribute("href").split("/")[2]]);
+  });
+  await page.selectOption("[name=home]", "NY");
+  await page.selectOption("[name=reach]", "near");
+  await page.click(".cm-go");
+  const nearNy = await metaOf();
+  const NY_NEAR = ["NY", "CT", "MA", "NJ", "PA", "VT"];
+  ok(nearNy.length > 0 && nearNy.every((c) => NY_NEAR.includes(c.st)), "near-home keeps New York and its bordering states: " + [...new Set(nearNy.map((c) => c.st))]);
+  ok(/within reach of New York/.test(await page.textContent("#cm-profile")), "profile mentions the home state");
+  await page.selectOption("[name=reach]", "state");
+  await page.click(".cm-go");
+  ok((await metaOf()).every((c) => c.st === "NY"), "stay-in-state keeps only the home state");
+  await page.selectOption("[name=reach]", "");
+  await page.selectOption("[name=home]", "");
+  await page.selectOption("[name=region]", "West");
+  await page.click(".cm-go");
+  const west = await metaOf();
+  ok(west.length > 0 && west.every((c) => c.rg === "West"), "region filter holds");
+  await page.selectOption("[name=region]", "");
+  await page.selectOption("[name=ratio]", "10");
+  await page.selectOption("[name=gradMin]", "80");
+  await page.click(".cm-go");
+  const tight = await metaOf();
+  ok(tight.length > 0 && tight.every((c) => c.sf <= 10 && c.gr >= 80), "ratio and graduation limits hold");
+  ok(/Student-to-faculty ratio of about/.test(await page.textContent("#cm-results")), "ratio reason is shown");
+  await page.selectOption("[name=ratio]", "");
+  await page.selectOption("[name=gradMin]", "");
+  await page.selectOption("[name=select]", "hard");
+  await page.selectOption("[name=pDebt]", "high");
+  await page.click(".cm-go");
+  const hard = await metaOf();
+  ok(hard.length > 0 && hard.every((c) => c.ad < 20), "selectivity filter holds");
+  await page.selectOption("[name=select]", "");
+  await page.selectOption("[name=pDebt]", "");
+
   // Persistence and reset.
   await page.reload({ waitUntil: "load" });
   ok((await page.inputValue("[name=sat]")) === "1200", "inputs persist across reloads");

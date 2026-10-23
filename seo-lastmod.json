@@ -1,7 +1,7 @@
 {
  "/": {
-  "d": "2026-10-14",
-  "h": "cfc87dd1c6ff1b76"
+  "d": "2026-10-23",
+  "h": "2671c7f6fee76aca"
  },
  "/about/": {
   "d": "2026-10-23",
@@ -17,87 +17,87 @@
  },
  "/act-scores/": {
   "d": "2026-10-23",
-  "h": "d4a9aaf14efd4984"
+  "h": "d7e288526c57c69e"
  },
  "/act-scores/17/": {
   "d": "2026-10-23",
-  "h": "7e0315e89b877ad5"
+  "h": "0efe1e0541e369b2"
  },
  "/act-scores/18/": {
   "d": "2026-10-23",
-  "h": "2b5f89cad4fcb6b0"
+  "h": "c81eaeb333341514"
  },
  "/act-scores/19/": {
   "d": "2026-10-23",
-  "h": "0e946a3c37222692"
+  "h": "f85254fd1c46cf02"
  },
  "/act-scores/20/": {
   "d": "2026-10-23",
-  "h": "da3b495cfc289ae4"
+  "h": "280777c24d0f23f9"
  },
  "/act-scores/21/": {
   "d": "2026-10-23",
-  "h": "54ce161a01ab71f0"
+  "h": "ec5b52c26e0bc981"
  },
  "/act-scores/22/": {
   "d": "2026-10-23",
-  "h": "0e84f192b4e0005f"
+  "h": "3fdc7710f95d47f3"
  },
  "/act-scores/23/": {
   "d": "2026-10-23",
-  "h": "56152a88909d12fe"
+  "h": "951681742e688d0c"
  },
  "/act-scores/24/": {
   "d": "2026-10-23",
-  "h": "db0460b293155e8c"
+  "h": "0a0eee7759a6b447"
  },
  "/act-scores/25/": {
   "d": "2026-10-23",
-  "h": "1967ae93b76a6e4c"
+  "h": "3c3b05a7f78a5890"
  },
  "/act-scores/26/": {
   "d": "2026-10-23",
-  "h": "43465705ff191295"
+  "h": "258a8d9711764789"
  },
  "/act-scores/27/": {
   "d": "2026-10-23",
-  "h": "6ddb320c6f2e821d"
+  "h": "4281cdd0b2f1f4f3"
  },
  "/act-scores/28/": {
   "d": "2026-10-23",
-  "h": "191c228cafe0ef6d"
+  "h": "7135493a057e706f"
  },
  "/act-scores/29/": {
   "d": "2026-10-23",
-  "h": "86ddd0e0c4ec5d6e"
+  "h": "1abc70200a12f4f3"
  },
  "/act-scores/30/": {
   "d": "2026-10-23",
-  "h": "5eb13bb38ca7db01"
+  "h": "e731f05edbc592a1"
  },
  "/act-scores/31/": {
   "d": "2026-10-23",
-  "h": "47ea55625dbc89f5"
+  "h": "03466157e10c0cfb"
  },
  "/act-scores/32/": {
   "d": "2026-10-23",
-  "h": "2179ae0c7c3ae35c"
+  "h": "b7b094bcdfaf7d20"
  },
  "/act-scores/33/": {
   "d": "2026-10-23",
-  "h": "6e37a422736d8c00"
+  "h": "61e442e0b0839c70"
  },
  "/act-scores/34/": {
   "d": "2026-10-23",
-  "h": "8300c271d94f1a3a"
+  "h": "09e1a5c8b13992b8"
  },
  "/act-scores/35/": {
   "d": "2026-10-23",
-  "h": "8ae541c1dc6d6e5d"
+  "h": "05fe51db9b229d5c"
  },
  "/act-scores/36/": {
   "d": "2026-10-23",
-  "h": "8fadc8804aa672de"
+  "h": "86c68cc8983c2a83"
  },
  "/application-planning/": {
   "d": "2026-10-23",
@@ -113,207 +113,207 @@
  },
  "/college-costs/": {
   "d": "2026-10-23",
-  "h": "2ae63078abf3c0ef"
+  "h": "490444be62b76bb3"
  },
  "/college-costs/alabama/": {
   "d": "2026-10-23",
-  "h": "c1f8f21cce0b7853"
+  "h": "9871d0439087bf7d"
  },
  "/college-costs/arizona/": {
   "d": "2026-10-23",
-  "h": "1ffc0d3880ce363f"
+  "h": "3572bf9984e27bf8"
  },
  "/college-costs/arkansas/": {
   "d": "2026-10-23",
-  "h": "121deaa6a2470a1c"
+  "h": "bdc363929e7a1e2f"
  },
  "/college-costs/california/": {
   "d": "2026-10-23",
-  "h": "04a00f7deebd853f"
+  "h": "bae2a7997203c23f"
  },
  "/college-costs/colorado/": {
   "d": "2026-10-23",
-  "h": "0f4e90494d1488ea"
+  "h": "a328deec31fb93cf"
  },
  "/college-costs/connecticut/": {
   "d": "2026-10-23",
-  "h": "3d57ee02e24c7232"
+  "h": "813b4e41eceacf0e"
  },
  "/college-costs/delaware/": {
   "d": "2026-10-23",
-  "h": "9cee87ef381362e9"
+  "h": "ef3ac56101141f47"
  },
  "/college-costs/district-of-columbia/": {
   "d": "2026-10-23",
-  "h": "199f7f7a062c52b5"
+  "h": "48ada34c9bbf41c2"
  },
  "/college-costs/florida/": {
   "d": "2026-10-23",
-  "h": "0d8adfa956bac80b"
+  "h": "3cd2737a96121cff"
  },
  "/college-costs/georgia/": {
   "d": "2026-10-23",
-  "h": "d2457aa86002469d"
+  "h": "3d8c7da91d4f2e08"
  },
  "/college-costs/hawaii/": {
   "d": "2026-10-23",
-  "h": "2aacaeae52b2570a"
+  "h": "e8feedfc2cd9ddbc"
  },
  "/college-costs/idaho/": {
   "d": "2026-10-23",
-  "h": "aab519e67855065d"
+  "h": "f01772edf4ded48d"
  },
  "/college-costs/illinois/": {
   "d": "2026-10-23",
-  "h": "ccd0333e642cd5f0"
+  "h": "8773107d4eec07f7"
  },
  "/college-costs/indiana/": {
   "d": "2026-10-23",
-  "h": "0f84443072cc4d9b"
+  "h": "a3ce63a8b2cecbde"
  },
  "/college-costs/iowa/": {
   "d": "2026-10-23",
-  "h": "f631e8038df39de8"
+  "h": "4ad5e7954b4c7cc5"
  },
  "/college-costs/kansas/": {
   "d": "2026-10-23",
-  "h": "1e18c2aacdad270d"
+  "h": "ab6a935e9946f3fa"
  },
  "/college-costs/kentucky/": {
   "d": "2026-10-23",
-  "h": "236d81ed9cc4658a"
+  "h": "90862534bbaafd9a"
  },
  "/college-costs/louisiana/": {
   "d": "2026-10-23",
-  "h": "8a49784beec11259"
+  "h": "209404d13cbe3402"
  },
  "/college-costs/maine/": {
   "d": "2026-10-23",
-  "h": "d0133f43c944c6da"
+  "h": "d66c456f767da2fd"
  },
  "/college-costs/maryland/": {
   "d": "2026-10-23",
-  "h": "8006f3043805bfb6"
+  "h": "32b8edcbcdfcb421"
  },
  "/college-costs/massachusetts/": {
   "d": "2026-10-23",
-  "h": "0fdd85c5638f1d19"
+  "h": "12e70c6684a09a40"
  },
  "/college-costs/michigan/": {
   "d": "2026-10-23",
-  "h": "abba9dd5c0049652"
+  "h": "9f898461790450da"
  },
  "/college-costs/minnesota/": {
   "d": "2026-10-23",
-  "h": "712347776c16cb8d"
+  "h": "0b754fd0f59bb36a"
  },
  "/college-costs/mississippi/": {
   "d": "2026-10-23",
-  "h": "a27bc8d0a1b33358"
+  "h": "07eed2bf7b3a63ae"
  },
  "/college-costs/missouri/": {
   "d": "2026-10-23",
-  "h": "64c5350819bed4b0"
+  "h": "85077f126c6f11e9"
  },
  "/college-costs/montana/": {
   "d": "2026-10-23",
-  "h": "64641f064b161f3a"
+  "h": "a3b068090e1da18d"
  },
  "/college-costs/nebraska/": {
   "d": "2026-10-23",
-  "h": "cf3cfa01a2c86d60"
+  "h": "07907f5944d9d765"
  },
  "/college-costs/nevada/": {
   "d": "2026-10-23",
-  "h": "fde80ad76b7071b7"
+  "h": "c8f8bdb64cf487a0"
  },
  "/college-costs/new-hampshire/": {
   "d": "2026-10-23",
-  "h": "a11a22e19b033dc8"
+  "h": "fd1ea6d08bf4a772"
  },
  "/college-costs/new-jersey/": {
   "d": "2026-10-23",
-  "h": "63196f6054de4c83"
+  "h": "b175d5c6eae306f1"
  },
  "/college-costs/new-mexico/": {
   "d": "2026-10-23",
-  "h": "83b7aab0db99384b"
+  "h": "37b512ba2c347ad9"
  },
  "/college-costs/new-york/": {
   "d": "2026-10-23",
-  "h": "f4ac5d392b8b5b37"
+  "h": "7f35f11da642d522"
  },
  "/college-costs/north-carolina/": {
   "d": "2026-10-23",
-  "h": "c83bdd0f0bbb8f21"
+  "h": "c85228ea8f70a641"
  },
  "/college-costs/north-dakota/": {
   "d": "2026-10-23",
-  "h": "9248cfd0d70ed289"
+  "h": "045cb2ae832e9a3c"
  },
  "/college-costs/ohio/": {
   "d": "2026-10-23",
-  "h": "0edf2fedc78bd0d8"
+  "h": "0c5d2aa2b4bf3c27"
  },
  "/college-costs/oklahoma/": {
   "d": "2026-10-23",
-  "h": "ecbb982aa2636c12"
+  "h": "5d1380f49682f760"
  },
  "/college-costs/oregon/": {
   "d": "2026-10-23",
-  "h": "bf8cdae23c363ffe"
+  "h": "6ffc4eef4c77f6de"
  },
  "/college-costs/pennsylvania/": {
   "d": "2026-10-23",
-  "h": "ceb9c379b3034350"
+  "h": "78b33e9477a99206"
  },
  "/college-costs/puerto-rico/": {
   "d": "2026-10-23",
-  "h": "086fe56d95273c82"
+  "h": "e23b8a27522c96ef"
  },
  "/college-costs/rhode-island/": {
   "d": "2026-10-23",
-  "h": "bf112707ab4ef66e"
+  "h": "e545d1316c7e895f"
  },
  "/college-costs/south-carolina/": {
   "d": "2026-10-23",
-  "h": "0e51b4418e1bab49"
+  "h": "23e77833d6e1f824"
  },
  "/college-costs/south-dakota/": {
   "d": "2026-10-23",
-  "h": "fe08983c23d32b91"
+  "h": "e88852ba2db49c3c"
  },
  "/college-costs/tennessee/": {
   "d": "2026-10-23",
-  "h": "136ee16799b7bbc6"
+  "h": "a8b989e32e068013"
  },
  "/college-costs/texas/": {
   "d": "2026-10-23",
-  "h": "b81c8f76a0a70cde"
+  "h": "fe4130a6cf365af0"
  },
  "/college-costs/utah/": {
   "d": "2026-10-23",
-  "h": "936fb5f602fefcf4"
+  "h": "cc916aa6963b2fec"
  },
  "/college-costs/vermont/": {
   "d": "2026-10-23",
-  "h": "268ed4f6db7e1751"
+  "h": "5dcb85c124f1d289"
  },
  "/college-costs/virginia/": {
   "d": "2026-10-23",
-  "h": "a2f2e4f51b11cb30"
+  "h": "3d340045b6236292"
  },
  "/college-costs/washington/": {
   "d": "2026-10-23",
-  "h": "66fbba926dc6fdc3"
+  "h": "cdffff2fdd751cc6"
  },
  "/college-costs/west-virginia/": {
   "d": "2026-10-23",
-  "h": "b779c28cadbf5078"
+  "h": "0867608e52159efa"
  },
  "/college-costs/wisconsin/": {
   "d": "2026-10-23",
-  "h": "7873c00b4cb40790"
+  "h": "c04a7dc0c805a6ad"
  },
  "/colleges-by-state/": {
   "d": "2026-10-23",
@@ -321,1623 +321,1623 @@
  },
  "/colleges/": {
   "d": "2026-10-23",
-  "h": "f7f88e306e0a632c"
+  "h": "a162bfd130682fd2"
  },
  "/colleges/alabama/": {
   "d": "2026-10-23",
-  "h": "e2d0daf5277d30d6"
+  "h": "2cb8cfe0177c6a80"
  },
  "/colleges/alcorn-state-university/": {
   "d": "2026-10-23",
-  "h": "7033044ca57a118e"
+  "h": "e80e555a2af89b8d"
  },
  "/colleges/allegheny-college/": {
   "d": "2026-10-23",
-  "h": "2b58637f6b647c00"
+  "h": "8291246cba5a28f5"
  },
  "/colleges/amherst-college/": {
   "d": "2026-10-23",
-  "h": "d889bbd66ab7f908"
+  "h": "f37074d8d5f63def"
  },
  "/colleges/anderson-university/": {
   "d": "2026-10-23",
-  "h": "35dc73aa1de489d2"
+  "h": "e7309b522bd81aa9"
  },
  "/colleges/anna-maria-college/": {
   "d": "2026-10-23",
-  "h": "0ab6bb8278faf5e7"
+  "h": "7654a20a93ce5707"
  },
  "/colleges/appalachian-state-university/": {
   "d": "2026-10-23",
-  "h": "08f3d9c83f447dd9"
+  "h": "48cd3eff2c98ba7b"
  },
  "/colleges/arizona-state-university-campus-immersion/": {
   "d": "2026-10-23",
-  "h": "01427d79bfe47d8a"
+  "h": "f5235edffc3bfbe9"
  },
  "/colleges/arizona-state-university-digital-immersion/": {
   "d": "2026-10-23",
-  "h": "5916cacad7c73a3f"
+  "h": "a7c398c1136efe1e"
  },
  "/colleges/arizona/": {
   "d": "2026-10-23",
-  "h": "c2449340cb10612f"
+  "h": "176f0a6f98efcab0"
  },
  "/colleges/arkansas/": {
   "d": "2026-10-23",
-  "h": "12b28f91998a7ea6"
+  "h": "77299b1dff8632f9"
  },
  "/colleges/auburn-university/": {
   "d": "2026-10-23",
-  "h": "7906d1e8025d50f1"
+  "h": "975c0c2b13c51ee1"
  },
  "/colleges/austin-college/": {
   "d": "2026-10-23",
-  "h": "a0ecaebe74d38419"
+  "h": "08283ace22ddc0bf"
  },
  "/colleges/ave-maria-university/": {
   "d": "2026-10-23",
-  "h": "fa1849802341dcbc"
+  "h": "42d6d33b4da0eaca"
  },
  "/colleges/babson-college/": {
   "d": "2026-10-23",
-  "h": "24d59fac3e738369"
+  "h": "d6be08b9087aca2d"
  },
  "/colleges/ball-state-university/": {
   "d": "2026-10-23",
-  "h": "3b784fe16ef7ca33"
+  "h": "ac50e70a1ad80b3e"
  },
  "/colleges/bard-college/": {
   "d": "2026-10-23",
-  "h": "bc8614b3b4312616"
+  "h": "f3eb91f235579c1c"
  },
  "/colleges/barnard-college/": {
   "d": "2026-10-23",
-  "h": "185acda445dd847b"
+  "h": "2b505d9ab17b64ae"
  },
  "/colleges/bates-college/": {
   "d": "2026-10-23",
-  "h": "a7b83367928e5caa"
+  "h": "1be8547bfde75697"
  },
  "/colleges/baylor-university/": {
   "d": "2026-10-23",
-  "h": "86701e66bc5ee14b"
+  "h": "af30b437dedecc9d"
  },
  "/colleges/beacon-college/": {
   "d": "2026-10-23",
-  "h": "3c21e9c238539ea2"
+  "h": "5b588ccf9c749265"
  },
  "/colleges/belhaven-university/": {
   "d": "2026-10-23",
-  "h": "a98fae512f2368ee"
+  "h": "de3b905c763ea080"
  },
  "/colleges/bennington-college/": {
   "d": "2026-10-23",
-  "h": "4900f8200df31bb8"
+  "h": "e508ab7021461582"
  },
  "/colleges/bentley-university/": {
   "d": "2026-10-23",
-  "h": "d343827625e4e868"
+  "h": "8dbe5a2f4a7e26ed"
  },
  "/colleges/berea-college/": {
   "d": "2026-10-23",
-  "h": "657857f1e3050c8e"
+  "h": "50f9d0b4c42cfce0"
  },
  "/colleges/berklee-college-of-music/": {
   "d": "2026-10-23",
-  "h": "ac0409aa6d850afc"
+  "h": "0878fe758c8f9577"
  },
  "/colleges/bethany-lutheran-college/": {
   "d": "2026-10-23",
-  "h": "9751bc9f2717615f"
+  "h": "2b3bdb31d6c5ab65"
  },
  "/colleges/binghamton-university/": {
   "d": "2026-10-23",
-  "h": "d4c049d1c70db00d"
+  "h": "61f86ffbac2c7f65"
  },
  "/colleges/boise-state-university/": {
   "d": "2026-10-23",
-  "h": "97fe0b58adc7f0f8"
+  "h": "04bcf089400258fd"
  },
  "/colleges/boston-college/": {
   "d": "2026-10-23",
-  "h": "9a22d99290a7816e"
+  "h": "aeae480092f5e8f4"
  },
  "/colleges/boston-university/": {
   "d": "2026-10-23",
-  "h": "7b333ac3376c52cd"
+  "h": "1cb248165f883ca5"
  },
  "/colleges/bowdoin-college/": {
   "d": "2026-10-23",
-  "h": "8b61ce7429d6cfc5"
+  "h": "b5d682b945da9076"
  },
  "/colleges/brandeis-university/": {
   "d": "2026-10-23",
-  "h": "0da9c9fb65e478b3"
+  "h": "260495338de5c04e"
  },
  "/colleges/brescia-university/": {
   "d": "2026-10-23",
-  "h": "a1d87bd8e907ef95"
+  "h": "3051a594d2cf3f57"
  },
  "/colleges/brevard-college/": {
   "d": "2026-10-23",
-  "h": "46e141841ecff3ed"
+  "h": "df18eed016453b52"
  },
  "/colleges/brigham-young-university-hawaii/": {
   "d": "2026-10-23",
-  "h": "8fbc7cdf087dc1ec"
+  "h": "1cffa11dbcafe7e2"
  },
  "/colleges/brigham-young-university/": {
   "d": "2026-10-23",
-  "h": "0074638115d9b9d3"
+  "h": "7973c6a917d7cb45"
  },
  "/colleges/brown-university/": {
   "d": "2026-10-23",
-  "h": "90cf05f5bcb37cc5"
+  "h": "9c52090e58488fc3"
  },
  "/colleges/bryn-mawr-college/": {
   "d": "2026-10-23",
-  "h": "886982a8905fef09"
+  "h": "dbfa3c8a61c0c059"
  },
  "/colleges/bucknell-university/": {
   "d": "2026-10-23",
-  "h": "887b6a2785747b44"
+  "h": "f44722cba4356063"
  },
  "/colleges/california-institute-of-technology/": {
   "d": "2026-10-23",
-  "h": "044f4431b5b27ee3"
+  "h": "a8d3c13a0f9b747b"
  },
  "/colleges/california-institute-of-the-arts/": {
   "d": "2026-10-23",
-  "h": "3070215eb8ee6452"
+  "h": "597ee09a62841ee1"
  },
  "/colleges/california-polytechnic-state-university-san-luis-obispo/": {
   "d": "2026-10-23",
-  "h": "9fa558a755019618"
+  "h": "0fdfa9989ee05b20"
  },
  "/colleges/california-state-polytechnic-university-pomona/": {
   "d": "2026-10-23",
-  "h": "352ba36c3d2ef59e"
+  "h": "7b896c21f595a165"
  },
  "/colleges/california-state-university-chico/": {
   "d": "2026-10-23",
-  "h": "0c7ebddde79dd8ee"
+  "h": "09f7e0129f8b16b8"
  },
  "/colleges/california-state-university-fresno/": {
   "d": "2026-10-23",
-  "h": "f286f345c953685a"
+  "h": "80b83b2f01eae42d"
  },
  "/colleges/california-state-university-fullerton/": {
   "d": "2026-10-23",
-  "h": "828a0ded223f5583"
+  "h": "23d777ee0438af55"
  },
  "/colleges/california-state-university-long-beach/": {
   "d": "2026-10-23",
-  "h": "763ba55a6b978f3d"
+  "h": "d66e55e3aa151fb5"
  },
  "/colleges/california-state-university-los-angeles/": {
   "d": "2026-10-23",
-  "h": "891ac5191d6ca7c4"
+  "h": "49098ac94882a14f"
  },
  "/colleges/california-state-university-northridge/": {
   "d": "2026-10-23",
-  "h": "5176770bde1dffe0"
+  "h": "259bb110534d9282"
  },
  "/colleges/california-state-university-sacramento/": {
   "d": "2026-10-23",
-  "h": "c351315aaabeda11"
+  "h": "70fcf8f63464ddf1"
  },
  "/colleges/california-state-university-san-bernardino/": {
   "d": "2026-10-23",
-  "h": "906b3c85419ca97d"
+  "h": "630ac5d7059bef50"
  },
  "/colleges/california-state-university-san-marcos/": {
   "d": "2026-10-23",
-  "h": "3a9e0518624e548b"
+  "h": "6c03a4e23925b63c"
  },
  "/colleges/california/": {
   "d": "2026-10-23",
-  "h": "9085743588b49820"
+  "h": "74f00e0470cc249b"
  },
  "/colleges/carleton-college/": {
   "d": "2026-10-23",
-  "h": "24e0c039496aaaf0"
+  "h": "38bf69756b9b63b7"
  },
  "/colleges/carnegie-mellon-university/": {
   "d": "2026-10-23",
-  "h": "3400d70e66c8c883"
+  "h": "14a862bba8b01d46"
  },
  "/colleges/case-western-reserve-university/": {
   "d": "2026-10-23",
-  "h": "36f58a310880a48e"
+  "h": "233bab0d68b78cab"
  },
  "/colleges/centre-college/": {
   "d": "2026-10-23",
-  "h": "e3ceecef858d84f9"
+  "h": "ba6025f93e53113a"
  },
  "/colleges/chicago-state-university/": {
   "d": "2026-10-23",
-  "h": "2a919773b7724f9a"
+  "h": "bba5b92411682d63"
  },
  "/colleges/citadel-military-college-of-south-carolina/": {
   "d": "2026-10-23",
-  "h": "8703be72be6cd20d"
+  "h": "153bbbfeb964fab4"
  },
  "/colleges/claremont-mckenna-college/": {
   "d": "2026-10-23",
-  "h": "39b18f507d9d7274"
+  "h": "0f56953d2accd769"
  },
  "/colleges/clark-university/": {
   "d": "2026-10-23",
-  "h": "1799a6e293835f4e"
+  "h": "e9b9c6edd372808c"
  },
  "/colleges/clemson-university/": {
   "d": "2026-10-23",
-  "h": "4ee5e8d0f8ac268f"
+  "h": "62b8cf564ba83f8a"
  },
  "/colleges/colby-college/": {
   "d": "2026-10-23",
-  "h": "59d74ba34b949c74"
+  "h": "b56a55e4f1f16530"
  },
  "/colleges/colgate-university/": {
   "d": "2026-10-23",
-  "h": "13e7bc4ee9233614"
+  "h": "33204c06d4173a19"
  },
  "/colleges/college-of-the-holy-cross/": {
   "d": "2026-10-23",
-  "h": "554db0f8849afba8"
+  "h": "123d3fe736583d52"
  },
  "/colleges/college-of-the-ozarks/": {
   "d": "2026-10-23",
-  "h": "9847893501aa1d28"
+  "h": "74778ef20a69f158"
  },
  "/colleges/colorado-college/": {
   "d": "2026-10-23",
-  "h": "bbccac18b52a695c"
+  "h": "24c6befea27f56a8"
  },
  "/colleges/colorado-state-university-fort-collins/": {
   "d": "2026-10-23",
-  "h": "e5b3b21e575c4527"
+  "h": "a0f6f0ddbaf1b0bd"
  },
  "/colleges/colorado/": {
   "d": "2026-10-23",
-  "h": "54c98276314a6183"
+  "h": "b9815be3105be0dd"
  },
  "/colleges/columbia-university-in-the-city-of-new-york/": {
   "d": "2026-10-23",
-  "h": "62053d7c95b4767e"
+  "h": "6cb8b03595919aaa"
  },
  "/colleges/connecticut-college/": {
   "d": "2026-10-23",
-  "h": "6855468365bc3dc2"
+  "h": "191823d24d4a6cf4"
  },
  "/colleges/connecticut/": {
   "d": "2026-10-23",
-  "h": "21d1915d75ac6932"
+  "h": "3d68ecce980701da"
  },
  "/colleges/coppin-state-university/": {
   "d": "2026-10-23",
-  "h": "2f6534916a3033e4"
+  "h": "f954f9680656fae4"
  },
  "/colleges/cornell-university/": {
   "d": "2026-10-23",
-  "h": "3596cdf7d43ea004"
+  "h": "bda2e4872e0adfb6"
  },
  "/colleges/crown-college/": {
   "d": "2026-10-23",
-  "h": "c21e62056e7dc8dc"
+  "h": "3455c80e3d3c9bfc"
  },
  "/colleges/cuny-bernard-m-baruch-college/": {
   "d": "2026-10-23",
-  "h": "75351d802a2dfc8e"
+  "h": "29a18a5d6eff64e5"
  },
  "/colleges/cuny-hunter-college/": {
   "d": "2026-10-23",
-  "h": "4ff3d159a811778b"
+  "h": "4045ef71b9364f34"
  },
  "/colleges/cuny-new-york-city-college-of-technology/": {
   "d": "2026-10-23",
-  "h": "5910c10190905e3b"
+  "h": "970287cc236bef2f"
  },
  "/colleges/dartmouth-college/": {
   "d": "2026-10-23",
-  "h": "d33e1e246e12ba55"
+  "h": "066f09192c066fc0"
  },
  "/colleges/davidson-college/": {
   "d": "2026-10-23",
-  "h": "02fcf8adb6f5273e"
+  "h": "36b49f67a9f3de0b"
  },
  "/colleges/delaware-state-university/": {
   "d": "2026-10-23",
-  "h": "7c0e3c689ecec71e"
+  "h": "32a4c0658f288ad4"
  },
  "/colleges/delaware/": {
   "d": "2026-10-23",
-  "h": "c5d4e110c8ea9550"
+  "h": "ad8151fec53cdd51"
  },
  "/colleges/denison-university/": {
   "d": "2026-10-23",
-  "h": "972ada21a485a2ef"
+  "h": "22c1c257f66ce81d"
  },
  "/colleges/depaul-university/": {
   "d": "2026-10-23",
-  "h": "2b98cb252a4a8b4b"
+  "h": "d37d141373071fa5"
  },
  "/colleges/dickinson-college/": {
   "d": "2026-10-23",
-  "h": "2595c0e4c3c4f7a3"
+  "h": "39a4bbe788e0d65f"
  },
  "/colleges/dickinson-state-university/": {
   "d": "2026-10-23",
-  "h": "e6e338aaff679350"
+  "h": "92c54afaf218ec70"
  },
  "/colleges/dillard-university/": {
   "d": "2026-10-23",
-  "h": "035f24560b2ff428"
+  "h": "df1e9a5f57bf644f"
  },
  "/colleges/district-of-columbia/": {
   "d": "2026-10-23",
-  "h": "0fad8d5e42bf3693"
+  "h": "0ca9a7aa9fbaca5e"
  },
  "/colleges/duke-university/": {
   "d": "2026-10-23",
-  "h": "9026a26538eb3270"
+  "h": "d7589a8137523d4e"
  },
  "/colleges/east-carolina-university/": {
   "d": "2026-10-23",
-  "h": "ad3dbbbb8c68a7bf"
+  "h": "cc034e1f829078e7"
  },
  "/colleges/emerson-college/": {
   "d": "2026-10-23",
-  "h": "4fd589538679cf39"
+  "h": "6eff8eca2d8c4709"
  },
  "/colleges/emory-university/": {
   "d": "2026-10-23",
-  "h": "4f4b56c9826506db"
+  "h": "284330ffbe2cb9e3"
  },
  "/colleges/fairfield-university/": {
   "d": "2026-10-23",
-  "h": "4f35e778dbe285e0"
+  "h": "30219a61ee46302d"
  },
  "/colleges/fisk-university/": {
   "d": "2026-10-23",
-  "h": "40d6bb02a76e05c9"
+  "h": "14fe9b3b49791a09"
  },
  "/colleges/florida-agricultural-and-mechanical-university/": {
   "d": "2026-10-23",
-  "h": "7fdf60d19d48ced3"
+  "h": "ec50126714ef76e3"
  },
  "/colleges/florida-atlantic-university/": {
   "d": "2026-10-23",
-  "h": "f074fc1abfa174ac"
+  "h": "b6e8535a7c8d1ee8"
  },
  "/colleges/florida-gulf-coast-university/": {
   "d": "2026-10-23",
-  "h": "8d40601fe132d318"
+  "h": "3ee743f684c52e43"
  },
  "/colleges/florida-international-university/": {
   "d": "2026-10-23",
-  "h": "6c8fc8a388b844bb"
+  "h": "172d0877a993419a"
  },
  "/colleges/florida-state-university/": {
   "d": "2026-10-23",
-  "h": "c7fc5bf88c55a674"
+  "h": "d44e7323f12db81c"
  },
  "/colleges/florida/": {
   "d": "2026-10-23",
-  "h": "a290592aedb2bc20"
+  "h": "5bfd8df15cc97207"
  },
  "/colleges/franklin-and-marshall-college/": {
   "d": "2026-10-23",
-  "h": "8b1aaacd071556c0"
+  "h": "ba54f16feb2cd240"
  },
  "/colleges/furman-university/": {
   "d": "2026-10-23",
-  "h": "19cc0f0d85f5f56b"
+  "h": "b74f0ef3b705e015"
  },
  "/colleges/george-mason-university/": {
   "d": "2026-10-23",
-  "h": "2e8ded95a4baa717"
+  "h": "79797a2a84e76789"
  },
  "/colleges/george-washington-university/": {
   "d": "2026-10-23",
-  "h": "1d0b02b92d1d6196"
+  "h": "7782f273a1a1b499"
  },
  "/colleges/georgetown-university/": {
   "d": "2026-10-23",
-  "h": "4f252289c89087b6"
+  "h": "cc999c1a183ef8e6"
  },
  "/colleges/georgia-institute-of-technology/": {
   "d": "2026-10-23",
-  "h": "e6bebc1df28fe54a"
+  "h": "297e84dd2108a20f"
  },
  "/colleges/georgia-southern-university/": {
   "d": "2026-10-23",
-  "h": "ae0cb791da40edaa"
+  "h": "b47fdbbc22f8b744"
  },
  "/colleges/georgia-state-university/": {
   "d": "2026-10-23",
-  "h": "0b5fcc2e4a5d8477"
+  "h": "26ffb7f3d3904d59"
  },
  "/colleges/georgia/": {
   "d": "2026-10-23",
-  "h": "ff01b25bfb8bcc36"
+  "h": "114aa855b87aad74"
  },
  "/colleges/gettysburg-college/": {
   "d": "2026-10-23",
-  "h": "d0ff74f3b034e6c4"
+  "h": "6220759f489aa0eb"
  },
  "/colleges/governors-state-university/": {
   "d": "2026-10-23",
-  "h": "e1881d4c67272ec6"
+  "h": "098b07c901d06271"
  },
  "/colleges/grambling-state-university/": {
   "d": "2026-10-23",
-  "h": "0d8984f63abc0b4a"
+  "h": "9917b0f748722bca"
  },
  "/colleges/grand-canyon-university/": {
   "d": "2026-10-23",
-  "h": "60019bb85757a0a4"
+  "h": "269843791b3ed16a"
  },
  "/colleges/grand-valley-state-university/": {
   "d": "2026-10-23",
-  "h": "4b8a3b1cd7778eef"
+  "h": "56576c536a2e9200"
  },
  "/colleges/grinnell-college/": {
   "d": "2026-10-23",
-  "h": "557954c1f36c58d6"
+  "h": "692e880ff258d557"
  },
  "/colleges/hallmark-university/": {
   "d": "2026-10-23",
-  "h": "e9c11c07ab25b595"
+  "h": "2b198e30e49e9737"
  },
  "/colleges/hamilton-college/": {
   "d": "2026-10-23",
-  "h": "b408a0bd2c76c7bc"
+  "h": "5119e5e234e6b894"
  },
  "/colleges/hampden-sydney-college/": {
   "d": "2026-10-23",
-  "h": "9cc480689fa4bc12"
+  "h": "a30e0789b6a02401"
  },
  "/colleges/harvard-university/": {
   "d": "2026-10-23",
-  "h": "8b4007dc48c199af"
+  "h": "3f73aafeb1e7aa64"
  },
  "/colleges/harvey-mudd-college/": {
   "d": "2026-10-23",
-  "h": "30a660c146c92920"
+  "h": "2c481909452e7f02"
  },
  "/colleges/haverford-college/": {
   "d": "2026-10-23",
-  "h": "b858a1d45a474983"
+  "h": "f3249145e282cc8f"
  },
  "/colleges/hawaii/": {
   "d": "2026-10-23",
-  "h": "716dfec1e4ac2bfb"
+  "h": "4f017cf5f3b4f377"
  },
  "/colleges/hillsdale-college/": {
   "d": "2026-10-23",
-  "h": "c4fed37e350a46bf"
+  "h": "dfa45eba79b9688b"
  },
  "/colleges/hope-international-university/": {
   "d": "2026-10-23",
-  "h": "2e25f94736c08257"
+  "h": "f938276c44b5a34e"
  },
  "/colleges/howard-university/": {
   "d": "2026-10-23",
-  "h": "1826481e94798f5d"
+  "h": "8e4c29701a8d5d99"
  },
  "/colleges/huston-tillotson-university/": {
   "d": "2026-10-23",
-  "h": "3e6ba29759db14f3"
+  "h": "b4bc4afd0cca8975"
  },
  "/colleges/idaho/": {
   "d": "2026-10-23",
-  "h": "1daf6180399a899d"
+  "h": "6309bb3242a337e6"
  },
  "/colleges/illinois-institute-of-technology/": {
   "d": "2026-10-23",
-  "h": "0ce63a4262d7b4d0"
+  "h": "14191924647eded6"
  },
  "/colleges/illinois-state-university/": {
   "d": "2026-10-23",
-  "h": "948ac0ee8a1661f5"
+  "h": "a3e9b33e52446b88"
  },
  "/colleges/illinois-wesleyan-university/": {
   "d": "2026-10-23",
-  "h": "3867c6f246f168b5"
+  "h": "522006b95fdc4458"
  },
  "/colleges/illinois/": {
   "d": "2026-10-23",
-  "h": "1995fbfcc3e1739c"
+  "h": "06b2c5257c285227"
  },
  "/colleges/indiana-university-bloomington/": {
   "d": "2026-10-23",
-  "h": "1bccdf71d410236f"
+  "h": "89edd5cfa2ff1cc6"
  },
  "/colleges/indiana-university-indianapolis/": {
   "d": "2026-10-23",
-  "h": "698a9d8356502679"
+  "h": "035247c602afe721"
  },
  "/colleges/indiana/": {
   "d": "2026-10-23",
-  "h": "313e129f81d9de6b"
+  "h": "a6cc2a0e5fc4c604"
  },
  "/colleges/inter-american-university-of-puerto-rico-aguadilla/": {
   "d": "2026-10-23",
-  "h": "2845bbf9d2e9427d"
+  "h": "4e08cfe6b10b8502"
  },
  "/colleges/inter-american-university-of-puerto-rico-arecibo/": {
   "d": "2026-10-23",
-  "h": "0b72c96c2f637a09"
+  "h": "08809de0cb4cfbee"
  },
  "/colleges/inter-american-university-of-puerto-rico-bayamon/": {
   "d": "2026-10-23",
-  "h": "7bb6dd7ee15839d4"
+  "h": "4a9b511947e38e97"
  },
  "/colleges/inter-american-university-of-puerto-rico-fajardo/": {
   "d": "2026-10-23",
-  "h": "26a9e88735473d87"
+  "h": "cd72fd94c04beb3a"
  },
  "/colleges/inter-american-university-of-puerto-rico-ponce/": {
   "d": "2026-10-23",
-  "h": "63ef1b7b4481a2a8"
+  "h": "7acc16206a8eb02d"
  },
  "/colleges/inter-american-university-of-puerto-rico-san-german/": {
   "d": "2026-10-23",
-  "h": "6654069d085bb4f7"
+  "h": "b39d95d8f14a4439"
  },
  "/colleges/iowa-state-university/": {
   "d": "2026-10-23",
-  "h": "1d7c887fe2f1bdda"
+  "h": "cc2e50602f4aaeae"
  },
  "/colleges/iowa/": {
   "d": "2026-10-23",
-  "h": "2df45a25f17bd226"
+  "h": "694df98d0f7332d3"
  },
  "/colleges/james-madison-university/": {
   "d": "2026-10-23",
-  "h": "0eb1a55aa9631205"
+  "h": "26257ddf0b6e4111"
  },
  "/colleges/johns-hopkins-university/": {
   "d": "2026-10-23",
-  "h": "25d11ad8f4378ff9"
+  "h": "667f390403438768"
  },
  "/colleges/johnson-c-smith-university/": {
   "d": "2026-10-23",
-  "h": "ddf5ee33e22e2fed"
+  "h": "273d3c80a165a73b"
  },
  "/colleges/judson-university/": {
   "d": "2026-10-23",
-  "h": "5512f996fad34f5d"
+  "h": "303cb95fe1da6df1"
  },
  "/colleges/kansas-city-art-institute/": {
   "d": "2026-10-23",
-  "h": "555a3a3593eece01"
+  "h": "877a8f5429a6cd25"
  },
  "/colleges/kansas-state-university/": {
   "d": "2026-10-23",
-  "h": "97d82d4228daf6e3"
+  "h": "214c8bbfa12b7b8d"
  },
  "/colleges/kansas/": {
   "d": "2026-10-23",
-  "h": "69b1cfbe55a4d4a1"
+  "h": "dcd1ac0c6e96b34a"
  },
  "/colleges/kennesaw-state-university/": {
   "d": "2026-10-23",
-  "h": "24f150b77884d168"
+  "h": "6334d2c223e81afc"
  },
  "/colleges/kent-state-university-at-kent/": {
   "d": "2026-10-23",
-  "h": "dda3d1f321634b17"
+  "h": "0f50f9c17b475651"
  },
  "/colleges/kentucky/": {
   "d": "2026-10-23",
-  "h": "c715629e6d214f85"
+  "h": "7b1dad0b0d59ba2d"
  },
  "/colleges/kenyon-college/": {
   "d": "2026-10-23",
-  "h": "41ade03c0f716bc4"
+  "h": "e7df75795eb6a132"
  },
  "/colleges/lafayette-college/": {
   "d": "2026-10-23",
-  "h": "1ead8c52a5ffed44"
+  "h": "05e988d559f95a14"
  },
  "/colleges/lehigh-university/": {
   "d": "2026-10-23",
-  "h": "6e24e43bc0ef475b"
+  "h": "c726286414f4f6de"
  },
  "/colleges/letourneau-university/": {
   "d": "2026-10-23",
-  "h": "5096c3723be8a250"
+  "h": "6e04af8e466c11f0"
  },
  "/colleges/liberty-university/": {
   "d": "2026-10-23",
-  "h": "2812aa3d6ac2d38c"
+  "h": "7523f01c27776b8e"
  },
  "/colleges/louisiana-state-university-and-agricultural-mechanical-college/": {
   "d": "2026-10-23",
-  "h": "948f8549adf917b9"
+  "h": "fb82a344c8d7d5c1"
  },
  "/colleges/louisiana-state-university-shreveport/": {
   "d": "2026-10-23",
-  "h": "071661ddf508cd2b"
+  "h": "e5a62cecf12b4a6b"
  },
  "/colleges/louisiana/": {
   "d": "2026-10-23",
-  "h": "fd090529befb4da0"
+  "h": "bb3f06f0059d88cb"
  },
  "/colleges/loyola-marymount-university/": {
   "d": "2026-10-23",
-  "h": "d88fc748204fe742"
+  "h": "56a95b3408f6c925"
  },
  "/colleges/macalester-college/": {
   "d": "2026-10-23",
-  "h": "c9a74a74d73e84e0"
+  "h": "05ff1689c342fc91"
  },
  "/colleges/maine-maritime-academy/": {
   "d": "2026-10-23",
-  "h": "8786f20683626799"
+  "h": "4420c4959af7e83c"
  },
  "/colleges/maine/": {
   "d": "2026-10-23",
-  "h": "9499ea86cd01770a"
+  "h": "05c56fe2c61cb337"
  },
  "/colleges/manhattan-school-of-music/": {
   "d": "2026-10-23",
-  "h": "f47716e8d98183f0"
+  "h": "1e35644369e1e016"
  },
  "/colleges/maryland/": {
   "d": "2026-10-23",
-  "h": "fa6516c582d1e142"
+  "h": "05cbae49df97d4fc"
  },
  "/colleges/massachusetts-institute-of-technology/": {
   "d": "2026-10-23",
-  "h": "c9f1bace3fb622d4"
+  "h": "42d06214bfbcfc1a"
  },
  "/colleges/massachusetts/": {
   "d": "2026-10-23",
-  "h": "2627c33fc34b6069"
+  "h": "260ac15fcbccdb04"
  },
  "/colleges/metropolitan-state-university-of-denver/": {
   "d": "2026-10-23",
-  "h": "410e7301a9f0441d"
+  "h": "5c32059cb3a463e8"
  },
  "/colleges/miami-university-oxford/": {
   "d": "2026-10-23",
-  "h": "d195cee9a646dd88"
+  "h": "a6185a67ddf37838"
  },
  "/colleges/michigan-state-university/": {
   "d": "2026-10-23",
-  "h": "9a6314e712e01a23"
+  "h": "9d95dce4c4e6255d"
  },
  "/colleges/michigan/": {
   "d": "2026-10-23",
-  "h": "8a47a90ef7108a90"
+  "h": "eb3d70978cfc85ec"
  },
  "/colleges/middle-tennessee-state-university/": {
   "d": "2026-10-23",
-  "h": "3c63f877055d4efa"
+  "h": "507e1d2782ca7d6f"
  },
  "/colleges/middlebury-college/": {
   "d": "2026-10-23",
-  "h": "27c163897316a2a5"
+  "h": "611c23067e796e71"
  },
  "/colleges/millsaps-college/": {
   "d": "2026-10-23",
-  "h": "abfe6342e692bd5d"
+  "h": "ef86948525291fbe"
  },
  "/colleges/minerva-university/": {
   "d": "2026-10-23",
-  "h": "f30cd15de6756aea"
+  "h": "9e799f69b8eae567"
  },
  "/colleges/minneapolis-college-of-art-and-design/": {
   "d": "2026-10-23",
-  "h": "cb872bb96b58ff47"
+  "h": "de4e0a454091edeb"
  },
  "/colleges/minnesota/": {
   "d": "2026-10-23",
-  "h": "13ee09e3e8a39aba"
+  "h": "f5040b7f26e881bd"
  },
  "/colleges/mississippi-christian-university/": {
   "d": "2026-10-23",
-  "h": "c54dd2e118c01a80"
+  "h": "aebc555bf26888a7"
  },
  "/colleges/mississippi-state-university/": {
   "d": "2026-10-23",
-  "h": "6dc5084888f7f26f"
+  "h": "b20c0d5fb33052d2"
  },
  "/colleges/mississippi/": {
   "d": "2026-10-23",
-  "h": "7defc02381f239d5"
+  "h": "93afb24d37d05018"
  },
  "/colleges/missouri/": {
   "d": "2026-10-23",
-  "h": "1ff7676ee831e925"
+  "h": "0e61801dc4c4728d"
  },
  "/colleges/montana-state-university/": {
   "d": "2026-10-23",
-  "h": "c2d7573faefe3100"
+  "h": "40ea0c10ddca91b0"
  },
  "/colleges/montana/": {
   "d": "2026-10-23",
-  "h": "a317968e98de3ca6"
+  "h": "1d513360ffc375a2"
  },
  "/colleges/montclair-state-university/": {
   "d": "2026-10-23",
-  "h": "5d9eeb61b7186adc"
+  "h": "523a5c7555897d2f"
  },
  "/colleges/moravian-university/": {
   "d": "2026-10-23",
-  "h": "4cc97b45c999f2f5"
+  "h": "78a69e8a49431ae4"
  },
  "/colleges/morehouse-college/": {
   "d": "2026-10-23",
-  "h": "4910d3cb82749ca2"
+  "h": "9f553aec5814a2fd"
  },
  "/colleges/mount-holyoke-college/": {
   "d": "2026-10-23",
-  "h": "804f01eed304ca7b"
+  "h": "c7d904b9db30f650"
  },
  "/colleges/mount-marty-university/": {
   "d": "2026-10-23",
-  "h": "d8c0d50a41607a51"
+  "h": "89a2153078e5d9ca"
  },
  "/colleges/nebraska/": {
   "d": "2026-10-23",
-  "h": "fb3fbb12ab75de23"
+  "h": "8e340703b0c3f25e"
  },
  "/colleges/nevada/": {
   "d": "2026-10-23",
-  "h": "b76e840e5676080c"
+  "h": "0875d829b0046745"
  },
  "/colleges/new-hampshire/": {
   "d": "2026-10-23",
-  "h": "1fba0569bf5e02a4"
+  "h": "81a5cedee9580dbd"
  },
  "/colleges/new-jersey/": {
   "d": "2026-10-23",
-  "h": "47a141c2c7382aca"
+  "h": "6f2e3c7e60f97d55"
  },
  "/colleges/new-mexico-institute-of-mining-and-technology/": {
   "d": "2026-10-23",
-  "h": "1349ce20a562e06d"
+  "h": "b2ce6cec36182886"
  },
  "/colleges/new-mexico/": {
   "d": "2026-10-23",
-  "h": "17f50655dee58105"
+  "h": "6c8bb0df4e0fe428"
  },
  "/colleges/new-york-university/": {
   "d": "2026-10-23",
-  "h": "a7f76ed43603aa02"
+  "h": "44579e22ab0c800c"
  },
  "/colleges/new-york/": {
   "d": "2026-10-23",
-  "h": "98436b0977da026b"
+  "h": "c52bf3831a5135e8"
  },
  "/colleges/north-carolina-a-t-state-university/": {
   "d": "2026-10-23",
-  "h": "559c6bbbce1e9076"
+  "h": "08ac56c29c32018f"
  },
  "/colleges/north-carolina-state-university-at-raleigh/": {
   "d": "2026-10-23",
-  "h": "36653d8c82d80e93"
+  "h": "b1cee47a83670fcf"
  },
  "/colleges/north-carolina/": {
   "d": "2026-10-23",
-  "h": "751dc44f95358af5"
+  "h": "a9da0847bf6187f6"
  },
  "/colleges/north-dakota/": {
   "d": "2026-10-23",
-  "h": "ce77de542d88925f"
+  "h": "ac9ace7484201943"
  },
  "/colleges/northeastern-university/": {
   "d": "2026-10-23",
-  "h": "8013a5eb6c4e989f"
+  "h": "38758be968cf4218"
  },
  "/colleges/northern-arizona-university/": {
   "d": "2026-10-23",
-  "h": "1ca0bcfd70b99b69"
+  "h": "be3ca223a14d6189"
  },
  "/colleges/northwestern-university/": {
   "d": "2026-10-23",
-  "h": "feede60375e73112"
+  "h": "be2324fc2557b556"
  },
  "/colleges/oakwood-university/": {
   "d": "2026-10-23",
-  "h": "22c13c434562aefd"
+  "h": "0c3187681ce609ef"
  },
  "/colleges/oberlin-college/": {
   "d": "2026-10-23",
-  "h": "85f6aecd87710a1d"
+  "h": "0b199d2058459286"
  },
  "/colleges/occidental-college/": {
   "d": "2026-10-23",
-  "h": "99f15545807a2733"
+  "h": "d6d18ab6919066d8"
  },
  "/colleges/ohio-christian-university/": {
   "d": "2026-10-23",
-  "h": "b6d66e48950aa1f6"
+  "h": "e7fcd3217f15ddb2"
  },
  "/colleges/ohio-state-university/": {
   "d": "2026-10-23",
-  "h": "9308bb7acb007764"
+  "h": "ee6b4f2fbc10b5d7"
  },
  "/colleges/ohio-university/": {
   "d": "2026-10-23",
-  "h": "6d574772c465b396"
+  "h": "dc7173afb9153797"
  },
  "/colleges/ohio/": {
   "d": "2026-10-23",
-  "h": "3ebea5419441eb3e"
+  "h": "14378bcf398dc8ef"
  },
  "/colleges/oklahoma-baptist-university/": {
   "d": "2026-10-23",
-  "h": "9c2d1b2d9a19ba4e"
+  "h": "d077631d444caad6"
  },
  "/colleges/oklahoma-state-university/": {
   "d": "2026-10-23",
-  "h": "d32b8bab3f009047"
+  "h": "091ba34d78954171"
  },
  "/colleges/oklahoma/": {
   "d": "2026-10-23",
-  "h": "fa3ef23f03661887"
+  "h": "4639a009606c6599"
  },
  "/colleges/old-dominion-university/": {
   "d": "2026-10-23",
-  "h": "a9c15812f09cde64"
+  "h": "c5927c8bd8a009f8"
  },
  "/colleges/oregon-state-university/": {
   "d": "2026-10-23",
-  "h": "52c1fdbfb0eddf34"
+  "h": "3258f337efbd718b"
  },
  "/colleges/oregon/": {
   "d": "2026-10-23",
-  "h": "4611490fe73ce3a2"
+  "h": "f7e7d8df332b846a"
  },
  "/colleges/paul-quinn-college/": {
   "d": "2026-10-23",
-  "h": "89f71ca35d96071e"
+  "h": "39d2acf16c2d5b21"
  },
  "/colleges/pennsylvania-state-university/": {
   "d": "2026-10-23",
-  "h": "ff3d7206f8d10aad"
+  "h": "1aa7c37b2562b4d5"
  },
  "/colleges/pennsylvania/": {
   "d": "2026-10-23",
-  "h": "55796787794b7600"
+  "h": "ac379b7694c3b0c8"
  },
  "/colleges/pitzer-college/": {
   "d": "2026-10-23",
-  "h": "645b99d652fc18a2"
+  "h": "b12267e6d0b50658"
  },
  "/colleges/point-university/": {
   "d": "2026-10-23",
-  "h": "2be8ba22d8c94c1c"
+  "h": "febdf00b06b775be"
  },
  "/colleges/pomona-college/": {
   "d": "2026-10-23",
-  "h": "80371eef2ef68b5a"
+  "h": "7c96b77d5297fde1"
  },
  "/colleges/princeton-university/": {
   "d": "2026-10-23",
-  "h": "429ddf6baa3e0113"
+  "h": "4c51ae9765ad310b"
  },
  "/colleges/providence-college/": {
   "d": "2026-10-23",
-  "h": "19265c449fa4ac7a"
+  "h": "e2fa6b9d6de8be41"
  },
  "/colleges/puerto-rico/": {
   "d": "2026-10-23",
-  "h": "57412430cc72471c"
+  "h": "5478b23a97ac4a95"
  },
  "/colleges/purdue-university/": {
   "d": "2026-10-23",
-  "h": "1a544fccf2abefbe"
+  "h": "5d4cbe10ef33dce0"
  },
  "/colleges/quincy-university/": {
   "d": "2026-10-23",
-  "h": "eeb287d7e9aa35b2"
+  "h": "e80abed7fbeb9d4f"
  },
  "/colleges/reed-college/": {
   "d": "2026-10-23",
-  "h": "b7492f19e8379b55"
+  "h": "8e6901de6a5ff7ad"
  },
  "/colleges/regent-university/": {
   "d": "2026-10-23",
-  "h": "dd577b8e7f7d0284"
+  "h": "3100a9c150944dc5"
  },
  "/colleges/rhode-island-school-of-design/": {
   "d": "2026-10-23",
-  "h": "9600c290b7b36b5e"
+  "h": "8d11cd6d4b233b3f"
  },
  "/colleges/rhode-island/": {
   "d": "2026-10-23",
-  "h": "8b166063b11b33aa"
+  "h": "140527a557f8f962"
  },
  "/colleges/rhodes-college/": {
   "d": "2026-10-23",
-  "h": "1ffceb1b36ced449"
+  "h": "8b42e6af5b7dd666"
  },
  "/colleges/rice-university/": {
   "d": "2026-10-23",
-  "h": "d5a6f716551dbf68"
+  "h": "587fa054680ee0eb"
  },
  "/colleges/rollins-college/": {
   "d": "2026-10-23",
-  "h": "1deabdfaf60644bf"
+  "h": "d9a9e59af00209aa"
  },
  "/colleges/rowan-university/": {
   "d": "2026-10-23",
-  "h": "65ad36dbaa15f9c3"
+  "h": "035c73eac23e9920"
  },
  "/colleges/russell-sage-college/": {
   "d": "2026-10-23",
-  "h": "ffdc95bd5085c29d"
+  "h": "2d91525f7cb75251"
  },
  "/colleges/rutgers-university-new-brunswick/": {
   "d": "2026-10-23",
-  "h": "13674897bd8f9243"
+  "h": "297a611a87b6c6f9"
  },
  "/colleges/sam-houston-state-university/": {
   "d": "2026-10-23",
-  "h": "ce028dd81b952094"
+  "h": "ee86a496b6a5793b"
  },
  "/colleges/san-diego-state-university/": {
   "d": "2026-10-23",
-  "h": "ea45a26f79ff418a"
+  "h": "4900ffde3951110f"
  },
  "/colleges/san-francisco-state-university/": {
   "d": "2026-10-23",
-  "h": "58ff20bdd172b365"
+  "h": "da0b1dc8f3571687"
  },
  "/colleges/san-jose-state-university/": {
   "d": "2026-10-23",
-  "h": "d59372487187cbd2"
+  "h": "d0014123fefcbb94"
  },
  "/colleges/santa-clara-university/": {
   "d": "2026-10-23",
-  "h": "1ddafd4bbb8ae445"
+  "h": "c81d23f33b46075e"
  },
  "/colleges/savannah-college-of-art-and-design/": {
   "d": "2026-10-23",
-  "h": "72d8d5cbba0a6b1f"
+  "h": "6bb48d47ffacf665"
  },
  "/colleges/scripps-college/": {
   "d": "2026-10-23",
-  "h": "5f3d1c866ce315e0"
+  "h": "c93eab72ab4d62eb"
  },
  "/colleges/skidmore-college/": {
   "d": "2026-10-23",
-  "h": "881723deb0c5731e"
+  "h": "299c92e689f9d200"
  },
  "/colleges/smith-college/": {
   "d": "2026-10-23",
-  "h": "8a7e64a95ed4d143"
+  "h": "d58d827583f0feab"
  },
  "/colleges/south-carolina/": {
   "d": "2026-10-23",
-  "h": "4e6e7575c6c7a6fe"
+  "h": "30ac0ff0246fba55"
  },
  "/colleges/south-dakota/": {
   "d": "2026-10-23",
-  "h": "2a877f639d70100c"
+  "h": "5dc13235666aa093"
  },
  "/colleges/southeastern-university/": {
   "d": "2026-10-23",
-  "h": "5da82d1e23226e07"
+  "h": "67b84c81fd3aa07d"
  },
  "/colleges/southern-new-hampshire-university/": {
   "d": "2026-10-23",
-  "h": "440ceef6609b4791"
+  "h": "477bc00b44b4a071"
  },
  "/colleges/southern-university-and-a-m-college/": {
   "d": "2026-10-23",
-  "h": "c293798b5a263c07"
+  "h": "5a43686ccd07b094"
  },
  "/colleges/southwestern-university/": {
   "d": "2026-10-23",
-  "h": "9fddb586b8883cc2"
+  "h": "f4b5554b7c4f14c6"
  },
  "/colleges/spelman-college/": {
   "d": "2026-10-23",
-  "h": "ad1b908133fc28ff"
+  "h": "727f9f8b23a9540a"
  },
  "/colleges/spring-arbor-university/": {
   "d": "2026-10-23",
-  "h": "7d1d44a0e86e3691"
+  "h": "34cc70e8ce994723"
  },
  "/colleges/st-lawrence-university/": {
   "d": "2026-10-23",
-  "h": "5e5d14f8a6ed20a0"
+  "h": "7796b4dc560bdce1"
  },
  "/colleges/st-olaf-college/": {
   "d": "2026-10-23",
-  "h": "b4fa022967428b9e"
+  "h": "82e39a5c8efcdebb"
  },
  "/colleges/stanford-university/": {
   "d": "2026-10-23",
-  "h": "80cc56579f9568c3"
+  "h": "f4108c9930ab1993"
  },
  "/colleges/sterling-college/": {
   "d": "2026-10-23",
-  "h": "ff051fa54ccb772d"
+  "h": "3462be3259f932fd"
  },
  "/colleges/stevens-institute-of-technology/": {
   "d": "2026-10-23",
-  "h": "c14d53b2f5083474"
+  "h": "14306a0723d855e8"
  },
  "/colleges/stony-brook-university/": {
   "d": "2026-10-23",
-  "h": "cd1f9c84bd153d99"
+  "h": "a9ae83d06a73482f"
  },
  "/colleges/swarthmore-college/": {
   "d": "2026-10-23",
-  "h": "00f250488ad5bb66"
+  "h": "fa7a566b87151280"
  },
  "/colleges/syracuse-university/": {
   "d": "2026-10-23",
-  "h": "b3e906a87246a2f9"
+  "h": "7666f241d5e797b0"
  },
  "/colleges/temple-university/": {
   "d": "2026-10-23",
-  "h": "4bcc9878fb823ce4"
+  "h": "3eb16bcddd147338"
  },
  "/colleges/tennessee/": {
   "d": "2026-10-23",
-  "h": "8b7dea042e73f711"
+  "h": "5c1812f72628d4a8"
  },
  "/colleges/texas-a-m-international-university/": {
   "d": "2026-10-23",
-  "h": "7b37161fad97da73"
+  "h": "4b2dd0050c62c7f9"
  },
  "/colleges/texas-a-m-university-college-station/": {
   "d": "2026-10-23",
-  "h": "1bddc5f90e15ab11"
+  "h": "927d7151c11fe596"
  },
  "/colleges/texas-christian-university/": {
   "d": "2026-10-23",
-  "h": "42c888d871e3b951"
+  "h": "dfe6f0013d923562"
  },
  "/colleges/texas-state-university/": {
   "d": "2026-10-23",
-  "h": "f5767507822af5b2"
+  "h": "d861ce1233ae95d7"
  },
  "/colleges/texas-tech-university/": {
   "d": "2026-10-23",
-  "h": "e462d6b989abd1a7"
+  "h": "346e1c6415f91e99"
  },
  "/colleges/texas/": {
   "d": "2026-10-23",
-  "h": "0e66263a77add0b5"
+  "h": "c0f7756a97a7dc6d"
  },
  "/colleges/the-college-of-idaho/": {
   "d": "2026-10-23",
-  "h": "543907f2518c68a4"
+  "h": "8c32b5d5aa1c415e"
  },
  "/colleges/the-cooper-union-for-the-advancement-of-science-and-art/": {
   "d": "2026-10-23",
-  "h": "66e13f0cca01c672"
+  "h": "2beedc3b4af2fa58"
  },
  "/colleges/the-university-of-alabama/": {
   "d": "2026-10-23",
-  "h": "2c847f57809770dc"
+  "h": "0d2f8b7e14f4b1c7"
  },
  "/colleges/the-university-of-tampa/": {
   "d": "2026-10-23",
-  "h": "af253ebbe10c835b"
+  "h": "a9571963198df6db"
  },
  "/colleges/the-university-of-tennessee-knoxville/": {
   "d": "2026-10-23",
-  "h": "64cba38560cfebc7"
+  "h": "d17f762db7542ae2"
  },
  "/colleges/the-university-of-texas-at-arlington/": {
   "d": "2026-10-23",
-  "h": "4c6552b2ccabcfb4"
+  "h": "5e28640e77f451fc"
  },
  "/colleges/the-university-of-texas-at-austin/": {
   "d": "2026-10-23",
-  "h": "06d59d8b94c96010"
+  "h": "06fcae2f5b87b5b9"
  },
  "/colleges/the-university-of-texas-at-dallas/": {
   "d": "2026-10-23",
-  "h": "43614a353a29fb11"
+  "h": "b7c06f7bd6943165"
  },
  "/colleges/the-university-of-texas-at-el-paso/": {
   "d": "2026-10-23",
-  "h": "c5304970ed685545"
+  "h": "ed42eb4a98cf26b1"
  },
  "/colleges/the-university-of-texas-at-san-antonio/": {
   "d": "2026-10-23",
-  "h": "c34f2aa8484fa363"
+  "h": "5d1a02fe86a2bed4"
  },
  "/colleges/the-university-of-texas-rio-grande-valley/": {
   "d": "2026-10-23",
-  "h": "dab6a7e9ab0e6a3c"
+  "h": "d4c44f12a6fe242a"
  },
  "/colleges/thomas-university/": {
   "d": "2026-10-23",
-  "h": "b683daf274f57f13"
+  "h": "9a0d09e4af3d2e74"
  },
  "/colleges/towson-university/": {
   "d": "2026-10-23",
-  "h": "339fbe82c8f2291f"
+  "h": "1cd97dac9386b679"
  },
  "/colleges/trine-university-regional-non-traditional-campuses/": {
   "d": "2026-10-23",
-  "h": "7059ae35be3f50ab"
+  "h": "82f7e44cce8f7884"
  },
  "/colleges/trinity-college/": {
   "d": "2026-10-23",
-  "h": "fd94e71989d58059"
+  "h": "38a195d63a153cc9"
  },
  "/colleges/trinity-university/": {
   "d": "2026-10-23",
-  "h": "b2b5bde5e7485cdd"
+  "h": "1e7b087714458385"
  },
  "/colleges/tufts-university/": {
   "d": "2026-10-23",
-  "h": "2bd78b447a4ffe1c"
+  "h": "51c52b759657765c"
  },
  "/colleges/tulane-university-of-louisiana/": {
   "d": "2026-10-23",
-  "h": "6e96171a1945764d"
+  "h": "e54d1d473d62f5be"
  },
  "/colleges/tuskegee-university/": {
   "d": "2026-10-23",
-  "h": "b8154605221a192d"
+  "h": "21a3c331c76ddb3c"
  },
  "/colleges/union-college/": {
   "d": "2026-10-23",
-  "h": "dbb4d2c1f75d0c24"
+  "h": "1d5058afaee34193"
  },
  "/colleges/united-states-air-force-academy/": {
   "d": "2026-10-23",
-  "h": "9a23f20fc7a25776"
+  "h": "f682e61ba646232c"
  },
  "/colleges/united-states-coast-guard-academy/": {
   "d": "2026-10-23",
-  "h": "cd8b2614abe86663"
+  "h": "f0d03a9e2c37d1eb"
  },
  "/colleges/united-states-merchant-marine-academy/": {
   "d": "2026-10-23",
-  "h": "3773b54216c7b7be"
+  "h": "20e35d6def9cb830"
  },
  "/colleges/united-states-military-academy/": {
   "d": "2026-10-23",
-  "h": "071ec2e91468add0"
+  "h": "a094169c5bd16b28"
  },
  "/colleges/united-states-naval-academy/": {
   "d": "2026-10-23",
-  "h": "3fc0e6af013f74bc"
+  "h": "7a3e8fbf27a58452"
  },
  "/colleges/university-at-buffalo/": {
   "d": "2026-10-23",
-  "h": "e01c6f2b47e955ec"
+  "h": "2ca818ec49bb893c"
  },
  "/colleges/university-of-arizona/": {
   "d": "2026-10-23",
-  "h": "f816bb28e37d4e7e"
+  "h": "a6216727f87395e1"
  },
  "/colleges/university-of-arkansas-at-pine-bluff/": {
   "d": "2026-10-23",
-  "h": "4441d0ea560f128b"
+  "h": "bc12428c530bf6c0"
  },
  "/colleges/university-of-arkansas/": {
   "d": "2026-10-23",
-  "h": "a464740f6c21f970"
+  "h": "94c4848746952cce"
  },
  "/colleges/university-of-california-berkeley/": {
   "d": "2026-10-23",
-  "h": "f1aaaa21882cbef7"
+  "h": "22a219fc31cfd622"
  },
  "/colleges/university-of-california-davis/": {
   "d": "2026-10-23",
-  "h": "cba42696cbc5424d"
+  "h": "2ed7344635d22468"
  },
  "/colleges/university-of-california-irvine/": {
   "d": "2026-10-23",
-  "h": "f65eb776f40629a8"
+  "h": "082ec38fdd653174"
  },
  "/colleges/university-of-california-los-angeles/": {
   "d": "2026-10-23",
-  "h": "e6b47c63d64f038a"
+  "h": "87fedd1876e5f5bf"
  },
  "/colleges/university-of-california-riverside/": {
   "d": "2026-10-23",
-  "h": "e707ff6135b93078"
+  "h": "956e1e40fec52af3"
  },
  "/colleges/university-of-california-san-diego/": {
   "d": "2026-10-23",
-  "h": "d055296f64a20e72"
+  "h": "a996e829f1f21769"
  },
  "/colleges/university-of-california-santa-barbara/": {
   "d": "2026-10-23",
-  "h": "9a45b3b056cfbede"
+  "h": "f921db08ae4a1723"
  },
  "/colleges/university-of-california-santa-cruz/": {
   "d": "2026-10-23",
-  "h": "2257ce37d8e99560"
+  "h": "6ea249b1dea3695b"
  },
  "/colleges/university-of-central-florida/": {
   "d": "2026-10-23",
-  "h": "1db62e622b35874d"
+  "h": "e92ef6d1e7c97201"
  },
  "/colleges/university-of-chicago/": {
   "d": "2026-10-23",
-  "h": "c8791e1d9a2a37a1"
+  "h": "68f68a356fe8f99e"
  },
  "/colleges/university-of-cincinnati/": {
   "d": "2026-10-23",
-  "h": "c3a97edefb5b8be1"
+  "h": "2c56e4871f223b61"
  },
  "/colleges/university-of-colorado-boulder/": {
   "d": "2026-10-23",
-  "h": "7528cf068d0a60fb"
+  "h": "51085fd8d3eaf267"
  },
  "/colleges/university-of-connecticut/": {
   "d": "2026-10-23",
-  "h": "4dac5ab16569ffd3"
+  "h": "9e712e104e437c7e"
  },
  "/colleges/university-of-dallas/": {
   "d": "2026-10-23",
-  "h": "f0f022484a4f4d8d"
+  "h": "65024a214f5ec230"
  },
  "/colleges/university-of-delaware/": {
   "d": "2026-10-23",
-  "h": "9a74bdb8447a47cc"
+  "h": "f85f02a3fe6eaa5d"
  },
  "/colleges/university-of-florida/": {
   "d": "2026-10-23",
-  "h": "37a04d67277abe86"
+  "h": "b978d2dd53e095b0"
  },
  "/colleges/university-of-georgia/": {
   "d": "2026-10-23",
-  "h": "5c81f8ff9d366c80"
+  "h": "f38bf8f3f68be340"
  },
  "/colleges/university-of-hawaii-at-manoa/": {
   "d": "2026-10-23",
-  "h": "9a30cd088987a77f"
+  "h": "ec39cedf91035fee"
  },
  "/colleges/university-of-houston/": {
   "d": "2026-10-23",
-  "h": "a20993f4022d8914"
+  "h": "e8918f3e11cda01b"
  },
  "/colleges/university-of-illinois-chicago/": {
   "d": "2026-10-23",
-  "h": "d33e4f37323356e1"
+  "h": "7d3534863eca4de5"
  },
  "/colleges/university-of-illinois-urbana-champaign/": {
   "d": "2026-10-23",
-  "h": "7b8a15f0679cd8f0"
+  "h": "da7751245d35af7f"
  },
  "/colleges/university-of-iowa/": {
   "d": "2026-10-23",
-  "h": "16d82f8024bc3ecd"
+  "h": "ccac376c197aace3"
  },
  "/colleges/university-of-kansas/": {
   "d": "2026-10-23",
-  "h": "0f78be44b8b09dff"
+  "h": "9717b41d74f74a19"
  },
  "/colleges/university-of-kentucky/": {
   "d": "2026-10-23",
-  "h": "c16401bde26497b1"
+  "h": "86269e279bda1ad0"
  },
  "/colleges/university-of-louisville/": {
   "d": "2026-10-23",
-  "h": "0697fe0423a7622b"
+  "h": "06602c058cb7a2f2"
  },
  "/colleges/university-of-lynchburg/": {
   "d": "2026-10-23",
-  "h": "265abaeb43912608"
+  "h": "31c6c76f36ee74d6"
  },
  "/colleges/university-of-maryland-college-park/": {
   "d": "2026-10-23",
-  "h": "3ee03b79633321b3"
+  "h": "f1c31c839de271bb"
  },
  "/colleges/university-of-massachusetts-amherst/": {
   "d": "2026-10-23",
-  "h": "e9fadb4ad679e6b8"
+  "h": "aca906a52944132b"
  },
  "/colleges/university-of-miami/": {
   "d": "2026-10-23",
-  "h": "f12f95c5d66b11dc"
+  "h": "01e564cc72c4210c"
  },
  "/colleges/university-of-michigan-ann-arbor/": {
   "d": "2026-10-23",
-  "h": "53fbca36c9e13ec9"
+  "h": "39484de7ffa6582f"
  },
  "/colleges/university-of-minnesota-twin-cities/": {
   "d": "2026-10-23",
-  "h": "43991fbed7ec08f0"
+  "h": "c88cf5451f350778"
  },
  "/colleges/university-of-mississippi/": {
   "d": "2026-10-23",
-  "h": "e2d7197917949672"
+  "h": "a2e65a5fc8614bc4"
  },
  "/colleges/university-of-missouri-columbia/": {
   "d": "2026-10-23",
-  "h": "5483481a754f05c3"
+  "h": "5e3b73aeecaf884f"
  },
  "/colleges/university-of-montevallo/": {
   "d": "2026-10-23",
-  "h": "ca3fecc887970abf"
+  "h": "cc7979a49483f1f3"
  },
  "/colleges/university-of-nebraska-lincoln/": {
   "d": "2026-10-23",
-  "h": "52b3c65f2349e1a8"
+  "h": "a0098642da1272ce"
  },
  "/colleges/university-of-nevada-las-vegas/": {
   "d": "2026-10-23",
-  "h": "778b98307c1579b4"
+  "h": "512ba6201696d249"
  },
  "/colleges/university-of-nevada-reno/": {
   "d": "2026-10-23",
-  "h": "dab39f0febdee7a4"
+  "h": "5abade1b030d3bc9"
  },
  "/colleges/university-of-new-mexico/": {
   "d": "2026-10-23",
-  "h": "dcdc0c011da02cf5"
+  "h": "980c93dfd1c72a44"
  },
  "/colleges/university-of-north-carolina-at-chapel-hill/": {
   "d": "2026-10-23",
-  "h": "0bac88b35da4d721"
+  "h": "0599fe1fae42ba6d"
  },
  "/colleges/university-of-north-carolina-at-charlotte/": {
   "d": "2026-10-23",
-  "h": "b288141f888c5968"
+  "h": "491545d90c2dccb5"
  },
  "/colleges/university-of-north-carolina-at-greensboro/": {
   "d": "2026-10-23",
-  "h": "353bceadce22cd61"
+  "h": "e5bd6a100d38d0bf"
  },
  "/colleges/university-of-north-carolina-school-of-the-arts/": {
   "d": "2026-10-23",
-  "h": "08de9decc63e1384"
+  "h": "9acb1afa92601373"
  },
  "/colleges/university-of-north-carolina-wilmington/": {
   "d": "2026-10-23",
-  "h": "8d58d19f4f3bfd98"
+  "h": "5cb6d0e8bfd09c41"
  },
  "/colleges/university-of-north-florida/": {
   "d": "2026-10-23",
-  "h": "178639573de87f0c"
+  "h": "ca8d2259817d9630"
  },
  "/colleges/university-of-north-georgia/": {
   "d": "2026-10-23",
-  "h": "87ef59c74cc77491"
+  "h": "55229b492d127cbb"
  },
  "/colleges/university-of-north-texas/": {
   "d": "2026-10-23",
-  "h": "18d34de77f1c9c97"
+  "h": "0817e0ef1e53275f"
  },
  "/colleges/university-of-notre-dame/": {
   "d": "2026-10-23",
-  "h": "9cc93f5f976e9d49"
+  "h": "0985ab0ed1ae300b"
  },
  "/colleges/university-of-oklahoma-norman-campus/": {
   "d": "2026-10-23",
-  "h": "0bbec90d832a477d"
+  "h": "e66c9d550d7f5e5c"
  },
  "/colleges/university-of-oregon/": {
   "d": "2026-10-23",
-  "h": "ec37961d47714eb9"
+  "h": "417809c9a7be43ef"
  },
  "/colleges/university-of-pennsylvania/": {
   "d": "2026-10-23",
-  "h": "133c777179063746"
+  "h": "09ce130f8a1b8404"
  },
  "/colleges/university-of-pittsburgh-pittsburgh-campus/": {
   "d": "2026-10-23",
-  "h": "b277d653d38c911c"
+  "h": "c960994c1343fdd2"
  },
  "/colleges/university-of-providence/": {
   "d": "2026-10-23",
-  "h": "9947c7d846618184"
+  "h": "1f216b0d262a1b93"
  },
  "/colleges/university-of-puerto-rico-at-cayey/": {
   "d": "2026-10-23",
-  "h": "c2fea5b9e4ab7b09"
+  "h": "09ec678ac732b83b"
  },
  "/colleges/university-of-puerto-rico-at-ponce/": {
   "d": "2026-10-23",
-  "h": "e9b97f571126b231"
+  "h": "f9ca87d300b2acde"
  },
  "/colleges/university-of-puerto-rico-carolina/": {
   "d": "2026-10-23",
-  "h": "cc4702b4342527b8"
+  "h": "7c8380de5af98e61"
  },
  "/colleges/university-of-puerto-rico-humacao/": {
   "d": "2026-10-23",
-  "h": "49eeea790189edbe"
+  "h": "450700a312ae0c3c"
  },
  "/colleges/university-of-puerto-rico-rio-piedras/": {
   "d": "2026-10-23",
-  "h": "6e4d0a00f8887b26"
+  "h": "59ec2c112ff055e3"
  },
  "/colleges/university-of-puerto-rico/": {
   "d": "2026-10-23",
-  "h": "6b1bb71cdd326f6d"
+  "h": "172d1a2ef491d4b5"
  },
  "/colleges/university-of-richmond/": {
   "d": "2026-10-23",
-  "h": "b0119024e6719554"
+  "h": "e988e51335efde90"
  },
  "/colleges/university-of-rochester/": {
   "d": "2026-10-23",
-  "h": "79deea2c1d21a9f3"
+  "h": "58d197ecb58f54ba"
  },
  "/colleges/university-of-san-diego/": {
   "d": "2026-10-23",
-  "h": "3699970a25202336"
+  "h": "b2d441e10991663e"
  },
  "/colleges/university-of-south-carolina-columbia/": {
   "d": "2026-10-23",
-  "h": "930d4e84801ac5ee"
+  "h": "b51b5910ece2a098"
  },
  "/colleges/university-of-south-florida/": {
   "d": "2026-10-23",
-  "h": "b91530e432983ae0"
+  "h": "d2d0bdf20660bede"
  },
  "/colleges/university-of-southern-california/": {
   "d": "2026-10-23",
-  "h": "1cb4dbcba34b0e39"
+  "h": "f82e980c8463c028"
  },
  "/colleges/university-of-utah/": {
   "d": "2026-10-23",
-  "h": "e785a38b53458705"
+  "h": "896ded7d0e1a7de0"
  },
  "/colleges/university-of-virginia-s-college-at-wise/": {
   "d": "2026-10-23",
-  "h": "4d75c06a8a0749d6"
+  "h": "5ab1177e80856f39"
  },
  "/colleges/university-of-virginia/": {
   "d": "2026-10-23",
-  "h": "768df4e47de4bae2"
+  "h": "71f839f1da1a99fe"
  },
  "/colleges/university-of-washington-seattle-campus/": {
   "d": "2026-10-23",
-  "h": "a222cb8b698ddc11"
+  "h": "78d6e650fdff793f"
  },
  "/colleges/university-of-west-alabama/": {
   "d": "2026-10-23",
-  "h": "8c95366072ad35e3"
+  "h": "268e1d2ca2404fa5"
  },
  "/colleges/university-of-west-georgia/": {
   "d": "2026-10-23",
-  "h": "7521fbac4b93a823"
+  "h": "ebda714b2b2f33f0"
  },
  "/colleges/university-of-wisconsin-madison/": {
   "d": "2026-10-23",
-  "h": "bd3cafa24ac89f3a"
+  "h": "fb7b784aabf17de6"
  },
  "/colleges/university-of-wisconsin-milwaukee/": {
   "d": "2026-10-23",
-  "h": "e1e8a9c4a9e94fd9"
+  "h": "6975311f8e12877f"
  },
  "/colleges/utah-state-university/": {
   "d": "2026-10-23",
-  "h": "85ac06cd94ee4191"
+  "h": "d0db67b3d662a7fc"
  },
  "/colleges/utah/": {
   "d": "2026-10-23",
-  "h": "c47789ea459fb3d1"
+  "h": "63f83b1f38a212ad"
  },
  "/colleges/vanderbilt-university/": {
   "d": "2026-10-23",
-  "h": "32361e0894d7c765"
+  "h": "0765add77be4f64a"
  },
  "/colleges/vassar-college/": {
   "d": "2026-10-23",
-  "h": "067f9842f7ae47bb"
+  "h": "e034fd47d21f3379"
  },
  "/colleges/vermont/": {
   "d": "2026-10-23",
-  "h": "dbc6bd54fe4f2325"
+  "h": "e1a874eb1b3800c3"
  },
  "/colleges/villanova-university/": {
   "d": "2026-10-23",
-  "h": "2144d62a08d7baf8"
+  "h": "a952102175e79052"
  },
  "/colleges/virginia-commonwealth-university/": {
   "d": "2026-10-23",
-  "h": "f3dd6744ffb62668"
+  "h": "c812c98b24b953ef"
  },
  "/colleges/virginia-polytechnic-institute-and-state-university/": {
   "d": "2026-10-23",
-  "h": "59a2bbb5463a607e"
+  "h": "9f2709a43c711512"
  },
  "/colleges/virginia/": {
   "d": "2026-10-23",
-  "h": "c532ebe45c8561d8"
+  "h": "ef4717d69f875f49"
  },
  "/colleges/wake-forest-university/": {
   "d": "2026-10-23",
-  "h": "acb89e18f21eae5f"
+  "h": "981f7cdfd6bbb7cc"
  },
  "/colleges/warner-university/": {
   "d": "2026-10-23",
-  "h": "ce103bf092e0c7bd"
+  "h": "cbd8d9325e2b7602"
  },
  "/colleges/washington-and-lee-university/": {
   "d": "2026-10-23",
-  "h": "6f906456c369ae29"
+  "h": "20bc06ddd91b6fd8"
  },
  "/colleges/washington-state-university/": {
   "d": "2026-10-23",
-  "h": "8b78998e140dd715"
+  "h": "f8378b3d51f5f215"
  },
  "/colleges/washington-university-in-st-louis/": {
   "d": "2026-10-23",
-  "h": "3f6768d8e2164a36"
+  "h": "bd0ec8c47787e6ea"
  },
  "/colleges/washington/": {
   "d": "2026-10-23",
-  "h": "e724c3eaa320f810"
+  "h": "5b2a3b9a6fbb3537"
  },
  "/colleges/wayne-state-university/": {
   "d": "2026-10-23",
-  "h": "5366e69d2dc99077"
+  "h": "3b5837edb60bda8c"
  },
  "/colleges/wellesley-college/": {
   "d": "2026-10-23",
-  "h": "a925a520623900a7"
+  "h": "5f88f81d15fef8c2"
  },
  "/colleges/wesleyan-university/": {
   "d": "2026-10-23",
-  "h": "62dd1e4bd9761cda"
+  "h": "9c437e53935bcf13"
  },
  "/colleges/west-chester-university-of-pennsylvania/": {
   "d": "2026-10-23",
-  "h": "520bb751f2e5430b"
+  "h": "51367b3a2d1ad702"
  },
  "/colleges/west-virginia-university-institute-of-technology/": {
   "d": "2026-10-23",
-  "h": "e78eaa1a18d01939"
+  "h": "30dcc254ec0e5d73"
  },
  "/colleges/west-virginia-university/": {
   "d": "2026-10-23",
-  "h": "1e27239c7b205971"
+  "h": "a34c680778515aac"
  },
  "/colleges/west-virginia/": {
   "d": "2026-10-23",
-  "h": "1a084ba84c02dd13"
+  "h": "0e8ba39eb26c3b16"
  },
  "/colleges/whitman-college/": {
   "d": "2026-10-23",
-  "h": "c10c9481563f4ec7"
+  "h": "28074899d1395b2c"
  },
  "/colleges/wilberforce-university/": {
   "d": "2026-10-23",
-  "h": "d3b17719e24cf576"
+  "h": "f5f5738906d1923b"
  },
  "/colleges/william-jewell-college/": {
   "d": "2026-10-23",
-  "h": "6afa9f306bdf70f8"
+  "h": "0e16721fce256470"
  },
  "/colleges/william-mary/": {
   "d": "2026-10-23",
-  "h": "90731222079580f4"
+  "h": "9bafead38acdda02"
  },
  "/colleges/william-penn-university/": {
   "d": "2026-10-23",
-  "h": "4f3b57fd39c01910"
+  "h": "c2b886e5fd862c06"
  },
  "/colleges/williams-college/": {
   "d": "2026-10-23",
-  "h": "d0986f49b918b302"
+  "h": "e7c3b07fa97731d6"
  },
  "/colleges/wisconsin/": {
   "d": "2026-10-23",
-  "h": "23512122536129a0"
+  "h": "d8f1e8c50bccb064"
  },
  "/colleges/wofford-college/": {
   "d": "2026-10-23",
-  "h": "cc15a0d458172f4d"
+  "h": "32ac53c8f240a532"
  },
  "/colleges/yale-university/": {
   "d": "2026-10-23",
-  "h": "c6c248914f2dad0f"
+  "h": "e03f0c9deb76eaf5"
  },
  "/contact/": {
   "d": "2026-10-23",
@@ -1957,79 +1957,79 @@
  },
  "/guides/": {
   "d": "2026-10-23",
-  "h": "66d3c27d3a2fae02"
+  "h": "cff0dd7eade5d771"
  },
  "/guides/act-score-calculator/": {
   "d": "2026-10-23",
-  "h": "98a0dddedc79382a"
+  "h": "71cfa1755472b7a3"
  },
  "/guides/college-admissions-chances/": {
   "d": "2026-10-23",
-  "h": "8e5b74f153902f97"
+  "h": "09e3b84524104b22"
  },
  "/guides/desmos-calculator-digital-sat/": {
   "d": "2026-10-23",
-  "h": "c3928d6df9dff86d"
+  "h": "48d1099886caeaf7"
  },
  "/guides/digital-sat-vs-act/": {
   "d": "2026-10-23",
-  "h": "dc3b755b7d6fd20d"
+  "h": "b1cfefc799347190"
  },
  "/guides/fafsa-guide-for-beginners/": {
   "d": "2026-10-23",
-  "h": "6d86b63e9fc105dc"
+  "h": "b3666f2cd0db1c9e"
  },
  "/guides/free-sat-study-plan/": {
   "d": "2026-10-23",
-  "h": "5609588100326fc6"
+  "h": "7d0da43157345725"
  },
  "/guides/how-long-is-the-digital-sat/": {
   "d": "2026-10-23",
-  "h": "3862c4346feaec52"
+  "h": "4ead9b112527545d"
  },
  "/guides/how-to-build-a-study-schedule/": {
   "d": "2026-10-23",
-  "h": "305b493f442986f4"
+  "h": "4e5b335d3059e61e"
  },
  "/guides/how-to-get-a-full-ride-scholarship/": {
   "d": "2026-10-23",
-  "h": "92c553deb8ad7ed3"
+  "h": "ab8eaf1ad554042f"
  },
  "/guides/how-to-improve-your-sat-score/": {
   "d": "2026-10-23",
-  "h": "73d706bc0b4e629e"
+  "h": "cd99c286a57cc37b"
  },
  "/guides/how-to-stop-procrastinating/": {
   "d": "2026-10-23",
-  "h": "0458a01df82c3d6d"
+  "h": "7c1059123cc0b180"
  },
  "/guides/how-to-study-effectively/": {
   "d": "2026-10-23",
-  "h": "9485edb574d39514"
+  "h": "360a5561566c7522"
  },
  "/guides/how-to-write-a-scholarship-essay/": {
   "d": "2026-10-23",
-  "h": "2f917540e988f3c9"
+  "h": "39ba766ef203c559"
  },
  "/guides/psat-vs-sat/": {
   "d": "2026-10-23",
-  "h": "347a57dc7b6356ca"
+  "h": "296f0d2115a31296"
  },
  "/guides/sat-score-calculator/": {
   "d": "2026-10-23",
-  "h": "8f6a8d949d3db5c3"
+  "h": "fe37a4c7a6a9034c"
  },
  "/guides/scholarship-search-guide/": {
   "d": "2026-10-23",
-  "h": "61a447b263c8a319"
+  "h": "e1bc75ecd1dd9d46"
  },
  "/guides/scholarships-for-high-school-seniors/": {
   "d": "2026-10-23",
-  "h": "cd763d098968f10c"
+  "h": "d305dd41c0a7df7f"
  },
  "/guides/what-is-a-good-sat-score/": {
   "d": "2026-10-23",
-  "h": "ec300c2bea0aefc5"
+  "h": "b0565fd79da88929"
  },
  "/methodology/": {
   "d": "2026-10-23",
@@ -2041,7 +2041,7 @@
  },
  "/sat-act-conversion/": {
   "d": "2026-10-23",
-  "h": "7ec23320b15915d2"
+  "h": "7b1aefa3a57096f0"
  },
  "/sat-practice-test/": {
   "d": "2026-10-23",
@@ -2053,479 +2053,479 @@
  },
  "/sat-scores/": {
   "d": "2026-10-23",
-  "h": "c277728566e7b564"
+  "h": "91880e7fc1659ab5"
  },
  "/sat-scores/1000/": {
   "d": "2026-10-23",
-  "h": "da220acafd09dae7"
+  "h": "27ac03fd9a7e172f"
  },
  "/sat-scores/1010/": {
   "d": "2026-10-23",
-  "h": "a15fc29fe9feeaa0"
+  "h": "8c010f51c434eb19"
  },
  "/sat-scores/1020/": {
   "d": "2026-10-23",
-  "h": "c4fbc6ac34fd9412"
+  "h": "802f22d54397cd04"
  },
  "/sat-scores/1030/": {
   "d": "2026-10-23",
-  "h": "984cf542d176e494"
+  "h": "56ff98cf6fb7e169"
  },
  "/sat-scores/1040/": {
   "d": "2026-10-23",
-  "h": "35b2b771518c34aa"
+  "h": "d3d439814641f6f9"
  },
  "/sat-scores/1050/": {
   "d": "2026-10-23",
-  "h": "6f77d0dc13ac720a"
+  "h": "14f120181263acf5"
  },
  "/sat-scores/1060/": {
   "d": "2026-10-23",
-  "h": "2f867165b4447149"
+  "h": "6f52f54913c23c9a"
  },
  "/sat-scores/1070/": {
   "d": "2026-10-23",
-  "h": "0e4b13d9c4fe7ac3"
+  "h": "67568c086bdcbdeb"
  },
  "/sat-scores/1080/": {
   "d": "2026-10-23",
-  "h": "455762578e41811d"
+  "h": "cd307a0bd23fb9f9"
  },
  "/sat-scores/1090/": {
   "d": "2026-10-23",
-  "h": "5f0eb7514a877210"
+  "h": "de9ff53eaa04ad26"
  },
  "/sat-scores/1100/": {
   "d": "2026-10-23",
-  "h": "323043edf9634dc8"
+  "h": "b66ed83079c48217"
  },
  "/sat-scores/1110/": {
   "d": "2026-10-23",
-  "h": "f267789b6582cef8"
+  "h": "16d7c97290b0afe7"
  },
  "/sat-scores/1120/": {
   "d": "2026-10-23",
-  "h": "18cc1fab1f684d4d"
+  "h": "d83247a0cfef3839"
  },
  "/sat-scores/1130/": {
   "d": "2026-10-23",
-  "h": "e714e7ae785f0a1a"
+  "h": "aa66546e0154923c"
  },
  "/sat-scores/1140/": {
   "d": "2026-10-23",
-  "h": "2a737e7864ae8c10"
+  "h": "94816382c1af5e05"
  },
  "/sat-scores/1150/": {
   "d": "2026-10-23",
-  "h": "3f61a6f84db8e87f"
+  "h": "6c2e5f563a7cc5f7"
  },
  "/sat-scores/1160/": {
   "d": "2026-10-23",
-  "h": "6f79240448f3bacd"
+  "h": "e48326fd7930aedc"
  },
  "/sat-scores/1170/": {
   "d": "2026-10-23",
-  "h": "29e44020ec191264"
+  "h": "9c80105e579752cc"
  },
  "/sat-scores/1180/": {
   "d": "2026-10-23",
-  "h": "a1b31a7b9370d6b6"
+  "h": "f5eee2b003e91534"
  },
  "/sat-scores/1190/": {
   "d": "2026-10-23",
-  "h": "f69a72f1041140cf"
+  "h": "c6acc069382fabed"
  },
  "/sat-scores/1200/": {
   "d": "2026-10-23",
-  "h": "ea3ef4a6d66be4bb"
+  "h": "de06b2b76a8e43ac"
  },
  "/sat-scores/1210/": {
   "d": "2026-10-23",
-  "h": "7d7766b5f0b7044f"
+  "h": "3471cb23395cfe65"
  },
  "/sat-scores/1220/": {
   "d": "2026-10-23",
-  "h": "b12d7f01e95bb5ff"
+  "h": "ac2938710d3574f5"
  },
  "/sat-scores/1230/": {
   "d": "2026-10-23",
-  "h": "d67107ed030b5bbc"
+  "h": "88f4e03bc9ddd1b3"
  },
  "/sat-scores/1240/": {
   "d": "2026-10-23",
-  "h": "9d44b75d727eece0"
+  "h": "6d98cc59fbef50f9"
  },
  "/sat-scores/1250/": {
   "d": "2026-10-23",
-  "h": "0223a265b7f377af"
+  "h": "79633b7fc8af83a7"
  },
  "/sat-scores/1260/": {
   "d": "2026-10-23",
-  "h": "40fd6099f27cf4fd"
+  "h": "3050344a2c42d210"
  },
  "/sat-scores/1270/": {
   "d": "2026-10-23",
-  "h": "627ee061ac1dc0c2"
+  "h": "a4d5ebf6c188199a"
  },
  "/sat-scores/1280/": {
   "d": "2026-10-23",
-  "h": "fc6d53a1315be56f"
+  "h": "fc3280c761fc6291"
  },
  "/sat-scores/1290/": {
   "d": "2026-10-23",
-  "h": "d53d0a88925949ba"
+  "h": "003dfe216aa7b5e1"
  },
  "/sat-scores/1300/": {
   "d": "2026-10-23",
-  "h": "45e0a05524ddc68b"
+  "h": "deb43e52b8797e6b"
  },
  "/sat-scores/1310/": {
   "d": "2026-10-23",
-  "h": "97d0bcbba151f9da"
+  "h": "e6f17ac0784b2992"
  },
  "/sat-scores/1320/": {
   "d": "2026-10-23",
-  "h": "4b06ae3cbfb239ab"
+  "h": "36f0e765dfd1059a"
  },
  "/sat-scores/1330/": {
   "d": "2026-10-23",
-  "h": "d56ae4a85c8bba77"
+  "h": "d1b7bb9a6daa1abe"
  },
  "/sat-scores/1340/": {
   "d": "2026-10-23",
-  "h": "c4fb1c4256e5ac1b"
+  "h": "815bb9eaecbcff7a"
  },
  "/sat-scores/1350/": {
   "d": "2026-10-23",
-  "h": "3680af569584d51c"
+  "h": "3651c91f4ad4c46f"
  },
  "/sat-scores/1360/": {
   "d": "2026-10-23",
-  "h": "ef6f7ad2a63e6616"
+  "h": "02dee2a9ba75cff7"
  },
  "/sat-scores/1370/": {
   "d": "2026-10-23",
-  "h": "40bf66e43ea6c4f5"
+  "h": "ded77e48bb35d523"
  },
  "/sat-scores/1380/": {
   "d": "2026-10-23",
-  "h": "2bbc2e6f3b610276"
+  "h": "69caf53fbb06f38e"
  },
  "/sat-scores/1390/": {
   "d": "2026-10-23",
-  "h": "d4cc164938594a5b"
+  "h": "9a6e98e5b93571c7"
  },
  "/sat-scores/1400/": {
   "d": "2026-10-23",
-  "h": "068f1382763288df"
+  "h": "3cb27ad96b79637b"
  },
  "/sat-scores/1410/": {
   "d": "2026-10-23",
-  "h": "e2a7ec40bff40313"
+  "h": "10e60bcdef321a70"
  },
  "/sat-scores/1420/": {
   "d": "2026-10-23",
-  "h": "21a95339a845a4b1"
+  "h": "5468b576bb35165e"
  },
  "/sat-scores/1430/": {
   "d": "2026-10-23",
-  "h": "19241f8295d83d55"
+  "h": "16d117c90d127102"
  },
  "/sat-scores/1440/": {
   "d": "2026-10-23",
-  "h": "4daf85674f98c050"
+  "h": "ee1bec4fba0be1ae"
  },
  "/sat-scores/1450/": {
   "d": "2026-10-23",
-  "h": "92fdd56f4942c77f"
+  "h": "6431b3466ff25188"
  },
  "/sat-scores/1460/": {
   "d": "2026-10-23",
-  "h": "03f882bdf23e897d"
+  "h": "8977ceeed824a071"
  },
  "/sat-scores/1470/": {
   "d": "2026-10-23",
-  "h": "e69914744b444bd9"
+  "h": "7384391e60a6e5e9"
  },
  "/sat-scores/1480/": {
   "d": "2026-10-23",
-  "h": "e5f63193fc39680f"
+  "h": "5b846306f0865eb2"
  },
  "/sat-scores/1490/": {
   "d": "2026-10-23",
-  "h": "9e807f0ec0095873"
+  "h": "72a6152fe44df444"
  },
  "/sat-scores/1500/": {
   "d": "2026-10-23",
-  "h": "fbee01359ed1bbb6"
+  "h": "9dbc15ae57ec65e0"
  },
  "/sat-scores/1510/": {
   "d": "2026-10-23",
-  "h": "ce8f74f39373518d"
+  "h": "a8bcdd12960a0ad5"
  },
  "/sat-scores/1520/": {
   "d": "2026-10-23",
-  "h": "f774ca0a395cf48a"
+  "h": "b897c7829d0bc57e"
  },
  "/sat-scores/1530/": {
   "d": "2026-10-23",
-  "h": "292b26945b047c6f"
+  "h": "baf3490eb815f801"
  },
  "/sat-scores/1540/": {
   "d": "2026-10-23",
-  "h": "43116b4c3b904b7b"
+  "h": "06eecf4e312e6af0"
  },
  "/sat-scores/1550/": {
   "d": "2026-10-23",
-  "h": "f3ff8e454dde3f9b"
+  "h": "2d550de42525133a"
  },
  "/sat-scores/900/": {
   "d": "2026-10-23",
-  "h": "f559d72305ba74d8"
+  "h": "5f98a43a14d577fa"
  },
  "/sat-scores/910/": {
   "d": "2026-10-23",
-  "h": "570f93452c04c228"
+  "h": "7e50f88d05f20464"
  },
  "/sat-scores/920/": {
   "d": "2026-10-23",
-  "h": "64bb13359eb21e3e"
+  "h": "43fd37a750116404"
  },
  "/sat-scores/930/": {
   "d": "2026-10-23",
-  "h": "86e381406ef292f1"
+  "h": "406a7d9cf1ba89f0"
  },
  "/sat-scores/940/": {
   "d": "2026-10-23",
-  "h": "5bcc46857b168002"
+  "h": "eff47bbc5c1f68a8"
  },
  "/sat-scores/950/": {
   "d": "2026-10-23",
-  "h": "002d37a38a609d9e"
+  "h": "5e9e0ef813b9c4cb"
  },
  "/sat-scores/960/": {
   "d": "2026-10-23",
-  "h": "a9fc0feca5bb0dfc"
+  "h": "24b62e9964ca99a8"
  },
  "/sat-scores/970/": {
   "d": "2026-10-23",
-  "h": "b2c46d0624f415a6"
+  "h": "b69501d44750bc66"
  },
  "/sat-scores/980/": {
   "d": "2026-10-23",
-  "h": "8a871d5bbd18da36"
+  "h": "b193fdb756d9941e"
  },
  "/sat-scores/990/": {
   "d": "2026-10-23",
-  "h": "e509a27073d99df5"
+  "h": "813ac1eb1d7da248"
  },
  "/scholarships/": {
   "d": "2026-10-23",
-  "h": "403d5a7f11e1b191"
+  "h": "1eb475a06aafe500"
  },
  "/scholarships/acs-scholars/": {
   "d": "2026-10-23",
-  "h": "56bdfac5b5cf701a"
+  "h": "8f07931c7b7d4126"
  },
  "/scholarships/aises/": {
   "d": "2026-10-23",
-  "h": "7fa5bb057c06e1e5"
+  "h": "58c817a7e61ee4e8"
  },
  "/scholarships/apia-scholars/": {
   "d": "2026-10-23",
-  "h": "c9599c6c832a9f1b"
+  "h": "8b8d42460521b972"
  },
  "/scholarships/army-rotc/": {
   "d": "2026-10-23",
-  "h": "10d7c1b9ae7ac04f"
+  "h": "4dea26d784563cc4"
  },
  "/scholarships/bigfuture/": {
   "d": "2026-10-23",
-  "h": "ed9504b605ee710c"
+  "h": "864356060d93b91c"
  },
  "/scholarships/bow-seat/": {
   "d": "2026-10-23",
-  "h": "00972405fce6a0ae"
+  "h": "5cfaeb9ed99270ce"
  },
  "/scholarships/breakthrough-jr/": {
   "d": "2026-10-23",
-  "h": "e162410121366f95"
+  "h": "64e65f2571bb7018"
  },
  "/scholarships/bright-futures/": {
   "d": "2026-10-23",
-  "h": "ba194358d2d95bd2"
+  "h": "55ad3e49c5268804"
  },
  "/scholarships/burger-king/": {
   "d": "2026-10-23",
-  "h": "78116800b32056a9"
+  "h": "49fe3bfc88f7975a"
  },
  "/scholarships/cal-grant/": {
   "d": "2026-10-23",
-  "h": "0527df7655cc82b5"
+  "h": "aacc14a15037e206"
  },
  "/scholarships/coca-cola-scholars/": {
   "d": "2026-10-23",
-  "h": "568359903ee91e6f"
+  "h": "74d852c8f60ab9c0"
  },
  "/scholarships/coolidge/": {
   "d": "2026-10-23",
-  "h": "09c2890aae17c260"
+  "h": "eb5289468ec4cadf"
  },
  "/scholarships/davidson-fellows/": {
   "d": "2026-10-23",
-  "h": "0c0e1aba99db4e6f"
+  "h": "176216177dfae31e"
  },
  "/scholarships/davis-putter/": {
   "d": "2026-10-23",
-  "h": "a4e657846b49c199"
+  "h": "9f8ac3bcdb1c8c57"
  },
  "/scholarships/dell-scholars/": {
   "d": "2026-10-23",
-  "h": "d04bc00c621b9520"
+  "h": "7cad07389fcb0a50"
  },
  "/scholarships/doodle-google/": {
   "d": "2026-10-23",
-  "h": "50dff57abe84e679"
+  "h": "668029d2ce0f8f94"
  },
  "/scholarships/elks-mvs/": {
   "d": "2026-10-23",
-  "h": "6432f20db4256b1d"
+  "h": "0151aec9d05c8f91"
  },
  "/scholarships/excelsior/": {
   "d": "2026-10-23",
-  "h": "725cf2b4650f0919"
+  "h": "a17c6ea4cdb65fb1"
  },
  "/scholarships/fc2s/": {
   "d": "2026-10-23",
-  "h": "e10a5bb7a6e0c278"
+  "h": "84df4f83bca75147"
  },
  "/scholarships/folds-honor/": {
   "d": "2026-10-23",
-  "h": "be82ecb3f17b6347"
+  "h": "ac967fdddd4d81ee"
  },
  "/scholarships/foot-locker/": {
   "d": "2026-10-23",
-  "h": "03842eb625a59b4f"
+  "h": "eba2d981220ed772"
  },
  "/scholarships/gates-scholar/": {
   "d": "2026-10-23",
-  "h": "1b297c6e5253d982"
+  "h": "8ab28f80a201f145"
  },
  "/scholarships/golden-door/": {
   "d": "2026-10-23",
-  "h": "90fa44f6d0468903"
+  "h": "e7405b627375e9be"
  },
  "/scholarships/hope-georgia/": {
   "d": "2026-10-23",
-  "h": "bd54ed9c571529c1"
+  "h": "e305be8b8e40732c"
  },
  "/scholarships/horatio-alger/": {
   "d": "2026-10-23",
-  "h": "57946c26cd012242"
+  "h": "a4107b14ee2b4b41"
  },
  "/scholarships/horatio-cte/": {
   "d": "2026-10-23",
-  "h": "169e03b619b3dfdd"
+  "h": "b55039f5da2b077c"
  },
  "/scholarships/hsf/": {
   "d": "2026-10-23",
-  "h": "373cebb590e98d84"
+  "h": "8788b9755767cd4d"
  },
  "/scholarships/jackie-robinson/": {
   "d": "2026-10-23",
-  "h": "4d36e6e6cd485d19"
+  "h": "1ab5bc8967a0ad29"
  },
  "/scholarships/jkcf-college/": {
   "d": "2026-10-23",
-  "h": "d11ad4618e95e06b"
+  "h": "5188e1a5e884eb9d"
  },
  "/scholarships/national-merit/": {
   "d": "2026-10-23",
-  "h": "06c9a64add8540d6"
+  "h": "25f5c84853ea341f"
  },
  "/scholarships/ncwit-aspirations/": {
   "d": "2026-10-23",
-  "h": "10a4d80420d6343f"
+  "h": "9320fdc2f66f51c1"
  },
  "/scholarships/nhs-scholarship/": {
   "d": "2026-10-23",
-  "h": "39247ce1bda34022"
+  "h": "9a7890d9a0b942a9"
  },
  "/scholarships/nrotc/": {
   "d": "2026-10-23",
-  "h": "f10ea4dadcd47c84"
+  "h": "8a4d8c2cc04e2951"
  },
  "/scholarships/point-foundation/": {
   "d": "2026-10-23",
-  "h": "b2705a9ff8d47631"
+  "h": "5eb280aca97e09a8"
  },
  "/scholarships/profile-courage/": {
   "d": "2026-10-23",
-  "h": "75780ff1229a62ae"
+  "h": "66dbca394377be59"
  },
  "/scholarships/prudential/": {
   "d": "2026-10-23",
-  "h": "7e494867d63124db"
+  "h": "47052ba9003b9871"
  },
  "/scholarships/questbridge-match/": {
   "d": "2026-10-23",
-  "h": "2a543501e9287493"
+  "h": "968f209efb83e0da"
  },
  "/scholarships/regeneron-sts/": {
   "d": "2026-10-23",
-  "h": "506e1ecb13a82d3a"
+  "h": "6993072f0e4f3cc7"
  },
  "/scholarships/ron-brown/": {
   "d": "2026-10-23",
-  "h": "4085db638945eaf1"
+  "h": "e8a7ca2123fe2165"
  },
  "/scholarships/samsung-solve/": {
   "d": "2026-10-23",
-  "h": "92edf020d8ec6da1"
+  "h": "02ef7514fcb8856e"
  },
  "/scholarships/scholastic-awards/": {
   "d": "2026-10-23",
-  "h": "c74550cc0bb8ce32"
+  "h": "0add9824ac3473d8"
  },
  "/scholarships/smart-scholarship/": {
   "d": "2026-10-23",
-  "h": "af424c6361ec8731"
+  "h": "2ac6264ef0f0593f"
  },
  "/scholarships/stuck-at-prom/": {
   "d": "2026-10-23",
-  "h": "3120db07d0cb8e5d"
+  "h": "7157bc2d73d01546"
  },
  "/scholarships/swe-scholarship/": {
   "d": "2026-10-23",
-  "h": "389327636df9e288"
+  "h": "1246df131e2a0492"
  },
  "/scholarships/texas-grant/": {
   "d": "2026-10-23",
-  "h": "c579b4506e853060"
+  "h": "c3865bf9abd7c779"
  },
  "/scholarships/thanksusa/": {
   "d": "2026-10-23",
-  "h": "8c1e9513f8b002d6"
+  "h": "212e5bc542fcab45"
  },
  "/scholarships/thedream-us/": {
   "d": "2026-10-23",
-  "h": "7f7cfade97781914"
+  "h": "56f7e517d801658a"
  },
  "/scholarships/uncf/": {
   "d": "2026-10-23",
-  "h": "4382db24fc4e8b1b"
+  "h": "33f9a643f1ccaf45"
  },
  "/scholarships/vfw-voice/": {
   "d": "2026-10-23",
-  "h": "d5f09f0525181380"
+  "h": "9c51bee816df7e3a"
  },
  "/scholarships/vrg-scholarship/": {
   "d": "2026-10-23",
-  "h": "4bbe721f174d358a"
+  "h": "e6cb5238204a7019"
  },
  "/scholarships/youngarts/": {
   "d": "2026-10-23",
-  "h": "548c08c8dda43495"
+  "h": "a5aab811365b5853"
  },
  "/score-calculator/": {
   "d": "2026-10-23",
@@ -2537,118 +2537,118 @@
  },
  "/unblocked-games/": {
   "d": "2026-10-23",
-  "h": "2bbac7606552e4bf"
+  "h": "286253aa24886a62"
  },
  "/unblocked-games/2048/": {
   "d": "2026-10-23",
-  "h": "ca08bbcfbb1684ce"
+  "h": "a9bd2fd3e1094468"
  },
  "/unblocked-games/arena-protocol/": {
   "d": "2026-10-23",
-  "h": "2ea81777d63f4ad2"
+  "h": "b6f9a05f113e54df"
  },
  "/unblocked-games/blackjack/": {
   "d": "2026-10-23",
-  "h": "b0eac8c436e4db90"
+  "h": "a17486bd3329993c"
  },
  "/unblocked-games/block-fit/": {
   "d": "2026-10-23",
-  "h": "8f7a1e26d3da19c8"
+  "h": "bea5e97636d15109"
  },
  "/unblocked-games/breakout/": {
   "d": "2026-10-23",
-  "h": "0f88d0963eb0a903"
+  "h": "8478a1208a3a0a73"
  },
  "/unblocked-games/bubble-shooter/": {
   "d": "2026-10-23",
-  "h": "325530abbf0b4a63"
+  "h": "96888dae124e80f1"
  },
  "/unblocked-games/crossy-hopper/": {
   "d": "2026-10-23",
-  "h": "6f7d1ff707f9c5cc"
+  "h": "8bb7fce877837c81"
  },
  "/unblocked-games/detailing-bay/": {
   "d": "2026-10-23",
-  "h": "7de77f5393a3608a"
+  "h": "cd5126d2d8c4695d"
  },
  "/unblocked-games/dirt-bike-trails/": {
   "d": "2026-10-23",
-  "h": "81134ef042748212"
+  "h": "59f9bee7f04c7ca6"
  },
  "/unblocked-games/dot-muncher/": {
   "d": "2026-10-23",
-  "h": "174c23dd16afc89c"
+  "h": "5620d0cd72a61eb9"
  },
  "/unblocked-games/drift-circuit/": {
   "d": "2026-10-23",
-  "h": "99c87b0ae6380970"
+  "h": "cc288a9c11b1d6d1"
  },
  "/unblocked-games/fleet-hunter/": {
   "d": "2026-10-23",
-  "h": "cfc99917adea35f4"
+  "h": "39194009a3119027"
  },
  "/unblocked-games/four-in-a-row/": {
   "d": "2026-10-23",
-  "h": "e3cb3c53ba03bc46"
+  "h": "f5efb6b597b17434"
  },
  "/unblocked-games/ledge-leaper/": {
   "d": "2026-10-23",
-  "h": "4fe39afaae4dc15a"
+  "h": "acb5cae4a4595096"
  },
  "/unblocked-games/line-drop/": {
   "d": "2026-10-23",
-  "h": "22c881158edc4ae5"
+  "h": "07754b530529eb7d"
  },
  "/unblocked-games/minesweeper/": {
   "d": "2026-10-23",
-  "h": "87b0a818a548ec22"
+  "h": "928d5d83308a3b02"
  },
  "/unblocked-games/neon-racing/": {
   "d": "2026-10-23",
-  "h": "d0a9160f0dc2a884"
+  "h": "f4a6803598415929"
  },
  "/unblocked-games/pong/": {
   "d": "2026-10-23",
-  "h": "be859bcb7faa95ff"
+  "h": "72708165e6e34ebc"
  },
  "/unblocked-games/sky-runner/": {
   "d": "2026-10-23",
-  "h": "a1ec80cedbbca043"
+  "h": "fc9dca75b48dd126"
  },
  "/unblocked-games/snake/": {
   "d": "2026-10-23",
-  "h": "d392468d8546f6a4"
+  "h": "6568972d97d51c9c"
  },
  "/unblocked-games/solitaire/": {
   "d": "2026-10-23",
-  "h": "05147f781a42044d"
+  "h": "f22650d13241848c"
  },
  "/unblocked-games/stack-tower/": {
   "d": "2026-10-23",
-  "h": "39d543c2cd31cc45"
+  "h": "f6d5b51c8aabee38"
  },
  "/unblocked-games/star-defender/": {
   "d": "2026-10-23",
-  "h": "18fefd72dca16c1b"
+  "h": "a772de24b45abddd"
  },
  "/unblocked-games/sudoku/": {
   "d": "2026-10-23",
-  "h": "aab0a7fbf763f424"
+  "h": "1ea1b1a277acc74b"
  },
  "/unblocked-games/tic-tac-toe/": {
   "d": "2026-10-23",
-  "h": "366a2fb9a180991e"
+  "h": "dade789c6cb354c1"
  },
  "/unblocked-games/vocab-sprint/": {
   "d": "2026-10-23",
-  "h": "d4b9321332ea5e44"
+  "h": "e2ace179cc8a17ba"
  },
  "/unblocked-games/water-sort/": {
   "d": "2026-10-23",
-  "h": "9d787a47cdcb8e70"
+  "h": "1c2e076bce91056e"
  },
  "/unblocked-games/word-finder/": {
   "d": "2026-10-23",
-  "h": "f594d5acf062b1ce"
+  "h": "b0d6ce935e0920a6"
  }
 }

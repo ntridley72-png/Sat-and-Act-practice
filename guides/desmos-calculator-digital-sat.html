@@ -1,14 +1,14 @@
 <!doctype html><html lang="en"><head><meta charset=utf8>
 <meta name=viewport content="width=device-width,initial-scale=1">
-<title>How to Use the Desmos Calculator on the Digital SAT | FunSAT</title>
-<meta name="description" content="Learn how to use the built-in Desmos graphing calculator on the digital SAT: when to graph, when to compute, and the fastest tricks for tricky questions.">
+<title>SAT Desmos Calculator Guide: How to Use It (Examples)</title>
+<meta name="description" content="How to use the Desmos calculator on the digital SAT: graph, solve systems, find zeros, run regressions and sliders, with worked examples and mistakes to avoid.">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <link rel="canonical" href="https://funsat.bid/guides/desmos-calculator-digital-sat.html">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://funsat.bid/guides/desmos-calculator-digital-sat.html">
 <meta property="og:site_name" content="FunSAT">
-<meta property="og:title" content="How to Use the Desmos Calculator on the Digital SAT | FunSAT">
-<meta property="og:description" content="Learn how to use the built-in Desmos graphing calculator on the digital SAT: when to graph, when to compute, and the fastest tricks for tricky questions.">
+<meta property="og:title" content="SAT Desmos Calculator Guide: How to Use It (Examples)">
+<meta property="og:description" content="How to use the Desmos calculator on the digital SAT: graph, solve systems, find zeros, run regressions and sliders, with worked examples and mistakes to avoid.">
 <meta property="og:image" content="https://funsat.bid/social-card.png?v=2">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.ico?v=3" sizes="32x32">
@@ -30,30 +30,93 @@ p,li{line-height:1.7;color:var(--ws-ink)}
 .muted{color:var(--ws-muted)}
 .gcard{border:1px solid var(--ws-line);background:var(--ws-surface);border-radius:2px;padding:16px 18px;margin:16px 0}
 .cta{display:inline-block;background:var(--ws-accent);color:#fff!important;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:2px;margin-top:10px}
+.gtable{width:100%;border-collapse:collapse;margin:12px 0}.gtable th,.gtable td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--ws-line);vertical-align:top}code{background:var(--ws-surface);border:1px solid var(--ws-line);padding:1px 5px;font-size:.92em}
 .glinks{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;padding-top:14px;border-top:1px solid var(--ws-line)}
 .glinks a{font-size:13px;color:var(--ws-accent);text-decoration:none;border:1px solid var(--ws-line);padding:7px 10px;border-radius:2px}
 .gfoot{margin-top:28px;font-size:12px;color:var(--ws-muted);border-top:1px solid var(--ws-line);padding-top:14px}
 </style>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"How to Use the Desmos Calculator on the Digital SAT","description":"Learn how to use the built-in Desmos graphing calculator on the digital SAT: when to graph, when to compute, and the fastest tricks for tricky questions.","datePublished":"2026-10-06","dateModified":"2026-10-06","author":{"@type":"Organization","name":"FunSAT","url":"https://funsat.bid/"},"publisher":{"@type":"Organization","name":"FunSAT","logo":{"@type":"ImageObject","url":"https://funsat.bid/social-card.png"}},"mainEntityOfPage":"https://funsat.bid/guides/desmos-calculator-digital-sat.html"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"How to Use the Desmos Calculator on the Digital SAT","description":"How to use the Desmos calculator on the digital SAT: graph, solve systems, find zeros, run regressions and sliders, with worked examples and mistakes to avoid.","datePublished":"2026-10-06","dateModified":"2026-10-23","author":{"@type":"Organization","name":"FunSAT","url":"https://funsat.bid/"},"publisher":{"@type":"Organization","name":"FunSAT","logo":{"@type":"ImageObject","url":"https://funsat.bid/social-card.png"}},"mainEntityOfPage":"https://funsat.bid/guides/desmos-calculator-digital-sat.html"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is Desmos on the digital SAT?","acceptedAnswer":{"@type":"Answer","text":"Yes. The digital SAT is taken in the Bluebook app, and a Desmos graphing calculator is built in for both Math modules. It is not available on the Reading and Writing section."}},{"@type":"Question","name":"Can I use my own calculator instead of the built-in Desmos?","acceptedAnswer":{"@type":"Answer","text":"Yes. College Board allows approved handheld calculators on the Math section, so you may bring one. Check College Board's current calculator policy before test day. The built-in Desmos calculator is free, always available, and fast for graphing questions, so most students use it for those."}},{"@type":"Question","name":"Is the SAT Desmos calculator the same as the regular Desmos website?","acceptedAnswer":{"@type":"Answer","text":"It is a version of the Desmos graphing calculator built into Bluebook. Graphing, tables, sliders, regression and the statistics functions work as they do online. Account and sharing features are not part of the test."}},{"@type":"Question","name":"Do I have to use Desmos on every math question?","acceptedAnswer":{"@type":"Answer","text":"No. Plain arithmetic, percentages and simple algebra are often quicker to do directly. Open the graph when a question asks for intersections, zeros, a vertex, a best-fit line or the value of an unknown constant."}},{"@type":"Question","name":"How can I practice with the SAT Desmos calculator?","acceptedAnswer":{"@type":"Answer","text":"Work through Bluebook's official practice tests, which include the real calculator, and use the graphing calculator inside FunSAT's free practice sets to build the habit on every graphing question you meet."}},{"@type":"Question","name":"What is the fastest way to solve a system of equations with Desmos?","acceptedAnswer":{"@type":"Answer","text":"Type each equation on its own line, then tap the point where the graphs cross. Desmos shows the coordinates, which are the solution. Zoom out first if you cannot see both lines cross."}}]}</script>
 </head><body data-workspace="exam">
 <div class="gwrap">
 <nav class="gnav"><a href="/">← FunSAT</a><a href="/guides/">All study guides</a></nav>
 <p class="gkicker">SAT calculator guide</p>
 <h1>How to Use the Desmos Calculator on the Digital SAT</h1>
-<p>The digital SAT is taken in the Bluebook app, and every student gets the same built-in <strong>Desmos graphing calculator</strong> on both Math modules. Learning it well is one of the cheapest score improvements available — no content knowledge required, just familiarity.</p>
-<h2>When to graph, and when to just compute</h2>
-<ul><li><strong>Graph it</strong> when the question asks for intersections, solutions, zeros, or "which x makes both true": type both equations on separate lines and read the intersection.</li>
-<li><strong>Compute it</strong> for arithmetic, percentages, unit rates, and simple algebra. Opening a graph costs time.</li>
-<li><strong>Never guess</strong> on systems of equations — typing is faster and more reliable than substitution under pressure.</li></ul>
-<h2>Five shortcuts that save real time</h2>
-<h3>1. Solve systems by intersection</h3><p>Type the two equations, tap the intersection point, and the answer appears as an exact pair.</p>
-<h3>2. Find zeros and minimums</h3><p>Graph a quadratic; the x-intercepts are the solutions and the vertex is the minimum or maximum.</p>
-<h3>3. Lists for averages and medians</h3><p><code>mean([4, 8, 9, 11])</code> and <code>median([3, 7, 2, 9, 5])</code> beat hand arithmetic, especially with five or more values.</p>
-<h3>4. Sliders for unknown constants</h3><p>If a problem has an unknown constant, make it a slider and watch how the graph changes.</p>
-<h3>5. Degrees mode for trigonometry</h3><p>Switch to degrees before using sine, cosine, or tangent on angle questions.</p>
+<p>The digital SAT is taken in the Bluebook app, and every student gets the same built-in <strong>Desmos graphing calculator</strong> on both Math modules. Learning it well is one of the cheapest score improvements available: no new content knowledge, just familiarity. This guide shows what the SAT Desmos calculator can do, the exact steps for the question types it helps with, and the mistakes that cost points.</p>
+<div class="gcard"><strong>In this guide</strong><ul>
+<li><a href="#basics">What the SAT Desmos calculator is</a></li>
+<li><a href="#when">When to graph and when to compute</a></li>
+<li><a href="#examples">Five worked examples</a></li>
+<li><a href="#cheatsheet">Cheat sheet: what to type</a></li>
+<li><a href="#mistakes">Common mistakes</a></li>
+<li><a href="#faq">FAQ</a></li></ul></div>
+
+<h2 id="basics">What the SAT Desmos calculator is</h2>
+<p>In Bluebook, a calculator button sits at the top of every Math question. It opens a version of the Desmos graphing calculator that you can drag, resize and keep open while you read the problem. You get an expression list on the left and a graph on the right. Anything you type on a line is plotted, evaluated or turned into a slider automatically.</p>
+<ul><li><strong>Where it is available:</strong> both Math modules. There is no calculator on Reading and Writing.</li>
+<li><strong>Your own calculator:</strong> you may bring an approved handheld calculator instead. Check College Board's current policy before test day.</li>
+<li><strong>What it is not:</strong> an answer machine. It only saves time when you know what to type, which is why practice matters.</li></ul>
+
+<h2 id="when">When to graph, and when to just compute</h2>
+<ul><li><strong>Graph it</strong> when the question asks for intersections, solutions, zeros, a vertex, or "which x makes both true": type both equations on separate lines and read the intersection.</li>
+<li><strong>Use a table or regression</strong> when the question hands you data points and asks for a line or curve of best fit.</li>
+<li><strong>Use a slider</strong> when a problem has an unknown constant such as <em>k</em> and asks when something is true.</li>
+<li><strong>Compute it</strong> for arithmetic, percentages, unit rates and simple algebra. Opening a graph costs time.</li>
+<li><strong>Never guess</strong> on systems of equations. Typing is faster and more reliable than substitution under pressure.</li></ul>
+
+<h2 id="examples">Five worked examples</h2>
+<h3>1. Solve a system by intersection</h3>
+<p><strong>Question:</strong> What is the solution to y = 2x + 1 and y = −x + 7?</p>
+<p><strong>Do this:</strong> type <code>y=2x+1</code> on one line and <code>y=-x+7</code> on the next. Tap the point where the lines cross. Desmos shows <strong>(2, 5)</strong>. Check: 2(2)+1 = 5 and −2+7 = 5.</p>
+<h3>2. Find the zeros and the vertex of a quadratic</h3>
+<p><strong>Question:</strong> What are the solutions of x² − 5x + 6 = 0, and where is the minimum of y = x² − 5x + 6?</p>
+<p><strong>Do this:</strong> type <code>y=x^2-5x+6</code>. Tap each place the curve touches the x-axis to see the zeros, <strong>x = 2</strong> and <strong>x = 3</strong>. Tap the lowest point to see the vertex, <strong>(2.5, −0.25)</strong>.</p>
+<h3>3. Circle and line</h3>
+<p><strong>Question:</strong> At which points do x² + y² = 25 and y = x + 1 intersect?</p>
+<p><strong>Do this:</strong> type <code>x^2+y^2=25</code> and <code>y=x+1</code>. Tap both crossings: <strong>(3, 4)</strong> and <strong>(−4, −3)</strong>. By hand this takes a quadratic; here it takes seconds.</p>
+<h3>4. An unknown constant with a slider</h3>
+<p><strong>Question:</strong> For what value of k does the system y = 3x + 2 and y = kx − 4 have no solution?</p>
+<p><strong>Do this:</strong> type both lines. Desmos offers a slider for <em>k</em>; add it and drag until the two lines are parallel and never cross. That happens at <strong>k = 3</strong>, because parallel lines share a slope.</p>
+<h3>5. Line of best fit from a table</h3>
+<p><strong>Question:</strong> Data points (1, 2), (2, 4), (3, 5), (4, 8). What is the linear regression?</p>
+<p><strong>Do this:</strong> add a table with the x and y values, then on a new line type <code>y_1~mx_1+b</code>. Desmos returns <strong>m = 1.9</strong> and <strong>b = 0</strong>, so the best-fit line is y = 1.9x.</p>
+
+<h2 id="cheatsheet">Cheat sheet: what to type</h2>
+<table class="gtable"><thead><tr><th scope="col">Goal</th><th scope="col">Type or do this</th></tr></thead><tbody>
+<tr><td>Graph a function</td><td><code>y=2x+1</code> or just <code>2x+1</code></td></tr>
+<tr><td>Solve two equations</td><td>Enter each on its own line, tap the crossing point</td></tr>
+<tr><td>Zeros, maximum or minimum</td><td>Graph it, tap the point where the curve crosses the axis or turns</td></tr>
+<tr><td>Mean of a list</td><td><code>mean([4,8,9,11])</code> gives 8</td></tr>
+<tr><td>Median of a list</td><td><code>median([3,7,2,9,5])</code> gives 5</td></tr>
+<tr><td>Standard deviation</td><td><code>stdev([4,8,9,11])</code></td></tr>
+<tr><td>Absolute value</td><td><code>abs(x-3)</code></td></tr>
+<tr><td>Exponent</td><td><code>x^2</code>, then press the right arrow to leave the exponent</td></tr>
+<tr><td>Inequality</td><td><code>y&gt;2x+1</code> shades the solution region</td></tr>
+<tr><td>Regression</td><td>Make a table, then <code>y_1~mx_1+b</code> (use <code>y_1~ax_1^2+bx_1+c</code> for a quadratic fit)</td></tr>
+<tr><td>Trig on angles in degrees</td><td>Open settings and switch from radians to degrees</td></tr>
+<tr><td>Unknown constant</td><td>Use a letter such as <em>k</em>, then drag the slider Desmos offers</td></tr>
+</tbody></table>
+
+<h2 id="mistakes">Common mistakes that cost points</h2>
+<ul><li><strong>Graphing when arithmetic is faster.</strong> If the answer is one line of math, do the line of math.</li>
+<li><strong>Misreading the graph.</strong> Zoom out until you can see every crossing, then check which intersection answers the question, since lines and curves often cross more than once.</li>
+<li><strong>Wrong angle mode.</strong> Radians are the default. Switch to degrees before using sine, cosine or tangent on angle questions.</li>
+<li><strong>Typing errors.</strong> A missing parenthesis changes the whole expression. Look at the graph and ask whether it matches the story in the problem.</li>
+<li><strong>Not rounding as the question asks.</strong> Desmos gives many decimals; the answer choices may want a fraction or a rounded value.</li>
+<li><strong>Learning it on test day.</strong> Practice the five moves above until they take under 30 seconds each.</li></ul>
+
 <h2>Practice with the real thing</h2>
 <p>FunSAT's practice tests include a built-in graphing calculator powered by the same Desmos engine, so you can build the habit before test day. <a href="/">Open a free digital SAT practice set →</a></p>
-<div class="glinks"><a href="/guides/how-long-is-the-digital-sat.html">How long the digital SAT is</a><a href="/guides/sat-score-calculator.html">SAT score calculator</a><a href="/guides/how-to-improve-your-sat-score.html">How to improve your SAT score</a><a href="/">Practice free →</a><a href="/guides/">All guides</a></div>
+<div class="gcard"><p>Want to know what your practice scores mean? Use the <a href="/guides/sat-score-calculator/">SAT score calculator</a>, then see <a href="/sat-scores/">which colleges each score reaches</a>.</p><a class="cta" href="/">Start free SAT practice →</a></div>
+
+<h2 id="faq">Frequently asked questions</h2>
+<h3>Is Desmos on the digital SAT?</h3><p>Yes. The digital SAT is taken in the Bluebook app, and a Desmos graphing calculator is built in for both Math modules. It is not available on the Reading and Writing section.</p>
+<h3>Can I use my own calculator instead of the built-in Desmos?</h3><p>Yes. College Board allows approved handheld calculators on the Math section, so you may bring one. Check College Board's current calculator policy before test day. The built-in Desmos calculator is free, always available, and fast for graphing questions, so most students use it for those.</p>
+<h3>Is the SAT Desmos calculator the same as the regular Desmos website?</h3><p>It is a version of the Desmos graphing calculator built into Bluebook. Graphing, tables, sliders, regression and the statistics functions work as they do online. Account and sharing features are not part of the test.</p>
+<h3>Do I have to use Desmos on every math question?</h3><p>No. Plain arithmetic, percentages and simple algebra are often quicker to do directly. Open the graph when a question asks for intersections, zeros, a vertex, a best-fit line or the value of an unknown constant.</p>
+<h3>How can I practice with the SAT Desmos calculator?</h3><p>Work through Bluebook's official practice tests, which include the real calculator, and use the graphing calculator inside FunSAT's free practice sets to build the habit on every graphing question you meet.</p>
+<h3>What is the fastest way to solve a system of equations with Desmos?</h3><p>Type each equation on its own line, then tap the point where the graphs cross. Desmos shows the coordinates, which are the solution. Zoom out first if you cannot see both lines cross.</p>
+<div class="glinks"><a href="/guides/how-long-is-the-digital-sat.html">How long the digital SAT is</a><a href="/guides/sat-score-calculator.html">SAT score calculator</a><a href="/guides/how-to-improve-your-sat-score.html">How to improve your SAT score</a><a href="/guides/free-sat-study-plan.html">Free SAT study plan</a><a href="/guides/what-is-a-good-sat-score.html">What is a good SAT score?</a><a href="/sat-practice/">SAT practice</a><a href="/">Practice free →</a><a href="/guides/">All guides</a></div>
 <p class="gfoot">FunSAT — SAT &amp; ACT prep, college &amp; scholarships. A free browser-based app: digital SAT and ACT practice tests, unofficial score calculators, a built-in Desmos graphing calculator, college admissions chances from official U.S. Department of Education data, and a scholarship search. <a href="/">Start free practice →</a></p>
 </div>
 </body></html>

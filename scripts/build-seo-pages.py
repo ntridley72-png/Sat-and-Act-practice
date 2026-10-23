@@ -1792,6 +1792,7 @@ def score_page(colleges, concordance, score, test):
             + '<a href="/sat-act-conversion/">SAT to ACT conversion</a>'
               '<a href="/guides/what-is-a-good-sat-score/">What is a good SAT score?</a>'
               '<a href="/guides/how-to-improve-your-sat-score/">How to improve your score</a>'
+              '<a href="/guides/desmos-calculator-digital-sat/">SAT Desmos calculator guide</a>'
               '<a href="/colleges/">All colleges</a></div>')
 
     return path, page(path=path, title=title, description=description, body=body, schema=[

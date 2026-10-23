@@ -162,7 +162,7 @@
     "home-sidebar": [300, 250, "Sidebar 300x250"],
     "article-top": [728, 250, "In-article (fluid)"],
     "article-bottom": [728, 280, "Responsive 728x280"],
-    "article-mid": [728, 250, "In-article (fluid)"],
+    "article-mid": [320, 50, "Phone banner 320x50"],
     "anchor": [728, 90, "Sticky anchor 728x90"],
     "results-top": [728, 250, "Results 728x250"],
     "college-list": [728, 250, "In-feed (fluid)"],
@@ -294,6 +294,7 @@
       if (isAnchor && anchorDismissed()) { host.remove(); return; }
       // Margin units only mount where the margin exists, so a narrow window never loads
       // (and never bills) an impression nobody can see. A later resize mounts them.
+      if (host.dataset.maxWidth && window.innerWidth >= Number(host.dataset.maxWidth)) return;
       if (host.dataset.minWidth && window.innerWidth < Number(host.dataset.minWidth)) return;
       // Every app screen starts display:none. An adsbygoogle unit pushed while its
       // container is hidden measures zero width, comes back unfilled and does not

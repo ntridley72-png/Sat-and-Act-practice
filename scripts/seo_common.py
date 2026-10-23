@@ -60,11 +60,14 @@ AD_UNITS = (
     'container:"container-ba6d22b48d5d42c6cd1add3ad5e6c681"},'
     'sky:{key:"4e48d9998406ce142c41865c66a4325",'
     'script:"https://bauval.org/22/4e48d9998406ce142c41865c66a4325",'
-    'width:160,height:600},squares:[]}'
+    'width:160,height:600},'
+    'mobile:{key:"c12c35cf8d3881414086bb25244cd69e",'
+    'script:"https://bauval.org/22/c12c35cf8d3881414086bb25244cd69e",'
+    'width:320,height:50},squares:[]}'
 )
 AD_SLOTS = {
     "article-top": '{kind:"native"}',
-    "article-mid": '{kind:"native"}',
+    "article-mid": '{unit:"mobile"}',
     "article-bottom": '{kind:"native"}',
     "article-grid": '{kind:"grid"}',
     "article-rail": '{unit:"sky"}',
@@ -77,7 +80,10 @@ AD_CONFIG = (
 
 
 def ad_slot(name):
-    return f'<div class="sponsor-slot" data-ad-slot="{name}" hidden></div>'
+    # The 320x50 banner is a phone unit: it mounts below 700px only, where the native
+    # widget's single instance is already taken by the top slot.
+    extra = ' data-max-width="700"' if name == "article-mid" else ""
+    return f'<div class="sponsor-slot" data-ad-slot="{name}"{extra} hidden></div>'
 
 
 # Desktop-only 160x600 in the empty margin beside the article. It is a fixed-width

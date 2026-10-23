@@ -22,6 +22,8 @@ from seo_common import (ORIGIN, ROOT, SITE_NAME, STATES, TODAY, breadcrumbs, e,
                         faq_schema, inject_ads, inject_fonts, load_colleges, load_scholarships,
                         money, num, page, pct, slugify, write)
 
+from college_match import college_match_page
+
 HOME = ("Home", "/")
 
 
@@ -750,6 +752,7 @@ def college_page(c, data):
              f'<a href="/colleges/">All colleges</a>'
              f'<a href="/guides/what-is-a-good-sat-score/">What is a good SAT score?</a>'
              f'<a href="/guides/college-admissions-chances/">Admissions chances</a>'
+             f'<a href="/college-match/">Find colleges that fit you</a>'
              f'<a href="/guides/is-a-college-campus-safe/">Is a college campus safe?</a>'
              f'<a href="/guides/how-much-does-college-really-cost/">What college really costs</a>'
              f'<a href="/guides/college-graduation-rates-and-earnings/">Graduation rates and earnings</a>'
@@ -878,6 +881,9 @@ def colleges_hub(colleges, by_state):
             f'{len(colleges)} four-year colleges, built from the U.S. Department of Education '
             f'College Scorecard. Every profile shows the middle-50% SAT and ACT range, net '
             f'price, graduation rate and median earnings in one place.</p>'
+            f'<div class="gcard"><p><strong>Not sure where to start?</strong> Enter your score, budget and '
+            f'preferences and we will sort every college into reach, match and likely.</p>'
+            f'<a class="cta" href="/college-match/">Find colleges that fit you &rarr;</a></div>'
             f'<h2>Highest SAT ranges</h2>'
             f'<table class="gtable"><thead><tr><th scope="col">College</th>'
             f'<th scope="col">State</th><th scope="col">SAT (mid 50%)</th>'
@@ -1570,6 +1576,10 @@ def main():
     write(out / "colleges" / "index.html", h)
     entries.append((p, "0.9", "weekly"))
 
+    p, h = college_match_page(colleges)
+    write(out / p.strip("/") / "index.html", h)
+    entries.append((p, "0.9", "monthly"))
+
     for state, cols in sorted(by_state.items()):
         p, h = state_hub(state, cols)
         write(out / p.lstrip("/") / "index.html", h)
@@ -1824,6 +1834,7 @@ def score_page(colleges, concordance, score, test):
               '<a href="/guides/how-to-improve-your-sat-score/">How to improve your score</a>'
               '<a href="/guides/desmos-calculator-digital-sat/">SAT Desmos calculator guide</a>'
               '<a href="/guides/sat-desmos-tips-and-tricks/">SAT Desmos tips and tricks</a>'
+              '<a href="/college-match/">College matcher</a>'
               '<a href="/colleges/">All colleges</a></div>')
 
     return path, page(path=path, title=title, description=description, body=body, schema=[

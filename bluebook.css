@@ -1,0 +1,198 @@
+/* Bluebook-style practice screen, layered on the Exam theme.
+   Everything is scoped to body[data-workspace="exam"] so Notebook and Focus keep their own
+   layouts. The markup, ids and handlers are untouched: this file and bluebook.js only move
+   and restyle what app.js and workspace.js already render. */
+
+body[data-workspace="exam"]{
+  --ws-accent:#0b5fff; --ws-tint:#eaf1ff; --ws-rule:#1a1a1a;
+  --fx-accent-line:#9fbaea; --fx-band:#a9bee6;
+  --bb-line:#b9bec7; --bb-ink:#111; --bb-head:64px; --bb-foot:64px;
+}
+body[data-workspace="exam"][data-test="act"]{ --ws-accent:#0b2a5b; --ws-tint:#e8f0ff; }
+
+/* ---------- Practice screen chrome ---------- */
+body[data-workspace="exam"].workspace-practicing{background:#fff}
+body[data-workspace="exam"].workspace-practicing .topbar,
+body[data-workspace="exam"].workspace-practicing .foot,
+body[data-workspace="exam"].workspace-practicing .sponsor-slot{display:none!important}
+body[data-workspace="exam"].workspace-practicing .wrap{max-width:none!important;padding:0!important;margin:0!important}
+body[data-workspace="exam"].workspace-practicing #screen-test>.card:first-child{
+  position:sticky;top:0;z-index:40;border:0;border-bottom:2px dashed var(--bb-line);border-radius:0;
+  box-shadow:none;margin:0;padding:0;background:#fff}
+body[data-workspace="exam"][data-test="act"].workspace-practicing #screen-test>.card:first-child{background:#0b2a5b;color:#fff;border-bottom:0}
+body[data-workspace="exam"].workspace-practicing #screen-test .module-head{
+  display:grid;grid-template-columns:1fr auto 1fr;grid-template-rows:auto auto;align-items:center;column-gap:16px;
+  padding:8px 24px;margin:0;position:relative}
+body[data-workspace="exam"].workspace-practicing #screen-test .module-head>div:first-child{display:contents}
+body[data-workspace="exam"].workspace-practicing #screen-test .module-tag{
+  grid-column:1;grid-row:1;font:700 17px/1.2 Archivo,system-ui,sans-serif;letter-spacing:0;text-transform:none;color:inherit}
+body[data-workspace="exam"].workspace-practicing #screen-test #moduleSub{grid-column:1;grid-row:2;font-size:13px;color:inherit;opacity:.8}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-timer{
+  grid-column:2;grid-row:1/3;justify-self:center;display:flex;flex-direction:column;align-items:center;gap:2px}
+body[data-workspace="exam"].workspace-practicing #screen-test #modTimer{font:700 22px/1 Archivo,system-ui,sans-serif;font-variant-numeric:tabular-nums;color:inherit}
+body[data-workspace="exam"].workspace-practicing #screen-test #btnHideTimer{
+  min-height:0;padding:1px 10px;font-size:12px;border:1px solid currentColor;border-radius:12px;background:transparent;color:inherit}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-tools-home{grid-column:3;grid-row:1/3;justify-self:end}
+body[data-workspace="exam"].workspace-practicing #screen-test .tools-bar{display:flex;gap:4px;border:0;background:none;padding:0}
+body[data-workspace="exam"].workspace-practicing #screen-test .tool-btn{
+  display:flex;flex-direction:column;align-items:center;gap:2px;min-width:64px;min-height:48px;padding:5px 8px;
+  border:0;border-bottom:3px solid transparent;border-radius:6px;background:transparent;color:inherit;font-size:12px;font-weight:600}
+body[data-workspace="exam"].workspace-practicing #screen-test .tool-btn svg{width:20px;height:20px}
+body[data-workspace="exam"].workspace-practicing #screen-test .tool-btn.on{border-bottom-color:var(--ws-accent);background:var(--ws-tint);color:var(--bb-ink)}
+body[data-workspace="exam"][data-test="act"].workspace-practicing .tool-btn.on{background:rgba(255,255,255,.18);color:#fff;border-bottom-color:#fff}
+body[data-workspace="exam"].workspace-practicing #screen-test .tool-btn:hover{background:var(--ws-tint);color:var(--bb-ink)}
+body[data-workspace="exam"][data-test="act"].workspace-practicing .tool-btn:hover{background:rgba(255,255,255,.14);color:#fff}
+/* The less-used actions live behind a "More" button, as in Bluebook. */
+body[data-workspace="exam"].workspace-practicing #screen-test .module-actions{
+  display:none!important;position:absolute;top:100%;right:24px;z-index:50;flex-direction:column;gap:6px;min-width:210px;
+  padding:10px;background:#fff;color:var(--bb-ink);border:2px solid var(--bb-ink);border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,.25)}
+body[data-workspace="exam"].workspace-practicing.bb-more-open #screen-test .module-actions{display:flex!important}
+body[data-workspace="exam"].workspace-practicing #screen-test .module-actions button{justify-content:flex-start;width:100%}
+body[data-workspace="exam"].workspace-practicing #screen-test .progress-track{height:3px;margin:0;border-radius:0;background:#e6e8ec}
+body[data-workspace="exam"].workspace-practicing #screen-test .progress-fill{background:var(--ws-accent)}
+body[data-workspace="exam"].workspace-practicing #screen-test .progress-label,
+body[data-workspace="exam"].workspace-practicing #screen-test .qfx-streak{display:none}
+
+body[data-workspace="exam"][data-test="act"].workspace-practicing #screen-test :is(.bb-timer,#modTimer,#btnHideTimer,.module-tag,#moduleSub){color:#fff!important}
+body[data-workspace="exam"][data-test="act"].workspace-practicing #screen-test #btnHideTimer{border-color:#fff}
+
+body[data-workspace="exam"].workspace-practicing #screen-test .module-actions button{
+  min-height:42px;background:#fff;color:var(--bb-ink);border:1px solid var(--bb-line);border-radius:8px;font-size:14px;font-weight:700;line-height:1.25;padding:10px 12px}
+body[data-workspace="exam"].workspace-practicing #screen-test .module-actions button:hover{background:var(--ws-tint)}
+
+/* The screen is exactly one viewport: header on top, a scrolling middle, the bar at the bottom.
+   The bar is part of the layout, not laid over it, so nothing can ever scroll underneath it. */
+body[data-workspace="exam"].workspace-practicing #screen-test{display:flex!important;flex-direction:column;height:100dvh;overflow:hidden}
+body[data-workspace="exam"].workspace-practicing #screen-test #questionCard{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-grid{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-canvas{flex:1 1 auto;min-height:0;display:grid;grid-template-rows:minmax(0,1fr) auto}
+
+/* ---------- Question area ---------- */
+body[data-workspace="exam"].workspace-practicing #screen-test #questionCard{
+  margin:0!important;padding:0;border:0;border-radius:0;box-shadow:none;background:#fff}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-grid{padding:0}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-navigator{display:none}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-canvas{width:100%;max-width:none;margin:0;padding:0;border:0;background:#fff;overflow:visible}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-question-body{width:100%;max-width:none;margin:0;padding:0 0 32px;overflow-y:auto;overflow-x:hidden;max-height:none;min-height:0}
+body[data-workspace="exam"].workspace-practicing #screen-test .split{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:0;min-height:100%}
+body[data-workspace="exam"].workspace-practicing #screen-test .split-l{padding:28px 40px;border-right:2px solid var(--bb-ink);overflow:auto}
+body[data-workspace="exam"].workspace-practicing #screen-test .split-r{padding:0 40px}
+body[data-workspace="exam"].workspace-practicing #screen-test .passage{font-family:Georgia,"Times New Roman",serif;font-size:17px;line-height:1.7;color:var(--bb-ink);background:transparent;border:0;padding:0}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-question-body:not(:has(.split)){max-width:820px;margin:0 auto;padding-left:24px;padding-right:24px}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-qhead{
+  display:flex;align-items:center;gap:12px;background:#eef0f5;border-bottom:2px solid var(--bb-ink);margin:0 -40px 20px;padding:8px 40px}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-question-body:not(:has(.split)) .bb-qhead{margin:0 -24px 20px;padding:8px 24px}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-num{background:var(--bb-ink);color:#fff;font-weight:800;padding:6px 12px;border-radius:0;font-size:16px}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-star{margin-left:auto;background:transparent;border:0;color:var(--bb-ink);font-weight:600;min-height:0}
+body[data-workspace="exam"].workspace-practicing #screen-test .qtext{font-size:18px;line-height:1.6;color:var(--bb-ink);margin:0 0 18px}
+body[data-workspace="exam"].workspace-practicing #screen-test .choice{
+  display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:12px 16px;min-height:54px;
+  background:#fff;color:var(--bb-ink);border:2px solid var(--bb-ink);border-radius:10px;font-size:16px;font-weight:500}
+body[data-workspace="exam"].workspace-practicing #screen-test .choice .key{
+  display:grid;place-items:center;flex:none;width:30px;height:30px;border:2px solid var(--bb-ink);border-radius:50%;font-weight:800;font-size:14px;background:#fff;color:var(--bb-ink)}
+body[data-workspace="exam"].workspace-practicing #screen-test .choice.sel{border-color:var(--ws-accent);background:var(--ws-tint)}
+body[data-workspace="exam"].workspace-practicing #screen-test .choice.sel .key{background:var(--ws-accent);border-color:var(--ws-accent);color:#fff}
+body[data-workspace="exam"].workspace-practicing #screen-test .choice:hover:not(:disabled){border-color:var(--ws-accent)}
+body[data-workspace="exam"].workspace-practicing #screen-test .choice:focus-visible{outline:3px solid var(--ws-accent);outline-offset:2px}
+body[data-workspace="exam"].workspace-practicing #screen-test .choice-row.struck .choice{opacity:.55;text-decoration:line-through}
+body[data-workspace="exam"].workspace-practicing #screen-test .choice.correct{border-color:#1d6b3f;background:#edf6f0}
+body[data-workspace="exam"].workspace-practicing #screen-test .choice.wrong{border-color:#b4241f;background:#fdeeee}
+
+body[data-workspace="exam"].workspace-practicing.calc-open,body[data-workspace="exam"].workspace-practicing.calc-open.calc-wide{padding:0!important}
+
+/* ---------- Bottom bar ---------- */
+.bb-btns-pre{display:none}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot{
+  position:relative;z-index:45;margin:0;min-height:var(--bb-foot);
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;
+  padding:8px 24px max(8px,env(safe-area-inset-bottom));background:#fff;border:0;border-top:2px dashed var(--bb-line);box-shadow:none}
+.bbx-left,.bbx-right{display:flex;align-items:center;gap:10px;min-width:0}
+.bbx-right{justify-content:flex-end;flex-wrap:nowrap}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-btns{flex-direction:row;flex-wrap:nowrap;align-items:center}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-btns button{width:auto;flex:none;white-space:nowrap}
+.bbx-mid{display:flex;justify-content:center}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-coin{display:none}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-btns,
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-btns-pre{display:flex;gap:10px}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-navbtn,
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot .secondary,
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot .qfx-check{
+  min-height:44px;padding:11px 20px;line-height:1.25;border-radius:24px;font-weight:800;font-size:15px;border:2px solid var(--ws-accent);background:#fff;color:var(--ws-accent)}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot .qfx-check,
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot .qfx-check.next{background:var(--ws-accent);color:#fff}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot .qfx-check:disabled{background:#e6e8ec;border-color:#e6e8ec;color:#5b6470}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot .secondary:disabled{opacity:.45}
+body[data-workspace="exam"].workspace-practicing #screen-test .qfx-icon{width:44px;height:44px;border-radius:50%;border:2px solid var(--bb-ink);background:#fff;color:var(--bb-ink);font-size:20px;padding:0}
+body[data-workspace="exam"].workspace-practicing #screen-test .qfx-icon.on{background:var(--ws-accent);border-color:var(--ws-accent);color:#fff}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-pop{bottom:calc(100% + 12px);top:auto}
+
+/* Question navigator: white cells, dashed when unanswered, filled when answered. */
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-pop .qdot{
+  min-width:40px;height:40px;padding:0 6px;border:2px dashed var(--bb-line);border-radius:6px;background:#fff;color:var(--ws-accent);font-weight:800}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-pop .qdot.answered{border:2px solid var(--ws-accent);background:var(--ws-accent);color:#fff}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-pop .qdot.flagged{box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 6px #c0201a}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-pop .qdot.current{outline:3px solid var(--bb-ink);outline-offset:2px}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-pop{background:#fff;color:var(--bb-ink);border:2px solid var(--bb-ink);border-radius:12px;box-shadow:0 14px 36px rgba(0,0,0,.3);padding:14px}
+
+/* ---------- Floating calculator ---------- */
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-calculator-dock{
+  position:fixed;z-index:60;top:92px;right:24px;left:auto;width:min(540px,calc(100vw - 32px));
+  background:#fff;border:2px solid var(--bb-ink);border-radius:10px;box-shadow:0 14px 36px rgba(0,0,0,.32);overflow:hidden;grid-column:auto;grid-row:auto}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-calculator-dock:not(:has(.show)){display:none}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-calculator-dock .calc-head{
+  background:var(--bb-ink);color:#fff;cursor:grab;touch-action:none;user-select:none}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-calculator-dock .calc-head button{background:#fff;color:var(--bb-ink);border:0}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-calculator-dock.dragging .calc-head{cursor:grabbing}
+
+/* ---------- Tutor bubble ---------- */
+.bbx-bubble{display:none}
+body[data-workspace="exam"].workspace-practicing .bbx-bubble{
+  display:grid;place-items:center;position:fixed;z-index:70;right:20px;bottom:calc(var(--bb-foot) + 22px);width:56px;height:56px;padding:0;
+  border-radius:50%;border:0;background:var(--ws-accent);color:#fff;font:800 24px/1 Archivo,system-ui,sans-serif;box-shadow:0 6px 18px rgba(11,95,255,.45);cursor:pointer}
+body[data-workspace="exam"][data-test="act"].workspace-practicing .bbx-bubble{box-shadow:0 6px 18px rgba(11,42,91,.45)}
+body[data-workspace="exam"].workspace-practicing .bbx-bubble:focus-visible{outline:3px solid var(--bb-ink);outline-offset:3px}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-learning{
+  display:none;position:fixed;z-index:65;right:20px;bottom:calc(var(--bb-foot) + 90px);width:min(390px,calc(100vw - 24px));
+  max-height:min(560px,calc(100dvh - var(--bb-head) - var(--bb-foot) - 120px));overflow:auto;margin:0;padding:12px 14px;
+  background:#fff;color:var(--bb-ink);border:2px solid var(--bb-ink);border-radius:14px;box-shadow:0 14px 36px rgba(0,0,0,.32)}
+body[data-workspace="exam"].workspace-practicing.bb-ai-open #screen-test .workspace-learning{display:block!important}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-learning h2{font-size:16px;margin:0 0 8px}
+body[data-workspace="exam"].workspace-practicing #screen-test .bbx-sheetbar{display:none}
+
+/* ---------- Phones ---------- */
+@media (max-width:820px){
+  body[data-workspace="exam"]{--bb-head:112px;--bb-foot:76px}
+  body[data-workspace="exam"].workspace-practicing #screen-test .module-head{grid-template-columns:1fr auto;padding:8px 14px;row-gap:4px}
+  body[data-workspace="exam"].workspace-practicing #screen-test .module-tag{font-size:15px}
+  body[data-workspace="exam"].workspace-practicing #screen-test .bb-timer{grid-column:2;grid-row:1;flex-direction:row;gap:8px}
+  body[data-workspace="exam"].workspace-practicing #screen-test #modTimer{font-size:19px}
+  body[data-workspace="exam"].workspace-practicing #screen-test .workspace-tools-home{grid-column:1/-1;grid-row:3;justify-self:stretch}
+  body[data-workspace="exam"].workspace-practicing #screen-test .tools-bar{justify-content:space-between;width:100%}
+  body[data-workspace="exam"].workspace-practicing #screen-test .tool-btn{min-width:0;flex:1;min-height:44px;font-size:11px}
+  body[data-workspace="exam"].workspace-practicing #screen-test .module-actions{right:14px}
+  body[data-workspace="exam"].workspace-practicing #screen-test .split{grid-template-columns:1fr;min-height:0}
+  body[data-workspace="exam"].workspace-practicing #screen-test .split-l{border-right:0;border-bottom:2px solid var(--bb-ink);padding:18px 16px;max-height:38dvh}
+  body[data-workspace="exam"].workspace-practicing #screen-test .split-r{padding:0 16px}
+  body[data-workspace="exam"].workspace-practicing #screen-test .bb-qhead{margin:0 -16px 14px;padding:8px 16px}
+  body[data-workspace="exam"].workspace-practicing #screen-test .workspace-question-body:not(:has(.split)){padding-left:16px;padding-right:16px}
+  body[data-workspace="exam"].workspace-practicing #screen-test .workspace-question-body:not(:has(.split)) .bb-qhead{margin:0 -16px 14px;padding:8px 16px}
+  body[data-workspace="exam"].workspace-practicing #screen-test .qtext{font-size:18px}
+  body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot{grid-template-columns:auto 1fr auto;gap:8px;padding:8px 12px max(8px,env(safe-area-inset-bottom))}
+  body[data-workspace="exam"].workspace-practicing #screen-test .bb-navbtn{padding:0 10px;font-size:13px;white-space:nowrap}
+  body[data-workspace="exam"].workspace-practicing #screen-test .bbx-left{gap:6px}
+  body[data-workspace="exam"].workspace-practicing #screen-test .bb-btns{gap:6px}
+  body[data-workspace="exam"].workspace-practicing #screen-test .tool-btn span{font-size:11px;line-height:1.1;text-align:center}
+  body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot .secondary,
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot .qfx-check{padding:0 14px;font-size:14px}
+  body[data-workspace="exam"].workspace-practicing #screen-test .qfx-icon{width:38px;height:38px;font-size:18px}
+  body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot .secondary,body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot .qfx-check{min-height:42px;padding:10px 12px}
+  /* The calculator becomes a sheet over the lower part of the screen. */
+  body[data-workspace="exam"].workspace-practicing #screen-test .workspace-calculator-dock{
+    top:auto!important;left:0!important;right:0!important;bottom:var(--bb-foot);width:100%;border-radius:14px 14px 0 0;border-width:2px 0 0}
+  body[data-workspace="exam"].workspace-practicing .bbx-bubble{right:14px;bottom:calc(var(--bb-foot) + 14px);width:50px;height:50px}
+  body[data-workspace="exam"].workspace-practicing #screen-test .workspace-learning{
+    left:8px;right:8px;width:auto;bottom:calc(var(--bb-foot) + 74px);max-height:60dvh}
+}
+@media (prefers-reduced-motion:no-preference){
+  body[data-workspace="exam"].workspace-practicing #screen-test .choice{transition:border-color .12s,background .12s}
+}

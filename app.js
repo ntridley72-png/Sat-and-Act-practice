@@ -3009,7 +3009,7 @@ const GAME_RULES = {
 };
 const $ = (id) => document.getElementById(id);
 const _QINDEX = {};
-BANK.math.concat(BANK.rw).concat(ACT_SCIENCE).forEach((q) => { _QINDEX[q.id] = q; });
+BANK.math.concat(BANK.rw, ACT_ENGLISH, ACT_MATH, ACT_READING, ACT_SCIENCE).forEach((q) => { _QINDEX[q.id] = q; });
 const byId = (id) => _QINDEX[id];
 
 function bankByDiff(bankKey) {
@@ -4159,7 +4159,8 @@ function renderQuestion() {
       '<button type="button" class="qfx-icon' + (elimMode ? " on" : "") + '" id="btnElim" aria-label="Cross-out mode: cross out choices you have ruled out" aria-pressed="' + elimMode + '">\u2298</button>' +
       '<button type="button" class="qfx-icon' + (flagged ? " on" : "") + '" id="btnFlag" aria-label="Mark this question for review" aria-pressed="' + flagged + '">\u2691</button>' +
       '<button type="button" class="qfx-check" id="btnCheck"' + (picked == null ? " disabled" : "") + ">Check answer</button></div>" +
-      '<div class="bb-coin" title="Every ' + QUESTIONS_PER_TOKEN + ' questions = 1 credit">\ud83e\ude99 <span class="meter"><i style="width:' + Math.round(((profile.qSinceToken || 0) / QUESTIONS_PER_TOKEN) * 100) + '%"></i></span><span>' + coinLeft + " more for +1 credit</span>" + navPop + "</div>";
+      '<div class="bb-coin" title="Every ' + QUESTIONS_PER_TOKEN + ' questions = 1 credit">\ud83e\ude99 <span class="meter"><i style="width:' + Math.round(((profile.qSinceToken || 0) / QUESTIONS_PER_TOKEN) * 100) + '%"></i></span><span>' + coinLeft + " more for +1 credit</span>" + navPop + "</div>" +
+      '<div class="bb-btns bb-btns-pre"><button id="btnPrev" class="secondary"' + (qi === 0 ? " disabled" : "") + ">Back</button></div></div>";
   } else {
     html += '<div class="bb-foot">' +
       '<div class="bb-coin" title="Every ' + QUESTIONS_PER_TOKEN + ' questions = 1 credit">\ud83e\ude99 <span class="meter"><i style="width:' + Math.round(((profile.qSinceToken || 0) / QUESTIONS_PER_TOKEN) * 100) + '%"></i></span><span>' + coinLeft + " more for +1 credit</span></div>" +

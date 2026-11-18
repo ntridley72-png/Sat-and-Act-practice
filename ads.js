@@ -286,6 +286,28 @@
     return FLIRTY.test(String(creative.label || "")) || FLIRTY.test(String(creative.alt || "")) || urlIsUnsafe(creative.href) || urlIsUnsafe(creative.image);
   }
 
+  // A slot whose network returned nothing (no inventory, blocked script, unapproved zone) would
+  // sit on the page as a bare "Sponsored" label over an empty box. Native widgets fill the
+  // container we own, so a still-empty container after a few seconds means there is no ad:
+  // collapse the slot, and bring it back if a fill arrives late. Sandboxed iframes are opaque
+  // to us, so they cannot be checked this way.
+  function collapseWhenEmpty(host) {
+    if (!host.dataset.adsterraNative) return;
+    const filled = () => !!(nativeHost && nativeHost.children.length && nativeHost.offsetHeight > 24);
+    const apply = () => {
+      if (!host.isConnected || host.dataset.adsterraNative !== "true") return;
+      const ok = filled();
+      if (!ok && !host.hidden) { host.hidden = true; host.dataset.adEmpty = "true"; try { console.info("[funsat ads] native unit returned no ad; slot collapsed"); } catch (error) {} }
+      if (ok && host.dataset.adEmpty) { host.hidden = false; delete host.dataset.adEmpty; }
+    };
+    [4000, 9000, 16000].forEach((ms) => setTimeout(apply, ms));
+    if (typeof MutationObserver === "function" && nativeHost) {
+      const mo = new MutationObserver(() => { if (host.dataset.adEmpty) apply(); });
+      mo.observe(nativeHost, { childList: true, subtree: true });
+      setTimeout(() => mo.disconnect(), 60000);
+    }
+  }
+
   function mount() {
     document.querySelectorAll("[data-ad-slot]").forEach((host) => {
       if (host.dataset.adMounted) return;
@@ -323,6 +345,7 @@
       // After the hidden state is final, or a synchronous block would be
       // overwritten by the show above.
       if (rendered && !PREVIEW) watchForUnsafeListings(host);
+      if (rendered && !PREVIEW) collapseWhenEmpty(host);
       // An unfilled anchor would otherwise hold a fixed strip of empty page.
       if (!rendered && isAnchor) host.remove();
     });

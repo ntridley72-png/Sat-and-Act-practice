@@ -1546,7 +1546,7 @@ def main():
         c["_safety"] = (safety_all.get("colleges") or {}).get(str(c["id"]))
         c["_photosX"] = (photos_all.get("colleges") or {}).get(str(c["id"]))
         c["_defs"] = data["meta"].get("statsDefs") or {}
-        c["_release"] = data["meta"].get("release", "")
+        c["_release"] = c.get("rel") or data["meta"].get("release", "")
         c["_verified"] = data["meta"].get("fetched", "")
     by_state = {}
     for c in colleges:

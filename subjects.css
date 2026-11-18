@@ -4,11 +4,11 @@ body[data-workspace] #screen-subjects{background:var(--bg)!important;color:var(-
 .subjects-head h1{margin:10px 0 8px;font-size:clamp(24px,3.2vw,36px)}
 .subjects-head p{max-width:820px}
 .subject-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
-body[data-workspace] .subject-tab{height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:#1a222e;color:var(--text);font-weight:700;font-size:14px}
+body[data-workspace] .subject-tab{height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--ws-line,var(--line));background:var(--ws-surface,#fff);color:var(--ws-ink,var(--text));font-weight:700;font-size:14px}
 body[data-workspace] .subject-tab.active{background:rgba(94,240,176,.16);border-color:var(--mint);color:var(--mint)}
 .subject-length{display:flex;align-items:center;gap:12px;margin:16px 0;flex-wrap:wrap;color:var(--muted);font-size:13px}
 .subject-seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
-body[data-workspace] .subject-len{height:36px;padding:0 16px;border:0;border-right:1px solid var(--line);background:#1a222e;color:var(--text);font-weight:700}
+body[data-workspace] .subject-len{height:36px;padding:0 16px;border:0;border-right:1px solid var(--ws-line,var(--line));background:var(--ws-surface,#fff);color:var(--ws-ink,var(--text));font-weight:700}
 body[data-workspace] .subject-len:last-child{border-right:0}
 body[data-workspace] .subject-len.active{background:var(--mint);color:#06281c}
 .subject-weak{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:8px 0 18px}

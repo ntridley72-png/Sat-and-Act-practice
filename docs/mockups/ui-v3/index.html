@@ -1,0 +1,128 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FunSAT UI mockups v3</title>
+<style>
+:root{--bg:#0f1316;--rail:#0b0e10;--surf:#161b1f;--surf2:#1d2429;--line:#2a343b;--ink:#e8eef0;--mut:#93a3ab;--acc:#5ccfc5;--onacc:#06201d;--warn:#f0b84a;--bad:#ff8a80;--ok:#5fd391}
+*{box-sizing:border-box}body{margin:0;background:#07090a;color:var(--ink);font:14px/1.45 Inter,system-ui,sans-serif;padding:32px}
+h1{font-size:22px;margin:0 0 4px}.sub{color:var(--mut);margin:0 0 28px}
+.frame{width:1280px;height:800px;position:relative;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--bg);margin:0 0 8px}
+.cap{color:var(--mut);margin:0 0 40px;max-width:1280px}.cap b{color:var(--ink)}
+.rail{position:absolute;left:0;top:0;bottom:0;width:220px;background:var(--rail);border-right:1px solid var(--line);padding:18px 14px}
+.brand{font-weight:800;font-size:20px}.brand span{color:var(--acc)}
+.nav a{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:8px;color:var(--mut);margin:2px 0}
+.nav a.on{background:var(--surf2);color:var(--ink)}.nav i{width:16px;height:16px;border-radius:4px;background:var(--line);display:inline-block}.nav a.on i{background:var(--acc)}
+.main{position:absolute;left:220px;right:0;top:0;bottom:0;padding:26px 30px;overflow:hidden}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:16px}
+.grid{display:grid;gap:16px}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:1.4fr 1fr}
+.k{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.08em}.big{font-size:34px;font-weight:800}
+.btn{display:inline-block;background:var(--acc);color:var(--onacc);font-weight:800;border-radius:8px;padding:10px 16px}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:9px 6px;border-bottom:1px solid var(--line)}th{color:var(--mut);font-size:12px;font-weight:600}
+.bar{height:8px;border-radius:4px;background:var(--surf2);overflow:hidden}.bar i{display:block;height:100%;background:var(--acc)}
+.chip{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border:1px solid currentColor;border-radius:4px}
+.ok{color:var(--ok)}.wr{color:var(--warn)}.bd{color:var(--bad)}
+/* landing */
+.hero{position:absolute;inset:0;background:radial-gradient(900px 500px at 70% 10%,#173a3a 0,transparent 60%),var(--bg);padding:0 70px}
+.top{display:flex;justify-content:space-between;align-items:center;height:70px}
+.h1{font-size:54px;line-height:1.05;font-weight:800;letter-spacing:-.02em;margin:70px 0 14px;max-width:700px}.h1 em{color:var(--acc);font-style:normal}
+/* bluebook-like test */
+.bb{position:absolute;inset:0;background:#fff;color:#111;display:flex;flex-direction:column;font-family:Inter,system-ui,sans-serif}
+.bb-top{height:64px;border-bottom:2px dashed #b9b9b9;display:flex;align-items:center;justify-content:space-between;padding:0 26px;background:#fff}
+.bb-top b{font-size:17px}.bb-top small{display:block;color:#555}
+.bb-mid{flex:1;display:grid;grid-template-columns:1fr 1fr;position:relative;min-height:0}
+.bb-l{padding:28px 36px;border-right:2px solid #1a1a1a;overflow:hidden;font-family:Georgia,serif;font-size:17px;line-height:1.65}
+.bb-r{padding:22px 36px;overflow:hidden}
+.qh{display:flex;align-items:center;gap:12px;background:#eef0f5;border-bottom:2px solid #1a1a1a;margin:-22px -36px 18px;padding:8px 36px}
+.qn{background:#1a1a1a;color:#fff;font-weight:800;padding:6px 12px}
+.opt{display:flex;gap:12px;align-items:center;border:2px solid #1a1a1a;border-radius:10px;padding:12px 14px;margin:10px 0;font-size:16px}
+.opt i{width:28px;height:28px;border:2px solid #1a1a1a;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:14px}
+.opt.sel{border-color:#0b5fff;background:#eaf1ff}.opt.sel i{background:#0b5fff;color:#fff;border-color:#0b5fff}
+.bb-bot{height:62px;border-top:2px dashed #b9b9b9;display:flex;align-items:center;justify-content:space-between;padding:0 26px;background:#fff}
+.pill{background:#0b5fff;color:#fff;font-weight:800;border-radius:22px;padding:9px 18px}.pill.o{background:#fff;color:#0b5fff;border:2px solid #0b5fff}
+.tool{border:1px solid #bbb;border-radius:6px;padding:6px 10px;margin-left:8px;font-weight:700;background:#fff}
+.calc{position:absolute;right:26px;top:10px;width:470px;height:420px;background:#fff;border:2px solid #1a1a1a;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:5;display:flex;flex-direction:column}
+.calc .hd{background:#1a1a1a;color:#fff;padding:8px 12px;display:flex;justify-content:space-between;font-weight:700;cursor:move}
+.calc .body{flex:1;display:grid;grid-template-columns:170px 1fr;min-height:0}
+.calc .ex{border-right:1px solid #ccc;padding:8px;font-family:ui-monospace,monospace;font-size:14px}
+.calc .ex div{border-bottom:1px solid #e4e4e4;padding:8px 4px;display:flex;gap:8px;align-items:center}.calc .ex b{width:16px;height:16px;border-radius:50%;display:inline-block}
+.ai{position:absolute;right:24px;bottom:78px;z-index:9}
+.bubble{width:58px;height:58px;border-radius:50%;background:#0b5fff;color:#fff;display:grid;place-items:center;font-weight:800;box-shadow:0 6px 18px rgba(11,95,255,.5);margin-left:auto}
+.chat{width:340px;background:#fff;border:2px solid #1a1a1a;border-radius:14px;box-shadow:0 12px 34px rgba(0,0,0,.35);margin-bottom:12px;overflow:hidden}
+.chat .h{background:#0b5fff;color:#fff;padding:10px 14px;font-weight:800;display:flex;justify-content:space-between}
+.chat .m{padding:12px;font-size:14px;max-height:300px}.me{background:#eef0f5;border-radius:10px;padding:8px 10px;margin:6px 0 6px 40px}.bot{background:#eaf1ff;border-radius:10px;padding:8px 10px;margin:6px 40px 6px 0}
+.chat .in{border-top:1px solid #ddd;padding:10px;color:#777;display:flex;justify-content:space-between}
+/* act */
+.act{position:absolute;inset:0;background:#f3f5f8;color:#0b1f3a;display:flex;flex-direction:column}
+.act-top{height:56px;background:#0b2a5b;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px;font-weight:700}
+.act-sub{height:46px;background:#fff;border-bottom:1px solid #cbd5e1;display:flex;align-items:center;justify-content:space-between;padding:0 24px}
+.act-body{flex:1;display:grid;grid-template-columns:1.2fr 1fr;gap:0;min-height:0}
+.act-q{padding:26px 34px;font-size:16px;line-height:1.7;background:#fff;border-right:1px solid #cbd5e1;overflow:hidden}
+.act-a{padding:26px 30px}
+.act-opt{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid #94a3b8;border-radius:6px;padding:11px 14px;margin:9px 0}.act-opt b{width:26px;height:26px;border-radius:50%;background:#e2e8f0;display:grid;place-items:center}.act-opt.sel{border:2px solid #0b2a5b;background:#e8f0ff}
+.act-bot{height:58px;background:#fff;border-top:1px solid #cbd5e1;display:flex;align-items:center;justify-content:space-between;padding:0 24px}
+.nums{display:flex;gap:5px}.nums i{width:26px;height:26px;border:1px solid #94a3b8;border-radius:4px;display:grid;place-items:center;font-style:normal;font-size:12px;background:#fff}.nums i.d{background:#0b2a5b;color:#fff}.nums i.f{background:#ffd166}.nums i.c{outline:2px solid #0b2a5b}
+.sci{position:absolute;right:24px;top:116px;width:250px;background:#1f2937;border-radius:12px;padding:12px;box-shadow:0 10px 26px rgba(0,0,0,.35);color:#fff}
+.sci .scr{background:#c9e3c2;color:#102;border-radius:6px;padding:10px;text-align:right;font-family:ui-monospace,monospace;font-size:22px;margin:8px 0}
+.keys{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.keys span{background:#374151;border-radius:5px;text-align:center;padding:8px 0;font-size:12px}.keys span.o{background:#f59e0b;color:#111}
+/* phone */
+.phones{display:flex;gap:28px}.phone{width:390px;height:800px;border:1px solid var(--line);border-radius:28px;overflow:hidden;position:relative;background:#fff;color:#111}
+.ph-top{height:54px;border-bottom:2px dashed #b9b9b9;display:flex;align-items:center;justify-content:space-between;padding:0 16px}
+.ph-body{padding:16px;font-size:15px}
+.dark{background:var(--bg);color:var(--ink)}
+.ann{position:absolute;background:var(--warn);color:#111;font-weight:800;font-size:11px;padding:2px 7px;border-radius:10px;z-index:20}
+</style></head><body>
+<h1>FunSAT UI mockups v3</h1>
+<p class="sub">Concept frames, not shipped code. Numbers shown are sample values.</p>
+
+<!-- A DASHBOARD -->
+<div class="frame" id="f-dash"><div class="rail"><div class="brand">Fun<span>SAT</span></div>
+<div class="nav" style="margin-top:22px"><a class="on"><i></i>Desk</a><a><i></i>Practice test</a><a><i></i>Drills</a><a><i></i>Colleges</a><a><i></i>College matcher</a><a><i></i>Scholarships</a><a><i></i>Study breaks</a></div>
+<div style="position:absolute;bottom:16px;left:14px;right:14px" class="card"><div class="k">Streak</div><b>5 days</b><div class="bar" style="margin-top:8px"><i style="width:70%"></i></div></div></div>
+<div class="main"><div style="display:flex;justify-content:space-between;align-items:center"><div><div class="k">Good evening</div><div style="font-size:28px;font-weight:800">Your practice desk</div></div><span class="btn">+ New practice test</span></div>
+<div class="grid g3" style="margin:18px 0"><div class="card"><div class="k">Estimated score</div><div class="big">1180</div><div class="ok">▲ 40 since last test</div></div><div class="card"><div class="k">Target (UT Austin, 75th pct)</div><div class="big">1450</div><div class="bar" style="margin-top:10px"><i style="width:56%"></i></div><div class="k" style="margin-top:6px">270 to go</div></div><div class="card"><div class="k">Tests completed</div><div class="big">5</div><div class="k">3 SAT · 2 ACT</div></div></div>
+<div class="grid g2"><div class="card"><div class="k" style="margin-bottom:6px">What to work on next</div><table><tr><th>Skill</th><th>Accuracy</th><th></th></tr>
+<tr><td>Linear equations in two variables</td><td class="bd">48%</td><td><span class="btn ghost" style="padding:4px 10px">Drill 10</span></td></tr>
+<tr><td>Boundaries</td><td class="wr">61%</td><td><span class="btn ghost" style="padding:4px 10px">Drill 10</span></td></tr>
+<tr><td>Command of Evidence</td><td class="wr">66%</td><td><span class="btn ghost" style="padding:4px 10px">Drill 10</span></td></tr>
+<tr><td>Quadratics</td><td class="ok">82%</td><td><span class="btn ghost" style="padding:4px 10px">Drill 10</span></td></tr></table></div>
+<div class="grid" style="gap:16px"><div class="card" style="border-color:var(--acc)"><div class="k">Continue where you left off</div><div style="font-size:18px;font-weight:700;margin:4px 0 10px">SAT Math · Module 2 · Question 14 of 22</div><span class="btn">Resume</span> <span class="btn ghost">Discard</span></div>
+<div class="card"><div class="k">Find colleges that fit you</div><div style="margin:4px 0 10px">1250 SAT · $48–75k household · Engineering → <b>38 matches</b></div><span class="btn ghost">Open matcher</span></div></div></div>
+<div class="card" style="margin-top:16px"><div class="k" style="margin-bottom:6px">Recent tests</div><table><tr><td>Nov 16</td><td>SAT full</td><td>1180</td><td class="ok">▲ 40</td></tr><tr><td>Nov 9</td><td>SAT Math</td><td>610</td><td class="ok">▲ 20</td></tr></table></div></div></div>
+<p class="cap"><b>1 · Home / Progress Desk.</b> Dark left rail; one screen answers "where am I, what next". New: a college-matcher card tied to the same score, and a Resume card that sits first.</p>
+
+<!-- B LANDING -->
+<div class="frame" id="f-land"><div class="hero"><div class="top"><div class="brand">Fun<span>SAT</span></div><div style="display:flex;gap:26px;color:var(--mut)"><span>Practice</span><span>Colleges</span><span>Scholarships</span><span>Guides</span></div></div>
+<div class="h1">Free SAT &amp; ACT practice that feels like the <em>real test</em></div>
+<p style="font-size:19px;color:var(--mut);max-width:620px">Bluebook-style layout, a built-in graphing calculator, an AI tutor when you are stuck, and a matcher that turns your score into a college list. No account needed.</p>
+<div style="margin:26px 0"><span class="btn" style="font-size:18px;padding:14px 24px">Start a free practice test →</span> &nbsp; <span class="btn ghost" style="font-size:18px;padding:14px 24px">Find colleges that fit me</span></div>
+<div class="grid g3" style="margin-top:46px"><div class="card"><b>Real test feel</b><p style="color:var(--mut)">Timer, Mark for Review, question navigator and a Desmos-style calculator in the same places as test day.</p></div><div class="card"><b>Help when you are stuck</b><p style="color:var(--mut)">A tutor bubble explains the idea without giving away the answer.</p></div><div class="card"><b>Scores to colleges</b><p style="color:var(--mut)">Reach, match and likely colleges with net price for your family's income.</p></div></div></div></div>
+<p class="cap"><b>2 · First-visit landing.</b> For people arriving from search: one promise, one button, three proofs. Return visitors skip straight to the Desk.</p>
+
+<!-- C SAT -->
+<div class="frame" id="f-sat"><div class="bb">
+<div class="bb-top"><div><b>Section 2: Math</b><small>Module 1 · Directions ▾</small></div><div style="text-align:center"><b style="font-size:22px">27:41</b><small>Hide</small></div><div><span class="tool">✎ Annotate</span><span class="tool">ƒ Calculator</span><span class="tool">Reference</span><span class="tool">⋮ More</span></div></div>
+<div class="bb-mid"><div class="bb-l"><p>The function <i>f</i> is defined by <i>f</i>(<i>x</i>) = 2<i>x</i> + 1. The graph of <i>y</i> = <i>g</i>(<i>x</i>) in the <i>xy</i>-plane is a line that passes through the points (0, 7) and (2, 3).</p><p>At what point do the graphs of <i>f</i> and <i>g</i> intersect?</p></div>
+<div class="bb-r"><div class="qh"><span class="qn">9</span><span>☐ Mark for Review</span><span style="margin-left:auto;text-decoration:line-through;color:#555">ABC</span></div>
+<div class="opt"><i>A</i>(1, 3)</div><div class="opt sel"><i>B</i>(1.5, 4)</div><div class="opt"><i>C</i>(2, 5)</div><div class="opt"><i>D</i>(3, 7)</div></div>
+<div class="calc"><div class="hd"><span>Calculator</span><span>— ✕</span></div><div class="body"><div class="ex"><div><b style="background:#c74440"></b>y=2x+1</div><div><b style="background:#2d70b3"></b>y=-2x+7</div><div><b style="background:#388c46"></b>(1.5, 4)</div></div>
+<svg viewBox="0 0 300 500" style="width:100%;height:100%"><g stroke="#ddd"><path d="M0 100H300M0 200H300M0 300H300M0 400H300M50 0V500M100 0V500M150 0V500M200 0V500M250 0V500"/></g><path d="M0 250H300M150 0V500" stroke="#555"/><path d="M0 410L300 110" stroke="#c74440" stroke-width="3"/><path d="M0 110L300 410" stroke="#2d70b3" stroke-width="3"/><circle cx="225" cy="260" r="6" fill="#388c46"/><text x="190" y="248" font-size="12">(1.5, 4)</text></svg></div></div>
+<div class="bb-bot"><b>Alex Rivera</b><span class="pill o">Question 9 of 27 ▴</span><div><span class="pill o">Back</span> <span class="pill">Next</span></div></div>
+<div class="ai"><div class="chat"><div class="h"><span>Tutor</span><span>—</span></div><div class="m"><div class="me">How do I find where two lines meet?</div><div class="bot">Set the two expressions equal, 2x + 1 = −2x + 7, then solve for x. Or type both into the calculator and tap where they cross. Want a hint on the next step?</div></div><div class="in"><span>Ask about this question…</span><b style="color:#0b5fff">Send</b></div></div><div class="bubble">?</div></div></div>
+</div></div>
+<p class="cap"><b>3 · SAT practice test, Bluebook-style.</b> Same layout as the real app: section/module and directions at top left, timer with Hide in the middle, tools top right, split passage/question with a heavy divider, flag to Mark for Review, answer-eliminator, and a bottom bar with the student name, "Question 9 of 27" navigator and Back/Next. The calculator is a draggable window; the <b>tutor is a bubble</b> that opens a small chat over the question without covering the choices and never states the answer letter.</p>
+
+<!-- D ACT -->
+<div class="frame" id="f-act"><div class="act"><div class="act-top"><span>ACT · Mathematics · 60 questions · 60 minutes</span><span style="font-size:20px">47:12</span><span>Calculator ▾ &nbsp; Notes</span></div>
+<div class="act-sub"><span><b>Question 14</b> of 60</span><span>☐ Flag for review</span></div>
+<div class="act-body"><div class="act-q"><p>A rectangle has a perimeter of 56 centimeters. Its length is 4 centimeters more than its width. What is the area of the rectangle, in square centimeters?</p><p style="color:#475569">Do not forget: you may use a permitted calculator.</p></div>
+<div class="act-a"><div class="act-opt"><b>F</b>144</div><div class="act-opt sel"><b>G</b>192</div><div class="act-opt"><b>H</b>196</div><div class="act-opt"><b>J</b>220</div><div class="act-opt"><b>K</b>224</div></div></div>
+<div class="act-bot"><div class="nums"><i class="d">11</i><i class="d">12</i><i class="d">13</i><i class="c">14</i><i>15</i><i class="f">16</i><i>17</i><i>18</i><i>19</i><i>20</i></div><div><span class="pill o" style="border-color:#0b2a5b;color:#0b2a5b">Previous</span> <span class="pill" style="background:#0b2a5b">Next</span></div></div>
+<div class="sci"><b>Scientific calculator</b><div class="scr">12 × 16 = 192</div><div class="keys"><span>sin</span><span>cos</span><span>tan</span><span>x²</span><span>√</span><span>7</span><span>8</span><span>9</span><span>÷</span><span>(</span><span>4</span><span>5</span><span>6</span><span>×</span><span>)</span><span>1</span><span>2</span><span>3</span><span>−</span><span>π</span><span>0</span><span>.</span><span class="o">=</span><span>+</span><span>C</span></div></div>
+<div class="ai"><div class="bubble" style="background:#0b2a5b">?</div></div></div></div>
+<p class="cap"><b>4 · ACT practice test.</b> ACT-style chrome: dark-blue header with the test, count and timer; question on the left, answers on the right; ACT answer letters alternate A–D on odd questions and F–K on even ones (Math has five choices); a numbered strip at the bottom shows answered, flagged and current. The calculator is a practice aid you open from the header, and the tutor is the same bubble. (Sample question is for layout only.)</p>
+
+<!-- E PHONE -->
+<div class="phones"><div class="phone"><div class="ph-top"><b>Math · Module 1</b><b>27:41</b><span>⋮</span></div><div class="ph-body"><div style="display:flex;gap:8px;margin-bottom:10px"><span style="background:#111;color:#fff;font-weight:800;padding:4px 10px">9</span><span>☐ Mark for Review</span></div><p>The graph of y = g(x) is a line through (0, 7) and (2, 3). At what point do the graphs of f and g intersect?</p><div class="opt"><i>A</i>(1, 3)</div><div class="opt sel"><i>B</i>(1.5, 4)</div><div class="opt"><i>C</i>(2, 5)</div><div class="opt"><i>D</i>(3, 7)</div></div>
+<div style="position:absolute;bottom:0;left:0;right:0;height:60px;border-top:2px dashed #b9b9b9;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 14px"><span class="pill o">9 / 27 ▴</span><span><span class="tool">ƒ</span><span class="tool">?</span></span><span class="pill">Next</span></div></div>
+<div class="phone dark"><div style="padding:18px"><div class="brand">Fun<span>SAT</span></div><div class="k" style="margin-top:14px">Your practice desk</div><div class="card" style="margin:12px 0"><div class="k">Estimated</div><div class="big">1180</div></div><div class="card" style="border-color:var(--acc);margin-bottom:12px"><div class="k">Continue</div><b>SAT Math · Q14 of 22</b><br><br><span class="btn">Resume</span></div><div class="card"><div class="k">Next up</div><div style="margin:6px 0">Linear equations · 48%</div><span class="btn ghost">Drill 10</span></div></div></div></div>
+<p class="cap"><b>5 · Phones.</b> On a phone the tools collapse into the bottom bar (calculator and tutor) so the question stays readable; the Desk becomes a single column.</p>
+</body></html>

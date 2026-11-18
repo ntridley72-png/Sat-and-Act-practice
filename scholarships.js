@@ -54,6 +54,7 @@
   function isRenewable(s) { return /renewab/i.test(String(s.amtNote || "") + " " + String(s.desc || "")); }
   function isOpen(s) { const d = monthsUntil(s); return d == null ? true : d <= 6; }
   function amountLabel(s) {
+    if (!s.hi && !s.lo) return s.amtNote || "Varies";
     if (s.hi >= 90000) return "Full cost";
     if (s.lo && s.hi && s.lo !== s.hi) return "$" + s.lo.toLocaleString() + "–$" + s.hi.toLocaleString();
     return "$" + (s.hi || s.lo || 0).toLocaleString();

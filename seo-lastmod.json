@@ -2941,211 +2941,303 @@
  },
  "/scholarships/": {
   "d": "2026-11-18",
-  "h": "abfafc7c7fbbc160"
+  "h": "228169570000c8ef"
  },
  "/scholarships/acs-scholars/": {
   "d": "2026-11-18",
-  "h": "5d3bd143d465d8e5"
+  "h": "6b5c7fc90c18a06b"
+ },
+ "/scholarships/afrotc/": {
+  "d": "2026-11-18",
+  "h": "6462ac640191357a"
  },
  "/scholarships/aises/": {
   "d": "2026-11-18",
-  "h": "c392168b852045db"
+  "h": "5b3ab689ac4fd1ad"
+ },
+ "/scholarships/amazon-future-engineer/": {
+  "d": "2026-11-18",
+  "h": "f74edc2eb2ceb388"
+ },
+ "/scholarships/american-indian-college-fund/": {
+  "d": "2026-11-18",
+  "h": "a5433d849c9825a3"
+ },
+ "/scholarships/american-legion-oratorical/": {
+  "d": "2026-11-18",
+  "h": "d981c4fdab9093f4"
  },
  "/scholarships/apia-scholars/": {
   "d": "2026-11-18",
-  "h": "3593eded8de2fcb6"
+  "h": "d27383c441616fba"
  },
  "/scholarships/army-rotc/": {
   "d": "2026-11-18",
-  "h": "8aad100bb59a080a"
+  "h": "ce6c3da4bba62c6d"
  },
  "/scholarships/bigfuture/": {
   "d": "2026-11-18",
-  "h": "7a56554c0237d78f"
+  "h": "a4c6e0c4a8bc15e7"
  },
  "/scholarships/bow-seat/": {
   "d": "2026-11-18",
-  "h": "79f4dcc2697054bb"
+  "h": "99386c5fbf6c112d"
  },
  "/scholarships/breakthrough-jr/": {
   "d": "2026-11-18",
-  "h": "7543f440b993b457"
+  "h": "f9fb8632fa444db1"
  },
  "/scholarships/bright-futures/": {
   "d": "2026-11-18",
-  "h": "3c71cd912031d08d"
+  "h": "536e861a51011b23"
  },
  "/scholarships/burger-king/": {
   "d": "2026-11-18",
-  "h": "66a4fc49e5f27e88"
+  "h": "9bcf326e0e303269"
  },
  "/scholarships/cal-grant/": {
   "d": "2026-11-18",
-  "h": "f3a6d24f8e3eb338"
+  "h": "b548a89a499f8738"
+ },
+ "/scholarships/cbcf/": {
+  "d": "2026-11-18",
+  "h": "625a757527ce61d2"
  },
  "/scholarships/coca-cola-scholars/": {
   "d": "2026-11-18",
-  "h": "1ddcde749bac599f"
+  "h": "7b80c855adc4095a"
  },
  "/scholarships/coolidge/": {
   "d": "2026-11-18",
-  "h": "d17f2e34b018ca74"
+  "h": "9004affd6a2f31d3"
  },
  "/scholarships/davidson-fellows/": {
   "d": "2026-11-18",
-  "h": "db66b93c89ac2901"
+  "h": "f5f08966a4db0404"
  },
  "/scholarships/davis-putter/": {
   "d": "2026-11-18",
-  "h": "eeeff02a468bdedc"
+  "h": "ce0d4e65bbc22e88"
  },
  "/scholarships/dell-scholars/": {
   "d": "2026-11-18",
-  "h": "bfd117beb63ad843"
+  "h": "148311461c41d28b"
  },
  "/scholarships/doodle-google/": {
   "d": "2026-11-18",
-  "h": "1d808be6947fb865"
+  "h": "b2e6492813b23952"
  },
  "/scholarships/elks-mvs/": {
   "d": "2026-11-18",
-  "h": "fe1fd62358b617aa"
+  "h": "e1c981e6089bf281"
  },
  "/scholarships/excelsior/": {
   "d": "2026-11-18",
-  "h": "1aaee5bd8e549f44"
+  "h": "feb73913ec556e6f"
  },
  "/scholarships/fc2s/": {
   "d": "2026-11-18",
-  "h": "8555c5d35c823ea5"
+  "h": "d8334d9204cd10b8"
+ },
+ "/scholarships/federal-work-study/": {
+  "d": "2026-11-18",
+  "h": "70030039017e1da3"
  },
  "/scholarships/folds-honor/": {
   "d": "2026-11-18",
-  "h": "58384cd5948cc2de"
+  "h": "e44d4b03e7aed703"
  },
  "/scholarships/foot-locker/": {
   "d": "2026-11-18",
-  "h": "e71ef6f2e73c7ac3"
+  "h": "5b19b5e91e4394f3"
+ },
+ "/scholarships/fseog/": {
+  "d": "2026-11-18",
+  "h": "df9330a1a8731870"
  },
  "/scholarships/gates-scholar/": {
   "d": "2026-11-18",
-  "h": "597fcf2ffc74d0e5"
+  "h": "7db4d06dbf90d159"
  },
  "/scholarships/golden-door/": {
   "d": "2026-11-18",
-  "h": "d0cbce31ddd166c4"
+  "h": "a8210fcabd414e76"
  },
  "/scholarships/hope-georgia/": {
   "d": "2026-11-18",
-  "h": "239810bddb2cbaa7"
+  "h": "017c307736f39091"
  },
  "/scholarships/horatio-alger/": {
   "d": "2026-11-18",
-  "h": "8623cb23552e3cbf"
+  "h": "0a24a600ba62e4e8"
  },
  "/scholarships/horatio-cte/": {
   "d": "2026-11-18",
-  "h": "e9a6cb31e664fb12"
+  "h": "cf41df88fab82d5f"
  },
  "/scholarships/hsf/": {
   "d": "2026-11-18",
-  "h": "5f787b32622f8fd5"
+  "h": "c91eaaa992ee4a57"
+ },
+ "/scholarships/illinois-map/": {
+  "d": "2026-11-18",
+  "h": "c765f1584eb70e6e"
+ },
+ "/scholarships/iraq-afghanistan-grant/": {
+  "d": "2026-11-18",
+  "h": "ec3f95d89ce0f2c1"
  },
  "/scholarships/jackie-robinson/": {
   "d": "2026-11-18",
-  "h": "061708b031e38914"
+  "h": "ead693c6c268dd53"
  },
  "/scholarships/jkcf-college/": {
   "d": "2026-11-18",
-  "h": "7aeaf050896261f7"
+  "h": "e8e0ab941c2e0092"
+ },
+ "/scholarships/michigan-achievement/": {
+  "d": "2026-11-18",
+  "h": "937a4866938de1e3"
  },
  "/scholarships/national-merit/": {
   "d": "2026-11-18",
-  "h": "ca0491c7f683b62e"
+  "h": "741bd4a8b5159368"
  },
  "/scholarships/ncwit-aspirations/": {
   "d": "2026-11-18",
-  "h": "7571bd534cef2daa"
+  "h": "c056b9f509968e87"
  },
  "/scholarships/nhs-scholarship/": {
   "d": "2026-11-18",
-  "h": "9501f5bb2afe4aa0"
+  "h": "52a76dd3731ab66a"
+ },
+ "/scholarships/nj-tag/": {
+  "d": "2026-11-18",
+  "h": "75d1f71fcc7f7fd4"
  },
  "/scholarships/nrotc/": {
   "d": "2026-11-18",
-  "h": "747de95ef42a501b"
+  "h": "be66822be3ba6f86"
+ },
+ "/scholarships/nsbe/": {
+  "d": "2026-11-18",
+  "h": "3b5cb76d322b6c1d"
+ },
+ "/scholarships/ny-tap/": {
+  "d": "2026-11-18",
+  "h": "4689eade040bce30"
+ },
+ "/scholarships/oregon-opportunity-grant/": {
+  "d": "2026-11-18",
+  "h": "9019f791a63cefde"
+ },
+ "/scholarships/pa-state-grant/": {
+  "d": "2026-11-18",
+  "h": "55fa4f4c792adaaf"
+ },
+ "/scholarships/pell-grant/": {
+  "d": "2026-11-18",
+  "h": "7ddf6e12c38c0b7d"
  },
  "/scholarships/point-foundation/": {
   "d": "2026-11-18",
-  "h": "82bdf0195560e809"
+  "h": "fcbc39afaf02b0b4"
+ },
+ "/scholarships/posse/": {
+  "d": "2026-11-18",
+  "h": "5658979ae30bca28"
  },
  "/scholarships/profile-courage/": {
   "d": "2026-11-18",
-  "h": "a87d7532061be9cf"
+  "h": "a20c5ed5566ff6cc"
  },
  "/scholarships/prudential/": {
   "d": "2026-11-18",
-  "h": "29ef179edb44b5c8"
+  "h": "48f05f904f7f7531"
  },
  "/scholarships/questbridge-match/": {
   "d": "2026-11-18",
-  "h": "f3a0960b306017e1"
+  "h": "ac7b42a5921410c1"
  },
  "/scholarships/regeneron-sts/": {
   "d": "2026-11-18",
-  "h": "a38859bfd1b4b8de"
+  "h": "59a7d0cde3382f0a"
  },
  "/scholarships/ron-brown/": {
   "d": "2026-11-18",
-  "h": "063b67d24feac356"
+  "h": "85f8f11387d94f69"
  },
  "/scholarships/samsung-solve/": {
   "d": "2026-11-18",
-  "h": "af90073b91b329de"
+  "h": "669b984f44522a5f"
+ },
+ "/scholarships/sc-life/": {
+  "d": "2026-11-18",
+  "h": "94f08384fa3856cd"
  },
  "/scholarships/scholastic-awards/": {
   "d": "2026-11-18",
-  "h": "0b5626fe1bbc10d8"
+  "h": "ef60c1423cd51a25"
  },
  "/scholarships/smart-scholarship/": {
   "d": "2026-11-18",
-  "h": "583a1de710ef8bfd"
+  "h": "959c63a86c666cdc"
  },
  "/scholarships/stuck-at-prom/": {
   "d": "2026-11-18",
-  "h": "c7c9e6f40c2b80a7"
+  "h": "88fb8ab07f3c223e"
  },
  "/scholarships/swe-scholarship/": {
   "d": "2026-11-18",
-  "h": "50c510c6ab82e6d9"
+  "h": "ce6d833bc2259a50"
+ },
+ "/scholarships/teach-grant/": {
+  "d": "2026-11-18",
+  "h": "3e6e4175ef83f6a1"
  },
  "/scholarships/texas-grant/": {
   "d": "2026-11-18",
-  "h": "208487038c86cd40"
+  "h": "e51447d0b2d12c16"
  },
  "/scholarships/thanksusa/": {
   "d": "2026-11-18",
-  "h": "405033322625d45a"
+  "h": "a676c37deaf6c2e5"
  },
  "/scholarships/thedream-us/": {
   "d": "2026-11-18",
-  "h": "71c28c6cd6c9e6ec"
+  "h": "d586313f53e6aa5f"
+ },
+ "/scholarships/tmcf/": {
+  "d": "2026-11-18",
+  "h": "c3186030740b9ec4"
+ },
+ "/scholarships/tn-promise/": {
+  "d": "2026-11-18",
+  "h": "a41f13cc3ecbaf30"
  },
  "/scholarships/uncf/": {
   "d": "2026-11-18",
-  "h": "ed657a23a1145532"
+  "h": "db10463fc96ccde7"
  },
  "/scholarships/vfw-voice/": {
   "d": "2026-11-18",
-  "h": "6a36f2f42452d9b0"
+  "h": "b546477e4690d09e"
  },
  "/scholarships/vrg-scholarship/": {
   "d": "2026-11-18",
-  "h": "e5f928f726699952"
+  "h": "b2696d0b475db259"
+ },
+ "/scholarships/wa-college-grant/": {
+  "d": "2026-11-18",
+  "h": "86171297f3ed03b6"
  },
  "/scholarships/youngarts/": {
   "d": "2026-11-18",
-  "h": "e8f081410ef7b4d3"
+  "h": "d36073544fe408f5"
+ },
+ "/scholarships/zell-miller-georgia/": {
+  "d": "2026-11-18",
+  "h": "af522bd4469b2de7"
  },
  "/score-calculator/": {
   "d": "2026-10-23",

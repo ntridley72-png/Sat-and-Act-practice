@@ -6,9 +6,10 @@
 body[data-workspace="exam"]{
   --ws-accent:#0b5fff; --ws-tint:#eaf1ff; --ws-rule:#1a1a1a;
   --fx-accent-line:#9fbaea; --fx-band:#a9bee6;
+  --mint:#0b5fff; --mint2:#084bd0; --blue:#0b5fff; --ws-focus:#0b5fff;
   --bb-line:#b9bec7; --bb-ink:#111; --bb-head:64px; --bb-foot:64px;
 }
-body[data-workspace="exam"][data-test="act"]{ --ws-accent:#0b2a5b; --ws-tint:#e8f0ff; }
+body[data-workspace="exam"][data-test="act"]{ --ws-accent:#0b2a5b; --ws-tint:#e8f0ff; --mint:#0b2a5b; --mint2:#071d40; --blue:#0b2a5b; --ws-focus:#0b2a5b; }
 
 /* ---------- Practice screen chrome ---------- */
 body[data-workspace="exam"].workspace-practicing{background:#fff}

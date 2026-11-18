@@ -121,7 +121,7 @@ body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot .qfx-chec
 body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot .qfx-check,
 body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot .qfx-check.next{background:var(--ws-accent);color:#fff}
 body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot .qfx-check:disabled{background:#e6e8ec;border-color:#e6e8ec;color:#5b6470}
-body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot .secondary:disabled{opacity:.45}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot .secondary:disabled{opacity:1;color:#5b6470;border-color:#c9ced6;background:#f3f4f6}
 body[data-workspace="exam"].workspace-practicing #screen-test .qfx-icon{width:44px;height:44px;border-radius:50%;border:2px solid var(--bb-ink);background:#fff;color:var(--bb-ink);font-size:20px;padding:0}
 body[data-workspace="exam"].workspace-practicing #screen-test .qfx-icon.on{background:var(--ws-accent);border-color:var(--ws-accent);color:#fff}
 body[data-workspace="exam"].workspace-practicing #screen-test .bb-pop{bottom:calc(100% + 12px);top:auto}
@@ -196,3 +196,9 @@ body[data-workspace="exam"].workspace-practicing #screen-test .bb-foot .qfx-chec
 @media (prefers-reduced-motion:no-preference){
   body[data-workspace="exam"].workspace-practicing #screen-test .choice{transition:border-color .12s,background .12s}
 }
+
+/* Between modules the stock chrome comes back: the site bar (with the layout picker) and a normal page flow. */
+body[data-workspace="exam"].workspace-practicing:has(#routingCard[style*="block"]) .topbar{display:flex!important}
+body[data-workspace="exam"].workspace-practicing:has(#routingCard[style*="block"]) #screen-test{display:block!important;height:auto;overflow:visible}
+body[data-workspace="exam"].workspace-practicing:has(#routingCard[style*="block"]) .bbx-bubble{display:none}
+body[data-workspace="exam"].workspace-practicing:has(#routingCard[style*="block"]) .wrap{padding:0 24px 24px!important}

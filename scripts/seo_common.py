@@ -89,7 +89,7 @@ AD_UNITS = (
 AD_SLOTS = {
     "article-top": '{kind:"native"}',
     "article-mid": '{unit:"mobile"}',
-    "article-bottom": '{kind:"native"}',
+    "article-bottom": '{unit:"mobile"}',
     "article-grid": '{kind:"grid"}',
     "article-rail": '{unit:"sky"}',
 }
@@ -103,7 +103,7 @@ AD_CONFIG = (
 def ad_slot(name):
     # The 320x50 banner is a phone unit: it mounts below 700px only, where the native
     # widget's single instance is already taken by the top slot.
-    extra = ' data-max-width="700"' if name == "article-mid" else ""
+    extra = ' data-max-width="700"' if name in ("article-mid", "article-bottom") else ""
     return f'<div class="sponsor-slot" data-ad-slot="{name}"{extra} hidden></div>'
 
 
@@ -330,7 +330,7 @@ def page(*, path, title, description, body, schema, extra_head=""):
 </head><body data-workspace="exam"><div class="gwrap">{RAIL_SLOT}
 {DESK_NAV}
 {midroll_body}
-<div class="sponsor-slot" data-ad-slot="article-bottom" hidden></div>
+<div class="sponsor-slot" data-ad-slot="article-bottom" data-max-width="700" hidden></div>
 <p class="gfoot">{SITE_NAME} is a free browser-based SAT and ACT prep app: digital SAT and ACT practice tests, unofficial score calculators, a built-in graphing calculator, college admissions chances from official U.S. Department of Education data, and a scholarship search. <a href="/">Start free practice &rarr;</a></p>
 <nav class="gfootnav" aria-label="Site sections">
 <a href="/free-test-prep/">Free test prep</a><a href="/sat-practice/">SAT practice</a><a href="/act-practice/">ACT practice</a><a href="/score-calculators/">Score calculators</a><a href="/sat-scores/">SAT scores</a><a href="/act-scores/">ACT scores</a><a href="/college-admissions/">College admissions</a><a href="/college-match/">College matcher</a><a href="/colleges-by-state/">Colleges by state</a><a href="/college-costs/">College costs</a><a href="/college-comparisons/">Compare colleges</a><a href="/scholarships/">Scholarships</a><a href="/application-planning/">Application planning</a><a href="/unblocked-games/">Study-break games</a><a href="/about/">About</a><a href="/methodology/">Methodology</a><a href="/privacy/">Privacy</a><a href="/contact/">Contact</a><a href="/corrections/">Corrections</a>

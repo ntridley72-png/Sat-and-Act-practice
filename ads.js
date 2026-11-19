@@ -161,7 +161,6 @@
   const PREVIEW_SIZES = {
     "home-sidebar": [300, 250, "Sidebar 300x250"],
     "article-top": [728, 250, "In-article (fluid)"],
-    "article-bottom": [728, 280, "Responsive 728x280"],
     "article-mid": [320, 50, "Phone banner 320x50"],
     "anchor": [728, 90, "Sticky anchor 728x90"],
     "results-top": [728, 250, "Results 728x250"],
@@ -176,7 +175,13 @@
     "scholarships-grid": [300, 250, "Grid square 300x250"],
     "subjects-grid": [300, 250, "Grid square 300x250"],
     "article-grid": [300, 250, "Grid square 300x250"],
-    "article-rail": [160, 600, "Margin rail 160x600"]
+    "article-rail": [160, 600, "Margin rail 160x600"],
+    "app-rail": [160, 600, "App rail 160x600"],
+    "results-mobile": [320, 50, "Phone banner 320x50"],
+    "college-mobile": [320, 50, "Phone banner 320x50"],
+    "scholarships-mobile": [320, 50, "Phone banner 320x50"],
+    "subjects-mobile": [320, 50, "Phone banner 320x50"],
+    "article-bottom": [320, 50, "Phone banner 320x50"]
   };
 
   function renderPlaceholder(host, name) {

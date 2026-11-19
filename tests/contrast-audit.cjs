@@ -15,6 +15,7 @@ const BASE = process.env.BASE_URL || "http://localhost:8899";
 const APP = "/" + encodeURIComponent("SAT & ACT Practice.html");
 const COLLEGE_PAGE = process.env.COLLEGE_PAGE_URL || "";
 const THEMES = ["exam", "notebook", "focus"];
+const APPEARANCE = process.env.DESK_APPEARANCE === 'light' ? 'light' : 'dark';
 const WIDTHS = process.argv.includes("--wide") ? [390, 768, 1280] : [390, 1280];
 const jsonAt = process.argv.indexOf("--json");
 const JSON_OUT = jsonAt > 0 ? process.argv[jsonAt + 1] : "";
@@ -145,6 +146,7 @@ const scenarios = [
     async go(page) {
       await page.waitForSelector("#screen-start", { state: "visible" });
       const card = page.locator("#homeScoreCard");
+      await page.locator('.pd-comparison > summary').click();
       if (await card.count()) await card.click().catch(() => {});
       await page.waitForTimeout(250);
     },
@@ -208,17 +210,19 @@ const scenarios = [
         const ctx = await browser.newContext({ viewport: { width, height: 900 } });
         const page = await ctx.newPage();
         page.on("pageerror", (e) => errors.push(`${theme}/${scenario.name}/${width}: ${e.message}`));
-        await page.addInitScript(([t, seed]) => {
+        await page.addInitScript(([t, seed, appearance]) => {
           try {
             localStorage.setItem("funsatWorkspaceTheme", t);
+            localStorage.setItem('funsatDeskAppearance', appearance);
             localStorage.setItem("satPrepProfile_v1", JSON.stringify(seed));
           } catch (e) {}
-        }, [theme, SEED]);
+        }, [theme, SEED, APPEARANCE]);
         await page.route("**/api/**", (route) => route.fulfill({ status: 200, contentType: "application/json", body: "{}" }));
         try {
           await page.goto(BASE + APP, { waitUntil: "domcontentloaded" });
           await page.waitForSelector("body[data-workspace]");
           await page.evaluate(() => { try { arcade.close(); } catch (e) {} });
+          if (width <= 900 && ['college', 'scholarships'].includes(scenario.name)) await page.click('#deskMenu');
           await scenario.go(page);
           const res = await page.evaluate(AUDIT);
           res.rows.forEach((r) => all.push(Object.assign({ theme, screen: scenario.name, width }, r)));

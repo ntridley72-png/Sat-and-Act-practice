@@ -296,7 +296,17 @@
   function init() {
     const btn = $id("btnSubjectPractice");
     if (btn) btn.addEventListener("click", openSubjects);
-    window.FunSATSubjects = { open: openSubjects, inventory: () => (refreshInventory(), INVENTORY), start: startSubjectDrill };
+    window.FunSATSubjects = {
+      open: openSubjects, inventory: () => (refreshInventory(), INVENTORY), start: startSubjectDrill,
+      choose: (key) => {
+        refreshInventory(); const item = INVENTORY[key]; if (!item) return;
+        pick.test = item.test; pick.section = item.section; pick.sort = 'weak';
+        openSubjects();
+        const row = Array.from(document.querySelectorAll('[data-s-key]')).find((el) => el.dataset.sKey === key);
+        const drill = row?.querySelector('[data-s-go]');
+        if (drill) { drill.focus(); row.scrollIntoView({ block: 'center' }); }
+      }
+    };
   }
   init();
 })();

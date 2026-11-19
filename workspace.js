@@ -24,7 +24,7 @@
   const themeLabel=document.createElement('label');themeLabel.className='workspace-theme-label';themeLabel.innerHTML='<span class="theme-label-text">Theme</span>';themeLabel.append(select);
   const badges=document.querySelector('.badges'),account=document.getElementById('btnAccount');badges.insertBefore(themeLabel,account);
   document.querySelector('.brand').innerHTML='Fun<span class="brand-sat">SAT</span>';
-  const applyTheme=()=>{document.body.dataset.workspace=theme;document.documentElement.style.colorScheme=theme==='focus'?'dark':'light';};
+  const applyTheme=()=>{document.body.dataset.workspace=theme;document.documentElement.style.colorScheme=document.documentElement.dataset.deskAppearance||(theme==='focus'?'dark':'light');};
   select.onchange=()=>{theme=select.value;applyTheme();try{localStorage.setItem('funsatWorkspaceTheme',theme);}catch(e){}if(state.view==='test')renderQuestion();};
   applyTheme();
   function selectLearningTab(name) {

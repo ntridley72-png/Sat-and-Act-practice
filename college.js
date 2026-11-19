@@ -950,6 +950,10 @@
   }
 
   function renderCollegeScreen() {
+    // Read synchronously: native details toggle events may still be queued when
+    // editing a field replaces the screen, especially on a busy browser.
+    const currentMore = document.getElementById('ccMore');
+    if (currentMore) ccState.moreOpen = currentMore.open;
     const host = $("collegeBody") || $("screen-college");
     if (!host) return;
     const c = cp();
@@ -1152,7 +1156,7 @@
   // Editing a field re-renders the screen, so the disclosure has to remember
   // whether it was open.
   document.addEventListener("toggle", (e) => {
-    if (e.target && e.target.id === "ccMore") ccState.moreOpen = e.target.open;
+    if (e.target && e.target.id === "ccMore" && e.target.isConnected) ccState.moreOpen = e.target.open;
   }, true);
   document.addEventListener("click", (e) => {
     if (!e.target || !e.target.closest || !e.target.closest("#screen-college")) return;

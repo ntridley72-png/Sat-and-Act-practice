@@ -9,13 +9,13 @@ import { useLayoutEffect, useRef } from 'react'
 import { MathUtils, Vector3 } from 'three'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useBox, useRaycastVehicle } from '@react-three/cannon'
-import type { Group } from 'three'
+import type { Group, PerspectiveCamera } from 'three'
 import type { WheelInfoOptions } from '@react-three/cannon'
 import { createRef } from 'react'
 import { ProceduralCar } from '../art/ProceduralCar'
 import { useEnvironment } from '../art/useEnvironment'
 import { Wheel } from './Wheel'
-import { vehicleConfig, wheelInfo, playerMutation } from './config'
+import { vehicleConfig, wheelInfo, playerMutation, driving } from './config'
 import { drivenWheels } from '../garage'
 import type { ResolvedCar } from '../garage'
 import { useControls } from './useControls'
@@ -25,9 +25,14 @@ import type { RacingLine } from '../ai/racingLine'
 import { AudioRig } from '../audio/engine'
 import { Skid } from '../effects/Skid'
 import { Dust } from '../effects/Dust'
-import { planarHeading } from './heading'
+import { matrixHeading, matrixUpright } from './heading'
 
-const { lerp } = MathUtils
+const { lerp, clamp } = MathUtils
+/** Move `value` toward `target` by at most `rate` per second (a pedal, not a switch). */
+function approach(value: number, target: number, rate: number, dt: number): number {
+  const step = rate * dt
+  return value < target ? Math.min(target, value + step) : Math.max(target, value - step)
+}
 const v = new Vector3()
 // Reused each frame; allocating two Vector3s per frame is 120 a second.
 const camTarget = new Vector3()
@@ -118,6 +123,8 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
     // preserving yaw, suspension travel and car-specific traction/drive.
     angularFactor: [0, 1, 0],
     angularDamping: 0.45,
+    // A little rolling resistance so a lifted throttle slows the car the way a real one does.
+    ...(sandbox ? {} : { linearDamping: 0.03 }),
   }))
 
   const wheelRefs = useRef([createRef<Group>(), createRef<Group>(), createRef<Group>(), createRef<Group>()] as const)
@@ -145,6 +152,10 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
     }
   })
 
+  /** Weather and the car's tune scale how much the tyres can give; the dry baseline is 1. */
+  const gripScale = grip * (physics ? physics.frictionSlip / wheelInfo.frictionSlip : 1)
+  const wheelbase = front - back
+  const tilt = useRef<Group>(null)
   const audio = useRef<AudioRig | null>(null)
   /** Whether the car is off the racing surface, for the grass penalty. */
   const offTrack = useRef(false)
@@ -208,6 +219,7 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
   // times a second.
   const state = useRef({
     engineValue: 0, steeringValue: 0, speed: 0,
+    throttle: 0, brake: 0, gear: 1, shiftT: 0, rpm: driving.idle as number, roll: 0, pitch: 0, fov: 45,
     swayValue: 0, swayTarget: 0, swaySpeed: 0,
     wasSliding: false, wasBoosting: false,
     wasReset: false, resetRequest: playerMutation.resetRequest,
@@ -224,6 +236,7 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
       chassisApi.velocity.set(0, 0, 0)
       chassisApi.angularVelocity.set(0, 0, 0)
       s.engineValue = 0; s.steeringValue = 0; s.swayValue = 0; s.swaySpeed = 0
+      s.throttle = 0; s.brake = 0; s.gear = 1; s.shiftT = 0; s.rpm = driving.idle
       playerMutation.speed = 0
       playerMutation.sliding = false
       velocity.current.set(0, 0, 0)
@@ -245,14 +258,72 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
       Math.min(100, playerMutation.boost + (boosting ? -BOOST_DRAIN : BOOST_REFILL) * delta),
     )
 
-    const engine = (c.forward ? force : c.backward ? -force : 0) * (boosting ? BOOST_MULTIPLIER : 1)
-    // Cut drive above maxSpeed rather than clamping velocity: clamping would
-    // fight the solver and make the car feel like it hit a wall.
-    s.engineValue = lerp(s.engineValue, Math.abs(speed) > maxSpeed ? 0 : engine, 1 - Math.exp(-dt * 8))
+    // Planar speed along the car's own nose (+) or tail (-), and how far the velocity points
+    // off the nose. Both come from last frame's heading, which is what the camera uses too.
+    const yawNow = worldHeading.current
+    const fwdSpeed = velocity.current.x * Math.sin(yawNow) + velocity.current.z * Math.cos(yawNow)
+    const latSpeed = velocity.current.x * Math.cos(yawNow) - velocity.current.z * Math.sin(yawNow)
+    const vAbs = Math.abs(fwdSpeed)
 
-    const steeringLimit = steer / (1 + Math.max(0, speed - 8) * 0.055)
-    const steerTarget = c.left ? steeringLimit : c.right ? -steeringLimit : 0
-    s.steeringValue = lerp(s.steeringValue, steerTarget, 1 - Math.exp(-dt * 10))
+    if (sandbox) {
+      /* The drift playground keeps its original controls: its handbrake torque and drift
+         scoring were tuned against them. */
+      const engine = (c.forward ? force : c.backward ? -force : 0) * (boosting ? BOOST_MULTIPLIER : 1)
+      // Cut drive above maxSpeed rather than clamping velocity: clamping would
+      // fight the solver and make the car feel like it hit a wall.
+      s.engineValue = lerp(s.engineValue, Math.abs(speed) > maxSpeed ? 0 : engine, 1 - Math.exp(-dt * 8))
+
+      const steeringLimit = steer / (1 + Math.max(0, speed - 8) * 0.055)
+      const steerTarget = c.left ? steeringLimit : c.right ? -steeringLimit : 0
+      s.steeringValue = lerp(s.steeringValue, steerTarget, 1 - Math.exp(-dt * 10))
+    } else {
+      // --- pedals -------------------------------------------------------------------------
+      s.throttle = approach(s.throttle, c.forward ? 1 : 0, c.forward ? driving.throttleRise : driving.throttleFall, dt)
+      const braking = c.backward && fwdSpeed > 1
+      const reversing = c.backward && !c.forward && fwdSpeed <= 1
+      s.brake = approach(s.brake, braking ? 1 : 0, braking ? driving.brakeRise : driving.brakeFall, dt)
+
+      // --- gearbox: read-outs and a torque dip at each upshift ----------------------------
+      const ratio = Math.min(1, vAbs / maxSpeed)
+      const tops = driving.gearTops
+      let gear = s.gear
+      while (gear < tops.length && ratio > tops[gear - 1] * 0.995) gear++
+      while (gear > 1 && ratio < tops[gear - 2] * 0.86) gear--
+      if (gear > s.gear) s.shiftT = driving.shiftTime
+      s.gear = gear
+      s.shiftT = Math.max(0, s.shiftT - dt)
+      const rpmFromSpeed = driving.idle + (1 - driving.idle) * clamp(ratio / tops[gear - 1], 0, 1)
+      const rpmTarget = Math.max(rpmFromSpeed, driving.idle + s.throttle * 0.4 * (1 - ratio))
+      s.rpm = lerp(s.rpm, rpmTarget, 1 - Math.exp(-dt * 16))
+      playerMutation.gear = gear
+      playerMutation.rpm = s.rpm
+
+      // --- power: full torque up to the knee, then a power-limited fade to the top speed ---
+      const knee = maxSpeed * 0.55
+      const power = Math.min(1, knee / Math.max(vAbs, knee)) * Math.max(0, 1 - Math.pow(vAbs / (maxSpeed * 1.06), 4))
+      const shiftCut = s.shiftT > 0 ? driving.shiftTorque : 1
+      let drive = s.throttle * power * shiftCut * 1.1 * (boosting ? BOOST_MULTIPLIER : 1)
+      if (reversing) drive = fwdSpeed > -driving.reverseMax ? -driving.reversePower : 0
+      s.engineValue = lerp(s.engineValue, drive * force, 1 - Math.exp(-dt * 14))
+
+      // --- steering: the lock is limited by what the tyres can hold at this speed ----------
+      const mu = driving.gripG * Math.pow(gripScale, 0.7)
+      const gripAngle = Math.atan((mu * driving.gravity * wheelbase) / Math.max(vAbs * vAbs, 9))
+      const lock = Math.min(steer, gripAngle * driving.gripUse)
+      const dir = (c.left ? 1 : 0) - (c.right ? 1 : 0)
+      let target = dir * lock
+      /* Slide help. A keyboard cannot feather the wheel, so when the car slides much further
+         than a normal turn would explain (the nose has swung past the direction of travel) the
+         front wheels are nudged back toward the velocity. Ordinary cornering never triggers it
+         and it fades out under the handbrake so a deliberate slide is still the driver's. */
+      if (vAbs > 7 && !c.handbrake && fwdSpeed > 0) {
+        const excess = Math.atan2(latSpeed, vAbs) - 0.5 * s.steeringValue
+        if (Math.abs(excess) > 0.12) target += clamp((excess - Math.sign(excess) * 0.12) * 0.9, -0.12, 0.12)
+      }
+      target = clamp(target, -steer, steer)
+      const rate = dir !== 0 ? 5.5 / (1 + vAbs * 0.045) : 10
+      s.steeringValue = lerp(s.steeringValue, target, 1 - Math.exp(-dt * rate))
+    }
 
     /* ENGINE SIGN IS NEGATED, and it is not arbitrary.
      *
@@ -283,8 +354,24 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
     if (sandbox && c.handbrake && speed > 5 && Math.abs(s.steeringValue) > .02) {
       chassisApi.applyTorque([0, -s.steeringValue * (physics?.mass ?? 500) * Math.min(speed, 20) * .08, 0])
     }
-    for (const i of [0, 1]) api.setBrake(offRoadBrake, i)
-    for (const i of [2, 3]) api.setBrake(Math.max(offRoadBrake, handbrake), i)
+    if (sandbox) {
+      for (const i of [0, 1]) api.setBrake(offRoadBrake, i)
+      for (const i of [2, 3]) api.setBrake(Math.max(offRoadBrake, handbrake), i)
+    } else {
+      // Service brake split front-heavy, a light engine brake off the throttle, handbrake on the rears.
+      const engineBrake = !c.forward && !c.backward && vAbs > 2 ? 2 + 6 * Math.min(1, vAbs / maxSpeed) : 0
+      for (const i of [0, 1]) api.setBrake(Math.max(offRoadBrake, s.brake * driving.brakeFront), i)
+      for (const i of [2, 3]) api.setBrake(Math.max(offRoadBrake, s.brake * driving.brakeRear, handbrake, engineBrake), i)
+    }
+
+    // Body attitude, for feel only: lean out of corners, dip under braking, squat under power.
+    if (!sandbox && tilt.current) {
+      const aLat = ((vAbs * vAbs * Math.tan(s.steeringValue)) / wheelbase / driving.gravity) * (fwdSpeed < 0 ? -1 : 1)
+      s.roll = lerp(s.roll, clamp(aLat, -1.6, 1.6) * 0.03, 1 - Math.exp(-dt * 7))
+      s.pitch = lerp(s.pitch, (s.brake * 0.9 - s.throttle * 0.45 * (1 - clamp(vAbs / 20, 0, 1) * 0.6)) * 0.02, 1 - Math.exp(-dt * 6))
+      tilt.current.rotation.z = s.roll
+      tilt.current.rotation.x = s.pitch
+    }
 
     /* The camera sway. Upstream computes a target from steering and speed and
        lerps toward it; this is a large part of why their game feels quick even
@@ -296,7 +383,8 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
     // --- audio, driven from the same values as the physics ---------------
     const rig = audio.current
     if (rig) {
-      rig.setEngineSpeed(speed, maxSpeed)
+      if (sandbox) rig.setEngineSpeed(speed, maxSpeed)
+      else rig.setEngineRpm(s.rpm, s.throttle)
       if (c.forward && !s.wasSliding) rig.startEngine()
       // Edge-triggered, not level: playing a one-shot every frame while a
       // condition holds is a buzzsaw, not a sound effect.
@@ -312,7 +400,7 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
       worldPos.current.copy(v)
       // Euler XYZ's y angle folds back after a quarter-turn and flips the
       // camera during donuts. Project the quaternion's forward axis instead.
-      worldHeading.current = planarHeading(chassisBody.current.quaternion)
+      worldHeading.current = matrixHeading(chassisBody.current.matrix.elements)
 
       /* Debug probe. Harmless in production -- it writes two numbers to a
          global that nothing reads -- and it is the only way to answer
@@ -331,7 +419,13 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
         x: v.x,
         y: v.y,
         z: v.z,
-        upright: chassisBody.current ? new Vector3(0, 1, 0).applyQuaternion(chassisBody.current.quaternion).y : 1,
+        gear: playerMutation.gear,
+        rpm: playerMutation.rpm,
+        throttle01: s.throttle,
+        brake01: s.brake,
+        fwdSpeed,
+        latSpeed,
+        upright: chassisBody.current ? matrixUpright(chassisBody.current.matrix.elements) : 1,
         yaw: worldHeading.current,
         speed: playerMutation.speed,
         /* The resolved garage physics, so a test can prove the right car and
@@ -405,10 +499,21 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
        * behind the car rather than south of it. */
       const yaw = worldHeading.current
       const CAM = CAMERAS[camera] ?? CAMERAS.chase
+      // The view opens up with speed: the camera drops back and the lens widens, which is most
+      // of what makes a car feel fast without changing how fast it actually goes.
+      const speedFrac = clamp(speed / maxSpeed, 0, 1.2)
+      const open = camera === 'hood' ? 0.3 : 1
+      const backDist = CAM.back * (1 + 0.14 * speedFrac * open)
+      const cam = defaultCamera as PerspectiveCamera
+      if (cam.isPerspectiveCamera) {
+        const targetFov = (camera === 'hood' ? 58 : 46) + speedFrac * 12 * open + (boosting ? 5 : 0)
+        s.fov = lerp(s.fov, targetFov, 1 - Math.exp(-dt * 3))
+        if (Math.abs(cam.fov - s.fov) > 0.02) { cam.fov = s.fov; cam.updateProjectionMatrix() }
+      }
       // Local offset: along the car's forward axis (negative back = ahead of
       // centre, the cockpit), and up.
-      const backX = -Math.sin(yaw) * CAM.back + Math.cos(yaw) * Math.sin(s.swayValue) * CAM.side
-      const backZ = -Math.cos(yaw) * CAM.back - Math.sin(yaw) * Math.sin(s.swayValue) * CAM.side
+      const backX = -Math.sin(yaw) * backDist + Math.cos(yaw) * Math.sin(s.swayValue) * CAM.side
+      const backZ = -Math.cos(yaw) * backDist - Math.sin(yaw) * Math.sin(s.swayValue) * CAM.side
 
       camTarget.set(v.x + backX, v.y + CAM.height, v.z + backZ)
       // Frame-rate-independent smoothing. A raw delta*k lerp snaps at low fps
@@ -417,7 +522,8 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
 
       // Look slightly ahead of the car rather than at it, so the corner the
       // player is about to take is on screen instead of the bodywork.
-      lookTarget.set(v.x + Math.sin(yaw) * CAM.look, v.y + 0.8, v.z + Math.cos(yaw) * CAM.look)
+      const look = CAM.look * (1 + 0.2 * speedFrac)
+      lookTarget.set(v.x + Math.sin(yaw) * look, v.y + 0.8, v.z + Math.cos(yaw) * look)
       defaultCamera.lookAt(lookTarget)
     }
   })
@@ -433,8 +539,10 @@ export function Vehicle({ position = [0, 1, 0], rotation = [0, 0, 0], archetype 
             ORIGIN IS GROUND LEVEL (wheel centres sit at y = radius), but a
             cannon box is centred on its origin. Without this offset the
             bodywork floats half a box above its own wheels. */}
-        <group position={[0, -CHASSIS_HEIGHT / 2, 0]}>
-          <ProceduralCar archetype={archetype} paint={paint} wheels={false} env={env} finish={finish} spoiler={spoiler} neon={neon} />
+        <group ref={tilt}>
+          <group position={[0, -CHASSIS_HEIGHT / 2, 0]}>
+            <ProceduralCar archetype={archetype} paint={paint} wheels={false} env={env} finish={finish} spoiler={spoiler} neon={neon} />
+          </group>
         </group>
       </group>
       {wheelRefs.current.map((ref, i) => (

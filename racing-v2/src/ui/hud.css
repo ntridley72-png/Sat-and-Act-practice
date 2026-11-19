@@ -323,3 +323,24 @@
 @media (prefers-reduced-motion: reduce) {
   .rv2-chip, .rv2-root .rv2-swatch, .rv2-root .rv2-go, .rv2-root .rv2-ghost, .rv2-boost-fill { transition: none; }
 }
+
+.rv2-gear {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 18px;
+  font-weight: 700;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, .65);
+}
+.rv2-gear small { font-size: 10px; font-weight: 500; letter-spacing: .14em; color: rgba(255, 255, 255, .55); }
+.rv2-rpm-track {
+  width: clamp(70px, 11vw, 120px);
+  height: 5px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, .2);
+  overflow: hidden;
+}
+.rv2-rpm-fill { height: 100%; width: 0; border-radius: 99px; background: #fff; }
+.rv2-rpm-fill[data-hot="1"] { background: #ff5a3c; }

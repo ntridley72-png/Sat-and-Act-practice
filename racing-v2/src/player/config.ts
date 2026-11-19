@@ -61,4 +61,33 @@ export const playerMutation = {
   driftScore: 0,
   driftCombo: 1,
   driftAngle: 0,
+  /** Drivetrain read-outs for the HUD and the engine note: current gear (1-6) and engine speed 0..1. */
+  gear: 1,
+  rpm: 0.25,
 }
+
+/* The driving model. Everything here is about how the car feels to a keyboard driver:
+ * throttle and brake ramp instead of snapping, the steering lock shrinks with speed so the
+ * car can never be asked for more than the tyres can give, and power fades toward the top end.
+ * The circuit data was built around ~1.4 g of cornering grip (tools/speed-envelope.mjs), so
+ * that is the dry peak used here. */
+export const driving = {
+  gravity: 9.81,
+  /** Dry-tarmac peak lateral grip, in g. Measured: the raycast tyres saturate near 0.9 g, so the
+   *  steering lock is limited to what they can actually hold (bench/handling.cjs). */
+  gripG: 1.3,
+  /** Fraction of the grip-limited steering angle the car is allowed to use. */
+  gripUse: 0.97,
+  /** Throttle and brake ramp rates, per second. Pedals have travel; keys do not. */
+  throttleRise: 6, throttleFall: 9, brakeRise: 8, brakeFall: 14,
+  /** Peak brake force per wheel (front, rear): about 64/36 bias. */
+  brakeFront: 26, brakeRear: 15,
+  /** Reverse is a crawl, not a second accelerator. */
+  reversePower: 0.5, reverseMax: 9,
+  /** Gear tops as a fraction of top speed, for the read-outs. */
+  gearTops: [0.17, 0.31, 0.46, 0.62, 0.8, 1],
+  /** Torque dip while the gearbox changes, seconds and remaining fraction. */
+  shiftTime: 0.12, shiftTorque: 0.55,
+  /** Idle engine speed as a fraction of the redline. */
+  idle: 0.22,
+} as const

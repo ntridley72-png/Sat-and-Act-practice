@@ -17,7 +17,7 @@
  * student profile lives); this file only drives what the student sees.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { ACESFilmicToneMapping, sRGBEncoding } from 'three'
 import { Physics } from '@react-three/cannon'
 import { TrackMesh } from './art/TrackMesh'
@@ -108,6 +108,48 @@ const EMPTY_OUTCOME: RunOutcome = {
   time: '0:00.00', position: 1, total: 1, mode: 'practice',
   timeUp: false, endReason: null, recorded: false,
   improvedRace: false, improvedLap: false, best: null, lap: null, payout: 0,
+}
+
+/* Keeps the game playable on a laptop. Watches the real frame rate and, when it stays low,
+ * steps the render cost down: first a lower pixel ratio, then no shadow maps, then a smaller
+ * render again. It steps back up only after a long stretch of headroom, so it cannot flap.
+ * Physics and driving are untouched: only how many pixels are drawn changes. */
+const QUALITY_DPR = [1.5, 1, 0.8, 0.65] as const
+function QualityGovernor() {
+  const setDpr = useThree((state) => state.setDpr)
+  const gl = useThree((state) => state.gl)
+  const scene = useThree((state) => state.scene)
+  const m = useRef({ level: 0, frames: 0, time: 0, low: 0, high: 0, warm: 0 })
+  const apply = (level: number) => {
+    const ratio = Math.min(window.devicePixelRatio || 1, QUALITY_DPR[level])
+    setDpr(ratio)
+    const shadows = level < 2
+    if (gl.shadowMap.enabled !== shadows) {
+      gl.shadowMap.enabled = shadows
+      scene.traverse((o) => {
+        const mat = (o as unknown as { material?: { needsUpdate: boolean } | { needsUpdate: boolean }[] }).material
+        if (Array.isArray(mat)) mat.forEach((x) => (x.needsUpdate = true))
+        else if (mat) mat.needsUpdate = true
+      })
+    }
+    ;(window as unknown as { __rv2quality?: number }).__rv2quality = level
+  }
+  useFrame((_, delta) => {
+    const q = m.current
+    // Ignore the first seconds: shader compilation and asset decoding are not steady state.
+    q.warm += delta
+    if (q.warm < 3) return
+    q.frames++
+    q.time += delta
+    if (q.time < 1.5) return
+    const fps = q.frames / q.time
+    q.frames = 0
+    q.time = 0
+    if (fps < 40) { q.low++; q.high = 0 } else if (fps > 56) { q.high++; q.low = 0 } else { q.low = 0; q.high = 0 }
+    if (q.low >= 2 && q.level < QUALITY_DPR.length - 1) { q.level++; q.low = 0; apply(q.level) }
+    else if (q.high >= 8 && q.level > 0) { q.level--; q.high = 0; apply(q.level) }
+  })
+  return null
 }
 
 export function App({ opponents: initialOpponents, seed, skill = 'medium', paint: initialPaint, archetype: initialArchetype = 'sport', onQuit, assetBase, track: initialTrack, sandbox = false, economy, garage }: AppProps) {
@@ -568,6 +610,8 @@ export function App({ opponents: initialOpponents, seed, skill = 'medium', paint
         />
         <directionalLight position={[-60, 40, -30]} intensity={0.35} color="#9db6e0" />
         <directionalLight position={[0, 25, -90]} intensity={theme.rim.intensity} color={theme.rim.color} />
+
+        <QualityGovernor />
 
         {/* stepSize must match FIXED_DT in Opponent.tsx: the driver and the
             solver have to advance together or a replay drifts. */}

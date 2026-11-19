@@ -157,6 +157,21 @@ export class AudioRig {
     }
   }
 
+  /** Engine note from the simulated engine speed (0..1) and load (0..1), so the pitch
+   *  climbs through each gear and falls at every shift instead of rising with road speed. */
+  setEngineRpm(rpm: number, load: number): void {
+    const voice = this.voices.get('engine')
+    if (!voice || this.disposed) return
+    const r = Math.max(0, Math.min(1, rpm))
+    const l = Math.max(0, Math.min(1, load))
+    try {
+      voice.el.playbackRate = 0.62 + r * 1.75
+      voice.el.volume = this.muted ? 0 : (0.16 + r * 0.22 + l * 0.1) * this.volume
+    } catch {
+      /* playbackRate out of range on some engines; ignore */
+    }
+  }
+
   stopAll(): void {
     for (const { el } of this.voices.values()) {
       try {

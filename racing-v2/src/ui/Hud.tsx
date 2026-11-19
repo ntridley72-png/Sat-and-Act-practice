@@ -44,6 +44,8 @@ function fmtCountdown(seconds: number): string {
 
 export function Hud({ line, opponents, startedAt, mode, clock, sandbox = false, onFinish }: HudProps) {
   const speedEl = useRef<HTMLDivElement>(null)
+  const gearEl = useRef<HTMLSpanElement>(null)
+  const rpmEl = useRef<HTMLDivElement>(null)
   const boostEl = useRef<HTMLDivElement>(null)
   const clockEl = useRef<HTMLDivElement>(null)
   const modeEl = useRef<HTMLDivElement>(null)
@@ -62,6 +64,12 @@ export function Hud({ line, opponents, startedAt, mode, clock, sandbox = false, 
 
       if (speedEl.current) {
         speedEl.current.textContent = String(Math.round(playerMutation.speed * 3.6))
+      }
+      if (gearEl.current) gearEl.current.textContent = playerMutation.speed < 0.5 && playerMutation.gear <= 1 ? 'N' : String(playerMutation.gear)
+      if (rpmEl.current) {
+        const rpm = Math.max(0, Math.min(1, playerMutation.rpm))
+        rpmEl.current.style.width = `${Math.round(rpm * 100)}%`
+        rpmEl.current.dataset.hot = rpm > 0.92 ? '1' : '0'
       }
       if (scoreEl.current) scoreEl.current.textContent = Math.floor(playerMutation.driftScore).toLocaleString()
       if (comboEl.current) comboEl.current.textContent = 'x' + playerMutation.driftCombo.toFixed(1)
@@ -140,6 +148,10 @@ export function Hud({ line, opponents, startedAt, mode, clock, sandbox = false, 
           <span ref={speedEl}>0</span>
           <small>km/h</small>
         </div>
+        {!sandbox && <div className="rv2-gear">
+          <small>GEAR</small><span ref={gearEl}>N</span>
+          <div className="rv2-rpm-track"><div ref={rpmEl} className="rv2-rpm-fill" /></div>
+        </div>}
         <div className="rv2-boost-track">
           <div ref={boostEl} className="rv2-boost-fill" />
         </div>

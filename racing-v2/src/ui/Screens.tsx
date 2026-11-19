@@ -512,9 +512,9 @@ export function Help() {
       {open && (
         <dl className="rv2-keys">
           <div><dt>W / Up</dt><dd>Accelerate</dd></div>
-          <div><dt>S / Down</dt><dd>Brake / reverse</dd></div>
+          <div><dt>S / Down</dt><dd>Brake, then reverse</dd></div>
           <div><dt>A D / Left Right</dt><dd>Steer</dd></div>
-          <div><dt>Space</dt><dd>Handbrake</dd></div>
+          <div><dt>Space or X</dt><dd>Handbrake</dd></div>
           <div><dt>Shift</dt><dd>Boost</dd></div>
           <div><dt>C</dt><dd>Camera</dd></div>
           <div><dt>R</dt><dd>Reset</dd></div>

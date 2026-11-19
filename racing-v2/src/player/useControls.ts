@@ -32,6 +32,9 @@ const KEYS: Record<string, keyof Controls> = {
   ArrowRight: 'right',
   KeyD: 'right',
   Space: 'handbrake',
+  /* A second handbrake key. Many laptop keyboards cannot report W + A + Space together
+     (a common ghosting pattern), and X sits on a different matrix line. */
+  KeyX: 'handbrake',
   ShiftLeft: 'boost',
   ShiftRight: 'boost',
   KeyR: 'reset',

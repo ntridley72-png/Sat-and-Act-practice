@@ -1,0 +1,75 @@
+/* Bluebook look for every screen outside the practice test (Exam theme).
+   Same visual language as the test screen: white surfaces, a dashed rule under the header,
+   gray title bars with a heavy underline, 2px outlines on choices and fields, blue pill buttons.
+   Scoped so Notebook and Focus keep their own styling, and so the arcade keeps its cabinet. */
+
+body[data-workspace="exam"]:not(.workspace-practicing){
+  --bb-ink:#111; --bb-line:#b9bec7; --bb-bar:#eef0f5; --bb-blue:#0b5fff;
+}
+
+/* ---------- Header ---------- */
+body[data-workspace="exam"]:not(.workspace-practicing) .topbar{
+  border-bottom:2px dashed var(--bb-line);padding:10px 24px;gap:10px;background:#fff}
+body[data-workspace="exam"]:not(.workspace-practicing) .topbar .brand{font-weight:800;letter-spacing:-.02em}
+body[data-workspace="exam"]:not(.workspace-practicing) .topbar :is(.arcade-btn,.badge,.acct-btn){
+  border:0;border-radius:8px;background:transparent;box-shadow:none}
+body[data-workspace="exam"]:not(.workspace-practicing) .topbar .arcade-btn:hover{background:var(--bb-bar)}
+body[data-workspace="exam"]:not(.workspace-practicing) .topbar .arcade-btn.on,
+body[data-workspace="exam"]:not(.workspace-practicing) .topbar .arcade-btn[aria-current="page"]{background:var(--ws-tint);box-shadow:inset 0 -3px 0 var(--bb-blue)}
+
+/* ---------- Buttons ---------- */
+body[data-workspace="exam"]:not(.workspace-practicing) :is(#btnStart,.primary,.cta,.hsc-cta,.qfx-check,#btnReviewAnswers,.schl-official){
+  border-radius:24px;font-weight:800;border:2px solid var(--bb-blue);background:var(--bb-blue);color:#fff}
+body[data-workspace="exam"]:not(.workspace-practicing) :is(.secondary,.ghost):not(.arcade-btn){
+  border-radius:24px;font-weight:800;border:2px solid var(--bb-blue);background:#fff;color:var(--bb-blue)}
+body[data-workspace="exam"]:not(.workspace-practicing) :is(.secondary,.ghost):not(.arcade-btn):hover:not(:disabled){background:var(--ws-tint)}
+body[data-workspace="exam"]:not(.workspace-practicing) :is(.secondary,.ghost):disabled{color:#5b6470;border-color:#c9ced6;background:#f3f4f6}
+
+/* ---------- Surfaces ---------- */
+body[data-workspace="exam"]:not(.workspace-practicing) .card{border:1px solid var(--bb-line);border-radius:12px;box-shadow:none;background:#fff}
+body[data-workspace="exam"]:not(.workspace-practicing) :is(h1,h2){letter-spacing:-.02em}
+body[data-workspace="exam"]:not(.workspace-practicing) :is(.module-tag,.st-kicker,.kicker){font-family:inherit;font-weight:800}
+
+/* ---------- Fields ---------- */
+body[data-workspace="exam"]:not(.workspace-practicing) :is(input[type="text"],input[type="number"],input[type="search"],input:not([type]),select,textarea){
+  border:2px solid var(--bb-ink);border-radius:8px;background:#fff;color:var(--bb-ink)}
+body[data-workspace="exam"]:not(.workspace-practicing) :is(input,select,textarea):focus-visible{outline:3px solid var(--bb-blue);outline-offset:1px}
+
+/* ---------- Pickers, tabs and chips ---------- */
+body[data-workspace="exam"]:not(.workspace-practicing) .pick{border:2px solid var(--bb-ink);border-radius:10px;background:#fff;color:var(--bb-ink)}
+body[data-workspace="exam"]:not(.workspace-practicing) .pick.selected{border-color:var(--bb-blue);background:var(--ws-tint)}
+body[data-workspace="exam"]:not(.workspace-practicing) :is(.subject-tab,.scholar-chip,.hsc-tab){
+  border:2px solid var(--bb-ink);border-radius:999px;background:#fff;color:var(--bb-ink);font-weight:700}
+body[data-workspace="exam"]:not(.workspace-practicing) :is(.subject-tab,.scholar-chip,.hsc-tab).active,
+body[data-workspace="exam"]:not(.workspace-practicing) :is(.subject-tab,.scholar-chip,.hsc-tab)[aria-pressed="true"]{
+  border-color:var(--bb-blue);background:var(--ws-tint);color:var(--bb-blue)}
+
+/* ---------- Tables: gray title bar, heavy rule, dashed rows ---------- */
+body[data-workspace="exam"]:not(.workspace-practicing) table thead th{
+  background:var(--bb-bar);border-bottom:2px solid var(--bb-ink);color:var(--bb-ink);font-weight:800}
+body[data-workspace="exam"]:not(.workspace-practicing) table tbody tr{border-bottom:1px dashed var(--bb-line)}
+
+/* ---------- Screen-specific controls (legacy rules carry an id, so these carry one too) ---------- */
+body[data-workspace="exam"]:not(.workspace-practicing) :is(#screen-start,#screen-results,#screen-review,#screen-college,#screen-subjects,#screen-scholarships) :is(.secondary,.ghost,.sk-drill,.schl-mylist,#collegeBack,#ccAddEmpty,#btnNewSession,.schl-detail-actions button){
+  border-radius:24px;font-weight:800;border:2px solid var(--bb-blue);background:#fff;color:var(--bb-blue)}
+body[data-workspace="exam"]:not(.workspace-practicing) :is(#screen-start,#screen-results,#screen-review,#screen-college,#screen-subjects,#screen-scholarships) :is(.secondary,.ghost,.sk-drill,.schl-mylist,#collegeBack):hover:not(:disabled){background:var(--ws-tint)}
+body[data-workspace="exam"]:not(.workspace-practicing) :is(#screen-college,#screen-scholarships) :is(.cc-add,.schl-add,.cc-primary){
+  border-radius:24px;font-weight:800;border:2px solid var(--bb-blue);background:var(--bb-blue);color:#fff}
+body[data-workspace="exam"]:not(.workspace-practicing) #screen-scholarships .schl-gchip{
+  border:2px solid var(--bb-ink);border-radius:10px;background:#fff;color:var(--bb-ink);font-weight:800}
+body[data-workspace="exam"]:not(.workspace-practicing) #screen-scholarships .schl-gchip[aria-pressed="true"],
+body[data-workspace="exam"]:not(.workspace-practicing) #screen-scholarships .schl-gchip.on{border-color:var(--bb-blue);background:var(--ws-tint);color:var(--bb-blue)}
+body[data-workspace="exam"]:not(.workspace-practicing) #screen-start :is(.st-setup-sum,summary){font-weight:800}
+
+/* Header controls lose their legacy dividers. */
+body[data-workspace="exam"]:not(.workspace-practicing) .topbar :is(.icon-btn,.arcade-btn,.sound-btn,.acct-btn,.workspace-theme-label,select){border:0!important;box-shadow:none}
+body[data-workspace="exam"]:not(.workspace-practicing) .topbar .workspace-theme-label select{border:2px solid var(--bb-ink)!important;border-radius:8px}
+
+/* Result and section titles get the gray bar with the heavy rule. */
+body[data-workspace="exam"]:not(.workspace-practicing) #screen-results .rs-h{
+  background:var(--bb-bar);border-bottom:2px solid var(--bb-ink);margin:-20px -20px 16px;padding:12px 20px;font-size:20px;border-radius:12px 12px 0 0}
+
+/* ---------- The arcade keeps its cabinet look ---------- */
+body[data-workspace="exam"] .cab-tile,body[data-workspace="exam"] .cab-chip{background:#0a0b1e;border-color:#2b2bff;color:inherit}
+body[data-workspace="exam"] .cab-tile.on{border-color:#ffef5a}
+body[data-workspace="exam"] .cab-chip.on{background:#2b2bff}

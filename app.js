@@ -4370,7 +4370,7 @@ function finishTest(confirmed) {
 
 function renderResults() {
   $("resultsSaveStatus").textContent = cloud.user ? $("authSync").textContent : "Saved on this device. Sign in to save these results to your account.";
-  $("screen-results").querySelector("h1").textContent = state.keys.some((k) => state.plan[k].moduleOnly === "drill") ? "Your topic progress" : "Your score";
+  $("screen-results").querySelector("h1, .rs-h").textContent = state.keys.some((k) => state.plan[k].moduleOnly === "drill") ? "Your topic progress" : "Your score";
   $("resultsPred").innerHTML = predictorHtml();
   if (state.keys.some((k) => state.plan[k].moduleOnly === "drill")) return renderTopicResults();
   if (state.cfg.testType === "act") return renderActResults();

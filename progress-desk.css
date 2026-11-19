@@ -65,19 +65,19 @@ body.pd-shell .topbar {
 body.pd-shell .topbar .brand {order:0;margin:0 8px 22px;font-size:25px;letter-spacing:-.7px;line-height:1.2;color:var(--desk-ink)}
 body.pd-shell .brand-sat {background:none;color:var(--desk-ink);-webkit-text-fill-color:currentColor}
 body.pd-shell .topbar .badges {display:contents;container-type:normal;container-name:none;overflow:visible}
-body.pd-shell .topbar :is(.arcade-btn,.icon-btn,.sound-btn,.acct-btn) {
+body.pd-shell .topbar :is(.arcade-btn,.icon-btn,.sound-btn,.acct-btn,#deskReview) {
   position:relative;display:flex;align-items:center;justify-content:flex-start;gap:12px;
   width:100%;min-width:44px;height:44px;min-height:44px;border:1px solid transparent;
   border-radius:4px;margin:0;padding:10px 12px!important;font-size:14px;font-weight:500;
   background:transparent;color:var(--desk-ink);box-shadow:none;white-space:nowrap;
 }
-body.pd-shell .topbar :is(.arcade-btn,.icon-btn,.sound-btn,.acct-btn):hover {background:var(--desk-soft);box-shadow:none;color:var(--desk-ink)}
+body.pd-shell .topbar :is(.arcade-btn,.icon-btn,.sound-btn,.acct-btn,#deskReview):hover {background:var(--desk-soft);box-shadow:none;color:var(--desk-ink)}
 body.pd-shell .topbar .arcade-btn.active {color:var(--desk-accent);background:var(--desk-tint);border-left-color:var(--desk-accent)}
 body.pd-shell .topbar .arcade-btn.active::after {display:none}
-body.pd-shell .topbar :is(.arcade-btn,.acct-btn)>span {
+body.pd-shell .topbar :is(.arcade-btn,.acct-btn,#deskReview)>span {
   position:static;width:auto;height:auto;clip:auto;overflow:visible;margin:0;
 }
-body.pd-shell .topbar :is(.arcade-btn,.icon-btn) svg {width:18px;height:18px;flex:none}
+body.pd-shell .topbar :is(.arcade-btn,.icon-btn,#deskReview) svg {width:18px;height:18px;flex:none;margin:0}
 body.pd-shell .topbar #acctLabel {display:inline}
 body.pd-shell .topbar #btnHome {order:1}
 body.pd-shell .topbar #btnHome::after {content:"Home"}
@@ -235,3 +235,27 @@ html[data-desk-appearance] body:has(.pd-public-nav) .gwrap {margin-left:216px;ma
   html[data-desk-appearance] body:has(.pd-public-nav) .gwrap {margin-left:auto}
 }
 @media(prefers-reduced-motion:reduce) {body.pd-shell *,body.pd-shell *::before,body.pd-shell *::after {scroll-behavior:auto!important}}
+
+/* Rail polish: one icon column, one label column, and no stray dividers. */
+body.pd-shell .topbar :is(.arcade-btn,.icon-btn,.sound-btn,.acct-btn,#deskReview) {border-width:0 0 0 3px!important;border-style:solid!important;border-color:transparent!important;border-radius:6px}
+body.pd-shell .topbar :is(.workspace-theme-label,.badges){border:0!important}
+body.pd-shell .topbar :is(.arcade-btn,#deskReview).active {border-left-color:var(--desk-accent)!important}
+body.pd-shell .topbar :is(.arcade-btn,.icon-btn,.sound-btn,.acct-btn,#deskReview) > svg {width:20px;height:20px;flex:0 0 20px;margin:0}
+body.pd-shell .topbar :is(.arcade-btn,.acct-btn,#deskReview) > span {margin:0;padding:0;text-indent:0;line-height:1.2}
+body.pd-shell .topbar :is(#badgeTimer,#badgeAcc,#hudStreak,#tokenBadge,#autosave,#btnPause,.badge) {border:0!important;border-radius:0;box-shadow:none;background:transparent;padding:6px 12px}
+body.pd-shell .topbar :is(#hudStreak,#tokenBadge,#autosave) {margin:0;min-height:32px}
+body.pd-shell .topbar .workspace-theme-label {padding:0 4px}
+body.pd-shell .topbar .pd-appearance {padding:20px 4px 0}
+body.pd-shell .topbar :is(.workspace-theme-label,.pd-appearance) select{border-width:1px!important;background:var(--desk-surface);color:var(--desk-ink);border:1px solid var(--desk-line);border-radius:6px;font-size:14px;font-weight:500}
+body.pd-shell .topbar .theme-label-text{font-size:12px;font-weight:600;letter-spacing:.02em}
+body.pd-shell .topbar :is(.workspace-theme-label,.pd-appearance) select{border:1px solid var(--desk-line)!important}
+body.pd-shell .topbar :is(.arcade-btn,.icon-btn,.sound-btn,.acct-btn,#deskReview) > :is(svg,.ui-icon,img){margin:0!important;width:20px!important;height:20px!important;flex:0 0 20px}
+body.pd-shell .topbar #btnSound::after{margin:0;line-height:1.2}
+body.pd-shell .topbar #workspaceTheme{border:1px solid var(--desk-line)!important;border-radius:6px;background:var(--desk-surface)!important;color:var(--desk-ink);margin:0;width:100%}
+body.pd-shell .topbar #btnSound::after{margin-left:-10px}
+/* The account button's placeholder glyph becomes a proper person icon. */
+body.pd-shell .topbar #btnAccount > span:first-child{position:relative;width:20px!important;height:20px!important;flex:0 0 20px;font-size:0;color:transparent;overflow:hidden}
+body.pd-shell .topbar #btnAccount > span:first-child > *{display:none}
+body.pd-shell .topbar #btnAccount > span:first-child::before{content:"";position:absolute;inset:0;background:currentColor;color:var(--desk-ink);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6'/%3E%3C/svg%3E") center/contain no-repeat}

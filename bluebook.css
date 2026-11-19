@@ -11,6 +11,24 @@ body[data-workspace="exam"]{
 }
 body[data-workspace="exam"][data-test="act"]{ --ws-accent:#0b2a5b; --ws-tint:#e8f0ff; --mint:#0b2a5b; --mint2:#071d40; --blue:#0b2a5b; --ws-focus:#0b2a5b; }
 
+/* ---------- The test screen is always the light Bluebook palette ----------
+   The Progress Desk shell can be dark. The exam itself never is, so while a test is on screen the
+   Desk's palette variables are replaced with the light set (and the Bluebook blue); every Desk
+   token that derives from them follows. */
+body.pd-shell[data-workspace="exam"].workspace-practicing{
+  --desk-bg:#fff;--desk-surface:#fff;--desk-soft:#f3f4f6;--desk-ink:#111;--desk-muted:#5b6470;--desk-line:#c9ced6;
+  --desk-accent:#0b5fff;--desk-on-accent:#fff;--desk-tint:#eaf1ff;color-scheme:light;
+}
+html[data-desk-appearance] body[data-workspace="exam"].workspace-practicing{
+  color-scheme:light;--ws-success:#176341;--ws-error:#a62d29;--ws-warn:#775414;--ws-success-bg:#e7f4ec;--ws-error-bg:#fbece9;--ws-overlay:rgba(26,26,26,.74);
+  --fx-overlay:rgba(26,26,26,.74);--fx-r-sm:4px;--fx-r-md:6px;--fx-r-lg:6px;
+  --fx-good:#176341;--fx-good-lt:#176341;--fx-good-bg:#e7f4ec;--fx-good-line:#74a58a;--fx-on-good:#fff;
+  --fx-warn:#775414;--fx-warn-bg:#faf1df;--fx-warn-line:#aa956d;--fx-gold:#775414;--fx-gold-bg:#faf1df;--fx-gold-line:#aa956d;
+  --fx-info:#285b92;--fx-info-text:#285b92;--fx-info-bg:#edf3fa;--fx-info-line:#88a7c9;
+  --fx-violet:#694294;--fx-violet-bg:#f3ecfa;--fx-accept:#176341;--fx-waitlist:#285b92;--fx-deny:#a62d29;
+  background:#fff;color:#111;
+}
+
 /* ---------- Practice screen chrome ---------- */
 body[data-workspace="exam"].workspace-practicing{background:#fff}
 body[data-workspace="exam"].workspace-practicing .topbar,

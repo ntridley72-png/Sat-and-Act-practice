@@ -1,0 +1,117 @@
+/* The Bluebook look, carried from the practice screen to the rest of the site.
+   Built on the Progress Desk variables so it follows the Light/Dark appearance:
+   white surfaces, a dashed rule under headers and beside the rail, gray title bars with a
+   heavy underline, 2px outlines on choices and fields, black number squares, blue pill buttons.
+   The practice screen has its own stylesheet (bluebook.css) and the arcade keeps its cabinet. */
+
+body.pd-shell:not(.workspace-practicing),
+html[data-desk-appearance] body:has(.gwrap){
+  --bb-ink:var(--desk-ink);--bb-line:var(--desk-line);--bb-bar:var(--desk-soft);--bb-blue:var(--desk-accent);
+}
+
+/* ---------- Rail and page headers ---------- */
+@media (min-width:901px){
+  body.pd-shell:not(.workspace-practicing) .topbar{border-right:2px dashed var(--bb-line)}
+}
+body.pd-shell:not(.workspace-practicing) .topbar .brand{font-weight:800;letter-spacing:-.04em}
+body.pd-shell:not(.workspace-practicing) :is(.st-head,.college-head,.subjects-head,.schl-head){
+  padding-bottom:14px;margin-bottom:18px;border-bottom:2px dashed var(--bb-line)}
+body.pd-shell:not(.workspace-practicing) .st-kicker,
+body.pd-shell:not(.workspace-practicing) :is(.college-head,.subjects-head) .kicker{font-weight:700;color:var(--desk-muted)}
+
+/* ---------- Surfaces with a title bar ---------- */
+body.pd-shell:not(.workspace-practicing) :is(.pd-summary,.pd-skills,.pd-comparison,.st-setup,.st-resume,#historyStart,.results-screen,:is(#screen-college,#screen-subjects,#screen-scholarships,#screen-review) .card){
+  border:1px solid var(--bb-line);border-radius:12px;box-shadow:none}
+body.pd-shell:not(.workspace-practicing) .pd-skills>h2:first-child,
+body.pd-shell:not(.workspace-practicing) #historyStart>h3:first-child{
+  background:var(--bb-bar);border-bottom:2px solid var(--bb-ink);margin:-20px -20px 16px;padding:12px 20px;border-radius:12px 12px 0 0;font-size:17px;font-weight:800}
+body.pd-shell:not(.workspace-practicing) .pd-comparison>summary{
+  background:var(--bb-bar);border-bottom:2px solid var(--bb-ink);margin:-16px;padding:12px 16px;border-radius:12px;font-weight:800}
+body.pd-shell:not(.workspace-practicing) .pd-comparison[open]>summary{border-radius:12px 12px 0 0;margin-bottom:12px}
+body.pd-shell:not(.workspace-practicing) #screen-results .rs-h{
+  background:var(--bb-bar);border-bottom:2px solid var(--bb-ink);margin:-20px -20px 16px;padding:12px 20px;font-size:19px;font-weight:800;border-radius:12px 12px 0 0}
+body.pd-shell:not(.workspace-practicing) .pd-summary .pd-stat strong{font-weight:800}
+
+/* ---------- Tables: title bar, heavy rule, dashed rows ---------- */
+body.pd-shell:not(.workspace-practicing) table thead th{
+  background:var(--bb-bar);border-bottom:2px solid var(--bb-ink);color:var(--bb-ink);font-weight:800}
+body.pd-shell:not(.workspace-practicing) table tbody tr td,
+body.pd-shell:not(.workspace-practicing) table tbody tr th{border-bottom:1px dashed var(--bb-line)}
+body.pd-shell:not(.workspace-practicing) .pd-skills th{font-size:12px;color:var(--bb-ink)}
+
+/* ---------- Pickers, chips and number squares ---------- */
+body.pd-shell:not(.workspace-practicing) #app .pick{
+  border:2px solid var(--bb-ink);border-radius:10px;background:var(--desk-surface);color:var(--bb-ink);font-weight:700}
+body.pd-shell:not(.workspace-practicing) #app .pick.selected{border-color:var(--bb-blue);background:var(--desk-tint);color:var(--bb-ink)}
+body.pd-shell:not(.workspace-practicing) #app .seg .pick{border-radius:10px}
+body.pd-shell:not(.workspace-practicing) .st-n{
+  background:var(--bb-ink);color:var(--desk-bg);border:0;border-radius:0;font-weight:800;display:inline-grid;place-items:center}
+body.pd-shell:not(.workspace-practicing) :is(.subject-tab,.scholar-chip,.hsc-tab){
+  border:2px solid var(--bb-ink);border-radius:999px;background:var(--desk-surface);color:var(--bb-ink);font-weight:700}
+body.pd-shell:not(.workspace-practicing) :is(.subject-tab,.scholar-chip,.hsc-tab).active,
+body.pd-shell:not(.workspace-practicing) :is(.subject-tab,.scholar-chip,.hsc-tab)[aria-pressed="true"]{
+  border-color:var(--bb-blue);background:var(--desk-tint);color:var(--bb-blue)}
+body.pd-shell:not(.workspace-practicing) .schl-gchip{border:2px solid var(--bb-ink);border-radius:10px;background:var(--desk-surface);color:var(--bb-ink);font-weight:800}
+body.pd-shell:not(.workspace-practicing) .schl-gchip:is([aria-pressed="true"],.on){border-color:var(--bb-blue);background:var(--desk-tint);color:var(--bb-blue)}
+
+/* ---------- Buttons ---------- */
+body.pd-shell:not(.workspace-practicing) #app :is(#btnStart,#btnResume,.cta,.cc-add,.schl-official,.hsc-cta,.primary){
+  border:2px solid var(--bb-blue);border-radius:24px;background:var(--bb-blue);color:var(--desk-on-accent);font-weight:800}
+body.pd-shell:not(.workspace-practicing) #app :is(.secondary,.ghost,.sk-drill,.schl-mylist,#deskSetTarget,.st-setup-act,#btnDiscard):not(.arcade-btn){
+  border:2px solid var(--bb-blue);border-radius:24px;background:var(--desk-surface);color:var(--bb-blue);font-weight:800;text-decoration:none}
+body.pd-shell:not(.workspace-practicing) #app :is(.secondary,.ghost,.sk-drill,.schl-mylist,#deskSetTarget,.st-setup-act):not(.arcade-btn):hover:not(:disabled){background:var(--desk-tint)}
+body.pd-shell:not(.workspace-practicing) #app :is(.secondary,.ghost,.sk-drill):disabled{border-color:var(--bb-line);color:var(--desk-muted);background:var(--bb-bar)}
+body.pd-shell:not(.workspace-practicing) .pd-skills button{color:var(--bb-blue)!important}
+
+/* ---------- Fields ---------- */
+body.pd-shell:not(.workspace-practicing) :is(#app,.modal) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),select,textarea){
+  border:2px solid var(--bb-ink);border-radius:8px;background:var(--desk-surface);color:var(--bb-ink)}
+body.pd-shell:not(.workspace-practicing) :is(#app,.modal) :is(input,select,textarea):focus-visible{outline:3px solid var(--bb-blue);outline-offset:1px}
+
+/* A search box that wraps its input draws the outline once, on the wrapper. */
+body.pd-shell:not(.workspace-practicing) .schl-search{border:2px solid var(--bb-ink);border-radius:10px}
+body.pd-shell:not(.workspace-practicing) .schl-search input{border:0!important;border-radius:0;outline:0!important;background:transparent}
+body.pd-shell:not(.workspace-practicing) .schl-search:focus-within{border-color:var(--bb-blue);box-shadow:0 0 0 3px var(--desk-tint)}
+
+/* ---------- College, scholarship and subject cards read like answer options ---------- */
+body.pd-shell:not(.workspace-practicing) :is(.schl-card,.cc-card,.college-card,.history-item,.hsc-item){
+  border:2px solid var(--bb-ink);border-radius:10px;background:var(--desk-surface)}
+body.pd-shell:not(.workspace-practicing) :is(.schl-card,.cc-card,.college-card).sel,
+body.pd-shell:not(.workspace-practicing) :is(.schl-card,.cc-card,.college-card)[aria-selected="true"]{border-color:var(--bb-blue);background:var(--desk-tint)}
+body.pd-shell:not(.workspace-practicing) .schl-detail,body.pd-shell:not(.workspace-practicing) .schl-filters{border:1px solid var(--bb-line);border-radius:12px}
+
+/* ---------- Answer review: each question is a Bluebook panel ---------- */
+body.pd-shell:not(.workspace-practicing) .results-screen .review{
+  border:2px solid var(--bb-ink);border-left:2px solid var(--bb-ink);border-radius:10px;margin:14px 0;background:var(--desk-surface)}
+body.pd-shell:not(.workspace-practicing) .results-screen .review[data-outcome="right"]{border-color:var(--fx-good,#176341)}
+body.pd-shell:not(.workspace-practicing) .results-screen .review[data-outcome="wrong"]{border-color:var(--fx-deny,#a62d29)}
+body.pd-shell:not(.workspace-practicing) .review-head{background:var(--bb-bar);border-bottom:2px solid var(--bb-ink);padding:10px 14px;align-items:center}
+body.pd-shell:not(.workspace-practicing) .review-head>span:first-child>strong{
+  display:inline-block;min-width:28px;padding:3px 9px;margin-right:8px;background:var(--bb-ink);color:var(--desk-bg);text-align:center;font-weight:800}
+body.pd-shell:not(.workspace-practicing) .review-head .tag{border-radius:999px;border:1.5px solid currentColor;font-weight:800;background:transparent}
+body.pd-shell:not(.workspace-practicing) .review-body :is(.correct-ans,.your-ans){
+  display:inline-block;padding:4px 10px;border:2px solid currentColor;border-radius:8px;font-weight:700}
+body.pd-shell:not(.workspace-practicing) .review-body .correct-ans{color:var(--fx-good,#176341);background:var(--fx-good-bg,#e7f4ec)}
+body.pd-shell:not(.workspace-practicing) .review-body .your-ans{color:var(--fx-deny,#a62d29);background:var(--ws-error-bg,#fbece9)}
+body.pd-shell:not(.workspace-practicing) .rev-filter{border:2px solid var(--bb-ink);border-radius:999px;background:var(--desk-surface);color:var(--bb-ink);font-weight:800;padding:6px 14px}
+body.pd-shell:not(.workspace-practicing) .rev-filter.on{border-color:var(--bb-blue);background:var(--desk-tint);color:var(--bb-blue)}
+body.pd-shell:not(.workspace-practicing) .rev-bar h2{padding-bottom:6px;border-bottom:2px solid var(--bb-ink);flex:0 0 auto;margin-right:auto}
+
+/* ---------- Public pages (guides, colleges, scores, scholarships) ---------- */
+html[data-desk-appearance] .gwrap h1{font-weight:800;letter-spacing:-.03em}
+html[data-desk-appearance] .gwrap .gkicker{font-weight:800;letter-spacing:.08em}
+html[data-desk-appearance] .gwrap .gnav{border-bottom:2px dashed var(--desk-line)}
+html[data-desk-appearance] .gwrap .gcard{border:1px solid var(--desk-line);border-radius:12px}
+html[data-desk-appearance] .gwrap .gtable thead th{background:var(--desk-soft);border-bottom:2px solid var(--desk-ink);color:var(--desk-ink);font-weight:800}
+html[data-desk-appearance] .gwrap .gtable tbody td,html[data-desk-appearance] .gwrap .gtable tbody th{border-bottom:1px dashed var(--desk-line)}
+html[data-desk-appearance] .gwrap :is(.cta){border:2px solid var(--desk-accent);border-radius:24px;background:var(--desk-accent);color:var(--desk-on-accent)!important;font-weight:800}
+html[data-desk-appearance] .gwrap .glinks a{border:2px solid var(--desk-ink);border-radius:999px;color:var(--desk-ink);font-weight:700;background:var(--desk-surface)}
+html[data-desk-appearance] .gwrap .glinks a:hover{border-color:var(--desk-accent);background:var(--desk-tint);color:var(--desk-accent)}
+html[data-desk-appearance] .gwrap h2{padding-bottom:6px;border-bottom:2px solid var(--desk-ink)}
+html[data-desk-appearance] .pd-public-nav{border-right:2px dashed var(--desk-line)}
+html[data-desk-appearance] .gwrap :is(.cg-item,.choice){border-radius:10px}
+
+/* The arcade keeps its cabinet. */
+body.pd-shell .cab-tile,body.pd-shell .cab-chip{background:#0a0b1e;border-color:#2b2bff;color:inherit}
+body.pd-shell .cab-tile.on{border-color:#ffef5a}
+body.pd-shell .cab-chip.on{background:#2b2bff}

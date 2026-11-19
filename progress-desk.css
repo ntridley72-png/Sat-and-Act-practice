@@ -1,16 +1,16 @@
 /* Progress Desk: shared appearance, live app shell and public reading pages.
    Study-layout preferences and game-owned art stay independent of appearance. */
 :root {
+  --desk-bg:#ffffff;--desk-surface:#ffffff;--desk-soft:#eef0f5;
+  --desk-ink:#111111;--desk-muted:#4b5563;--desk-line:#c9ced6;
+  --desk-accent:#0b5fff;--desk-on-accent:#ffffff;--desk-tint:#eaf1ff;
+  color-scheme:light;background:var(--desk-bg);
+}
+html[data-desk-appearance="dark"] {
   --desk-bg:#171b1d;--desk-surface:#202629;--desk-soft:#293236;
   --desk-ink:#eef2f3;--desk-muted:#b1bec4;--desk-line:#3b484e;
-  --desk-accent:#73c6bb;--desk-on-accent:#122525;--desk-tint:#243c3c;
-  color-scheme:dark;background:var(--desk-bg);
-}
-html[data-desk-appearance="light"] {
-  --desk-bg:#f4f7f7;--desk-surface:#ffffff;--desk-soft:#eaf0f0;
-  --desk-ink:#182c30;--desk-muted:#52676d;--desk-line:#c8d4d7;
-  --desk-accent:#176a62;--desk-on-accent:#ffffff;--desk-tint:#e0efec;
-  color-scheme:light;
+  --desk-accent:#7fb0ff;--desk-on-accent:#0b1a33;--desk-tint:#1d2d4a;
+  color-scheme:dark;
 }
 html[data-desk-appearance] body[data-workspace] {
   --ws-bg:var(--desk-bg);--ws-surface:var(--desk-surface);--ws-soft:var(--desk-soft);

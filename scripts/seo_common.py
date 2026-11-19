@@ -52,15 +52,16 @@ FONT_PRELOAD = (
 )
 
 # Shared appearance for generated and hand-written public surfaces.
-DESK_ASSETS = """<script>(()=>{let value='dark';try{const saved=localStorage.getItem('funsatDeskAppearance');if(saved==='light'||saved==='dark')value=saved;}catch(e){}document.documentElement.dataset.deskAppearance=value;document.documentElement.style.colorScheme=value;})();</script>
+DESK_ASSETS = """<script>(()=>{let value='light';try{const saved=localStorage.getItem('funsatDeskAppearance');if(saved==='light'||saved==='dark')value=saved;}catch(e){}document.documentElement.dataset.deskAppearance=value;document.documentElement.style.colorScheme=value;})();</script>
 <link rel="stylesheet" href="/progress-desk.css">
+<link rel="stylesheet" href="/bluebook-site.css">
 <script defer src="/progress-desk.js"></script>"""
 
 DESK_NAV = """<nav class="pd-public-nav" aria-label="Main navigation">
 <a href="/">FunSAT</a><a href="/">Practice</a><a href="/?view=subjects">Subjects</a>
 <a href="/?view=review">Review</a><a href="/?view=college">College</a>
 <a href="/?view=scholarships">Scholarships</a><a href="/?view=arcade">Arcade</a>
-</nav><label class="pd-public-appearance">Appearance <select data-desk-appearance-control aria-label="Appearance"><option value="dark">Dark</option><option value="light">Light</option></select></label>"""
+</nav><label class="pd-public-appearance">Appearance <select data-desk-appearance-control aria-label="Appearance"><option value="light">Light</option><option value="dark">Dark</option></select></label>"""
 
 
 def inject_desk(html_text):

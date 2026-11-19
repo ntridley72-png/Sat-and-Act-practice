@@ -10,7 +10,7 @@ const SHOTS = path.join(__dirname, "screenshots");
 const THEMES = ["exam", "notebook", "focus"];
 const EXPECTED_BACKGROUND = {
   dark: "rgb(23, 27, 29)",
-  light: "rgb(244, 247, 247)",
+  light: "rgb(255, 255, 255)",
 };
 
 function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); return (a + 0.05) / (b + 0.05); }
@@ -18,7 +18,7 @@ function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); re
 (async () => {
   const browser = await chromium.launch({ executablePath: EXEC, args: ["--no-sandbox"] });
 
-  async function captureStartupFrames({ label, theme = null, appearance = 'dark', blockStorage = false, warm = false, reload = false, slow = false }) {
+  async function captureStartupFrames({ label, theme = null, appearance = 'light', blockStorage = false, warm = false, reload = false, slow = false }) {
     const context = await browser.newContext({ viewport: { width: 1440, height: 960 } });
     await context.addInitScript(({ savedTheme, appearance, shouldBlockStorage }) => {
       localStorage.setItem('funsatDeskAppearance', appearance);
@@ -62,7 +62,7 @@ function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); re
       const expectedTheme = theme || "exam";
       for (const [index, frame] of frames.entries()) {
         if (frame.workspace !== expectedTheme) throw new Error(`${label}/${kind} frame ${index} painted workspace ${frame.workspace}, expected ${expectedTheme}`);
-        const expectedScheme = blockStorage ? 'dark' : appearance;
+        const expectedScheme = blockStorage ? 'light' : appearance;
         if (frame.background !== EXPECTED_BACKGROUND[expectedScheme]) throw new Error(`${label}/${kind} frame ${index} painted ${frame.background}, expected ${EXPECTED_BACKGROUND[expectedScheme]}`);
         if (frame.colorScheme !== expectedScheme) throw new Error(`${label}/${kind} frame ${index} used color-scheme ${frame.colorScheme}, expected ${expectedScheme}`);
       }

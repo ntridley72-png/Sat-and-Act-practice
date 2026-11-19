@@ -6,14 +6,14 @@
   const isApp = !!document.getElementById('screen-start');
   const validAppearance = (value) => value === 'light' || value === 'dark';
   function appearance(value) {
-    const chosen = validAppearance(value) ? value : 'dark';
+    const chosen = validAppearance(value) ? value : 'light';
     root.dataset.deskAppearance = chosen;
     root.style.colorScheme = chosen;
     try { localStorage.setItem('funsatDeskAppearance', chosen); } catch (_) { /* Browsing works without persistent storage. */ }
     document.querySelectorAll('[data-desk-appearance-control]').forEach((select) => { select.value = chosen; });
   }
   document.querySelectorAll('[data-desk-appearance-control]').forEach((select) => {
-    select.value = root.dataset.deskAppearance || 'dark';
+    select.value = root.dataset.deskAppearance || 'light';
     select.addEventListener('change', () => appearance(select.value));
   });
   if (!isApp) return;

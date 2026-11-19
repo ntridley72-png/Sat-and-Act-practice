@@ -553,10 +553,11 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 <link rel="stylesheet" href="subjects.css">
 <script>
 /* Appearance is independent of the three study layouts and applied before paint. */
-(()=>{let value='dark';try{const saved=localStorage.getItem('funsatDeskAppearance');if(saved==='light'||saved==='dark')value=saved;}catch(e){}document.documentElement.dataset.deskAppearance=value;document.documentElement.style.colorScheme=value;})();
+(()=>{let value='light';try{const saved=localStorage.getItem('funsatDeskAppearance');if(saved==='light'||saved==='dark')value=saved;}catch(e){}document.documentElement.dataset.deskAppearance=value;document.documentElement.style.colorScheme=value;})();
 </script>
 <link rel="stylesheet" href="bluebook.css">
 <link rel="stylesheet" href="progress-desk.css">
+<link rel="stylesheet" href="bluebook-site.css">
 </head>
 <body class="pd-shell" data-workspace="exam"><script>
 /* Apply the saved workspace before visible content; appearance was applied in head. */

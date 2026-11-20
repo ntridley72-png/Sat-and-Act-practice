@@ -83,6 +83,7 @@ body.pd-shell .topbar #btnHome {order:1}
 body.pd-shell .topbar #btnHome::after {content:"Home"}
 body.pd-shell .topbar #btnPractice {order:2}
 body.pd-shell .topbar #btnSubjectPractice {order:3}
+body.pd-shell .topbar #btnPlan {order:4}
 body.pd-shell .topbar #deskReview {order:4}
 body.pd-shell .topbar #btnCollege {order:5}
 body.pd-shell .topbar #btnScholarships {order:6}

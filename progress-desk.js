@@ -106,7 +106,7 @@
   window.FunSATDesk = { appearance, update: updateDesk };
 
   // Public-page navigation enters existing app routes after all deferred modules attach.
-  const views = { subjects: 'btnSubjectPractice', college: 'btnCollege', scholarships: 'btnScholarships', review: 'deskReview', arcade: 'btnArcade' };
+  const views = { plan: 'btnPlan', subjects: 'btnSubjectPractice', college: 'btnCollege', scholarships: 'btnScholarships', review: 'deskReview', arcade: 'btnArcade' };
   const view = new URLSearchParams(location.search).get('view');
   if (views[view]) {
     const open = () => setTimeout(() => document.getElementById(views[view]).click(), 0);

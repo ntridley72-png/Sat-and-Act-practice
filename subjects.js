@@ -180,7 +180,8 @@
               '<td class="sk-acccell">' + accCell(st) + "</td>" +
               '<td class="sk-num">' + x.ids.length + "</td>" +
               '<td class="sk-go"><button type="button" class="sk-drill" data-s-go="' + esc(x.key) + '" ' +
-              'aria-label="Drill ' + esc(x.skill) + ", " + n + ' questions">Drill ' + n + "</button></td></tr>";
+              'aria-label="Drill ' + esc(x.skill) + ", " + n + ' questions">Drill ' + n + "</button>" +
+              '<button type="button" class="ghost sk-ws" data-s-ws="' + esc(x.key) + '" aria-label="Printable worksheet for ' + esc(x.skill) + '">Worksheet</button></td></tr>';
           }).join("") + "</tbody></table></div>"
         : '<p class="small muted">No questions available for this section yet.</p>') +
 
@@ -200,6 +201,10 @@
     host.querySelectorAll("[data-s-go]").forEach((b) => b.addEventListener("click", (e) => {
       e.stopPropagation();
       startSubjectDrill(b.dataset.sGo, pick.length);
+    }));
+    host.querySelectorAll("[data-s-ws]").forEach((b) => b.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (window.FunSATWorksheet) window.FunSATWorksheet.open({ keys: [b.dataset.sWs], test: pick.test, count: pick.length });
     }));
     // The Drill button on each row is the action; the row itself is not clickable,
     // so a stray tap on a long skill name cannot start a drill.

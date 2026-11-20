@@ -551,6 +551,8 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 <link rel="stylesheet" href="racing/racing.css">
 <link rel="stylesheet" href="redesign.css">
 <link rel="stylesheet" href="subjects.css">
+<link rel="stylesheet" href="plan.css">
+<link rel="stylesheet" href="worksheet.css">
 <script>
 /* Appearance is independent of the three study layouts and applied before paint. */
 (()=>{let value='light';try{const saved=localStorage.getItem('funsatDeskAppearance');if(saved==='light'||saved==='dark')value=saved;}catch(e){}document.documentElement.dataset.deskAppearance=value;document.documentElement.style.colorScheme=value;})();
@@ -586,6 +588,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
       <span class="token-badge wallet" id="tokenBadge" title="Every 3 questions = 1 arcade credit"><span class="coin" aria-hidden="true"></span><span id="tokenCount">0</span></span>
       <button class="arcade-btn" id="btnPractice" type="button" title="Full-length SAT and ACT practice tests"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><span>Practice tests</span></button>
       <button class="arcade-btn" id="btnSubjectPractice" type="button" title="Drill one subject or skill, separate from test scoring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg><span>Subject practice</span></button>
+      <button class="arcade-btn" id="btnPlan" type="button" title="Score history, a goal, and a study plan built from your weak spots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg><span>Plan</span></button>
       <button class="arcade-btn" id="btnCollege" type="button" title="Compare your scores with colleges"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5L2 9z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/></svg><span>College</span></button>
       <button class="arcade-btn" id="btnScholarships" type="button" title="Search scholarships"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M8.6 13.4 7 22l5-3 5 3-1.6-8.6"/></svg><span>Scholarships</span></button>
       <button class="arcade-btn" id="btnArcade" title="Play mini-games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h4M9 10v4"/><circle cx="15.5" cy="11" r="1"/><circle cx="17.5" cy="13.5" r="1"/><path d="M4 8h16a2 2 0 0 1 2 2v5a3 3 0 0 1-3 3 3 3 0 0 1-2.4-1.2L15 15H9l-1.6 1.8A3 3 0 0 1 5 18a3 3 0 0 1-3-3v-5a2 2 0 0 1 2-2z"/></svg><span>Arcade</span></button>
@@ -797,6 +800,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 
     <section id="screen-college" class="college-screen" style="display:none" aria-label="College score goals"><div id="collegeBody"></div><aside class="sponsor-slot" data-ad-slot="college-list" aria-label="Sponsored content" hidden></aside><aside class="sponsor-slot" data-ad-slot="college-grid" aria-label="Sponsored content" hidden></aside><aside class="sponsor-slot sponsor-inline" data-ad-slot="college-mobile" data-max-width="700" aria-label="Sponsored content" hidden></aside></section>
     <section id="screen-scholarships" class="college-screen" style="display:none" aria-label="Scholarship searcher"><div id="scholarshipBody"></div><aside class="sponsor-slot" data-ad-slot="scholarships-list" aria-label="Sponsored content" hidden></aside><aside class="sponsor-slot" data-ad-slot="scholarships-grid" aria-label="Sponsored content" hidden></aside><aside class="sponsor-slot sponsor-inline" data-ad-slot="scholarships-mobile" data-max-width="700" aria-label="Sponsored content" hidden></aside></section>
+    <section id="screen-plan" class="plan-screen" style="display:none" aria-label="Plan"><div id="planBody"></div><aside class="sponsor-slot" data-ad-slot="plan-list" aria-label="Sponsored content" hidden></aside><aside class="sponsor-slot sponsor-inline" data-ad-slot="plan-mobile" data-max-width="700" aria-label="Sponsored content" hidden></aside></section>
     <section id="screen-subjects" class="subjects-screen" style="display:none" aria-label="Subject practice"><div id="subjectsBody"></div><aside class="sponsor-slot" data-ad-slot="subjects-list" aria-label="Sponsored content" hidden></aside><aside class="sponsor-slot" data-ad-slot="subjects-grid" aria-label="Sponsored content" hidden></aside><aside class="sponsor-slot sponsor-inline" data-ad-slot="subjects-mobile" data-max-width="700" aria-label="Sponsored content" hidden></aside></section>
   </main>
 
@@ -940,7 +944,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 
 <noscript><div style="max-width:900px;margin:0 auto;padding:16px"><h2>SAT &amp; ACT practice, college tools, and study games</h2><p>FunSAT needs JavaScript for interactive practice. It offers free digital SAT and ACT practice questions, unofficial SAT/ACT score estimates, college admissions comparison from federal College Scorecard data, a scholarship search, and study-break games.</p></div></noscript>
 
-<script>window.FUNSAT_ADS={provider:"adsterra",units:{native:{script:"https://bauval.org/21/ba6d22b48d5d42c6cd1add3ad5e6c681",container:"container-ba6d22b48d5d42c6cd1add3ad5e6c681"},sky:{key:"4e48d9998406ce142c41865c66a4325",script:"https://bauval.org/22/4e48d9998406ce142c41865c66a4325",width:160,height:600},mobile:{key:"c12c35cf8d3881414086bb25244cd69e",script:"https://bauval.org/22/c12c35cf8d3881414086bb25244cd69e",width:320,height:50},squares:[]},slots:{"app-rail":{unit:"sky"},"results-mobile":{unit:"mobile"},"college-mobile":{unit:"mobile"},"scholarships-mobile":{unit:"mobile"},"subjects-mobile":{unit:"mobile"},"home-sidebar":{kind:"native"},"results-top":{kind:"native"},"arcade-menu":{kind:"native"},"college-list":{kind:"native"},"scholarships-list":{kind:"native"},"subjects-list":{kind:"native"},"results-grid":{kind:"grid"},"college-grid":{kind:"grid"},"scholarships-grid":{kind:"grid"},"subjects-grid":{kind:"grid"}}};</script>
+<script>window.FUNSAT_ADS={provider:"adsterra",units:{native:{script:"https://bauval.org/21/ba6d22b48d5d42c6cd1add3ad5e6c681",container:"container-ba6d22b48d5d42c6cd1add3ad5e6c681"},sky:{key:"4e48d9998406ce142c41865c66a4325",script:"https://bauval.org/22/4e48d9998406ce142c41865c66a4325",width:160,height:600},mobile:{key:"c12c35cf8d3881414086bb25244cd69e",script:"https://bauval.org/22/c12c35cf8d3881414086bb25244cd69e",width:320,height:50},squares:[]},slots:{"app-rail":{unit:"sky"},"results-mobile":{unit:"mobile"},"college-mobile":{unit:"mobile"},"scholarships-mobile":{unit:"mobile"},"subjects-mobile":{unit:"mobile"},"plan-mobile":{unit:"mobile"},"home-sidebar":{kind:"native"},"results-top":{kind:"native"},"arcade-menu":{kind:"native"},"college-list":{kind:"native"},"scholarships-list":{kind:"native"},"subjects-list":{kind:"native"},"plan-list":{kind:"native"},"results-grid":{kind:"grid"},"college-grid":{kind:"grid"},"scholarships-grid":{kind:"grid"},"subjects-grid":{kind:"grid"}}};</script>
 <script defer src="dirtbike.js"></script>
 <div class="sponsor-slot sponsor-rail sponsor-app-rail" data-ad-slot="app-rail" data-min-width="1700" hidden></div>
 <script defer src="ads.js"></script>
@@ -949,6 +953,10 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 <script defer src="college.js"></script>
 <script defer src="redesign.js"></script>
 <script defer src="subjects.js"></script>
+<script defer src="score-report.js"></script>
+<script defer src="study-plan.js"></script>
+<script defer src="worksheet.js"></script>
+<script defer src="plan.js"></script>
 <script defer src="bluebook.js"></script>
 <script defer src="scholarships-data.js"></script>
 <script defer src="scholarships.js"></script>

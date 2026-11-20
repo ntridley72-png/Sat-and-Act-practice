@@ -187,6 +187,39 @@ const scenarios = [
     },
   },
   {
+    name: "plan",
+    async go(page) {
+      await page.evaluate(() => {
+        profile.scoreReports = [{ id: "r1", kind: "sat", date: "2026-10-04", total: 1250, sections: { rw: 640, math: 610 }, domains: { Algebra: 3 }, source: "manual", addedAt: 1 }];
+        profile.studyPlan = { goals: { sat: { total: 1400, date: "" } }, minutes: 180 };
+      });
+      await page.click("#btnPlan");
+      await page.waitForSelector("#screen-plan", { state: "visible" });
+      await page.waitForTimeout(350);
+    },
+  },
+  {
+    name: "plan-form",
+    async go(page) {
+      await page.click("#btnPlan");
+      await page.waitForSelector("#screen-plan", { state: "visible" });
+      await page.click("#plManual");
+      await page.fill("#plTotal", "1255");
+      await page.click("#plForm button[type=submit]");
+      await page.waitForTimeout(250);
+    },
+  },
+  {
+    name: "worksheet",
+    async go(page) {
+      await page.click("#btnPlan");
+      await page.waitForSelector("#screen-plan", { state: "visible" });
+      await page.click("#plWorksheet");
+      await page.waitForSelector("#wsDialog");
+      await page.waitForTimeout(350);
+    },
+  },
+  {
     name: "scholarships",
     async go(page) {
       await page.click("#btnScholarships");
@@ -222,7 +255,7 @@ const scenarios = [
           await page.goto(BASE + APP, { waitUntil: "domcontentloaded" });
           await page.waitForSelector("body[data-workspace]");
           await page.evaluate(() => { try { arcade.close(); } catch (e) {} });
-          if (width <= 900 && ['college', 'scholarships'].includes(scenario.name)) await page.click('#deskMenu');
+          if (width <= 900 && ['college', 'scholarships', 'plan', 'plan-form', 'worksheet'].includes(scenario.name)) await page.click('#deskMenu');
           await scenario.go(page);
           const res = await page.evaluate(AUDIT);
           res.rows.forEach((r) => all.push(Object.assign({ theme, screen: scenario.name, width }, r)));

@@ -151,14 +151,10 @@ body.pd-shell .cab-chip.on{background:#2b2bff}
   body.pd-shell:not(.workspace-practicing) .topbar #bbMore:hover{background:var(--desk-tint)}
   body.pd-shell:not(.workspace-practicing) .topbar #bbMore svg{width:20px;height:20px}
   body.pd-shell:not(.workspace-practicing) .topbar #bbMore span{display:inline}
-  /* Between 901 and 1279px the bar cannot hold every label: inactive tabs show their icon only
+  /* Between 901 and 1439px the bar cannot hold every label: inactive tabs show their icon only
      (titles carry the name), and the account and More buttons shrink to icons. */
 }
-@media (min-width:1280px) and (max-width:1439px){
-  body.pd-shell:not(.workspace-practicing) .topbar #bbMore span,
-  body.pd-shell:not(.workspace-practicing) .topbar #btnAccount>span:not(:first-child){display:none}
-}
-@media (min-width:901px) and (max-width:1279px){
+@media (min-width:901px) and (max-width:1439px){
   body.pd-shell:not(.workspace-practicing) .topbar{padding:0 16px!important}
   body.pd-shell:not(.workspace-practicing) .topbar .brand{margin-right:12px}
   body.pd-shell:not(.workspace-practicing) .topbar .arcade-btn:not(.active)>span{display:none}

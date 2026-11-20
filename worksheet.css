@@ -1,0 +1,80 @@
+/* Worksheet maker. The dialog follows the site theme; the sheet itself is always black on white with
+   system fonts so a printout or image looks the same everywhere. Rules that style the sheet start with
+   .ws-sheet so worksheet.js can copy them into the downloadable image. */
+
+/* ---- dialog ---- */
+body.ws-open{overflow:hidden}
+.ws-root{position:fixed;inset:0;z-index:300;display:flex;justify-content:center;align-items:stretch;background:rgba(10,14,20,.55);padding:16px}
+.ws-root[hidden]{display:none}
+.ws-modal{display:flex;flex-direction:column;width:min(1180px,100%);max-height:100%;background:var(--desk-bg,#fff);color:var(--desk-ink,#111);border:2px solid var(--desk-ink,#111);border-radius:12px;overflow:hidden;outline:0}
+.ws-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:var(--desk-soft,#eef0f4);border-bottom:2px solid var(--desk-ink,#111)}
+.ws-bar h2{margin:0;font-size:18px;font-weight:800}
+.ws-layout{display:grid;grid-template-columns:minmax(300px,360px) minmax(0,1fr);min-height:0;flex:1}
+.ws-controls{overflow:auto;padding:16px;border-right:2px solid var(--desk-ink,#111);display:flex;flex-direction:column;gap:12px}
+.ws-previewwrap{overflow:auto;background:#d6dae1;padding:20px}
+.ws-preview{max-width:816px;margin:0 auto;background:#fff;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.ws-fieldrow{display:flex;gap:12px}
+.ws-fieldrow label,.ws-controls label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:700}
+.ws-opts{display:flex;flex-direction:column;gap:6px}
+.ws-opt{flex-direction:row!important;align-items:center;gap:8px!important;font-weight:600!important}
+.ws-help{margin:0;font-size:13px;color:var(--desk-muted,#555)}
+.ws-count{margin:0;font-size:13px;font-weight:700}
+.ws-skilllist{max-height:260px;overflow:auto;border:1px solid var(--desk-line,#ccd);border-radius:8px;padding:8px 10px}
+.ws-skills{border:0;margin:0 0 8px;padding:0}
+.ws-skills legend{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:0;margin-bottom:4px}
+.ws-skill{flex-direction:row!important;align-items:center;gap:8px!important;font-weight:500!important;padding:3px 0}
+.ws-acc{font-style:normal;color:var(--desk-muted,#555);font-size:12px}
+.ws-actions{display:flex;flex-wrap:wrap;gap:8px}
+@media (max-width:820px){
+  .ws-root{padding:0}
+  .ws-modal{border-radius:0;border-width:0}
+  .ws-layout{display:block;overflow:auto}
+  .ws-controls{border-right:0;border-bottom:2px solid var(--desk-ink,#111);overflow:visible}
+  .ws-previewwrap{overflow:visible;padding:12px}
+}
+
+/* ---- the sheet ---- */
+.ws-sheet{box-sizing:border-box;padding:40px 46px;font:14px/1.45 "Helvetica Neue",Helvetica,Arial,sans-serif;color:#111;background:#fff;text-align:left}
+.ws-sheet *{box-sizing:border-box;color:#111}
+.ws-sheet .ws-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding-bottom:12px;border-bottom:3px solid #111;margin-bottom:18px}
+.ws-sheet .ws-brand{font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.ws-sheet .ws-title{margin:2px 0 2px;font:800 22px/1.2 "Helvetica Neue",Helvetica,Arial,sans-serif}
+.ws-sheet .ws-sub{font-size:12px;color:#444}
+.ws-sheet .ws-who{display:flex;flex-direction:column;gap:8px;font-size:13px;min-width:230px}
+.ws-sheet .ws-who>div{display:flex;align-items:flex-end;gap:6px;white-space:nowrap}
+.ws-sheet .ws-line{display:inline-block;flex:1;min-width:90px;border-bottom:1.5px solid #111;height:1em}
+.ws-sheet .ws-line.short{min-width:40px;flex:0 0 46px}
+.ws-sheet .ws-qs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:18px}
+.ws-sheet .ws-q{display:flex;gap:12px;break-inside:avoid;page-break-inside:avoid}
+.ws-sheet .ws-qn{flex:0 0 28px;height:28px;border:2px solid #111;border-radius:6px;background:#111;color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center}
+.ws-sheet .ws-qn{color:#fff}
+.ws-sheet .ws-qb{flex:1;min-width:0}
+.ws-sheet .ws-passage{font:13px/1.5 Georgia,"Times New Roman",serif;border-left:3px solid #999;padding:2px 0 2px 12px;margin:0 0 10px;white-space:pre-line}
+.ws-sheet .ws-same{margin:0 0 8px;font-size:12px;color:#444;font-style:italic}
+.ws-sheet .ws-stem{margin:0 0 8px;white-space:pre-line;font-weight:600}
+.ws-sheet .ws-ch{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.ws-sheet .ws-ch li{display:flex;gap:10px;align-items:flex-start}
+.ws-sheet .ws-bub{flex:0 0 22px;height:22px;border:1.5px solid #111;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.ws-sheet .ws-free{margin:6px 0 0;display:flex;gap:8px;align-items:flex-end}
+.ws-sheet .ws-work{height:92px;margin-top:8px;border:1px dashed #999;border-radius:6px}
+.ws-sheet .ws-empty{padding:30px;text-align:center;color:#555}
+.ws-sheet .ws-keypage{margin-top:28px;padding-top:12px;border-top:3px solid #111}
+.ws-sheet .ws-keypage h2{margin:0 0 2px;font:800 20px/1.2 "Helvetica Neue",Helvetica,Arial,sans-serif}
+.ws-sheet .ws-keygrid{list-style:decimal inside;margin:12px 0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:6px 14px;font-size:14px}
+.ws-sheet .ws-exps{margin:12px 0 0;padding-left:22px;font-size:12.5px;display:flex;flex-direction:column;gap:6px}
+.ws-sheet .ws-foot{margin-top:26px;padding-top:8px;border-top:1px solid #bbb;font-size:11px;color:#555;text-align:center}
+
+/* ---- print: only the sheet ---- */
+#wsPrintRoot{display:none}
+@media print{
+  @page{margin:14mm}
+  html,body{background:#fff!important}
+  body>*:not(#wsPrintRoot){display:none!important}
+  #wsPrintRoot{display:block!important}
+  #wsPrintRoot .ws-sheet{padding:0}
+  #wsPrintRoot .ws-keypage{break-before:page;page-break-before:always;border-top:0;margin-top:0;padding-top:0}
+  .sponsor-slot,.sponsor-rail{display:none!important}
+}
+
+/* Subject practice row button */
+.sk-go .sk-ws{margin-left:6px;min-height:36px;padding:4px 12px}

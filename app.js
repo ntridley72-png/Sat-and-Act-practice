@@ -3254,7 +3254,7 @@ const DEFAULT_PROFILE = {
   tokens: 0, arcadeSeconds: ARCDE_START_SEC, qSinceToken: 0,
   bestStreak: 0, dailyStreak: 0, bestDailyStreak: 0, activityDays: [], fullPracticeDraft: null, totalCorrect: 0, totalAttempts: 0,
   highScores: { pacman: 0, snake: 0, pong: 0, watersort: 0, tetris: 0, doom: 0, pressurewash: 0, "2048": 0, breakout: 0, flappy: 0, minesweeper: 0, connect4: 0, wordgame: 0, sudoku: 0, solitaire: 0, hopper: 0, stack: 0, doodle: 0, wordscape: 0, blackjack: 0, tictactoe: 0, blockblast: 0, bubbles: 0, invaders: 0, racing: 0, drift: 0, dirtbike: 0, battleships: 0 },
-  soundOn: true, history: [], seen: {}, served: {}, lastServed: {}, recentQuestions: [], recentFamilies: [], selectionSequence: 0, qlog: {}, bookmarks: [], curve: "pt4", college: null, scholarships: null, garage: null, lastPlayed: {}, favorites: [], skillStats: {}, vocabStats: null, updatedAt: 0
+  soundOn: true, history: [], seen: {}, served: {}, lastServed: {}, recentQuestions: [], recentFamilies: [], selectionSequence: 0, qlog: {}, bookmarks: [], curve: "pt4", college: null, scholarships: null, garage: null, lastPlayed: {}, favorites: [], skillStats: {}, scoreReports: [], studyPlan: null, vocabStats: null, updatedAt: 0
 };
 let profile = JSON.parse(JSON.stringify(DEFAULT_PROFILE));
 
@@ -3509,7 +3509,7 @@ function render() {
   if (state.view === "routing") renderRouting();
   else renderQuestion();
 }
-function showScreen(id) { ["screen-start", "screen-test", "screen-results", "screen-college", "screen-subjects", "screen-scholarships"].forEach((s) => { $(s).style.display = s === id ? "block" : "none"; });
+function showScreen(id) { ["screen-start", "screen-test", "screen-results", "screen-college", "screen-subjects", "screen-scholarships", "screen-plan"].forEach((s) => { $(s).style.display = s === id ? "block" : "none"; });
   document.body.classList.toggle("practice-test-active", id === "screen-test");
   if (window.FunSatAds && typeof window.FunSatAds.setPracticeMode === "function") window.FunSatAds.setPracticeMode(id === "screen-test");
   // Slots inside this screen were skipped while it was hidden; mount them now.
@@ -3517,6 +3517,7 @@ function showScreen(id) { ["screen-start", "screen-test", "screen-results", "scr
   const practiceActive = id === "screen-start" || id === "screen-test" || id === "screen-results";
   $("btnPractice")?.classList.toggle("active",practiceActive);
   $("btnSubjectPractice")?.classList.toggle("active",id==="screen-subjects");
+  $("btnPlan")?.classList.toggle("active",id==="screen-plan");
   $("btnCollege")?.classList.toggle("active",id==="screen-college");
   $("btnScholarships")?.classList.toggle("active",id==="screen-scholarships");
   if (id !== "screen-test") { try { calcTool.close(); if (lineReader.on) lineReader.toggle(); if (highlighter.on) highlighter.toggle(); } catch (e) {} }

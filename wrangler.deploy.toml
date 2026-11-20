@@ -1,0 +1,44 @@
+# Deploy config for machines that cannot run the [build] step in wrangler.toml (it needs a POSIX shell
+# and python3, so it fails on plain Windows). Build public/ elsewhere (wrangler.toml's build command, run
+# on Linux/macOS/WSL), unpack it next to this file, then:
+#   npx wrangler deploy --config wrangler.deploy.toml
+# Keep every other line identical to wrangler.toml: only the [build] table is removed.
+
+# One Worker serves both the app (at /) and the account API (at /api/*),
+# so the app and API share an address and nothing else needs configuring.
+name = "sat-act-practice"
+main = "worker/index.js"
+compatibility_date = "2026-09-01"
+
+# Serve the app at funsat.bid. The domain must be added to this same Cloudflare account
+# (Websites → Add a domain) before deploying; Cloudflare then creates the DNS record itself.
+workers_dev = true  # backup address: sat-act-practice.<your-subdomain>.workers.dev
+# Both hostnames are routed to the Worker; worker/index.js 301s www -> apex so
+# there is exactly one canonical host. Cloudflare creates the DNS records for
+# each custom domain on deploy. If a deploy errors on the www entry, add
+# www.funsat.bid as a custom domain in the dashboard once, then redeploy.
+routes = [
+  { pattern = "funsat.bid", custom_domain = true },
+  { pattern = "www.funsat.bid", custom_domain = true },
+]
+
+# After verifying funsat.bid in Resend, uncomment this so reset emails can reach anyone:
+# [vars]
+# MAIL_FROM = "FunSAT <no-reply@funsat.bid>"
+
+# Prebuilt bundle: public/ was produced by the [build] command in wrangler.toml, so nothing runs here.
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
+html_handling = "none"
+
+# Cloudflare Workers AI for the tutor (free daily allowance, no API key).
+[ai]
+binding = "AI"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sat-act-practice-db"
+database_id = "8f1793ec-e23e-439e-9285-55f183146491"

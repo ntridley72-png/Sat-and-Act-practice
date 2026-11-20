@@ -176,6 +176,16 @@ body[data-workspace="exam"].workspace-practicing #screen-test .workspace-learnin
   background:#fff;color:var(--bb-ink);border:2px solid var(--bb-ink);border-radius:14px;box-shadow:0 14px 36px rgba(0,0,0,.32)}
 body[data-workspace="exam"].workspace-practicing.bb-ai-open #screen-test .workspace-learning{display:block!important}
 body[data-workspace="exam"].workspace-practicing #screen-test .workspace-learning h2{font-size:16px;margin:0 0 8px}
+/* The tutor panel as a titled pane, like every other panel: gray title bar with the heavy underline, pill tabs and buttons. */
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-learning{padding:0 0 14px;border-radius:12px}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-learning>*:not(h2){margin-left:16px;margin-right:16px}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-learning h2{margin:0 0 12px;padding:11px 16px;background:var(--desk-soft,#f3f4f6);border-bottom:2px solid var(--bb-ink);border-radius:10px 10px 0 0;font-size:16px;font-weight:800}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-learning .learning-tabs{gap:6px;border-bottom:0;margin-bottom:12px;padding:2px 2px 4px}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-learning .learning-tab{padding:6px 13px;background:#fff;color:var(--bb-ink);border:2px solid var(--bb-ink);border-radius:20px;font-size:12px;font-weight:800;box-shadow:none}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-learning .learning-tab[aria-selected="true"]{background:var(--desk-tint,#eaf1ff);border-color:var(--desk-accent,#0b5fff);color:var(--desk-accent,#0b5fff);box-shadow:none}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-learning button:not(.learning-tab){min-height:34px;padding:5px 14px;background:#fff;color:var(--bb-ink);border:2px solid var(--bb-ink);border-radius:20px;font-weight:800;box-shadow:none}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-learning #csend{background:var(--desk-accent,#0b5fff);border-color:var(--desk-accent,#0b5fff);color:#fff}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-learning :is(#cinput,textarea){border:2px solid var(--bb-ink);border-radius:10px}
 body[data-workspace="exam"].workspace-practicing #screen-test .bbx-sheetbar{display:none}
 
 /* ---------- Phones ---------- */

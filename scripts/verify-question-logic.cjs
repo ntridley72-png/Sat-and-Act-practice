@@ -341,9 +341,11 @@ function verifyText(q, out) {
     if (keyed !== ", yet") fail(`contrast between two clauses needs ", yet"; key is ${JSON.stringify(keyed)}`);
     return true;
   }
-  if (/The .+, ___ , was filed with the .+ on Friday/.test(stem)) {
-    if (keyed === "" || /^(?:which is|and|who|that) /.test(keyed)) fail(`a phrase between commas takes no extra "which is" or "and"; key is ${JSON.stringify(keyed)}`);
-    only((c) => String(c) !== "" && !/^(?:which is|and|who|that) /.test(String(c)), "are a bare phrase");
+  if (/^The .+ ___ was filed with the .+ on Friday/.test(stem)) {
+    // A removable describing phrase takes a comma on each side. Every choice has the same words and differs only in punctuation.
+    const bothSides = (c) => /^, .+,$/.test(String(c));
+    if (!bothSides(keyed)) fail(`a removable phrase needs a comma on each side; key is ${JSON.stringify(keyed)}`);
+    only(bothSides, "set the phrase off with a comma on each side");
     return true;
   }
   if (/Which choice completes the text with the most logical transition\?/.test(stem) && /___/.test(stem)) {
@@ -449,6 +451,7 @@ const VOWEL_SOUND_EXCEPT_A = /^(?:one|once|u(?:ni|ti|se|su|ro|ra|ber)|eu|ew)/i; 
 const SILENT_H = /^(?:hour|honest|honor|honour|heir)/i;                          // "an hour"
 function hygiene(q) {
   const out = [];
+  (q.choices || []).forEach((c, i) => { if (String(c).trim() === "") out.push({ level: "fail", rule: "blank-choice", msg: `choice ${String.fromCharCode(65 + i)} is empty` }); });
   const parts = [["question", String(q.q)], ["passage", String(q.passage || "")], ["explanation", String(q.exp || "")]].concat((q.choices || []).map((c, i) => ["choice " + String.fromCharCode(65 + i), String(c)])).concat((q.dw || []).map((d, i) => ["distractor note " + (i + 1), String(d)]));
   const LABELLED = /(?:Student|Scientist|Trial|Study|Sample|Experiment|Group|Model|Theory|Text|Passage|Option|Method|Figure|Table|Test|Plan|Machine|Container|Surface|Species|Site|Case|Part|Step|Line|Point|Week|Day|Year|Hour|Minute|Time|Run|Set|Phase|Unit|Level|Number|Quartile|Class|Type|Fund|Account|Team|Lab|Tank|Check)\s$|[=<>≤≥(−-]\s?$/;
   parts.forEach(([where, t]) => {

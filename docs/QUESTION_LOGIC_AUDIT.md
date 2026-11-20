@@ -38,7 +38,7 @@ The audit did find and fix real defects (below), so it is not a rubber stamp.
 - **Hand-written questions with no template.** Solved from the stem (and passage) alone, *without looking at the
   key*, then compared. The answers are stored as text in `scripts/data/*-hand-solved.json`, so reordering choices
   never invalidates them.
-- **Every question:** answer leaks (only the key is labelled, has a decimal, or lacks the shared first word),
+- **Every question:** blank choices, answer leaks (only the key is labelled, has a decimal, or lacks the shared first word),
   numerically equal choices, contradictions between identical questions, runs of the same keyed position, broken
   wording (template leaks, "1 copies", non-word distractors, "a umbrella"), explanation that never reaches the key.
 
@@ -57,6 +57,7 @@ The audit did find and fix real defects (below), so it is not a rubber stamp.
 | Purpose-of-text answer was the only choice not starting "to ..." (a giveaway) | 12 | key starts "to ..." |
 | Two defensible answers: colon vs semicolon (w112), "they" vs "he or she" (w2008), a second grammatical option (w2022) | 3 | distractors replaced, explanations rewritten |
 | ACT English item with no grammatical answer (ae4146) | 1 | withheld |
+| Punctuation family ("The reading guide, ___ , was filed...") offered a blank choice and a second grammatical answer ("which is first of its kind"). Found afterwards by looking at a rendered test; the first pass of this audit had accepted it | 20 | rebuilt as a comma-placement item (all four choices carry the same words, one has a comma on each side); `verify-question-logic.cjs` now solves it and rejects any blank choice |
 | Nine exact duplicates inflating topic counts | 9 | made distinct questions again (new topics and nouns) |
 | 19-21 questions in a row all keyed to one letter | 4 runs | keys spread by a documented load-time pass in `app.js` |
 | Typography ("___ :") | 3 | fixed |

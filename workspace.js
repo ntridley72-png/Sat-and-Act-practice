@@ -139,13 +139,19 @@
   };
   const baseShowScreen=showScreen;
   let shownScreen=null;
-  showScreen=function(id){document.body.classList.toggle('workspace-practicing',id==='screen-test');baseShowScreen(id);
+  // ".pd-in-test" is ".workspace-practicing" minus the page between modules (routing), where the normal site chrome returns.
+  // bluebook-site.css keys the site skin on it, so it is set in the same statements as .workspace-practicing.
+  const syncInTest=()=>document.body.classList.toggle('pd-in-test',document.body.classList.contains('workspace-practicing')&&state.view!=='routing');
+  const baseRender=render;
+  render=function(){const result=baseRender.apply(this,arguments);syncInTest();return result;};
+  showScreen=function(id){document.body.classList.toggle('workspace-practicing',id==='screen-test');syncInTest();baseShowScreen(id);syncInTest();
     if(id!=='screen-test'){document.body.append($('calcPanel'));toolsHome.append(toolbar);}
     // Practice is usually started from a button well down the home screen, and
     // nothing reset the scroll, so the student arrived below the question.
     if(id!==shownScreen){shownScreen=id;try{window.scrollTo(0,0);}catch(e){}}
   };
   document.body.classList.toggle('workspace-practicing',state.view==='test'||state.view==='routing');
+  syncInTest();
   if(state.view==='test')renderQuestion();
 })();
 

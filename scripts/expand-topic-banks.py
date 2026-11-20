@@ -523,12 +523,17 @@ def fam_tense(i):
         exp="Past perfect 'had finished' marks the earlier of two past events.")
 
 def fam_punct(i):
+    # A nonrestrictive phrase needs a comma on BOTH sides. Every choice carries the same words and differs only in
+    # punctuation, so exactly one is correct (an earlier version offered "which is ..." and a blank, which left two
+    # defensible answers and an empty choice).
     who, work = NOUNS[(i + 11) % len(NOUNS)]
-    desc = ["first of its kind", "still under revision", "shared by three offices"][i % 3]
-    q = f"The {work}, ___ , was filed with the {who} on Friday.\nWhich choice completes the text so that it conforms to Standard English?"
-    return dict(skill="Punctuation", diff=diff_for(i), q=q, correct=desc,
-        wrongs=[("" if desc != "" else "a draft", "The parenthetical description must be set off by commas on both sides."),("and " + desc, "A conjunction changes the sentence structure; the interrupter needs commas, not a conjunction."),("which is " + desc, "A 'which' clause would need its own comma pairing and shifts the meaning.")],
-        exp="Nonrestrictive interrupters take commas on both sides: 'The " + work + ", " + desc + ", was filed.'")
+    desc = ["the first of its kind", "still under revision", "shared by three offices"][i % 3]
+    q = f"The {work} ___ was filed with the {who} on Friday.\nWhich choice completes the text so that it conforms to Standard English?"
+    return dict(skill="Punctuation", diff=diff_for(i), q=q, correct=f", {desc},",
+        wrongs=[(f", {desc}", "The closing comma is missing, so the phrase is not fully set off from the verb."),
+                (f"{desc},", "The opening comma is missing; the phrase must be set off on both sides."),
+                (f"; {desc},", "A semicolon joins independent clauses; it cannot introduce a describing phrase.")],
+        exp="A describing phrase that can be removed needs a comma on each side: 'The " + work + ", " + desc + ", was filed.'")
 
 def fam_bound(i):
     who, work = NOUNS[(i + 13) % len(NOUNS)]

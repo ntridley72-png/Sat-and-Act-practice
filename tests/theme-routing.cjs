@@ -116,7 +116,10 @@ function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); re
   if (!reached) throw new Error("could not reach the module-transition card");
 
   for (const theme of THEMES) {
+    // The page between modules has the site header, where the layout picker lives in the "More" menu; other layouts show it inline.
+    if (!(await page.locator("#workspaceTheme").isVisible()) && (await page.locator("#bbMore").isVisible().catch(() => false))) await page.click("#bbMore");
     await page.selectOption("#workspaceTheme", theme);
+    await page.keyboard.press("Escape");
     await page.waitForTimeout(120);
     await page.evaluate(() => render());
     await page.waitForTimeout(120);

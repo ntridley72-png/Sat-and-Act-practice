@@ -2,100 +2,102 @@
    Built on the Progress Desk variables so it follows the Light/Dark appearance:
    white surfaces, a dashed rule under headers and beside the rail, gray title bars with a
    heavy underline, 2px outlines on choices and fields, black number squares, blue pill buttons.
-   The practice screen has its own stylesheet (bluebook.css) and the arcade keeps its cabinet. */
+   The practice screen has its own stylesheet (bluebook.css) and the arcade keeps its cabinet.
+   ".pd-in-test" (set by bluebook-shell.js) is on only while a question is on screen. Between modules the
+   routing page is ordinary site chrome, so it takes the same header bar and page padding as every other screen. */
 
-body.pd-shell:not(.workspace-practicing),
+body.pd-shell:not(.pd-in-test),
 html[data-desk-appearance] body:has(.gwrap){
   --bb-ink:var(--desk-ink);--bb-line:var(--desk-line);--bb-bar:var(--desk-soft);--bb-blue:var(--desk-accent);
 }
 
 /* ---------- Rail and page headers ---------- */
 @media (min-width:901px){
-  body.pd-shell:not(.workspace-practicing) .topbar{border-right:2px dashed var(--bb-line)}
+  body.pd-shell:not(.pd-in-test) .topbar{border-right:2px dashed var(--bb-line)}
 }
-body.pd-shell:not(.workspace-practicing) .topbar .brand{font-weight:800;letter-spacing:-.04em}
-body.pd-shell:not(.workspace-practicing) :is(.st-head,.college-head,.subjects-head,.schl-head){
+body.pd-shell:not(.pd-in-test) .topbar .brand{font-weight:800;letter-spacing:-.04em}
+body.pd-shell:not(.pd-in-test) :is(.st-head,.college-head,.subjects-head,.schl-head){
   padding-bottom:14px;margin-bottom:18px;border-bottom:2px dashed var(--bb-line)}
-body.pd-shell:not(.workspace-practicing) .st-kicker,
-body.pd-shell:not(.workspace-practicing) :is(.college-head,.subjects-head) .kicker{font-weight:700;color:var(--desk-muted)}
+body.pd-shell:not(.pd-in-test) .st-kicker,
+body.pd-shell:not(.pd-in-test) :is(.college-head,.subjects-head) .kicker{font-weight:700;color:var(--desk-muted)}
 
 /* ---------- Surfaces with a title bar ---------- */
-body.pd-shell:not(.workspace-practicing) :is(.pd-summary,.pd-skills,.pd-comparison,.st-setup,.st-resume,#historyStart,.results-screen,:is(#screen-college,#screen-subjects,#screen-scholarships,#screen-review) .card){
+body.pd-shell:not(.pd-in-test) :is(.pd-summary,.pd-skills,.pd-comparison,.st-setup,.st-resume,#historyStart,.results-screen,:is(#screen-college,#screen-subjects,#screen-scholarships,#screen-review) .card){
   border:1px solid var(--bb-line);border-radius:12px;box-shadow:none}
-body.pd-shell:not(.workspace-practicing) .pd-skills>h2:first-child,
-body.pd-shell:not(.workspace-practicing) #historyStart>h3:first-child{
+body.pd-shell:not(.pd-in-test) .pd-skills>h2:first-child,
+body.pd-shell:not(.pd-in-test) #historyStart>h3:first-child{
   background:var(--bb-bar);border-bottom:2px solid var(--bb-ink);margin:-20px -20px 16px;padding:12px 20px;border-radius:12px 12px 0 0;font-size:17px;font-weight:800}
-body.pd-shell:not(.workspace-practicing) .pd-comparison>summary{
+body.pd-shell:not(.pd-in-test) .pd-comparison>summary{
   background:var(--bb-bar);border-bottom:2px solid var(--bb-ink);margin:-16px;padding:12px 16px;border-radius:12px;font-weight:800}
-body.pd-shell:not(.workspace-practicing) .pd-comparison[open]>summary{border-radius:12px 12px 0 0;margin-bottom:12px}
-body.pd-shell:not(.workspace-practicing) #screen-results .rs-h{
+body.pd-shell:not(.pd-in-test) .pd-comparison[open]>summary{border-radius:12px 12px 0 0;margin-bottom:12px}
+body.pd-shell:not(.pd-in-test) #screen-results .rs-h{
   background:var(--bb-bar);border-bottom:2px solid var(--bb-ink);margin:-20px -20px 16px;padding:12px 20px;font-size:19px;font-weight:800;border-radius:12px 12px 0 0}
-body.pd-shell:not(.workspace-practicing) .pd-summary .pd-stat strong{font-weight:800}
+body.pd-shell:not(.pd-in-test) .pd-summary .pd-stat strong{font-weight:800}
 
 /* ---------- Tables: title bar, heavy rule, dashed rows ---------- */
-body.pd-shell:not(.workspace-practicing) table thead th{
+body.pd-shell:not(.pd-in-test) table thead th{
   background:var(--bb-bar);border-bottom:2px solid var(--bb-ink);color:var(--bb-ink);font-weight:800}
-body.pd-shell:not(.workspace-practicing) table tbody tr td,
-body.pd-shell:not(.workspace-practicing) table tbody tr th{border-bottom:1px dashed var(--bb-line)}
-body.pd-shell:not(.workspace-practicing) .pd-skills th{font-size:12px;color:var(--bb-ink)}
+body.pd-shell:not(.pd-in-test) table tbody tr td,
+body.pd-shell:not(.pd-in-test) table tbody tr th{border-bottom:1px dashed var(--bb-line)}
+body.pd-shell:not(.pd-in-test) .pd-skills th{font-size:12px;color:var(--bb-ink)}
 
 /* ---------- Pickers, chips and number squares ---------- */
-body.pd-shell:not(.workspace-practicing) #app .pick{
+body.pd-shell:not(.pd-in-test) #app .pick{
   border:2px solid var(--bb-ink);border-radius:10px;background:var(--desk-surface);color:var(--bb-ink);font-weight:700}
-body.pd-shell:not(.workspace-practicing) #app .pick.selected{border-color:var(--bb-blue);background:var(--desk-tint);color:var(--bb-ink)}
-body.pd-shell:not(.workspace-practicing) #app .seg .pick{border-radius:10px}
-body.pd-shell:not(.workspace-practicing) .st-n{
+body.pd-shell:not(.pd-in-test) #app .pick.selected{border-color:var(--bb-blue);background:var(--desk-tint);color:var(--bb-ink)}
+body.pd-shell:not(.pd-in-test) #app .seg .pick{border-radius:10px}
+body.pd-shell:not(.pd-in-test) .st-n{
   background:var(--bb-ink);color:var(--desk-bg);border:0;border-radius:0;font-weight:800;display:inline-grid;place-items:center}
-body.pd-shell:not(.workspace-practicing) :is(.subject-tab,.scholar-chip,.hsc-tab){
+body.pd-shell:not(.pd-in-test) :is(.subject-tab,.scholar-chip,.hsc-tab){
   border:2px solid var(--bb-ink);border-radius:999px;background:var(--desk-surface);color:var(--bb-ink);font-weight:700}
-body.pd-shell:not(.workspace-practicing) :is(.subject-tab,.scholar-chip,.hsc-tab).active,
-body.pd-shell:not(.workspace-practicing) :is(.subject-tab,.scholar-chip,.hsc-tab)[aria-pressed="true"]{
+body.pd-shell:not(.pd-in-test) :is(.subject-tab,.scholar-chip,.hsc-tab).active,
+body.pd-shell:not(.pd-in-test) :is(.subject-tab,.scholar-chip,.hsc-tab)[aria-pressed="true"]{
   border-color:var(--bb-blue);background:var(--desk-tint);color:var(--bb-blue)}
-body.pd-shell:not(.workspace-practicing) .schl-gchip{border:2px solid var(--bb-ink);border-radius:10px;background:var(--desk-surface);color:var(--bb-ink);font-weight:800}
-body.pd-shell:not(.workspace-practicing) .schl-gchip:is([aria-pressed="true"],.on){border-color:var(--bb-blue);background:var(--desk-tint);color:var(--bb-blue)}
+body.pd-shell:not(.pd-in-test) .schl-gchip{border:2px solid var(--bb-ink);border-radius:10px;background:var(--desk-surface);color:var(--bb-ink);font-weight:800}
+body.pd-shell:not(.pd-in-test) .schl-gchip:is([aria-pressed="true"],.on){border-color:var(--bb-blue);background:var(--desk-tint);color:var(--bb-blue)}
 
 /* ---------- Buttons ---------- */
-body.pd-shell:not(.workspace-practicing) #app :is(#btnStart,#btnResume,.cta,.cc-add,.schl-official,.hsc-cta,.primary){
+body.pd-shell:not(.pd-in-test) #app :is(#btnStart,#btnResume,.cta,.cc-add,.schl-official,.hsc-cta,.primary){
   border:2px solid var(--bb-blue);border-radius:24px;background:var(--bb-blue);color:var(--desk-on-accent);font-weight:800}
-body.pd-shell:not(.workspace-practicing) #app :is(.secondary,.ghost,.sk-drill,.schl-mylist,#deskSetTarget,.st-setup-act,#btnDiscard):not(.arcade-btn){
+body.pd-shell:not(.pd-in-test) #app :is(.secondary,.ghost,.sk-drill,.schl-mylist,#deskSetTarget,.st-setup-act,#btnDiscard):not(.arcade-btn){
   border:2px solid var(--bb-blue);border-radius:24px;background:var(--desk-surface);color:var(--bb-blue);font-weight:800;text-decoration:none}
-body.pd-shell:not(.workspace-practicing) #app :is(.secondary,.ghost,.sk-drill,.schl-mylist,#deskSetTarget,.st-setup-act):not(.arcade-btn):hover:not(:disabled){background:var(--desk-tint)}
-body.pd-shell:not(.workspace-practicing) #app :is(.secondary,.ghost,.sk-drill):disabled{border-color:var(--bb-line);color:var(--desk-muted);background:var(--bb-bar)}
-body.pd-shell:not(.workspace-practicing) .pd-skills button{color:var(--bb-blue)!important}
+body.pd-shell:not(.pd-in-test) #app :is(.secondary,.ghost,.sk-drill,.schl-mylist,#deskSetTarget,.st-setup-act):not(.arcade-btn):hover:not(:disabled){background:var(--desk-tint)}
+body.pd-shell:not(.pd-in-test) #app :is(.secondary,.ghost,.sk-drill):disabled{border-color:var(--bb-line);color:var(--desk-muted);background:var(--bb-bar)}
+body.pd-shell:not(.pd-in-test) .pd-skills button{color:var(--bb-blue)!important}
 
 /* ---------- Fields ---------- */
-body.pd-shell:not(.workspace-practicing) :is(#app,.modal) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),select,textarea){
+body.pd-shell:not(.pd-in-test) :is(#app,.modal) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),select,textarea){
   border:2px solid var(--bb-ink);border-radius:8px;background:var(--desk-surface);color:var(--bb-ink)}
-body.pd-shell:not(.workspace-practicing) :is(#app,.modal) :is(input,select,textarea):focus-visible{outline:3px solid var(--bb-blue);outline-offset:1px}
+body.pd-shell:not(.pd-in-test) :is(#app,.modal) :is(input,select,textarea):focus-visible{outline:3px solid var(--bb-blue);outline-offset:1px}
 
 /* A search box that wraps its input draws the outline once, on the wrapper. */
-body.pd-shell:not(.workspace-practicing) .schl-search{border:2px solid var(--bb-ink);border-radius:10px}
-body.pd-shell:not(.workspace-practicing) .schl-search input{border:0!important;border-radius:0;outline:0!important;background:transparent}
-body.pd-shell:not(.workspace-practicing) .schl-search:focus-within{border-color:var(--bb-blue);box-shadow:0 0 0 3px var(--desk-tint)}
+body.pd-shell:not(.pd-in-test) .schl-search{border:2px solid var(--bb-ink);border-radius:10px}
+body.pd-shell:not(.pd-in-test) .schl-search input{border:0!important;border-radius:0;outline:0!important;background:transparent}
+body.pd-shell:not(.pd-in-test) .schl-search:focus-within{border-color:var(--bb-blue);box-shadow:0 0 0 3px var(--desk-tint)}
 
 /* ---------- College, scholarship and subject cards read like answer options ---------- */
-body.pd-shell:not(.workspace-practicing) :is(.schl-card,.cc-card,.college-card,.history-item,.hsc-item){
+body.pd-shell:not(.pd-in-test) :is(.schl-card,.cc-card,.college-card,.history-item,.hsc-item){
   border:2px solid var(--bb-ink);border-radius:10px;background:var(--desk-surface)}
-body.pd-shell:not(.workspace-practicing) :is(.schl-card,.cc-card,.college-card).sel,
-body.pd-shell:not(.workspace-practicing) :is(.schl-card,.cc-card,.college-card)[aria-selected="true"]{border-color:var(--bb-blue);background:var(--desk-tint)}
-body.pd-shell:not(.workspace-practicing) .schl-detail,body.pd-shell:not(.workspace-practicing) .schl-filters{border:1px solid var(--bb-line);border-radius:12px}
+body.pd-shell:not(.pd-in-test) :is(.schl-card,.cc-card,.college-card).sel,
+body.pd-shell:not(.pd-in-test) :is(.schl-card,.cc-card,.college-card)[aria-selected="true"]{border-color:var(--bb-blue);background:var(--desk-tint)}
+body.pd-shell:not(.pd-in-test) .schl-detail,body.pd-shell:not(.pd-in-test) .schl-filters{border:1px solid var(--bb-line);border-radius:12px}
 
 /* ---------- Answer review: each question is a Bluebook panel ---------- */
-body.pd-shell:not(.workspace-practicing) .results-screen .review{
+body.pd-shell:not(.pd-in-test) .results-screen .review{
   border:2px solid var(--bb-ink);border-left:2px solid var(--bb-ink);border-radius:10px;margin:14px 0;background:var(--desk-surface)}
-body.pd-shell:not(.workspace-practicing) .results-screen .review[data-outcome="right"]{border-color:var(--fx-good,#176341)}
-body.pd-shell:not(.workspace-practicing) .results-screen .review[data-outcome="wrong"]{border-color:var(--fx-deny,#a62d29)}
-body.pd-shell:not(.workspace-practicing) .review-head{background:var(--bb-bar);border-bottom:2px solid var(--bb-ink);padding:10px 14px;align-items:center}
-body.pd-shell:not(.workspace-practicing) .review-head>span:first-child>strong{
+body.pd-shell:not(.pd-in-test) .results-screen .review[data-outcome="right"]{border-color:var(--fx-good,#176341)}
+body.pd-shell:not(.pd-in-test) .results-screen .review[data-outcome="wrong"]{border-color:var(--fx-deny,#a62d29)}
+body.pd-shell:not(.pd-in-test) .review-head{background:var(--bb-bar);border-bottom:2px solid var(--bb-ink);padding:10px 14px;align-items:center}
+body.pd-shell:not(.pd-in-test) .review-head>span:first-child>strong{
   display:inline-block;min-width:28px;padding:3px 9px;margin-right:8px;background:var(--bb-ink);color:var(--desk-bg);text-align:center;font-weight:800}
-body.pd-shell:not(.workspace-practicing) .review-head .tag{border-radius:999px;border:1.5px solid currentColor;font-weight:800;background:transparent}
-body.pd-shell:not(.workspace-practicing) .review-body :is(.correct-ans,.your-ans){
+body.pd-shell:not(.pd-in-test) .review-head .tag{border-radius:999px;border:1.5px solid currentColor;font-weight:800;background:transparent}
+body.pd-shell:not(.pd-in-test) .review-body :is(.correct-ans,.your-ans){
   display:inline-block;padding:4px 10px;border:2px solid currentColor;border-radius:8px;font-weight:700}
-body.pd-shell:not(.workspace-practicing) .review-body .correct-ans{color:var(--fx-good,#176341);background:var(--fx-good-bg,#e7f4ec)}
-body.pd-shell:not(.workspace-practicing) .review-body .your-ans{color:var(--fx-deny,#a62d29);background:var(--ws-error-bg,#fbece9)}
-body.pd-shell:not(.workspace-practicing) .rev-filter{border:2px solid var(--bb-ink);border-radius:999px;background:var(--desk-surface);color:var(--bb-ink);font-weight:800;padding:6px 14px}
-body.pd-shell:not(.workspace-practicing) .rev-filter.on{border-color:var(--bb-blue);background:var(--desk-tint);color:var(--bb-blue)}
-body.pd-shell:not(.workspace-practicing) .rev-bar h2{padding-bottom:6px;border-bottom:2px solid var(--bb-ink);flex:0 0 auto;margin-right:auto}
+body.pd-shell:not(.pd-in-test) .review-body .correct-ans{color:var(--fx-good,#176341);background:var(--fx-good-bg,#e7f4ec)}
+body.pd-shell:not(.pd-in-test) .review-body .your-ans{color:var(--fx-deny,#a62d29);background:var(--ws-error-bg,#fbece9)}
+body.pd-shell:not(.pd-in-test) .rev-filter{border:2px solid var(--bb-ink);border-radius:999px;background:var(--desk-surface);color:var(--bb-ink);font-weight:800;padding:6px 14px}
+body.pd-shell:not(.pd-in-test) .rev-filter.on{border-color:var(--bb-blue);background:var(--desk-tint);color:var(--bb-blue)}
+body.pd-shell:not(.pd-in-test) .rev-bar h2{padding-bottom:6px;border-bottom:2px solid var(--bb-ink);flex:0 0 auto;margin-right:auto}
 
 /* ---------- Public pages (guides, colleges, scores, scholarships) ---------- */
 html[data-desk-appearance] .gwrap h1{font-weight:800;letter-spacing:-.03em}
@@ -124,59 +126,59 @@ body.pd-shell .cab-chip.on{background:#2b2bff}
 
 /* ---------- Header bar (wide screens) ---------- */
 @media (min-width:901px){
-  body.pd-shell:not(.workspace-practicing) .topbar{
+  body.pd-shell:not(.pd-in-test) .topbar{
     inset:0 0 auto 0;width:100%;height:64px;max-height:none;flex-direction:row;align-items:center;gap:0;
     padding:0 24px!important;overflow:visible;border:0;border-bottom:2px dashed var(--bb-line);background:var(--desk-bg);z-index:60}
-  body.pd-shell:not(.workspace-practicing) .topbar .brand{margin:0 28px 0 0;font-size:22px;flex:none}
-  body.pd-shell:not(.workspace-practicing) .topbar .badges{display:flex;flex:1 1 auto;align-items:center;gap:0;height:64px;position:static;overflow:visible}
-  body.pd-shell:not(.workspace-practicing) .topbar #deskMenu{display:none}
-  body.pd-shell:not(.workspace-practicing) .topbar #btnHome::after{content:"Home"}
+  body.pd-shell:not(.pd-in-test) .topbar .brand{margin:0 28px 0 0;font-size:22px;flex:none}
+  body.pd-shell:not(.pd-in-test) .topbar .badges{display:flex;flex:1 1 auto;align-items:center;gap:0;height:64px;position:static;overflow:visible}
+  body.pd-shell:not(.pd-in-test) .topbar #deskMenu{display:none}
+  body.pd-shell:not(.pd-in-test) .topbar #btnHome::after{content:"Home"}
   /* Tabs */
-  body.pd-shell:not(.workspace-practicing) .topbar :is(.arcade-btn,#deskReview,#btnHome){
+  body.pd-shell:not(.pd-in-test) .topbar :is(.arcade-btn,#deskReview,#btnHome){
     width:auto;height:64px;min-height:64px;padding:0 12px!important;border-radius:0;gap:8px;font-size:14px;font-weight:700;
     border-width:0 0 3px 0!important;border-style:solid!important;border-color:transparent!important;background:transparent;color:var(--desk-ink)}
-  body.pd-shell:not(.workspace-practicing) .topbar :is(.arcade-btn,#deskReview,#btnHome):hover{background:var(--desk-tint);color:var(--desk-ink)}
-  body.pd-shell:not(.workspace-practicing) .topbar :is(.arcade-btn,#deskReview,#btnHome).active{
+  body.pd-shell:not(.pd-in-test) .topbar :is(.arcade-btn,#deskReview,#btnHome):hover{background:var(--desk-tint);color:var(--desk-ink)}
+  body.pd-shell:not(.pd-in-test) .topbar :is(.arcade-btn,#deskReview,#btnHome).active{
     background:var(--desk-tint);color:var(--desk-accent);border-bottom-color:var(--desk-accent)!important;border-left-color:transparent!important}
   /* Right-hand group: streak, wallet, sound, More, account */
-  body.pd-shell:not(.workspace-practicing) .topbar #hudStreak{order:20;margin-left:auto}
-  body.pd-shell:not(.workspace-practicing) .topbar #tokenBadge{order:21}
-  body.pd-shell:not(.workspace-practicing) .topbar #btnSound{order:22;width:auto;height:44px;min-height:44px;padding:0 12px!important;font-size:0;border-radius:8px}
-  body.pd-shell:not(.workspace-practicing) .topbar #btnSound::after{content:none}
-  body.pd-shell:not(.workspace-practicing) .topbar #bbMore{order:23}
-  body.pd-shell:not(.workspace-practicing) .topbar #btnAccount{order:24;width:auto;height:44px;min-height:44px;padding:0 12px!important;border-radius:8px}
-  body.pd-shell:not(.workspace-practicing) .topbar :is(#hudStreak,#tokenBadge){padding:0 10px;min-height:0;font-size:13px;font-weight:700;color:var(--desk-ink)}
-  body.pd-shell:not(.workspace-practicing) .topbar #bbMore{
+  body.pd-shell:not(.pd-in-test) .topbar #hudStreak{order:20;margin-left:auto}
+  body.pd-shell:not(.pd-in-test) .topbar #tokenBadge{order:21}
+  body.pd-shell:not(.pd-in-test) .topbar #btnSound{order:22;width:auto;height:44px;min-height:44px;padding:0 12px!important;font-size:0;border-radius:8px}
+  body.pd-shell:not(.pd-in-test) .topbar #btnSound::after{content:none}
+  body.pd-shell:not(.pd-in-test) .topbar #bbMore{order:23}
+  body.pd-shell:not(.pd-in-test) .topbar #btnAccount{order:24;width:auto;height:44px;min-height:44px;padding:0 12px!important;border-radius:8px}
+  body.pd-shell:not(.pd-in-test) .topbar :is(#hudStreak,#tokenBadge){padding:0 10px;min-height:0;font-size:13px;font-weight:700;color:var(--desk-ink)}
+  body.pd-shell:not(.pd-in-test) .topbar #bbMore{
     display:flex;align-items:center;gap:8px;height:44px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:var(--desk-ink);font:700 14px Archivo,system-ui,sans-serif}
-  body.pd-shell:not(.workspace-practicing) .topbar #bbMore:hover{background:var(--desk-tint)}
-  body.pd-shell:not(.workspace-practicing) .topbar #bbMore svg{width:20px;height:20px}
-  body.pd-shell:not(.workspace-practicing) .topbar #bbMore span{display:inline}
+  body.pd-shell:not(.pd-in-test) .topbar #bbMore:hover{background:var(--desk-tint)}
+  body.pd-shell:not(.pd-in-test) .topbar #bbMore svg{width:20px;height:20px}
+  body.pd-shell:not(.pd-in-test) .topbar #bbMore span{display:inline}
   /* Between 901 and 1439px the bar cannot hold every label: inactive tabs show their icon only
      (titles carry the name), and the account and More buttons shrink to icons. */
 }
 @media (min-width:901px) and (max-width:1439px){
-  body.pd-shell:not(.workspace-practicing) .topbar{padding:0 16px!important}
-  body.pd-shell:not(.workspace-practicing) .topbar .brand{margin-right:12px}
-  body.pd-shell:not(.workspace-practicing) .topbar .arcade-btn:not(.active)>span{display:none}
-  body.pd-shell:not(.workspace-practicing) .topbar :is(#deskReview,#btnHome):not(.active){font-size:0}
-  body.pd-shell:not(.workspace-practicing) .topbar :is(#deskReview,#btnHome):not(.active)::after{content:none}
-  body.pd-shell:not(.workspace-practicing) .topbar :is(.arcade-btn,#deskReview,#btnHome){padding:0 10px!important}
-  body.pd-shell:not(.workspace-practicing) .topbar #bbMore span,
-  body.pd-shell:not(.workspace-practicing) .topbar #btnAccount>span:not(:first-child){display:none}
-  body.pd-shell:not(.workspace-practicing) .topbar :is(#hudStreak,#tokenBadge){padding:0 6px}
+  body.pd-shell:not(.pd-in-test) .topbar{padding:0 16px!important}
+  body.pd-shell:not(.pd-in-test) .topbar .brand{margin-right:12px}
+  body.pd-shell:not(.pd-in-test) .topbar .arcade-btn:not(.active)>span{display:none}
+  body.pd-shell:not(.pd-in-test) .topbar :is(#deskReview,#btnHome):not(.active){font-size:0}
+  body.pd-shell:not(.pd-in-test) .topbar :is(#deskReview,#btnHome):not(.active)::after{content:none}
+  body.pd-shell:not(.pd-in-test) .topbar :is(.arcade-btn,#deskReview,#btnHome){padding:0 10px!important}
+  body.pd-shell:not(.pd-in-test) .topbar #bbMore span,
+  body.pd-shell:not(.pd-in-test) .topbar #btnAccount>span:not(:first-child){display:none}
+  body.pd-shell:not(.pd-in-test) .topbar :is(#hudStreak,#tokenBadge){padding:0 6px}
 }
 @media (min-width:901px){
   /* The popover */
-  body.pd-shell:not(.workspace-practicing) .topbar .bb-more-panel{
+  body.pd-shell:not(.pd-in-test) .topbar .bb-more-panel{
     display:none;position:fixed;top:68px;right:24px;width:260px;padding:14px;flex-direction:column;gap:12px;
     background:var(--desk-surface);color:var(--desk-ink);border:2px solid var(--bb-ink);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);z-index:80}
-  body.pd-shell.bb-more-open:not(.workspace-practicing) .topbar .bb-more-panel{display:flex}
-  body.pd-shell:not(.workspace-practicing) .topbar .bb-more-panel :is(.pd-appearance,.workspace-theme-label){padding:0;border:0;margin:0;order:0}
-  body.pd-shell:not(.workspace-practicing) .topbar .bb-more-panel #autosave{padding:0;color:var(--desk-muted)}
+  body.pd-shell.bb-more-open:not(.pd-in-test) .topbar .bb-more-panel{display:flex}
+  body.pd-shell:not(.pd-in-test) .topbar .bb-more-panel :is(.pd-appearance,.workspace-theme-label){padding:0;border:0;margin:0;order:0}
+  body.pd-shell:not(.pd-in-test) .topbar .bb-more-panel #autosave{padding:0;color:var(--desk-muted)}
   /* The page */
-  body.pd-shell:not(.workspace-practicing) .wrap,body.pd-shell.wide-test:not(.workspace-practicing) .wrap{
+  body.pd-shell:not(.pd-in-test) .wrap,body.pd-shell.wide-test:not(.pd-in-test) .wrap{
     max-width:1180px;margin:0 auto;padding:92px 28px 56px}
-  body.pd-shell:not(.workspace-practicing):has(#screen-start[style*="block"]) .wrap{max-width:1180px}
+  body.pd-shell:not(.pd-in-test):has(#screen-start[style*="block"]) .wrap{max-width:1180px}
 }
 @media (max-width:900px){
   body.pd-shell .topbar #bbMore{display:none}
@@ -186,107 +188,198 @@ body.pd-shell .cab-chip.on{background:#2b2bff}
 
 /* ---------- Practice desk: one bordered split pane with a footer bar ---------- */
 @media (min-width:901px){
-  body.pd-shell:not(.workspace-practicing) #screen-start .st-main{
+  body.pd-shell:not(.pd-in-test) #screen-start .st-main{
     gap:0;align-items:stretch;background:var(--desk-surface)!important;border:2px solid var(--bb-ink)!important;border-radius:12px;
     grid-template-columns:minmax(0,1.45fr) minmax(330px,1fr)}
-  body.pd-shell:not(.workspace-practicing) #screen-start .st-main>*{border-radius:0;box-shadow:none}
-  body.pd-shell:not(.workspace-practicing) #screen-start .st-resume{grid-column:1/-1;grid-row:1;border:0;border-bottom:2px solid var(--bb-ink);background:var(--desk-tint)}
-  body.pd-shell:not(.workspace-practicing) #screen-start .pd-summary{grid-column:1/-1;grid-row:2;border:0;border-bottom:2px solid var(--bb-ink);background:var(--bb-bar);border-radius:10px 10px 0 0}
-  body.pd-shell:not(.workspace-practicing) #screen-start .st-resume:not([style*="none"])~.pd-summary{border-radius:0}
-  body.pd-shell:not(.workspace-practicing) #screen-start .pd-skills{grid-column:1;grid-row:3;border:0}
-  body.pd-shell:not(.workspace-practicing) #screen-start #historyStart{grid-column:1;grid-row:4;border:0;border-top:2px dashed var(--bb-line);margin:0}
-  body.pd-shell:not(.workspace-practicing) #screen-start .st-setup{grid-column:2;grid-row:3 / span 2;border:0;border-left:2px solid var(--bb-ink);background:transparent}
-  body.pd-shell:not(.workspace-practicing) #screen-start .pd-skills>h2:first-child,
-  body.pd-shell:not(.workspace-practicing) #screen-start #historyStart>h3:first-child{border-radius:0}
-  body.pd-shell:not(.workspace-practicing) #screen-start .pd-summary .pd-stat strong{font-size:30px}
+  body.pd-shell:not(.pd-in-test) #screen-start .st-main>*{border-radius:0;box-shadow:none}
+  body.pd-shell:not(.pd-in-test) #screen-start .st-resume{grid-column:1/-1;grid-row:1;border:0;border-bottom:2px solid var(--bb-ink);background:var(--desk-tint)}
+  body.pd-shell:not(.pd-in-test) #screen-start .pd-summary{grid-column:1/-1;grid-row:2;border:0;border-bottom:2px solid var(--bb-ink);background:var(--bb-bar);border-radius:10px 10px 0 0}
+  body.pd-shell:not(.pd-in-test) #screen-start .st-resume:not([style*="none"])~.pd-summary{border-radius:0}
+  body.pd-shell:not(.pd-in-test) #screen-start .pd-skills{grid-column:1;grid-row:3;border:0}
+  body.pd-shell:not(.pd-in-test) #screen-start #historyStart{grid-column:1;grid-row:4;border:0;border-top:2px dashed var(--bb-line);margin:0}
+  body.pd-shell:not(.pd-in-test) #screen-start .st-setup{grid-column:2;grid-row:3 / span 2;border:0;border-left:2px solid var(--bb-ink);background:transparent}
+  body.pd-shell:not(.pd-in-test) #screen-start .pd-skills>h2:first-child,
+  body.pd-shell:not(.pd-in-test) #screen-start #historyStart>h3:first-child{border-radius:0}
+  body.pd-shell:not(.pd-in-test) #screen-start .pd-summary .pd-stat strong{font-size:30px}
   /* The footer bar: what you are about to start, and the button to start it. */
-  body.pd-shell:not(.workspace-practicing) #screen-start .st-go{
+  body.pd-shell:not(.pd-in-test) #screen-start .st-go{
     grid-column:1/-1;grid-row:5;position:sticky;bottom:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:20px;
     padding:12px 20px;margin:0;border:0;border-top:2px dashed var(--bb-line);background:var(--desk-surface);border-radius:0 0 10px 10px}
-  body.pd-shell:not(.workspace-practicing) #screen-start .st-go .st-summary{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;border:0;background:none;color:var(--desk-ink);font-weight:700}
-  body.pd-shell:not(.workspace-practicing) #screen-start .st-go .st-summary small,body.pd-shell:not(.workspace-practicing) #screen-start .st-go .st-summary .small{display:block;font-weight:500;color:var(--desk-muted)}
-  body.pd-shell:not(.workspace-practicing) #screen-start #btnStart{width:auto;min-width:230px;min-height:48px;padding:0 28px}
+  body.pd-shell:not(.pd-in-test) #screen-start .st-go .st-summary{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;border:0;background:none;color:var(--desk-ink);font-weight:700}
+  body.pd-shell:not(.pd-in-test) #screen-start .st-go .st-summary small,body.pd-shell:not(.pd-in-test) #screen-start .st-go .st-summary .small{display:block;font-weight:500;color:var(--desk-muted)}
+  body.pd-shell:not(.pd-in-test) #screen-start #btnStart{width:auto;min-width:230px;min-height:48px;padding:0 28px}
 }
-body.pd-shell:not(.workspace-practicing) #screen-start .st-side{gap:16px}
-body.pd-shell:not(.workspace-practicing) #screen-start .st-side .card,
-body.pd-shell:not(.workspace-practicing) #screen-start .st-side>div{border:1px solid var(--bb-line);border-radius:12px;box-shadow:none;background:var(--desk-surface)}
-body.pd-shell:not(.workspace-practicing) #screen-start .st-mini-h{
+body.pd-shell:not(.pd-in-test) #screen-start .st-side{gap:16px}
+body.pd-shell:not(.pd-in-test) #screen-start .st-side .card,
+body.pd-shell:not(.pd-in-test) #screen-start .st-side>div{border:1px solid var(--bb-line);border-radius:12px;box-shadow:none;background:var(--desk-surface)}
+body.pd-shell:not(.pd-in-test) #screen-start .st-mini-h{
   background:var(--bb-bar);border-bottom:2px solid var(--bb-ink);margin:-14px -14px 12px;padding:10px 14px;border-radius:10px 10px 0 0;font-weight:800}
-body.pd-shell:not(.workspace-practicing) #screen-start .st-head{border-bottom:0;margin-bottom:12px}
+body.pd-shell:not(.pd-in-test) #screen-start .st-head{border-bottom:0;margin-bottom:12px}
 
 /* ---------- Score report: title bar, score and details side by side, footer bar ---------- */
 @media (min-width:901px){
-  body.pd-shell:not(.workspace-practicing) #screen-results[style*="block"]{
+  body.pd-shell:not(.pd-in-test) #screen-results[style*="block"]{
     display:grid!important;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);column-gap:0;padding:0;border:2px solid var(--bb-ink);border-radius:12px;background:var(--desk-surface)}
-  body.pd-shell:not(.workspace-practicing) #screen-results>*{grid-column:1/-1;margin-left:0;margin-right:0}
-  body.pd-shell:not(.workspace-practicing) #screen-results>.rs-h{grid-row:1;margin:0;padding:14px 24px;border-radius:10px 10px 0 0}
-  body.pd-shell:not(.workspace-practicing) #screen-results>:is(#resultsIntro,#resultsSaveStatus){grid-column:2;padding:0 24px}
-  body.pd-shell:not(.workspace-practicing) #screen-results>#resultsIntro{grid-row:2;margin:18px 0 6px}
-  body.pd-shell:not(.workspace-practicing) #screen-results>#resultsSaveStatus{grid-row:3;margin:0 0 6px}
-  body.pd-shell:not(.workspace-practicing) #screen-results>.rs-hero{grid-column:1;grid-row:2 / span 3;margin:0;padding:20px 24px;border-right:2px solid var(--bb-ink)}
-  body.pd-shell:not(.workspace-practicing) #screen-results>#resultsWork{grid-column:2;grid-row:4;padding:0 24px 20px}
-  body.pd-shell:not(.workspace-practicing) #screen-results>#resultsMore{grid-row:5;margin:0;padding:0 24px;border-top:2px solid var(--bb-ink)}
-  body.pd-shell:not(.workspace-practicing) #screen-results>#resultsNote{grid-row:6;margin:16px 24px 0}
-  body.pd-shell:not(.workspace-practicing) #screen-results>.rs-actions{
+  body.pd-shell:not(.pd-in-test) #screen-results>*{grid-column:1/-1;margin-left:0;margin-right:0}
+  body.pd-shell:not(.pd-in-test) #screen-results>.rs-h{grid-row:1;margin:0;padding:14px 24px;border-radius:10px 10px 0 0}
+  body.pd-shell:not(.pd-in-test) #screen-results>:is(#resultsIntro,#resultsSaveStatus){grid-column:2;padding:0 24px}
+  body.pd-shell:not(.pd-in-test) #screen-results>#resultsIntro{grid-row:2;margin:18px 0 6px}
+  body.pd-shell:not(.pd-in-test) #screen-results>#resultsSaveStatus{grid-row:3;margin:0 0 6px}
+  body.pd-shell:not(.pd-in-test) #screen-results>.rs-hero{grid-column:1;grid-row:2 / span 3;margin:0;padding:20px 24px;border-right:2px solid var(--bb-ink)}
+  body.pd-shell:not(.pd-in-test) #screen-results>#resultsWork{grid-column:2;grid-row:4;padding:0 24px 20px}
+  body.pd-shell:not(.pd-in-test) #screen-results>#resultsMore{grid-row:5;margin:0;padding:0 24px;border-top:2px solid var(--bb-ink)}
+  body.pd-shell:not(.pd-in-test) #screen-results>#resultsNote{grid-row:6;margin:16px 24px 0}
+  body.pd-shell:not(.pd-in-test) #screen-results>.rs-actions{
     grid-row:7;position:sticky;bottom:0;z-index:5;display:flex;justify-content:flex-end;gap:12px;margin:20px 0 0;padding:12px 24px;
     background:var(--desk-surface);border-top:2px dashed var(--bb-line)}
-  body.pd-shell:not(.workspace-practicing) #screen-results>:is(#reviewArea,.rev-bar,#reviewBody){grid-row:auto;padding:0 24px 24px}
-  body.pd-shell:not(.workspace-practicing) #screen-results .score-box{border:2px solid var(--bb-ink);border-radius:10px;background:var(--desk-surface)}
-  body.pd-shell:not(.workspace-practicing) #screen-results .score-box.hl{border-color:var(--bb-blue);background:var(--desk-tint)}
-  body.pd-shell:not(.workspace-practicing) #screen-results .rs-chip{border:2px solid var(--bb-ink);border-radius:999px;background:var(--desk-surface);font-weight:700}
+  body.pd-shell:not(.pd-in-test) #screen-results>:is(#reviewArea,.rev-bar,#reviewBody){grid-row:auto;padding:0 24px 24px}
+  body.pd-shell:not(.pd-in-test) #screen-results .score-box{border:2px solid var(--bb-ink);border-radius:10px;background:var(--desk-surface)}
+  body.pd-shell:not(.pd-in-test) #screen-results .score-box.hl{border-color:var(--bb-blue);background:var(--desk-tint)}
+  body.pd-shell:not(.pd-in-test) #screen-results .rs-chip{border:2px solid var(--bb-ink);border-radius:999px;background:var(--desk-surface);font-weight:700}
 }
 
 /* ---------- College goals and scholarship lookup: bordered split panes ---------- */
 @media (min-width:1024px){
-  body.pd-shell:not(.workspace-practicing) #screen-college .cc-body{
+  body.pd-shell:not(.pd-in-test) #screen-college .cc-body{
     display:grid;grid-template-columns:300px minmax(0,1fr);gap:0;align-items:stretch;margin-top:0;border:2px solid var(--bb-ink);border-radius:12px;background:var(--desk-surface)}
-  body.pd-shell:not(.workspace-practicing) #screen-college .cc-rail{
+  body.pd-shell:not(.pd-in-test) #screen-college .cc-rail{
     max-width:none;position:static;max-height:none;padding:18px;border:0;border-right:2px solid var(--bb-ink);border-radius:0;box-shadow:none;background:transparent}
-  body.pd-shell:not(.workspace-practicing) #screen-college .cc-main{padding:18px}
-  body.pd-shell:not(.workspace-practicing) #screen-college .cc-list-head{padding-bottom:12px;margin-bottom:14px;border-bottom:2px dashed var(--bb-line)}
-  body.pd-shell:not(.workspace-practicing) #screen-scholarships .schl-body{
+  body.pd-shell:not(.pd-in-test) #screen-college .cc-main{padding:18px}
+  body.pd-shell:not(.pd-in-test) #screen-college .cc-list-head{padding-bottom:12px;margin-bottom:14px;border-bottom:2px dashed var(--bb-line)}
+  body.pd-shell:not(.pd-in-test) #screen-scholarships .schl-body{
     display:grid;grid-template-columns:268px minmax(0,1fr) minmax(300px,380px);gap:0;align-items:stretch;border:2px solid var(--bb-ink);border-radius:12px;background:var(--desk-surface)}
-  body.pd-shell:not(.workspace-practicing) #screen-scholarships .schl-filters{
+  body.pd-shell:not(.pd-in-test) #screen-scholarships .schl-filters{
     max-width:none;position:static;border:0;border-right:2px solid var(--bb-ink);border-radius:0;background:transparent}
-  body.pd-shell:not(.workspace-practicing) #screen-scholarships .schl-list{padding:16px;border-right:2px solid var(--bb-ink)}
-  body.pd-shell:not(.workspace-practicing) #screen-scholarships .schl-detail{
+  body.pd-shell:not(.pd-in-test) #screen-scholarships .schl-list{padding:16px;border-right:2px solid var(--bb-ink)}
+  body.pd-shell:not(.pd-in-test) #screen-scholarships .schl-detail{
     max-width:none;position:sticky;top:76px;align-self:start;border:0;border-radius:0;background:transparent}
-  body.pd-shell:not(.workspace-practicing) #screen-scholarships .schl-list-head{padding-bottom:10px;margin-bottom:12px;border-bottom:2px dashed var(--bb-line)}
-  body.pd-shell:not(.workspace-practicing) :is(#screen-college,#screen-scholarships) .schl-filters-head,
-  body.pd-shell:not(.workspace-practicing) #screen-college .cc-score-card{border-bottom:0}
+  body.pd-shell:not(.pd-in-test) #screen-scholarships .schl-list-head{padding-bottom:10px;margin-bottom:12px;border-bottom:2px dashed var(--bb-line)}
+  body.pd-shell:not(.pd-in-test) :is(#screen-college,#screen-scholarships) .schl-filters-head,
+  body.pd-shell:not(.pd-in-test) #screen-college .cc-score-card{border-bottom:0}
 }
 /* Fieldsets with a legend (the college chances panel) get the same gray title bar. */
-body.pd-shell:not(.workspace-practicing) #screen-college fieldset.college-chances{
+body.pd-shell:not(.pd-in-test) #screen-college fieldset.college-chances{
   border:2px solid var(--bb-ink);border-radius:12px;padding:0 18px 18px;margin-top:20px;background:var(--desk-surface)}
-body.pd-shell:not(.workspace-practicing) #screen-college fieldset.college-chances>legend{
+body.pd-shell:not(.pd-in-test) #screen-college fieldset.college-chances>legend{
   float:left;width:calc(100% + 36px);margin:0 -18px 14px;padding:12px 18px;background:var(--bb-bar);border-bottom:2px solid var(--bb-ink);border-radius:10px 10px 0 0;font-weight:800;box-sizing:border-box}
-body.pd-shell:not(.workspace-practicing) #screen-college fieldset.college-chances>legend~*{clear:both}
+body.pd-shell:not(.pd-in-test) #screen-college fieldset.college-chances>legend~*{clear:both}
 
 /* ---------- Subject drills: the table sits in one bordered pane ---------- */
-body.pd-shell:not(.workspace-practicing) #screen-subjects :is(.sk-tablewrap,.sk-table-wrap,.sk-wrap){border:2px solid var(--bb-ink);border-radius:12px;overflow:hidden;background:var(--desk-surface)}
-body.pd-shell:not(.workspace-practicing) #screen-results .rs-hero{border-radius:0;background:transparent}
+body.pd-shell:not(.pd-in-test) #screen-subjects :is(.sk-tablewrap,.sk-table-wrap,.sk-wrap){border:2px solid var(--bb-ink);border-radius:12px;overflow:hidden;background:var(--desk-surface)}
+body.pd-shell:not(.pd-in-test) #screen-results .rs-hero{border-radius:0;background:transparent}
 @media (min-width:1024px){
-  body.pd-shell:not(.workspace-practicing) #screen-college .cc-score-card{border:0;padding:0;box-shadow:none;background:transparent}
+  body.pd-shell:not(.pd-in-test) #screen-college .cc-score-card{border:0;padding:0;box-shadow:none;background:transparent}
 }
 
 /* ---------- Phones: the footer bar sits at the bottom of the screen, like the test ---------- */
 @media (max-width:900px){
-  body.pd-shell:not(.workspace-practicing) .topbar{border-bottom:2px dashed var(--bb-line)!important}
-  body.pd-shell:not(.workspace-practicing) .topbar #deskMenu{border:2px solid var(--bb-ink);border-radius:24px;font-weight:800}
-  body.pd-shell:not(.workspace-practicing):has(#screen-start[style*="block"]) .wrap{padding-bottom:104px}
-  body.pd-shell:not(.workspace-practicing) #screen-start .st-go{
+  body.pd-shell:not(.pd-in-test) .topbar{border-bottom:2px dashed var(--bb-line)!important}
+  body.pd-shell:not(.pd-in-test) .topbar #deskMenu{border:2px solid var(--bb-ink);border-radius:24px;font-weight:800}
+  body.pd-shell:not(.pd-in-test):has(#screen-start[style*="block"]) .wrap{padding-bottom:104px}
+  body.pd-shell:not(.pd-in-test) #screen-start .st-go{
     position:fixed;left:0;right:0;bottom:0;z-index:55;display:flex;align-items:center;gap:12px;margin:0;
     padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:var(--desk-surface);border:0;border-top:2px dashed var(--bb-line)}
-  body.pd-shell:not(.workspace-practicing) #screen-start .st-go .st-summary{display:flex;flex-direction:column;flex:1;min-width:0;margin:0;font-size:13px;font-weight:700}
-  body.pd-shell:not(.workspace-practicing) #screen-start .st-go .st-summary span{font-weight:500;color:var(--desk-muted)}
-  body.pd-shell:not(.workspace-practicing) #screen-start #btnStart{width:auto;flex:none;min-width:150px;min-height:46px;padding:0 22px}
-  body.pd-shell:not(.workspace-practicing) #screen-start .st-main{gap:0;border:2px solid var(--bb-ink)!important;border-radius:12px;background:var(--desk-surface)!important}
-  body.pd-shell:not(.workspace-practicing) #screen-start .st-main>*{border-radius:0;border-left:0;border-right:0;box-shadow:none}
-  body.pd-shell:not(.workspace-practicing) #screen-start .st-main>*+*{border-top:2px dashed var(--bb-line)}
-  body.pd-shell:not(.workspace-practicing) #screen-start .st-go{border-top:2px dashed var(--bb-line)!important}
-  body.pd-shell:not(.workspace-practicing):has(#screen-results[style*="block"]) .wrap{padding-bottom:96px}
-  body.pd-shell:not(.workspace-practicing) #screen-results .rs-actions{
+  body.pd-shell:not(.pd-in-test) #screen-start .st-go .st-summary{display:flex;flex-direction:column;flex:1;min-width:0;margin:0;font-size:13px;font-weight:700}
+  body.pd-shell:not(.pd-in-test) #screen-start .st-go .st-summary span{font-weight:500;color:var(--desk-muted)}
+  body.pd-shell:not(.pd-in-test) #screen-start #btnStart{width:auto;flex:none;min-width:150px;min-height:46px;padding:0 22px}
+  body.pd-shell:not(.pd-in-test) #screen-start .st-main{gap:0;border:2px solid var(--bb-ink)!important;border-radius:12px;background:var(--desk-surface)!important}
+  body.pd-shell:not(.pd-in-test) #screen-start .st-main>*{border-radius:0;border-left:0;border-right:0;box-shadow:none}
+  body.pd-shell:not(.pd-in-test) #screen-start .st-main>*+*{border-top:2px dashed var(--bb-line)}
+  body.pd-shell:not(.pd-in-test) #screen-start .st-go{border-top:2px dashed var(--bb-line)!important}
+  body.pd-shell:not(.pd-in-test):has(#screen-results[style*="block"]) .wrap{padding-bottom:96px}
+  body.pd-shell:not(.pd-in-test) #screen-results .rs-actions{
     position:fixed;left:0;right:0;bottom:0;z-index:55;display:flex;gap:10px;margin:0;padding:10px 14px calc(10px + env(safe-area-inset-bottom));
     background:var(--desk-surface);border-top:2px dashed var(--bb-line)}
-  body.pd-shell:not(.workspace-practicing) #screen-results .rs-actions button{flex:1;min-height:46px}
+  body.pd-shell:not(.pd-in-test) #screen-results .rs-actions button{flex:1;min-height:46px}
 }
+
+/* ---------- Dialogs, toasts and sign-in: the same bordered pane with a gray title bar ---------- */
+body.pd-shell .modal-overlay{background:rgba(10,14,20,.55)}
+body.pd-shell .modal-overlay .modal{
+  padding:0 22px 22px;background:var(--desk-surface);color:var(--desk-ink);border:2px solid var(--bb-ink,var(--desk-ink));border-radius:12px;
+  box-shadow:0 18px 44px rgba(0,0,0,.3);text-align:left}
+body.pd-shell .modal-overlay .modal>h2{
+  margin:0 -22px 16px;padding:13px 58px 13px 22px;background:var(--desk-soft);border-bottom:2px solid var(--bb-ink,var(--desk-ink));
+  font-size:18px;font-weight:800;line-height:1.3;letter-spacing:0;text-align:left}
+body.pd-shell .modal-overlay .modal .close-x{top:7px;right:9px;width:38px;height:38px;border-radius:8px;color:var(--desk-ink);font-size:26px;line-height:1;display:flex;align-items:center;justify-content:center}
+body.pd-shell .modal-overlay .modal .close-x:hover{background:var(--desk-tint);color:var(--desk-accent)}
+body.pd-shell .modal-overlay .modal>p{margin:0 0 14px}
+body.pd-shell .modal-overlay .modal div[style*="justify-content:center"]{justify-content:flex-start!important}
+body.pd-shell .modal-overlay .modal button:not(.close-x):not(.ghost):not(.secondary):not([data-mode]):not(#authForgot){background:var(--desk-accent);color:var(--desk-on-accent,#fff);border:2px solid var(--desk-accent);border-radius:24px;font-weight:800;min-height:44px;padding:8px 20px}
+body.pd-shell .modal-overlay .modal button.secondary:not(#authForgot){background:var(--desk-surface);color:var(--desk-accent);border:2px solid var(--desk-accent);border-radius:24px;font-weight:800;min-height:44px;padding:8px 20px}
+body.pd-shell .modal-overlay .modal button.ghost:not(#authForgot){border:2px solid var(--bb-ink,var(--desk-ink));background:var(--desk-surface);color:var(--desk-ink);border-radius:24px;font-weight:700;min-height:40px}
+body.pd-shell .auth-modal{max-width:440px}
+body.pd-shell .auth-modal label{font-size:13px;font-weight:700;margin:12px 0 4px}
+body.pd-shell .auth-modal input,body.pd-shell .auth-modal select{border:2px solid var(--bb-ink,var(--desk-ink));border-radius:8px;min-height:44px;background:var(--desk-surface);color:var(--desk-ink)}
+body.pd-shell .auth-tabs{display:flex;gap:0;padding:0;margin:12px 0;border:2px solid var(--bb-ink,var(--desk-ink));border-radius:10px;overflow:hidden;background:var(--desk-surface)}
+body.pd-shell .auth-tabs button{flex:1;border:0;border-radius:0;background:transparent;color:var(--desk-ink);font-weight:700;padding:9px;min-height:40px}
+body.pd-shell .auth-tabs button+button{border-left:2px solid var(--bb-ink,var(--desk-ink))}
+body.pd-shell .auth-tabs button.on{background:var(--desk-tint);color:var(--desk-accent);box-shadow:none;font-weight:800}
+body.pd-shell .modal-overlay .modal #authForgot{border:0;background:none;color:var(--desk-accent);text-decoration:underline;min-height:36px;padding:6px 0;border-radius:6px;font-weight:700}
+body.pd-shell .modal-overlay .modal hr,body.pd-shell .auth-modal [style*="border-top"]{border-color:var(--desk-line)!important;border-top-style:dashed!important}
+body.pd-shell .modal-overlay .modal .help-history{border:2px solid var(--bb-ink,var(--desk-ink));border-radius:10px;background:var(--desk-surface)}
+body.pd-shell .toast{background:var(--desk-ink);color:var(--desk-surface);border:2px solid var(--desk-ink);border-radius:12px;font-weight:700;font-size:14px}
+@media (max-width:640px){
+  body.pd-shell .modal-overlay .modal{padding:0 16px 18px;border-radius:12px}
+  body.pd-shell .modal-overlay .modal>h2{margin:0 -16px 14px;padding:12px 54px 12px 16px;font-size:17px}
+}
+
+/* The arcade's top bar follows the site (header bar, pills, outlined buttons); the cabinet itself stays neon. */
+body.pd-shell .arcade-hud{background:var(--desk-bg);color:var(--desk-ink);border-bottom:2px dashed var(--desk-line);padding:10px 20px}
+body.pd-shell .arcade-hud .chip{background:var(--desk-surface);color:var(--desk-ink);border:2px solid var(--bb-ink,var(--desk-ink));border-radius:999px;font-weight:800}
+body.pd-shell .arcade-hud button{background:var(--desk-surface);color:var(--desk-accent);border:2px solid var(--desk-accent);border-radius:24px;font-weight:800;min-height:40px;padding:6px 16px!important}
+body.pd-shell .arcade-hud #btnDriftGarage{border-color:#c2410c;color:#c2410c}
+html[data-desk-appearance="dark"] body.pd-shell .arcade-hud #btnDriftGarage{border-color:#ffa070;color:#ffa070}
+
+/* Between modules: bluebook.css brings the site bar back but zeroes the page padding, which put the stock rail over the
+   test header. Give the routing page the same header-bar clearance as the rest of the site. */
+body.pd-shell[data-workspace="exam"].workspace-practicing:has(#routingCard[style*="block"]) .wrap{max-width:1180px;margin:0 auto;padding:92px 28px 56px!important}
+@media (max-width:900px){
+  body.pd-shell[data-workspace="exam"].workspace-practicing:has(#routingCard[style*="block"]) .wrap{padding:92px 16px 32px!important}
+}
+/* The module is over: the site bar does not repeat the test timer, accuracy and pause controls. */
+body.pd-shell:has(#routingCard[style*="block"]) .topbar :is(#badgeTimer,#badgeAcc,#btnPause){display:none}
+
+/* The module-transition card as a titled pane, like every other panel on the site. */
+body.pd-shell #routingCard{max-width:760px;margin:24px auto 0!important;padding:0;background:var(--desk-surface);color:var(--desk-ink);border:2px solid var(--bb-ink,var(--desk-ink));border-radius:12px;box-shadow:none;overflow:hidden}
+body.pd-shell #routingCard .routing-box,
+body.pd-shell #routingCard .routing-box.up,
+body.pd-shell #routingCard .routing-box.std{margin:0;padding:0 0 22px;background:transparent;color:inherit;border:0;border-radius:0}
+body.pd-shell #routingCard .routing-title{margin:0 0 16px;padding:13px 22px;background:var(--desk-soft);border-bottom:2px solid var(--bb-ink,var(--desk-ink));font-size:18px;font-weight:800;letter-spacing:-.01em;color:var(--desk-ink)}
+body.pd-shell #routingCard .routing-box>:not(.routing-title){margin-left:22px;margin-right:22px}
+body.pd-shell #routingCard .routing-box h3{font-size:15px;font-weight:800;color:var(--desk-ink)}
+body.pd-shell #routingCard .domain .bar{height:10px;border-radius:6px;background:var(--desk-soft);border:1px solid var(--desk-line)}
+body.pd-shell #routingCard .workon{background:var(--desk-tint);color:var(--desk-ink);border:2px dashed var(--desk-line);border-radius:10px}
+body.pd-shell #routingCard #btnContinue{background:var(--desk-accent);color:#fff;border:2px solid var(--desk-accent);border-radius:24px;font-weight:800;min-height:44px;padding:10px 24px}
+@media (max-width:640px){
+  body.pd-shell #routingCard{margin:16px 0 0!important}
+  body.pd-shell #routingCard .routing-title{padding:12px 16px}
+  body.pd-shell #routingCard .routing-box>:not(.routing-title){margin-left:16px;margin-right:16px}
+}
+
+/* Full screen (exam layout): Pause, Study tools and Exit sit in their own strip above the test header, as outlined pills like
+   the rest of the site, instead of dark pills floating over the title and timer. The test screen keeps its light palette. */
+body.pd-shell[data-workspace="exam"].zen-mode.workspace-practicing{--zen-strip:52px}
+body.pd-shell[data-workspace="exam"].zen-mode.workspace-practicing::before{
+  content:"";position:fixed;top:0;left:0;right:0;height:var(--zen-strip);background:var(--desk-surface);border-bottom:2px dashed var(--desk-line);z-index:225}
+body.pd-shell[data-workspace="exam"].zen-mode.workspace-practicing #screen-test{padding-top:var(--zen-strip)}
+/* #screen-test is the scroller; its padding already leaves the strip, so the sticky header needs no extra offset. */
+body.pd-shell[data-workspace="exam"].zen-mode.workspace-practicing #screen-test>.card:first-child{top:0;margin-top:0}
+body.pd-shell[data-workspace="exam"].zen-mode :is(#zenPause,#zenStudy,#zenExit){
+  top:7px;min-height:38px;padding:0 16px;border-radius:24px;background:var(--desk-surface);color:var(--desk-ink);
+  border:2px solid var(--desk-ink);font-weight:800;font-size:13px;box-shadow:none;transform:none;z-index:230}
+body.pd-shell[data-workspace="exam"].zen-mode #zenExit{right:16px;border-color:var(--desk-accent);color:var(--desk-accent)}
+body.pd-shell[data-workspace="exam"].zen-mode #zenExit .small{color:var(--desk-muted);font-weight:700}
+body.pd-shell[data-workspace="exam"].zen-mode #zenStudy{right:204px}
+body.pd-shell[data-workspace="exam"].zen-mode #zenPause{right:352px}
+body.pd-shell[data-workspace="exam"].zen-mode :is(#zenPause.on,#zenStudy[aria-pressed="true"]){background:var(--desk-tint);border-color:var(--desk-accent);color:var(--desk-accent)}
+@media (max-width:700px){
+  body.pd-shell[data-workspace="exam"].zen-mode :is(#zenPause,#zenStudy,#zenExit){top:7px;min-height:38px;padding:0 11px;font-size:12px}
+  body.pd-shell[data-workspace="exam"].zen-mode #zenStudy{left:8px;right:auto}
+  body.pd-shell[data-workspace="exam"].zen-mode #zenPause{left:50%;right:auto;transform:translateX(-50%)}
+  body.pd-shell[data-workspace="exam"].zen-mode #zenExit{right:8px}
+  body.pd-shell[data-workspace="exam"].zen-mode #zenExit .small{display:none}
+}
+
+/* Plan screen: the primary "Drill" button is a pill like the "Worksheet" button beside it. */
+body.pd-shell:not(.pd-in-test) #screen-plan .pl-drill{border-radius:24px;font-weight:800}

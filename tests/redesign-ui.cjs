@@ -26,10 +26,14 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   if (!(await page.locator("#tokenBadge .coin").count())) throw new Error("wallet should use the gold coin");
   if (!/FunSAT/.test(await page.textContent(".brand"))) throw new Error("brand text missing");
   const toolbarSizing = await page.evaluate(() => ({
-    tabs: Array.from(document.querySelectorAll(".arcade-btn, .icon-btn, .sound-btn")).filter((el) => el.offsetParent).map((el) => Math.round(el.getBoundingClientRect().height)),
+    tabs: Array.from(document.querySelectorAll(".arcade-btn")).filter((el) => el.offsetParent).map((el) => Math.round(el.getBoundingClientRect().height)),
+    icon_btns: Array.from(document.querySelectorAll(".icon-btn, .sound-btn")).filter((el) => el.offsetParent).map((el) => Math.round(el.getBoundingClientRect().height)),
     icons: Array.from(document.querySelectorAll(".arcade-btn svg, .icon-btn svg")).filter((el) => el.offsetParent).map((el) => ({ w: Math.round(el.getBoundingClientRect().width), h: Math.round(el.getBoundingClientRect().height) })),
   }));
-  if (new Set(toolbarSizing.tabs).size !== 1 || toolbarSizing.tabs[0] !== 44) throw new Error("sidebar tabs should share an accessible 44px height: " + JSON.stringify(toolbarSizing));
+  // Tabs share one height (44px in the phone menu, the 64px header bar on wide screens) and every
+  // control, tab or icon button, keeps an accessible 44px minimum.
+  if (new Set(toolbarSizing.tabs).size !== 1 || toolbarSizing.tabs[0] < 44) throw new Error("header tabs should share an accessible height of at least 44px: " + JSON.stringify(toolbarSizing));
+  if (toolbarSizing.icon_btns.some((h) => h < 44)) throw new Error("header icon buttons should keep a 44px minimum: " + JSON.stringify(toolbarSizing));
   if (toolbarSizing.icons.some((icon) => icon.w !== 18 || icon.h !== 18)) throw new Error("top tab icons should share an 18px box: " + JSON.stringify(toolbarSizing));
   const pageWidth = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, document: document.documentElement.scrollWidth }));
   if (pageWidth.document > pageWidth.viewport) throw new Error("page must not scroll horizontally: " + JSON.stringify(pageWidth));
@@ -157,6 +161,8 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   await page.locator("#questionCard .choice").first().click();
   if (await page.locator("#btnCheck").count()) { await page.click("#btnCheck"); await page.waitForTimeout(150); }
   // Full screen practice mode: only the test, with Esc to exit.
+  /* The Bluebook practice header keeps Full screen in its More menu. */
+  if (await page.locator("#btnMore").isVisible()) await page.click("#btnMore");
   await page.click("#btnZen");
   await page.waitForTimeout(200);
   if (!(await page.evaluate(() => document.body.classList.contains("zen-mode")))) throw new Error("full screen mode did not activate");
@@ -174,7 +180,9 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   await page.keyboard.press("Escape");
   await page.waitForTimeout(300);
   if (await page.evaluate(() => document.body.classList.contains("zen-mode"))) throw new Error("Esc did not exit full screen mode");
-  if (!(await page.locator(".topbar").isVisible())) throw new Error("top bar should return after exiting full screen");
+  /* The exam layout's Bluebook practice header replaces the site top bar while a test is open. */
+  const examLayout = (await page.getAttribute("body", "data-workspace")) === "exam";
+  if (!(await page.locator(examLayout ? "#screen-test .module-head" : ".topbar").isVisible())) throw new Error("the header should return after exiting full screen");
   await page.keyboard.press("Enter");
   await page.waitForTimeout(220);
   const advanced = await page.evaluate(() => state.qi > 0 || state.view === "routing");

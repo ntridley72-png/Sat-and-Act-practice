@@ -115,3 +115,182 @@ html[data-desk-appearance] .gwrap :is(.cg-item,.choice){border-radius:10px}
 body.pd-shell .cab-tile,body.pd-shell .cab-chip{background:#0a0b1e;border-color:#2b2bff;color:inherit}
 body.pd-shell .cab-tile.on{border-color:#ffef5a}
 body.pd-shell .cab-chip.on{background:#2b2bff}
+
+/* =====================================================================================
+   LAYOUT. The shell and the screens are rebuilt on the practice screen's structure:
+   a header bar with tabs, a centred column, bordered split panes with heavy dividers,
+   and a footer bar for the one action that matters.
+   ===================================================================================== */
+
+/* ---------- Header bar (wide screens) ---------- */
+@media (min-width:901px){
+  body.pd-shell:not(.workspace-practicing) .topbar{
+    inset:0 0 auto 0;width:100%;height:64px;max-height:none;flex-direction:row;align-items:center;gap:0;
+    padding:0 24px!important;overflow:visible;border:0;border-bottom:2px dashed var(--bb-line);background:var(--desk-bg);z-index:60}
+  body.pd-shell:not(.workspace-practicing) .topbar .brand{margin:0 28px 0 0;font-size:22px;flex:none}
+  body.pd-shell:not(.workspace-practicing) .topbar .badges{display:flex;flex:1 1 auto;align-items:center;gap:0;height:64px;position:static;overflow:visible}
+  body.pd-shell:not(.workspace-practicing) .topbar #deskMenu{display:none}
+  body.pd-shell:not(.workspace-practicing) .topbar #btnHome::after{content:"Home"}
+  /* Tabs */
+  body.pd-shell:not(.workspace-practicing) .topbar :is(.arcade-btn,#deskReview,#btnHome){
+    width:auto;height:64px;min-height:64px;padding:0 12px!important;border-radius:0;gap:8px;font-size:14px;font-weight:700;
+    border-width:0 0 3px 0!important;border-style:solid!important;border-color:transparent!important;background:transparent;color:var(--desk-ink)}
+  body.pd-shell:not(.workspace-practicing) .topbar :is(.arcade-btn,#deskReview,#btnHome):hover{background:var(--desk-tint);color:var(--desk-ink)}
+  body.pd-shell:not(.workspace-practicing) .topbar :is(.arcade-btn,#deskReview,#btnHome).active{
+    background:var(--desk-tint);color:var(--desk-accent);border-bottom-color:var(--desk-accent)!important;border-left-color:transparent!important}
+  /* Right-hand group: streak, wallet, sound, More, account */
+  body.pd-shell:not(.workspace-practicing) .topbar #hudStreak{order:20;margin-left:auto}
+  body.pd-shell:not(.workspace-practicing) .topbar #tokenBadge{order:21}
+  body.pd-shell:not(.workspace-practicing) .topbar #btnSound{order:22;width:auto;height:44px;min-height:44px;padding:0 12px!important;font-size:0;border-radius:8px}
+  body.pd-shell:not(.workspace-practicing) .topbar #btnSound::after{content:none}
+  body.pd-shell:not(.workspace-practicing) .topbar #bbMore{order:23}
+  body.pd-shell:not(.workspace-practicing) .topbar #btnAccount{order:24;width:auto;height:44px;min-height:44px;padding:0 12px!important;border-radius:8px}
+  body.pd-shell:not(.workspace-practicing) .topbar :is(#hudStreak,#tokenBadge){padding:0 10px;min-height:0;font-size:13px;font-weight:700;color:var(--desk-ink)}
+  body.pd-shell:not(.workspace-practicing) .topbar #bbMore{
+    display:flex;align-items:center;gap:8px;height:44px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:var(--desk-ink);font:700 14px Archivo,system-ui,sans-serif}
+  body.pd-shell:not(.workspace-practicing) .topbar #bbMore:hover{background:var(--desk-tint)}
+  body.pd-shell:not(.workspace-practicing) .topbar #bbMore svg{width:20px;height:20px}
+  body.pd-shell:not(.workspace-practicing) .topbar #bbMore span{display:inline}
+  /* Between 901 and 1279px the bar cannot hold every label: inactive tabs show their icon only
+     (titles carry the name), and the account and More buttons shrink to icons. */
+}
+@media (min-width:1280px) and (max-width:1439px){
+  body.pd-shell:not(.workspace-practicing) .topbar #bbMore span,
+  body.pd-shell:not(.workspace-practicing) .topbar #btnAccount>span:not(:first-child){display:none}
+}
+@media (min-width:901px) and (max-width:1279px){
+  body.pd-shell:not(.workspace-practicing) .topbar{padding:0 16px!important}
+  body.pd-shell:not(.workspace-practicing) .topbar .brand{margin-right:12px}
+  body.pd-shell:not(.workspace-practicing) .topbar .arcade-btn:not(.active)>span{display:none}
+  body.pd-shell:not(.workspace-practicing) .topbar :is(#deskReview,#btnHome):not(.active){font-size:0}
+  body.pd-shell:not(.workspace-practicing) .topbar :is(#deskReview,#btnHome):not(.active)::after{content:none}
+  body.pd-shell:not(.workspace-practicing) .topbar :is(.arcade-btn,#deskReview,#btnHome){padding:0 10px!important}
+  body.pd-shell:not(.workspace-practicing) .topbar #bbMore span,
+  body.pd-shell:not(.workspace-practicing) .topbar #btnAccount>span:not(:first-child){display:none}
+  body.pd-shell:not(.workspace-practicing) .topbar :is(#hudStreak,#tokenBadge){padding:0 6px}
+}
+@media (min-width:901px){
+  /* The popover */
+  body.pd-shell:not(.workspace-practicing) .topbar .bb-more-panel{
+    display:none;position:fixed;top:68px;right:24px;width:260px;padding:14px;flex-direction:column;gap:12px;
+    background:var(--desk-surface);color:var(--desk-ink);border:2px solid var(--bb-ink);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);z-index:80}
+  body.pd-shell.bb-more-open:not(.workspace-practicing) .topbar .bb-more-panel{display:flex}
+  body.pd-shell:not(.workspace-practicing) .topbar .bb-more-panel :is(.pd-appearance,.workspace-theme-label){padding:0;border:0;margin:0;order:0}
+  body.pd-shell:not(.workspace-practicing) .topbar .bb-more-panel #autosave{padding:0;color:var(--desk-muted)}
+  /* The page */
+  body.pd-shell:not(.workspace-practicing) .wrap,body.pd-shell.wide-test:not(.workspace-practicing) .wrap{
+    max-width:1180px;margin:0 auto;padding:92px 28px 56px}
+  body.pd-shell:not(.workspace-practicing):has(#screen-start[style*="block"]) .wrap{max-width:1180px}
+}
+@media (max-width:900px){
+  body.pd-shell .topbar #bbMore{display:none}
+  body.pd-shell .topbar .bb-more-panel{display:flex;flex-direction:column;gap:10px;margin-top:8px;order:30;width:100%}
+  body.pd-shell .topbar .bb-more-panel #autosave{padding:6px 12px}
+}
+
+/* ---------- Practice desk: one bordered split pane with a footer bar ---------- */
+@media (min-width:901px){
+  body.pd-shell:not(.workspace-practicing) #screen-start .st-main{
+    gap:0;align-items:stretch;background:var(--desk-surface)!important;border:2px solid var(--bb-ink)!important;border-radius:12px;
+    grid-template-columns:minmax(0,1.45fr) minmax(330px,1fr)}
+  body.pd-shell:not(.workspace-practicing) #screen-start .st-main>*{border-radius:0;box-shadow:none}
+  body.pd-shell:not(.workspace-practicing) #screen-start .st-resume{grid-column:1/-1;grid-row:1;border:0;border-bottom:2px solid var(--bb-ink);background:var(--desk-tint)}
+  body.pd-shell:not(.workspace-practicing) #screen-start .pd-summary{grid-column:1/-1;grid-row:2;border:0;border-bottom:2px solid var(--bb-ink);background:var(--bb-bar);border-radius:10px 10px 0 0}
+  body.pd-shell:not(.workspace-practicing) #screen-start .st-resume:not([style*="none"])~.pd-summary{border-radius:0}
+  body.pd-shell:not(.workspace-practicing) #screen-start .pd-skills{grid-column:1;grid-row:3;border:0}
+  body.pd-shell:not(.workspace-practicing) #screen-start #historyStart{grid-column:1;grid-row:4;border:0;border-top:2px dashed var(--bb-line);margin:0}
+  body.pd-shell:not(.workspace-practicing) #screen-start .st-setup{grid-column:2;grid-row:3 / span 2;border:0;border-left:2px solid var(--bb-ink);background:transparent}
+  body.pd-shell:not(.workspace-practicing) #screen-start .pd-skills>h2:first-child,
+  body.pd-shell:not(.workspace-practicing) #screen-start #historyStart>h3:first-child{border-radius:0}
+  body.pd-shell:not(.workspace-practicing) #screen-start .pd-summary .pd-stat strong{font-size:30px}
+  /* The footer bar: what you are about to start, and the button to start it. */
+  body.pd-shell:not(.workspace-practicing) #screen-start .st-go{
+    grid-column:1/-1;grid-row:5;position:sticky;bottom:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:20px;
+    padding:12px 20px;margin:0;border:0;border-top:2px dashed var(--bb-line);background:var(--desk-surface);border-radius:0 0 10px 10px}
+  body.pd-shell:not(.workspace-practicing) #screen-start .st-go .st-summary{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;border:0;background:none;color:var(--desk-ink);font-weight:700}
+  body.pd-shell:not(.workspace-practicing) #screen-start .st-go .st-summary small,body.pd-shell:not(.workspace-practicing) #screen-start .st-go .st-summary .small{display:block;font-weight:500;color:var(--desk-muted)}
+  body.pd-shell:not(.workspace-practicing) #screen-start #btnStart{width:auto;min-width:230px;min-height:48px;padding:0 28px}
+}
+body.pd-shell:not(.workspace-practicing) #screen-start .st-side{gap:16px}
+body.pd-shell:not(.workspace-practicing) #screen-start .st-side .card,
+body.pd-shell:not(.workspace-practicing) #screen-start .st-side>div{border:1px solid var(--bb-line);border-radius:12px;box-shadow:none;background:var(--desk-surface)}
+body.pd-shell:not(.workspace-practicing) #screen-start .st-mini-h{
+  background:var(--bb-bar);border-bottom:2px solid var(--bb-ink);margin:-14px -14px 12px;padding:10px 14px;border-radius:10px 10px 0 0;font-weight:800}
+body.pd-shell:not(.workspace-practicing) #screen-start .st-head{border-bottom:0;margin-bottom:12px}
+
+/* ---------- Score report: title bar, score and details side by side, footer bar ---------- */
+@media (min-width:901px){
+  body.pd-shell:not(.workspace-practicing) #screen-results[style*="block"]{
+    display:grid!important;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);column-gap:0;padding:0;border:2px solid var(--bb-ink);border-radius:12px;background:var(--desk-surface)}
+  body.pd-shell:not(.workspace-practicing) #screen-results>*{grid-column:1/-1;margin-left:0;margin-right:0}
+  body.pd-shell:not(.workspace-practicing) #screen-results>.rs-h{grid-row:1;margin:0;padding:14px 24px;border-radius:10px 10px 0 0}
+  body.pd-shell:not(.workspace-practicing) #screen-results>:is(#resultsIntro,#resultsSaveStatus){grid-column:2;padding:0 24px}
+  body.pd-shell:not(.workspace-practicing) #screen-results>#resultsIntro{grid-row:2;margin:18px 0 6px}
+  body.pd-shell:not(.workspace-practicing) #screen-results>#resultsSaveStatus{grid-row:3;margin:0 0 6px}
+  body.pd-shell:not(.workspace-practicing) #screen-results>.rs-hero{grid-column:1;grid-row:2 / span 3;margin:0;padding:20px 24px;border-right:2px solid var(--bb-ink)}
+  body.pd-shell:not(.workspace-practicing) #screen-results>#resultsWork{grid-column:2;grid-row:4;padding:0 24px 20px}
+  body.pd-shell:not(.workspace-practicing) #screen-results>#resultsMore{grid-row:5;margin:0;padding:0 24px;border-top:2px solid var(--bb-ink)}
+  body.pd-shell:not(.workspace-practicing) #screen-results>#resultsNote{grid-row:6;margin:16px 24px 0}
+  body.pd-shell:not(.workspace-practicing) #screen-results>.rs-actions{
+    grid-row:7;position:sticky;bottom:0;z-index:5;display:flex;justify-content:flex-end;gap:12px;margin:20px 0 0;padding:12px 24px;
+    background:var(--desk-surface);border-top:2px dashed var(--bb-line)}
+  body.pd-shell:not(.workspace-practicing) #screen-results>:is(#reviewArea,.rev-bar,#reviewBody){grid-row:auto;padding:0 24px 24px}
+  body.pd-shell:not(.workspace-practicing) #screen-results .score-box{border:2px solid var(--bb-ink);border-radius:10px;background:var(--desk-surface)}
+  body.pd-shell:not(.workspace-practicing) #screen-results .score-box.hl{border-color:var(--bb-blue);background:var(--desk-tint)}
+  body.pd-shell:not(.workspace-practicing) #screen-results .rs-chip{border:2px solid var(--bb-ink);border-radius:999px;background:var(--desk-surface);font-weight:700}
+}
+
+/* ---------- College goals and scholarship lookup: bordered split panes ---------- */
+@media (min-width:1024px){
+  body.pd-shell:not(.workspace-practicing) #screen-college .cc-body{
+    display:grid;grid-template-columns:300px minmax(0,1fr);gap:0;align-items:stretch;margin-top:0;border:2px solid var(--bb-ink);border-radius:12px;background:var(--desk-surface)}
+  body.pd-shell:not(.workspace-practicing) #screen-college .cc-rail{
+    max-width:none;position:static;max-height:none;padding:18px;border:0;border-right:2px solid var(--bb-ink);border-radius:0;box-shadow:none;background:transparent}
+  body.pd-shell:not(.workspace-practicing) #screen-college .cc-main{padding:18px}
+  body.pd-shell:not(.workspace-practicing) #screen-college .cc-list-head{padding-bottom:12px;margin-bottom:14px;border-bottom:2px dashed var(--bb-line)}
+  body.pd-shell:not(.workspace-practicing) #screen-scholarships .schl-body{
+    display:grid;grid-template-columns:268px minmax(0,1fr) minmax(300px,380px);gap:0;align-items:stretch;border:2px solid var(--bb-ink);border-radius:12px;background:var(--desk-surface)}
+  body.pd-shell:not(.workspace-practicing) #screen-scholarships .schl-filters{
+    max-width:none;position:static;border:0;border-right:2px solid var(--bb-ink);border-radius:0;background:transparent}
+  body.pd-shell:not(.workspace-practicing) #screen-scholarships .schl-list{padding:16px;border-right:2px solid var(--bb-ink)}
+  body.pd-shell:not(.workspace-practicing) #screen-scholarships .schl-detail{
+    max-width:none;position:sticky;top:76px;align-self:start;border:0;border-radius:0;background:transparent}
+  body.pd-shell:not(.workspace-practicing) #screen-scholarships .schl-list-head{padding-bottom:10px;margin-bottom:12px;border-bottom:2px dashed var(--bb-line)}
+  body.pd-shell:not(.workspace-practicing) :is(#screen-college,#screen-scholarships) .schl-filters-head,
+  body.pd-shell:not(.workspace-practicing) #screen-college .cc-score-card{border-bottom:0}
+}
+/* Fieldsets with a legend (the college chances panel) get the same gray title bar. */
+body.pd-shell:not(.workspace-practicing) #screen-college fieldset.college-chances{
+  border:2px solid var(--bb-ink);border-radius:12px;padding:0 18px 18px;margin-top:20px;background:var(--desk-surface)}
+body.pd-shell:not(.workspace-practicing) #screen-college fieldset.college-chances>legend{
+  float:left;width:calc(100% + 36px);margin:0 -18px 14px;padding:12px 18px;background:var(--bb-bar);border-bottom:2px solid var(--bb-ink);border-radius:10px 10px 0 0;font-weight:800;box-sizing:border-box}
+body.pd-shell:not(.workspace-practicing) #screen-college fieldset.college-chances>legend~*{clear:both}
+
+/* ---------- Subject drills: the table sits in one bordered pane ---------- */
+body.pd-shell:not(.workspace-practicing) #screen-subjects :is(.sk-tablewrap,.sk-table-wrap,.sk-wrap){border:2px solid var(--bb-ink);border-radius:12px;overflow:hidden;background:var(--desk-surface)}
+body.pd-shell:not(.workspace-practicing) #screen-results .rs-hero{border-radius:0;background:transparent}
+@media (min-width:1024px){
+  body.pd-shell:not(.workspace-practicing) #screen-college .cc-score-card{border:0;padding:0;box-shadow:none;background:transparent}
+}
+
+/* ---------- Phones: the footer bar sits at the bottom of the screen, like the test ---------- */
+@media (max-width:900px){
+  body.pd-shell:not(.workspace-practicing) .topbar{border-bottom:2px dashed var(--bb-line)!important}
+  body.pd-shell:not(.workspace-practicing) .topbar #deskMenu{border:2px solid var(--bb-ink);border-radius:24px;font-weight:800}
+  body.pd-shell:not(.workspace-practicing):has(#screen-start[style*="block"]) .wrap{padding-bottom:104px}
+  body.pd-shell:not(.workspace-practicing) #screen-start .st-go{
+    position:fixed;left:0;right:0;bottom:0;z-index:55;display:flex;align-items:center;gap:12px;margin:0;
+    padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:var(--desk-surface);border:0;border-top:2px dashed var(--bb-line)}
+  body.pd-shell:not(.workspace-practicing) #screen-start .st-go .st-summary{display:flex;flex-direction:column;flex:1;min-width:0;margin:0;font-size:13px;font-weight:700}
+  body.pd-shell:not(.workspace-practicing) #screen-start .st-go .st-summary span{font-weight:500;color:var(--desk-muted)}
+  body.pd-shell:not(.workspace-practicing) #screen-start #btnStart{width:auto;flex:none;min-width:150px;min-height:46px;padding:0 22px}
+  body.pd-shell:not(.workspace-practicing) #screen-start .st-main{gap:0;border:2px solid var(--bb-ink)!important;border-radius:12px;background:var(--desk-surface)!important}
+  body.pd-shell:not(.workspace-practicing) #screen-start .st-main>*{border-radius:0;border-left:0;border-right:0;box-shadow:none}
+  body.pd-shell:not(.workspace-practicing) #screen-start .st-main>*+*{border-top:2px dashed var(--bb-line)}
+  body.pd-shell:not(.workspace-practicing) #screen-start .st-go{border-top:2px dashed var(--bb-line)!important}
+  body.pd-shell:not(.workspace-practicing):has(#screen-results[style*="block"]) .wrap{padding-bottom:96px}
+  body.pd-shell:not(.workspace-practicing) #screen-results .rs-actions{
+    position:fixed;left:0;right:0;bottom:0;z-index:55;display:flex;gap:10px;margin:0;padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+    background:var(--desk-surface);border-top:2px dashed var(--bb-line)}
+  body.pd-shell:not(.workspace-practicing) #screen-results .rs-actions button{flex:1;min-height:46px}
+}

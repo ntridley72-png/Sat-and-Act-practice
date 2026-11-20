@@ -94,6 +94,7 @@ const SHOTS = path.join(ROOT, "tests", "screenshots");
   // Themes: screenshot the college screen in each layout.
   fs.mkdirSync(SHOTS, { recursive: true });
   for (const theme of ["exam", "notebook", "focus"]) {
+    if (await page.locator("#bbMore").isVisible() && !(await page.locator("#workspaceTheme").isVisible())) await page.click("#bbMore"); /* wide screens: header More menu */
     await page.selectOption("#workspaceTheme", theme);
     await page.waitForTimeout(200);
     const data = await page.getAttribute("body", "data-workspace");
@@ -102,6 +103,7 @@ const SHOTS = path.join(ROOT, "tests", "screenshots");
   }
 
   // Profile persistence across reload (localStorage) and cloud-sync fields present.
+  if (await page.locator("#bbMore").isVisible() && !(await page.locator("#workspaceTheme").isVisible())) await page.click("#bbMore");
   await page.selectOption("#workspaceTheme", "exam");
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForSelector("body[data-workspace]");

@@ -38,6 +38,8 @@ const EXEC = path.join(os.homedir(), 'Library/Caches/ms-playwright/chromium_head
     assert.equal(await page.evaluate(() => state.view), 'subjects');
     await page.click('#btnHome');
     for (const appearance of ['light','dark']) {
+      /* Wide screens keep appearance and workspace theme in the header's More menu. */
+      if (await page.locator('#bbMore').isVisible()) await page.click('#bbMore');
       await page.selectOption('#deskAppearance',appearance);
       await page.selectOption('#workspaceTheme','notebook');
       await page.reload();

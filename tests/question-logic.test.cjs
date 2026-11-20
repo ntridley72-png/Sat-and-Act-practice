@@ -37,4 +37,10 @@ for (const [set, b] of Object.entries(rep.bias)) {
   assert.ok(share < 0.4, `${set}: one answer position holds ${(share * 100).toFixed(0)}% of keys`);
 }
 
+// The keyed answer is not the longest choice noticeably more often than chance (about 25%).
+for (const [set, b] of Object.entries(rep.bias)) {
+  if (b.n < 30) continue;
+  assert.ok(b.longestIsKey < 0.35, `${set}: the keyed answer is the longest choice in ${(b.longestIsKey * 100).toFixed(0)}% of questions (chance is about 25%)`);
+}
+
 console.log(`PASS: all ${live} live questions are covered by an independent check; no wrong keys, ambiguous items, leaks, wording defects or answer-position runs.`);

@@ -67,9 +67,8 @@ The audit did find and fix real defects (below), so it is not a rubber stamp.
 
 - The hand-solved tables were solved by an AI assistant, not by a credentialed human reviewer. They are an
   independent derivation, which catches key errors; they are not a substitute for editorial review.
-- **Answer-length bias remains.** The keyed answer is the longest choice in 94.6% of ACT Reading, 55% of ACT
-  Science and 41% of SAT Reading & Writing questions (chance is about 25%). A test-wise student can score by
-  choosing the longest option. Fixing it means rewriting distractors; it is not done.
+- Answer-length bias was found and fixed afterwards (see `docs/STUDY_TOOL_AUDIT.md`): the keyed answer is now the
+  longest choice in 19-28% of questions in each section, about chance. `tests/question-logic.test.cjs` guards it.
 - Difficulty labels, alignment with the real tests, and the roughly 600 withheld questions were not audited.
 - Some Reading items are weak in a different way: the vocabulary-in-context stems do not constrain the word's meaning
   by context alone. The keys are defensible; the items are easy to guess.

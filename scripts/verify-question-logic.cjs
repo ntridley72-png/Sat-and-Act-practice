@@ -404,14 +404,14 @@ function verifyText(q, out) {
     }
   }
   if (/For decades, the crew that maintained .+ followed a fixed routine/.test(text) && /overall structure/.test(stem)) {
-    if (!/^It describes a long-standing routine, then a change/.test(keyed)) fail(`the passage moves from routine to change to effect; key is ${JSON.stringify(keyed)}`);
+    if (!/^It describes a routine, then a change to it/.test(keyed)) fail(`the passage moves from routine to change to effect; key is ${JSON.stringify(keyed)}`);
     return true;
   }
   if ((m = text.match(/Interval A: (\d+) days of service; Interval B: (\d+) days; Interval C: (\d+) days/))) {
     const d = { A: +m[1], B: +m[2], C: +m[3] };
     const top = Object.keys(d).sort((x, y) => d[y] - d[x])[0];
     if (keyed !== `Interval ${top} provided the longest service before each repair.`) fail(`Interval ${top} has the most days (${d[top]}); key is ${JSON.stringify(keyed)}`);
-    q.choices.forEach((c, i) => { const t = String(c).match(/^Interval (\w) lasted longer than Interval (\w)\./); if (t && i === q.ans) fail("the keyed claim must be the true one"); if (t && d[t[1]] > d[t[2]]) out.push({ level: "fail", rule: "ambiguous", msg: `${JSON.stringify(c)} is also true (${d[t[1]]} > ${d[t[2]]})` }); });
+    q.choices.forEach((c, i) => { const t = String(c).match(/^Interval (\w) had longer service before each repair than Interval (\w)\./); if (t && i === q.ans) fail("the keyed claim must be the true one"); if (t && d[t[1]] > d[t[2]]) out.push({ level: "fail", rule: "ambiguous", msg: `${JSON.stringify(c)} is also true (${d[t[1]]} > ${d[t[2]]})` }); });
     return true;
   }
   return false;

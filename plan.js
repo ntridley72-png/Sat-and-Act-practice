@@ -247,6 +247,7 @@
       '<label>Study time<select id="plMinutes">' + [90, 120, 180, 240, 300, 360].map((m) => '<option value="' + m + '"' + (store().minutes === m ? " selected" : "") + ">" + (m / 60) + " hours a week</option>").join("") + "</select></label></div>" +
       '<div class="pl-errors" id="plGoalErr" role="alert" aria-live="polite"></div>' +
       "</div></div>" +
+      (window.FunSATHabits ? window.FunSATHabits.planHtml() : "") +
       '<div class="pl-pane"><div class="pl-bar">Score history</div><div class="pl-pbody">' +
       (pts.length ? chartSvg(pts, goal, test) + '<p class="pl-legend"><span class="pl-key official"></span> Official report <span class="pl-key practice"></span> Practice test <span class="pl-key goal"></span> Goal</p>'
         : '<p class="pl-muted">No scores yet. Add a score report below, or finish a full practice test and it will appear here.</p>') +
@@ -324,6 +325,7 @@
     const wsBtn = $id("plWorksheet");
     if (wsBtn) wsBtn.addEventListener("click", () => { if (window.FunSATWorksheet) window.FunSATWorksheet.open({ keys: plan.focus.slice(0, 3).map((f) => f.key), test: ui.test }); });
     host.querySelectorAll(".pl-week").forEach((d) => d.addEventListener("toggle", () => { if (d.open) ui.openWeek = Number(d.dataset.week); }));
+    if (window.FunSATHabits) window.FunSATHabits.wirePlan(host);
     const coach = $id("plCoach"); if (coach) coach.addEventListener("click", () => askCoach(plan));
   }
 

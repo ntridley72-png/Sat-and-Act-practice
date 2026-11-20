@@ -625,10 +625,10 @@ def fam_structure(i):
                f"the old routine had hidden, and the crew reorganized its work around what the records showed.")
     q = "Which choice best describes the overall structure of the text?"
     return dict(domain="Craft & Structure", skill="Text Structure and Purpose", diff=diff_for(i), q=q,
-        correct="It describes a long-standing routine, then a change to it, and closes with the effect of that change.",
-        wrongs=[("It compares two rival theories in detail.", "No competing theories are presented."),
-                ("It argues that record keeping is unnecessary.", "Records are shown to be valuable, not pointless."),
-                ("It lists unrelated events in sequence.", "The events form a connected cause-and-effect narrative.")],
+        correct="It describes a routine, then a change to it, and then that change's effect.",
+        wrongs=[("It compares two rival theories about the routine and weighs the evidence for each.", "No competing theories are presented."),
+                ("It argues that keeping records is unnecessary and that routines work better.", "Records are shown to be valuable, not pointless."),
+                ("It lists unrelated events in sequence without explaining how they connect.", "The events form a connected cause-and-effect narrative.")],
         exp="The text moves from an old routine to a change and its consequence.", passage=passage)
 
 def fam_crosstext(i):
@@ -640,10 +640,10 @@ def fam_crosstext(i):
           "records are worthless on their own.")
     q = f"Text 1: {t1}\n\nText 2: {t2}\n\nHow would the author of Text 1 most likely respond to the argument in Text 2?"
     return dict(domain="Craft & Structure", skill="Cross-Text Connections", diff=diff_for(i), q=q,
-        correct="By noting that the argument overstates the finding: single-year records remain useful even if trends emerge over time.",
-        wrongs=[("By agreeing that only multi-decade records have any value.", "Text 1 treats yearly data as the building blocks of the trend."),
-                ("By denying that the adjustments accumulated.", "That contradicts Text 1's own finding."),
-                ("By noting that the review covered too few seasons to matter.", f"Text 1 reports {n} seasons as sufficient for its conclusion.")],
+        correct="By noting that the argument overstates the finding, since single-year records remain useful.",
+        wrongs=[("By agreeing that only multi-decade records have any value, since single years are too noisy.", "Text 1 treats yearly data as the building blocks of the trend."),
+                ("By denying that the small yearly adjustments accumulated into a substantial change.", "That contradicts Text 1's own finding."),
+                ("By noting that the review covered too few seasons for its conclusion to matter.", f"Text 1 reports {n} seasons as sufficient for its conclusion.")],
         exp="Text 1 values the annual records as the source of the trend; Text 2's dismissal goes beyond the evidence.", passage=t1)
 
 def fam_inference(i):
@@ -654,9 +654,9 @@ def fam_inference(i):
     q = "Which inference is most strongly supported by the text?"
     return dict(domain="Information & Ideas", skill="Inferences", diff=diff_for(i), q=q,
         correct="The crew increased its checks in response to storm conditions.",
-        wrongs=[("The crew ignored the schedule entirely.", "The text says they exceeded the schedule, not abandoned it."),
-                ("Storms damaged the records themselves.", "Nothing suggests the records were harmed."),
-                ("The schedule required daily checks in stormy weeks.", "The text describes clustered entries after storms, not a daily requirement.")],
+        wrongs=[("The crew ignored the written schedule and checked at random times.", "The text says they exceeded the schedule, not abandoned it."),
+                ("Storms damaged the records, which is why the entries cluster.", "Nothing suggests the records were harmed."),
+                ("The schedule already required daily checks during every stormy week.", "The text describes clustered entries after storms, not a daily requirement.")],
         exp="Clustered post-storm entries indicate checks were added in response to the storms.", passage=passage)
 
 def fam_evidence(i):
@@ -668,9 +668,9 @@ def fam_evidence(i):
     q = "Which detail from the text best supports the guide's claim that early repairs save money?"
     return dict(domain="Information & Ideas", skill="Command of Evidence", diff=diff_for(i), q=q,
         correct=f"Patched equipment lasted {n} months versus {n - 8} months for equipment run to failure.",
-        wrongs=[("The guide discusses equipment maintenance.", "A general topic is not evidence for the cost claim."),
-                (f"The guide reports data from {n} items.", "Sample size alone does not support the cost-saving claim."),
-                ("Replacement parts were sometimes required.", "Parts are a cost of late repair, not evidence for early repair savings.")],
+        wrongs=[("The guide discusses equipment maintenance and how often it should happen.", "A general topic is not evidence for the cost claim."),
+                (f"The guide reports data from {n} items and describes how they were chosen.", "Sample size alone does not support the cost-saving claim."),
+                ("Replacement parts were sometimes required for equipment left unrepaired.", "Parts are a cost of late repair, not evidence for early repair savings.")],
         exp="The longer service life of patched equipment directly supports the savings claim.", passage=passage)
 
 def fam_quant(i):
@@ -681,9 +681,9 @@ def fam_quant(i):
     q = "Which statement is best supported by the data in the text?"
     return dict(domain="Information & Ideas", skill="Quantitative Evidence", diff=diff_for(i), q=q,
         correct=f"Interval B provided the longest service before each repair.",
-        wrongs=[(f"Interval A required the fewest repairs.", "Every interval covered the same number of repairs."),
-                (f"Interval C lasted longer than Interval B.", f"Interval C is {a3} days versus {a2}."),
-                ("The three intervals lasted equal amounts of time.", "The recorded values differ.")],
+        wrongs=[(f"Interval A covered the fewest repairs of the three intervals.", "Every interval covered the same number of repairs."),
+                (f"Interval C had longer service before each repair than Interval B.", f"Interval C is {a3} days versus {a2}."),
+                ("The three intervals gave equal service before each repair.", "The recorded values differ.")],
         exp=f"Comparing the recorded days ({a1}, {a2}, {a3}), Interval B is the longest.", passage=passage)
 
 READING_FAMS = {"Words in Context": fam_words, "Text Structure and Purpose": fam_structure,
@@ -782,10 +782,10 @@ def fam_research(i):
     q = sci_table(i) + f"\nA student claims {subject} rises steadily with {xl.split(' ')[0].lower()}. Do the data support the claim?"
     rising = all(ys[j + 1] > ys[j] for j in range(3))
     return dict(domain="Research Summaries", skill="Research Summaries", diff=diff_for(i), q=q,
-        correct="Yes; every recorded step increases." if rising else "No; at least one step does not increase.",
-        wrongs=[(("No; at least one step does not increase." if rising else "Yes; every recorded step increases."), "This contradicts the recorded steps."),
-                ("The data cannot address the claim.", "The table directly records the variables in the claim."),
-                ("Only if the sample size is given.", "Whether values rise is visible without more context.")],
+        correct="Yes; the readings increase at every recorded step." if rising else "No; at least one recorded step does not increase.",
+        wrongs=[(("No; at least one recorded step does not increase." if rising else "Yes; the readings increase at every recorded step."), "This contradicts the recorded steps."),
+                ("The table cannot address this claim either way.", "The table directly records the variables in the claim."),
+                ("Only if the sample size were also reported.", "Whether values rise is visible without more context.")],
         exp="Check each consecutive pair against the claimed direction.")
 
 def fam_controls(i):
@@ -793,9 +793,9 @@ def fam_controls(i):
     q = sci_table(i) + f"\nThe lab wants to test whether {xl.split(' ')[0].lower()} alone causes the changes in {yl.split(' ')[0].lower()}. Which design best isolates that variable?"
     return dict(domain="Research Summaries", skill="Experimental controls", diff=diff_for(i), q=q,
         correct=f"Vary {xl.split(' ')[0].lower()} across settings while holding every other condition constant.",
-        wrongs=[("Change the equipment and the settings together.", "Confounded variables cannot isolate the cause."),
-                ("Repeat only the middle setting several times.", "Repeating one setting cannot show the variable's effect."),
-                ("Measure a different quantity at each setting.", "Changing the measurement breaks comparability.")],
+        wrongs=[("Change the equipment and the settings together, then compare the readings.", "Confounded variables cannot isolate the cause."),
+                ("Repeat only the middle setting several times and report its average.", "Repeating one setting cannot show the variable's effect."),
+                ("Measure a different quantity at each setting and compare the results.", "Changing the measurement breaks comparability.")],
         exp="Isolating one variable requires holding all other conditions constant.")
 
 def fam_design(i):
@@ -803,9 +803,9 @@ def fam_design(i):
     q = sci_table(i) + "\nWhich additional procedure would most improve the reliability of these results?"
     return dict(domain="Research Summaries", skill="Study design", diff=diff_for(i), q=q,
         correct="Repeat each setting multiple times and average the readings.",
-        wrongs=[("Record more decimal places for one trial.", "Precision of a single reading does not establish reliability."),
-                ("Test only the highest setting again.", "One setting cannot represent the whole range."),
-                ("Change the measurement device mid-study.", "Switching devices introduces an uncontrolled difference.")],
+        wrongs=[("Record more decimal places for a single trial of one setting.", "Precision of a single reading does not establish reliability."),
+                ("Test only the highest setting again and report that value alone.", "One setting cannot represent the whole range."),
+                ("Change the measurement device partway through the study.", "Switching devices introduces an uncontrolled difference.")],
         exp="Replication plus averaging reduces the influence of random error.")
 
 def fam_interp_exp(i):
@@ -814,9 +814,9 @@ def fam_interp_exp(i):
     rising = ys[3] > ys[0]
     return dict(domain="Research Summaries", skill="Interpreting experiments", diff=diff_for(i), q=q,
         correct=f"{yl.split(' ')[0]} is {'higher' if rising else 'lower'} at the highest {xl.split(' ')[0].lower()} than at the lowest.",
-        wrongs=[("The recorded quantity is identical at every setting.", "The table shows different values."),
-                ("The trend reverses halfway through the table.", "No reversal appears in the recorded steps."),
-                ("Nothing can be concluded from a single table.", "A single well-controlled table supports a direct comparison.")],
+        wrongs=[(f"{yl.split(' ')[0]} is identical at every {xl.split(' ')[0].lower()} setting in the table.", "The table shows different values."),
+                (f"The trend in {yl.split(' ')[0].lower()} reverses direction halfway through the table.", "No reversal appears in the recorded steps."),
+                (f"No conclusion about {yl.split(' ')[0].lower()} can be drawn from a single table.", "A single well-controlled table supports a direct comparison.")],
         exp="Compare the first and last readings to state the overall direction.")
 
 def fam_conflict(i):
@@ -826,9 +826,9 @@ def fam_conflict(i):
          f"Which observation would most directly support Scientist 2?")
     return dict(domain="Conflicting Viewpoints", skill="Conflicting Viewpoints", diff=diff_for(i), q=q,
         correct="Repeating the measurements with a pre-warmed apparatus reproduces the same pattern.",
-        wrongs=[("The apparatus warms steadily during the trials.", "That observation supports Scientist 1, not 2."),
-                ("The lab is unusually cold that day.", "Room temperature alone does not distinguish the claims."),
-                (f"The highest reading is {max(ys)} at {hi}.", "A reading alone does not separate the explanations.")],
+        wrongs=[("The apparatus warms steadily and the readings drift upward during the trials.", "That observation supports Scientist 1, not 2."),
+                ("The laboratory was unusually cold on the day of the measurements.", "Room temperature alone does not distinguish the claims."),
+                (f"The highest recorded reading is {max(ys)}, which occurred at the setting {hi}.", "A reading alone does not separate the explanations.")],
         exp="If the pattern survives with the apparatus pre-warmed, warm-up cannot be the cause.")
 
 def fam_compare(i):
@@ -838,9 +838,9 @@ def fam_compare(i):
     nxt = round(ys[3] + (ys[3] - ys[2]) * 0.1, 1) if ys[3] > ys[2] else round(ys[3] + (ys[3] - ys[2]) * 0.1, 1)
     return dict(domain="Conflicting Viewpoints", skill="Comparing predictions", diff="hard", q=q,
         correct="The next reading changes much less than the previous step.",
-        wrongs=[("The next reading continues the same proportional step.", "That matches Scientist 1's prediction."),
-                ("The next reading exceeds the previous step.", "Acceleration supports neither leveling-off claim."),
-                ("The next reading equals the first reading.", "A full return is not predicted by either view.")],
+        wrongs=[("The next reading continues to change by the same proportional step.", "That matches Scientist 1's prediction."),
+                ("The next reading is larger than the previous step by a wider margin.", "Acceleration supports neither leveling-off claim."),
+                ("The next reading returns to the same value as the first reading.", "A full return is not predicted by either view.")],
         exp="Leveling off means the next increment shrinks, matching Scientist 2.")
 
 def fam_eval(i):
@@ -849,9 +849,9 @@ def fam_eval(i):
          f"Which weakness most limits that conclusion?")
     return dict(domain="Conflicting Viewpoints", skill="Evaluating evidence", diff=diff_for(i), q=q,
         correct="Other conditions could be changing along with the tested variable.",
-        wrongs=[("The table has too few decimal places.", "Precision is not the core limitation here."),
-                ("The values were recorded by hand.", "Method of recording is not the cited weakness."),
-                ("The subject is uninteresting.", "Interest level does not bear on causal inference.")],
+        wrongs=[("The table reports its values to too few decimal places overall.", "Precision is not the core limitation here."),
+                ("The values in the table were recorded by hand rather than by sensor.", "Method of recording is not the cited weakness."),
+                ("The subject of the experiment is not very interesting to most readers.", "Interest level does not bear on causal inference.")],
         exp="Correlation between settings and readings can reflect confounded conditions rather than causation.")
 
 SCIENCE_FAMS = {"Data Representation": fam_datarep, "Reading tables": fam_readtables, "Interpolation": fam_interp,

@@ -85,3 +85,24 @@ html[data-desk-appearance="dark"] #screen-plan{--pl-err:#ff9a8d;--pl-warn:#f0b35
   #screen-plan .pl-fbtns{justify-content:flex-start}
   #screen-plan .pl-ld{flex-basis:92px}
 }
+
+/* ---- Study habits: review queue, daily goal, mastery levels ---- */
+.hb-block{display:flex;flex-direction:column;gap:8px;padding-bottom:12px;border-bottom:1px dashed var(--desk-line,#ccd)}
+.hb-block:last-child{border-bottom:0;padding-bottom:0}
+.hb-row{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.hb-track{height:12px;border:2px solid var(--desk-ink,#111);border-radius:8px;overflow:hidden;background:var(--desk-surface,#fff)}
+.hb-track i,.hb-bar i{display:block;height:100%;background:var(--desk-accent,#0b5fff)}
+.hb-goalsel{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:700;max-width:260px}
+.hb-levels{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 14px;font-size:14px}
+.hb-levels li{display:flex;align-items:center;gap:8px}
+.hb-lvdot{width:12px;height:12px;border-radius:50%;border:2px solid currentColor;flex:none}
+.habit-chip{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-top:10px;font-size:13px}
+.habit-chip .hb-goal{display:inline-flex;align-items:center;gap:8px;font-weight:700}
+.habit-chip .hb-bar{width:90px;height:10px;border:2px solid var(--desk-ink,#111);border-radius:6px;overflow:hidden;display:inline-block;background:var(--desk-surface,#fff)}
+.habit-chip .hb-review{background:var(--desk-accent,#0b5fff);color:var(--desk-on-accent,#fff);border:2px solid var(--desk-accent,#0b5fff);border-radius:20px;padding:6px 14px;font-weight:800;min-height:36px;cursor:pointer}
+.habit-chip .hb-muted{color:var(--desk-muted,#555)}
+:root{--hb-warn:#8a4b08;--hb-good:#1a7f37}
+html[data-desk-appearance="dark"]{--hb-warn:#f0b35a;--hb-good:#6fdc96}
+.lv-none{color:var(--desk-muted,#555)}.lv-attempted{color:var(--hb-warn)}.lv-familiar{color:var(--desk-accent,#0b5fff)}.lv-proficient{color:var(--hb-good)}.lv-mastered{color:var(--desk-ink,#111);font-weight:800}
+.lv-mastered .hb-lvdot{background:currentColor}.lv-proficient .hb-lvdot{background:linear-gradient(90deg,currentColor 50%,transparent 50%)}
+.sk-level{display:inline-block;margin-left:8px;padding:1px 8px;border:1.5px solid currentColor;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}

@@ -138,6 +138,11 @@
     return '<span class="sk-acc"><span class="sk-meter' + tone + '"><i style="width:' + st.accuracy + '%"></i></span>' +
       '<b>' + st.accuracy + '%</b><span class="sk-of">' + st.r + "/" + (st.r + st.w) + "</span></span>";
   }
+  function masteryChip(st) {
+    const H = window.FunSATHabits; if (!H) return "";
+    const m = H.mastery(st ? st.r : 0, st ? st.w : 0);
+    return ' <span class="sk-level lv-' + m.key + '">' + esc(m.label) + "</span>";
+  }
   function renderSubjectsScreen() {
     const host = $id("subjectsBody") || $id("screen-subjects");
     if (!host) return;
@@ -177,7 +182,7 @@
             return '<tr data-s-key="' + esc(x.key) + '">' +
               '<th scope="row" class="sk-name">' + esc(x.skill) + "</th>" +
               '<td class="sk-dom">' + esc(x.domain) + "</td>" +
-              '<td class="sk-acccell">' + accCell(st) + "</td>" +
+              '<td class="sk-acccell">' + accCell(st) + masteryChip(st) + "</td>" +
               '<td class="sk-num">' + x.ids.length + "</td>" +
               '<td class="sk-go"><button type="button" class="sk-drill" data-s-go="' + esc(x.key) + '" ' +
               'aria-label="Drill ' + esc(x.skill) + ", " + n + ' questions">Drill ' + n + "</button>" +

@@ -1,0 +1,22 @@
+{
+  "name": "FunSAT: SAT & ACT practice",
+  "short_name": "FunSAT",
+  "description": "Free SAT and ACT practice tests, skill drills, a study plan and printable worksheets. Works offline once opened.",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1D6FE0",
+  "orientation": "any",
+  "categories": ["education"],
+  "icons": [
+    { "src": "/favicon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/logo-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/logo-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "My plan", "short_name": "Plan", "url": "/?view=plan&source=pwa" },
+    { "name": "Subject practice", "short_name": "Subjects", "url": "/?view=subjects&source=pwa" }
+  ]
+}

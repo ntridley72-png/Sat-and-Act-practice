@@ -24,6 +24,7 @@ const TYPES = {
   ".map": "application/json",
   ".svg": "image/svg+xml",
   ".png": "image/png",
+  ".webmanifest": "application/manifest+json",
   ".ico": "image/x-icon",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
@@ -41,7 +42,7 @@ http
     if (url === "/favicon.ico") { res.writeHead(204); res.end(); return; }
     const file = url.startsWith("/racing-v2/")
       ? path.join(DIST, url.slice("/racing-v2/".length))
-      : path.join(ROOT, url === "/" ? "index.html" : url.slice(1));
+      : path.join(ROOT, url === "/" ? (fs.existsSync(path.join(ROOT, "index.html")) ? "index.html" : "SAT & ACT Practice.html") : url.slice(1)); // "/" is the app, as in the deployed build
     if (!file.startsWith(ROOT)) { res.writeHead(403); res.end(); return; }
     fs.readFile(file, (err, buf) => {
       if (err) { res.writeHead(404); res.end("not found: " + url); return; }

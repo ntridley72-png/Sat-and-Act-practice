@@ -16,20 +16,32 @@ def _rot(pairs):
     k = _seq["rot"] % len(pairs); _seq["rot"] += 1
     return pairs[k:] + pairs[:k]
 
+def _k(v):
+    """Identity of an answer choice: numerically equal values ("31" and "31.0") are the same choice."""
+    try:
+        return repr(float(v))
+    except (TypeError, ValueError):
+        return str(v)
+
+def fmt(v):
+    """31.0 -> 31, 31.5 -> 31.5 (how a printed table or answer would show it)."""
+    f = float(v)
+    return int(f) if f == int(f) else round(f, 1)
+
 def add(pool, qid, test, section, domain, skill, diff, q, correct, wrongs, exp, dw=None, **extra):
-    vals = {str(correct)}
+    vals = {_k(correct)}
     clean = []
     for w, why in wrongs:
-        if str(w) in vals:
+        if _k(w) in vals:
             continue
-        vals.add(str(w))
+        vals.add(_k(w))
         clean.append((w, why))
     if len(clean) < 3 and isinstance(correct, (int, float)) and not isinstance(correct, bool):
         k = 1
         while len(clean) < 3:
             for cand in (correct + k, correct - k):
-                if str(cand) not in vals:
-                    vals.add(str(cand))
+                if _k(cand) not in vals:
+                    vals.add(_k(cand))
                     clean.append((cand, f"An arithmetic slip of {k} from the keyed value."))
                     break
             k += 1
@@ -59,19 +71,19 @@ def pick3(cands, correct):
     """Return three (value, why) pairs with values distinct from each other and
     from the correct answer, padding with offset fallbacks when candidates collide."""
     out = []
-    seen = {str(correct)}
+    seen = {_k(correct)}
     for v, why in cands:
-        if str(v) in seen:
+        if _k(v) in seen:
             continue
-        seen.add(str(v)); out.append((v, why))
+        seen.add(_k(v)); out.append((v, why))
         if len(out) == 3:
             return out
     base = correct if isinstance(correct, (int, float)) else None
     bump = 1
     while len(out) < 3:
         v = (base + bump) if base is not None else f"{correct} (no{ bump })"
-        if str(v) not in seen:
-            seen.add(str(v)); out.append((v, "An arithmetic slip of " + str(bump) + " from the correct value."))
+        if _k(v) not in seen:
+            seen.add(_k(v)); out.append((v, "An arithmetic slip of " + str(bump) + " from the correct value."))
         bump += 1
     return out
 
@@ -439,15 +451,21 @@ NOUNS = [("committee", "budget memo"), ("squad", "travel plan"), ("panel", "revi
          ("guild", "exhibit plan"), ("council", "zoning note"), ("bureau", "records index"), ("troupe", "tour schedule"),
          ("league", "rule book"), ("choir", "rehearsal chart"), ("unit", "field report"), ("division", "quarterly review")]
 
+VERB_FORMS = {  # 3rd-person singular -> (base form, -ing form, past participle)
+    "grows": ("grow", "growing", "grown"), "improves": ("improve", "improving", "improved"),
+    "expands": ("expand", "expanding", "expanded"), "changes": ("change", "changing", "changed"),
+}
+
 def fam_sva(i):
     who, work = NOUNS[i % len(NOUNS)]
-    plural = 1 + (i % 3)
+    plural = 2 + (i % 3)          # "2 copies", never "1 copies"
     v = ["grows", "improves", "expands", "changes"][i % 4]
+    base, ing, pp = VERB_FORMS[v]
     q = f"The {who}'s collection of {plural} copies of the {work} ___ each year as new members contribute.\nWhich choice completes the text so that it conforms to Standard English?"
     return dict(skill="Subject-Verb Agreement", diff=diff_for(i), q=q, correct=v,
-        wrongs=[(v + "s" if not v.endswith("s") else v + "es", "The verb must agree with the singular 'collection,' not the nearby plural noun."),
-                ("were " + v[:-1] + "ing", "A plural past form disagrees with the singular subject and shifts tense."),
-                ("have " + v[:-1] + "ed", "The plural auxiliary 'have' does not agree with 'collection.'")],
+        wrongs=[(base, "The base form is plural; it disagrees with the singular 'collection,' not the nearby plural noun."),
+                ("were " + ing, "A plural past form disagrees with the singular subject and shifts tense."),
+                ("have " + pp, "The plural auxiliary 'have' does not agree with 'collection.'")],
         exp="The subject is the singular noun 'collection'; the phrase 'of ... copies' does not change agreement.")
 
 def fam_mod(i):
@@ -461,7 +479,7 @@ def fam_mod(i):
 
 def fam_pron(i):
     who, work = NOUNS[(i + 9) % len(NOUNS)]
-    q = f"The {who} submitted {work} with a note attached to it. When the reviewers replied, ___ thanked them for the detailed feedback.\nWhich choice completes the text so that it conforms to Standard English?"
+    q = f"The {who} submitted the {work} with a note attached to it. When the reviewers replied, ___ thanked them for the detailed feedback.\nWhich choice completes the text so that it conforms to Standard English?"
     return dict(skill="Pronouns", diff=diff_for(i), q=q, correct="the members",
         wrongs=[("they're members", "'They're' means 'they are,' which cannot serve as the subject here."),
                 ("there members", "'There' is a place word, not a subject or possessive."),
@@ -607,7 +625,7 @@ def fam_structure(i):
                f"the old routine had hidden, and the crew reorganized its work around what the records showed.")
     q = "Which choice best describes the overall structure of the text?"
     return dict(domain="Craft & Structure", skill="Text Structure and Purpose", diff=diff_for(i), q=q,
-        correct=f"It describes a routine, then a change {seq[4:]}.",
+        correct="It describes a long-standing routine, then a change to it, and closes with the effect of that change.",
         wrongs=[("It compares two rival theories in detail.", "No competing theories are presented."),
                 ("It argues that record keeping is unnecessary.", "Records are shown to be valuable, not pointless."),
                 ("It lists unrelated events in sequence.", "The events form a connected cause-and-effect narrative.")],
@@ -622,7 +640,7 @@ def fam_crosstext(i):
           "records are worthless on their own.")
     q = f"Text 1: {t1}\n\nText 2: {t2}\n\nHow would the author of Text 1 most likely respond to the argument in Text 2?"
     return dict(domain="Craft & Structure", skill="Cross-Text Connections", diff=diff_for(i), q=q,
-        correct="The argument overstates the finding: single-year records remain useful even if trends emerge over time.",
+        correct="By noting that the argument overstates the finding: single-year records remain useful even if trends emerge over time.",
         wrongs=[("By agreeing that only multi-decade records have any value.", "Text 1 treats yearly data as the building blocks of the trend."),
                 ("By denying that the adjustments accumulated.", "That contradicts Text 1's own finding."),
                 ("By noting that the review covered too few seasons to matter.", f"Text 1 reports {n} seasons as sufficient for its conclusion.")],
@@ -703,8 +721,19 @@ def exp_vals(i):
         ys = [round(base - j * step, 1) for j in range(4)]
     return subject, xl, xs, yl, ys
 
-def sci_table(i):
-    subject, xl, xs, yl, ys = exp_vals(i)
+def rates_vals(i):
+    """Like exp_vals, but every step between settings is different, so exactly one interval changes fastest."""
+    subject, xl, xs, yl, _, slope = EXP[i % len(EXP)]
+    base = 20 + (i % 7) + (i // 7) * 2
+    step = 2 + (i % 3)
+    offsets = [(0, 1, 3), (3, 1, 0), (1, 3, 0), (0, 3, 1), (1, 0, 3), (3, 0, 1)][i % 6]
+    ys = [base]
+    for off in offsets:
+        ys.append(round(ys[-1] + (step + off if slope > 0 else -(step + off)), 1))
+    return subject, xl, xs, yl, ys
+
+def sci_table(i, vals=None):
+    subject, xl, xs, yl, ys = vals or exp_vals(i)
     return f"A lab recorded {subject} across {len(xs)} settings.\n{xl}: " + " · ".join(map(str, xs)) + f"\n{yl}: " + " · ".join(map(str, ys))
 
 def fam_datarep(i):
@@ -712,7 +741,7 @@ def fam_datarep(i):
     q = sci_table(i) + f"\nAt which setting is the recorded {yl.split(' ')[0].lower()} value greatest?"
     max_i = ys.index(max(ys))
     return dict(domain="Data Representation", skill="Data Representation", diff=diff_for(i), q=q, correct=f"{xl.split(' ')[0]} = {xs[max_i]}",
-        wrongs=[(f"{xs[j]}", "This setting is not the maximum in the table.") for j in range(4) if j != max_i][:3],
+        wrongs=[(f"{xl.split(' ')[0]} = {xs[j]}", "This setting is not the maximum in the table.") for j in range(4) if j != max_i][:3],
         exp=f"Scanning the second row, the largest recorded value is {max(ys)} at {xs[max_i]}.")
 
 def fam_readtables(i):
@@ -727,17 +756,17 @@ def fam_readtables(i):
 
 def fam_interp(i):
     subject, xl, xs, yl, ys = exp_vals(i)
-    mid = (xs[1] + xs[2]) / 2; mid_y = (ys[1] + ys[2]) / 2
-    q = sci_table(i) + f"\nAssuming the trend between adjacent settings is linear, what value should the table show at {xl.split(' ')[0]} = {mid}?"
-    return dict(domain="Data Representation", skill="Interpolation", diff="hard", q=q, correct=round(mid_y, 1),
-        wrongs=pick3([(ys[1], "That is the lower endpoint, not the midpoint."), (ys[2], "That is the upper endpoint."),
-                      (round((ys[0] + ys[3]) / 2 + 1, 1), "Averaging the outer readings ignores the local trend.")], round(mid_y, 1)),
-        exp=f"Halfway between {xs[1]} and {xs[2]} lies the midpoint of {ys[1]} and {ys[2]}: {round(mid_y, 1)}.")
+    mid = (xs[1] + xs[2]) / 2; mid_y = round((ys[1] + ys[2]) / 2, 1)
+    q = sci_table(i) + f"\nAssuming the trend between adjacent settings is linear, what value should the table show at {xl.split(' ')[0]} = {fmt(mid)}?"
+    return dict(domain="Data Representation", skill="Interpolation", diff="hard", q=q, correct=fmt(mid_y),
+        wrongs=pick3([(fmt(ys[1]), "That is the lower endpoint, not the midpoint."), (fmt(ys[2]), "That is the upper endpoint."),
+                      (fmt(round((ys[0] + ys[3]) / 2 + 1, 1)), "Averaging the outer readings ignores the local trend.")], fmt(mid_y)),
+        exp=f"Halfway between {xs[1]} and {xs[2]} lies the midpoint of {fmt(ys[1])} and {fmt(ys[2])}: {fmt(mid_y)}.")
 
 def fam_rates(i):
-    subject, xl, xs, yl, ys = exp_vals(i)
-    r1 = round(ys[1] - ys[0], 1); r2 = round(ys[3] - ys[2], 1)
-    q = sci_table(i) + f"\nBetween which two consecutive settings does {yl.split(' ')[0].lower()} change the fastest?"
+    vals = rates_vals(i)
+    subject, xl, xs, yl, ys = vals
+    q = sci_table(i, vals) + f"\nBetween which two consecutive settings does {yl.split(' ')[0].lower()} change the fastest?"
     deltas = [round(ys[j + 1] - ys[j], 1) for j in range(3)]
     fast = deltas.index(max(deltas, key=abs))
     wrong_list = [(f"{xs[j]} to {xs[j + 1]}", "This interval changes by a smaller amount.") for j in range(3) if j != fast]
@@ -746,7 +775,7 @@ def fam_rates(i):
     return dict(domain="Data Representation", skill="Rates of change", diff=diff_for(i), q=q,
         correct=f"{xs[fast]} to {xs[fast + 1]}",
         wrongs=wrong_list,
-        exp=f"The interval changes by {deltas[fast]}, the largest step in the table.")
+        exp=f"The interval changes by {abs(deltas[fast])}, the largest step in the table.")
 
 def fam_research(i):
     subject, xl, xs, yl, ys = exp_vals(i)

@@ -363,7 +363,7 @@
       const exit = document.getElementById("zenExit");
       if (exit) exit.classList.toggle("show", !!on);
       const study = document.getElementById("zenStudy");
-      if (study) { study.classList.toggle("show", !!on); study.setAttribute("aria-pressed", String(document.body.classList.contains("zen-study"))); study.textContent = document.body.classList.contains("zen-study") ? "✕ Close tools" : "📖 Study tools"; }
+      if (study) { study.classList.toggle("show", !!on); study.setAttribute("aria-pressed", String(document.body.classList.contains("zen-study"))); study.innerHTML = document.body.classList.contains("zen-study") ? ico("close") + " Close tools" : ico("book") + " Study tools"; }
       try {
         if (on && document.documentElement.requestFullscreen && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
         if (!on && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
@@ -376,7 +376,7 @@
     function setStudyDrawer(on) {
       document.body.classList.toggle("zen-study", !!on);
       const btn = document.getElementById("zenStudy");
-      if (btn) { btn.setAttribute("aria-pressed", String(!!on)); btn.textContent = (on ? "✕ Close tools" : "📖 Study tools"); }
+      if (btn) { btn.setAttribute("aria-pressed", String(!!on)); btn.innerHTML = (on ? ico("close") + " Close tools" : ico("book") + " Study tools"); }
     }
     const zenStudy = document.getElementById("zenStudy");
     if (zenStudy) zenStudy.addEventListener("click", () => setStudyDrawer(!document.body.classList.contains("zen-study")));

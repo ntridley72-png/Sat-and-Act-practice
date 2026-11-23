@@ -1377,3 +1377,7 @@ body.calc-resizing iframe,body.calc-resizing .dcg-container{pointer-events:none}
 body .cmsgs,body[data-workspace] .cmsgs{height:var(--cmsgs-h,260px);min-height:120px;max-height:80vh;overflow:auto;resize:vertical}
 body .modal.auth-modal{resize:both;min-width:min(320px,100%);max-width:min(96vw,900px);min-height:260px}
 body #helpHistoryList{max-height:45vh;min-height:120px;overflow:auto;resize:vertical}
+
+/* The interface icon set (icons.js): sized to the text it sits in, drawn in that text's colour. */
+.ic{display:inline-block;width:1.15em;height:1.15em;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.22em}
+button>.ic:only-child,.icon-btn>.ic{width:1.3em;height:1.3em;vertical-align:middle}

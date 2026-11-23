@@ -581,7 +581,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
     <button id="deskMenu" type="button" aria-expanded="false" aria-controls="deskNavigation">Menu</button>
     <div class="badges" id="deskNavigation">
       <span class="badge" id="badgeTimer">Time 0:00</span>
-      <button class="icon-btn" id="btnPause" type="button" title="Pause the timer" aria-label="Pause">⏸</button>
+      <button class="icon-btn" id="btnPause" type="button" title="Pause the timer" aria-label="Pause"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5v14M15 5v14" stroke-width="3"/></svg></button>
       <span class="badge" id="badgeAcc">—</span>
       <span class="hud-streak" id="hudStreak" title="Days in a row with at least one answered question">
         <span><svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3 3.5 5.5 6 5.5 9.5A5.5 5.5 0 0 1 12 18a5.5 5.5 0 0 1-5.5-5.5C6.5 9 9 6.5 12 3z"/><path d="M12 18c-1.4 0-2.5-1-2.5-2.3 0-1.4 1-2.2 2.5-4 1.5 1.8 2.5 2.6 2.5 4C14.5 17 13.4 18 12 18z"/></svg></span><span class="hud-streak-days" id="streakPips">0 days</span>
@@ -595,7 +595,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
       <button class="arcade-btn" id="btnArcade" title="Play mini-games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h4M9 10v4"/><circle cx="15.5" cy="11" r="1"/><circle cx="17.5" cy="13.5" r="1"/><path d="M4 8h16a2 2 0 0 1 2 2v5a3 3 0 0 1-3 3 3 3 0 0 1-2.4-1.2L15 15H9l-1.6 1.8A3 3 0 0 1 5 18a3 3 0 0 1-3-3v-5a2 2 0 0 1 2-2z"/></svg><span>Arcade</span></button>
       <button class="arcade-btn" id="deskReview" type="button" title="Review your saved attempts">Review</button>
       <label class="pd-appearance" for="deskAppearance">Appearance<select id="deskAppearance" data-desk-appearance-control><option value="dark">Dark</option><option value="light">Light</option></select></label>
-      <button class="sound-btn" id="btnSound" title="Toggle sound" aria-label="Toggle sound">🔊</button>
+      <button class="sound-btn" id="btnSound" title="Toggle sound" aria-label="Toggle sound"></button>
       <span class="autosave" id="autosave">✓ Autosaved</span>
       <button class="acct-btn" id="btnAccount" type="button" title="Sign in to save your progress"><span class="av" id="acctAvatar"></span><span id="acctLabel">Sign in</span></button>
     </div>
@@ -756,7 +756,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
           </div>
           <div class="bb-timer" id="modTimerWrap"><span id="modTimer"></span><button class="ghost" id="btnHideTimer" type="button">Hide</button></div>
           <div class="module-actions">
-            <button class="ghost" id="btnZen" title="Full screen practice — only the test (F, Esc to exit)">⛶ Full screen</button>
+            <button class="ghost" id="btnZen" title="Full screen practice — only the test (F, Esc to exit)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg> Full screen</button>
             <button class="ghost" id="btnNewTestMid" title="Abandon this test and set up a new one"><svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 6.3"/><path d="M20 5v6h-6"/></svg> New test</button>
             <button class="ghost" id="btnExit">Save &amp; exit</button>
             <button class="secondary" id="btnFinish">Stop &amp; see score</button>
@@ -820,7 +820,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
   <div class="calc-ai-msg" id="calcAiMsg"></div>
   <div id="calcHost"></div>
 </aside>
-<button id="zenPause" type="button" title="Pause the timer (P)" aria-label="Pause">⏸ Pause</button>
+<button id="zenPause" type="button" title="Pause the timer (P)" aria-label="Pause"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5v14M15 5v14" stroke-width="3"/></svg> Pause</button>
 <button id="zenStudy" type="button" title="Show or hide study tools (T)" aria-label="Toggle study tools" aria-pressed="false"><svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5c3 0 6 .7 8 2 2-1.3 5-2 8-2v13c-3 0-6 .7-8 2-2-1.3-5-2-8-2z"/><path d="M12 7v13"/></svg> Study tools</button>
 <button id="zenExit" type="button" title="Exit full screen (Esc)" aria-label="Exit full screen">✕ Exit full screen <span class="small">Esc</span></button>
 <div class="line-reader" id="lineReader"><div class="shade" id="lrTop"></div><div class="win" id="lrWin"></div><div class="shade" id="lrBot"></div></div>
@@ -832,7 +832,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
     <div style="display:flex;gap:6px">
       <button class="secondary" id="btnArcadeAddTime" style="padding:6px 12px;font-size:.82rem">+30s (1 coin)</button>
       <button class="secondary" id="btnArcadeRestart" style="padding:6px 12px;font-size:.82rem" title="Restart this game (R)">↺ Restart</button>
-      <button class="secondary" id="btnDriftGarage" style="display:none;padding:6px 12px;font-size:.82rem;border-color:var(--mint,#ff7a3d);color:var(--mint,#ff7a3d);font-weight:800" title="Drift cars, parts, tuning, tracks">🏁 Garage · $0</button>
+      <button class="secondary" id="btnDriftGarage" style="display:none;padding:6px 12px;font-size:.82rem;border-color:var(--mint,#ff7a3d);color:var(--mint,#ff7a3d);font-weight:800" title="Drift cars, parts, tuning, tracks"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 21V4M5 4.5h11.5l-2.3 3.8 2.3 3.8H5"/></svg> Garage · $0</button>
       <button class="secondary" id="btnArcadeMenu" style="padding:6px 12px;font-size:.82rem">Menu</button>
     </div>
   </div>
@@ -848,7 +848,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
       <label class="wash-job">Power Wash job<select id="washSubject"><option value="random">Surprise me</option><option value="car">Car</option><option value="house">House</option><option value="deck">Deck</option></select></label>
       <label>Car paint<select id="washPaint"><option value="red">Rally red</option><option value="blue">Ocean blue</option><option value="green">Emerald</option><option value="purple">Royal purple</option><option value="orange">Sunset orange</option><option value="silver">Silver</option></select></label>
       <label>Wheels<select id="washWheels"><option value="sport">Sport</option><option value="classic">Classic</option><option value="blackout">Blackout</option></select></label>
-      <button type="button" class="secondary" id="driftGarageBtn" style="display:none" title="Cars, parts, tuning, tracks">🏁 Garage</button>
+      <button type="button" class="secondary" id="driftGarageBtn" style="display:none" title="Cars, parts, tuning, tracks"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 21V4M5 4.5h11.5l-2.3 3.8 2.3 3.8H5"/></svg> Garage</button>
     </div>
     <canvas id="gameCanvas" width="420" height="300"></canvas>
     <div class="arcade-msg" id="arcadeMsg" style="display:none"></div>
@@ -934,6 +934,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 <canvas id="confettiCanvas"></canvas>
 
 <script defer src="avatar.js"></script>
+<script defer src="icons.js"></script>
 <script defer src="tutor-instructions.js"></script>
 <script defer src="app.js"></script>
 <script defer src="racing/index.js"></script>

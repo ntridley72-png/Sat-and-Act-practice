@@ -3779,9 +3779,11 @@ const MATH_COACH = {
   m46:["calc","Calculator use only: type 7/9. Or 1 − 2/9.","“Not green” counts the other 7 marbles, not just the 2 green ones."],
   m47:["no","Not a Desmos problem. It tests whether you recognize correlation values. Graphing wouldn't help unless you were given the data points.","A strong positive pattern means r close to +1. Negative r points downward."]
 };
-const DESMOS_LABEL = { yes:"✅ Yes — you can do this in Desmos", calc:"🟡 Only as a calculator — graphing doesn't help much", no:"❌ No — Desmos isn't the right tool for this one" };
+const DESMOS_LABEL = { yes: ico("check-circle") + " Yes — you can do this in Desmos", calc: ico("calc-circle") + " Only as a calculator — graphing doesn't help much", no: ico("x-circle") + " No — Desmos isn't the right tool for this one" };
 function isMathQ(q) { return !!q && /^m\d+$/.test(q.id); }
 function coachInfo(q) { return MATH_COACH[q.id] || ["calc", "Type the equations into the graphing calculator to check your work, or graph both sides and look for where they meet.", "Re-read what the question is asking for, then check each step."]; }
+function ico(name, cls) { return window.FunSATIcons ? FunSATIcons.html(name, cls) : ""; }   // icons.js: the interface icon set
+
 // ---- Tutor prompts: the teaching instructions live in tutor-instructions.js (FunSATTutor); these build one request. ----
 function tutorTestOf(q) { return q && q.test ? q.test : (q && /^a[a-z]\d/.test(q.id) ? "act" : "sat"); }
 function tutorSystem(mode, q, chosen, extra) {
@@ -3947,7 +3949,7 @@ function coachHtml(q, chosen) {
   const info = coachInfo(q);
   const good = chosen === q.ans;
   const steps = String(q.exp).replace(/([.!?])\s+(?=[A-Z“(\d])/g, "$1\u0001").split("\u0001").filter(Boolean);
-  let h = '<div class="coach"><h3>🧮 Math coach</h3>';
+  let h = '<div class="coach"><h3>'+ico('calculator')+' Math coach</h3>';
   h += '<div class="sec"><div class="sec-t">Can Desmos do it?</div><span class="dverdict ' + info[0] + '">' + DESMOS_LABEL[info[0]] + '</span><div>' + escapeHtml(info[1]) + '</div>' +
        (info[0] !== "no" ? '<div class="small muted" style="margin-top:3px"><a href="https://www.desmos.com/calculator" target="_blank" rel="noopener">Open Desmos</a> — the SAT has it built in (and it is allowed on every math question).</div>' : '') + '</div>';
   h += '<div class="sec"><div class="sec-t">Step by step</div><ol>' + steps.map((t) => "<li>" + escapeHtml(t) + "</li>").join("") + "</ol></div>";
@@ -3973,7 +3975,7 @@ function coachPaint(qid) {
     } else renderAiText(d, parsed.text);
     if (parsed.exprs.length) {
       const b = document.createElement("button"); b.type = "button"; b.className = "calc-show";
-      b.textContent = "📈 Show me in the calculator (" + parsed.exprs.length + " step" + (parsed.exprs.length > 1 ? "s" : "") + ")";
+      b.innerHTML = ico("chart") + " Show me in the calculator (" + parsed.exprs.length + " step" + (parsed.exprs.length > 1 ? "s" : "") + ")";
       b.addEventListener("click", () => calcTool.demo(parsed.exprs));
       d.appendChild(b);
     }
@@ -4077,7 +4079,7 @@ function explanationHtml(q, chosen) {
 
 function studyHelpHtml(q) {
   const tips = STUDY_TOOLS[q.domain] || ["Recall, check, retry: retrieve an idea before re-reading it.", "Identify what is being asked and list the facts given.", "Explain the solution aloud, then solve a similar problem without looking."];
-  return '<div class="idk-box"><h3>💡 Learn it, then remember it</h3><p><strong>Memory trick:</strong> ' + escapeHtml(teachingCache[q.id] && teachingCache[q.id].memory || tips[0]) + '</p><p><strong>First step:</strong> ' + escapeHtml(tips[1]) + '</p><p><strong>Study tool:</strong> ' + escapeHtml(tips[2]) + '</p>' +
+  return '<div class="idk-box"><h3>'+ico('bulb')+' Learn it, then remember it</h3><p><strong>Memory trick:</strong> ' + escapeHtml(teachingCache[q.id] && teachingCache[q.id].memory || tips[0]) + '</p><p><strong>First step:</strong> ' + escapeHtml(tips[1]) + '</p><p><strong>Study tool:</strong> ' + escapeHtml(tips[2]) + '</p>' +
     '<details><summary>Quick recall card — explain it before opening</summary><p>' + escapeHtml(q.exp) + '</p><p><strong>Answer:</strong> ' + escapeHtml(q.choices[q.ans]) + '</p></details>' +
     '<p class="small">Cover the explanation and describe why the correct answer works. Bookmark this question with ☆ to revisit it later.</p><button type="button" class="secondary" id="btnStudyDrill">Practice this topic</button></div>';
 }
@@ -4193,14 +4195,14 @@ function renderQuestion() {
       (elimMode && chosen == null ? '<button type="button" class="elim-btn" data-elim="' + i + '" aria-label="' + (struck ? "Undo cross-out for " : "Cross out ") + String.fromCharCode(65 + i) + '">' + (struck ? "Undo" : String.fromCharCode(65 + i)) + "</button>" : "") + "</div>";
   });
   html += "</div>";
-  if (chosen == null) html += '<button class="idk-btn" id="btnIdk" type="button">🤷 I don\'t know — show me</button>';
+  if (chosen == null) html += '<button class="idk-btn" id="btnIdk" type="button">' + ico("help") + ' I don\'t know — show me</button>';
 
   if (chosen != null) {
     const good = chosen === q.ans;
     const skipped = chosen === -1;
-    let head = good ? "Nice — that's correct ✓" : skipped ? "No worries — here's how to solve it 💡" : "Almost — here's the explanation ✗";
+    let head = good ? "Nice — that's correct ✓" : skipped ? "No worries — here's how to solve it" : "Almost — here's the explanation ✗";
     if (good) {
-      const streakMsg = sessionStreak >= STREAK_TARGET ? "Streak 🔥 " + sessionStreak + "!" : sessionStreak >= STREAK_TARGET - 1 ? "1 more right for arcade time! 🔥" : "";
+      const streakMsg = sessionStreak >= STREAK_TARGET ? "Streak " + sessionStreak + "!" : sessionStreak >= STREAK_TARGET - 1 ? "1 more right for arcade time! 🔥" : "";
       head += (streakMsg ? " " + streakMsg : "");
     }
     html += '<div class="feedback ' + (good ? "good" : skipped ? "idk" : "bad") + '">' +
@@ -4351,7 +4353,7 @@ function handleAnswer(choice, btnEl) {
       profile.tokens++;
       $("tokenCount").textContent = profile.tokens;
       saveProfile();
-      showToast(sessionStreak + " in a row! +1 🪙 arcade token");
+      showToast(sessionStreak + " in a row! +1 arcade token");
     }
   } else if (choice === -1) {
     if (sessionStreak > 0) showToast("Streak reset — but asking is how you learn!");
@@ -4728,7 +4730,7 @@ $("btnReview").addEventListener("click", renderReview);
 $("btnArcade").addEventListener("click", () => { openArcade(); });
 $("btnSound").addEventListener("click", () => {
   profile.soundOn = !profile.soundOn;
-  $("btnSound").textContent = profile.soundOn ? "🔊" : "🔇";
+  $("btnSound").textContent = "";   // the button draws its own sound / muted icon in CSS
   $("btnSound").classList.toggle("muted", !profile.soundOn);
   window.FunSATAudio.muted = !profile.soundOn;
   window.dispatchEvent(new CustomEvent('funsat:mute', { detail: { muted: !profile.soundOn } }));
@@ -4772,7 +4774,7 @@ function paintModuleClock() {
   const el = $("modTimer"), wrap = $("modTimerWrap"); if (!el) return;
   let t; try { if (state.view !== "test" || !currentQids().length) throw 0; t = modClockLeft(); } catch (e) { wrap.style.visibility = "hidden"; return; }
   wrap.style.visibility = "visible";
-  el.textContent = timerHidden ? "⏱" : (t < 0 ? "+" + fmtTime(-t) : fmtTime(t));
+  if (timerHidden) el.innerHTML = ico("clock"); else el.textContent = (t < 0 ? "+" + fmtTime(-t) : fmtTime(t));
   wrap.classList.toggle("low", !timerHidden && t > 0 && t <= 300);
   wrap.classList.toggle("over", !timerHidden && t <= 0);
   $("btnHideTimer").textContent = timerHidden ? "Show" : "Hide";
@@ -4903,8 +4905,8 @@ function resultsExtras() {
   const idk = Object.keys(state.answers).filter((id) => state.answers[id] === -1);
   let h = '<div class="res-cta">' +
     (profile.fullPracticeDraft ? '<button type="button" class="secondary" id="btnReturnFullPractice">Return to full SAT practice</button>' : '') +
-    '<button type="button" class="secondary" id="btnSpend">🎮 ' + (profile.tokens ? "Spend " + profile.tokens + " credit" + (profile.tokens > 1 ? "s" : "") : "Arcade") + "</button></div>";
-  if (idk.length) h += '<div class="idk-box"><h3>🤷 Questions you weren\'t sure about (' + idk.length + ')</h3><p class="small muted" style="margin:0">These need teaching, not just correcting. Re-read each explanation in Review answers, then try a drill.</p><ol>' +
+    '<button type="button" class="secondary" id="btnSpend">' + ico("gamepad") + ' ' + (profile.tokens ? "Spend " + profile.tokens + " credit" + (profile.tokens > 1 ? "s" : "") : "Arcade") + "</button></div>";
+  if (idk.length) h += '<div class="idk-box"><h3>' + ico("help") + ' Questions you weren\'t sure about (' + idk.length + ')</h3><p class="small muted" style="margin:0">These need teaching, not just correcting. Re-read each explanation in Review answers, then try a drill.</p><ol>' +
     idk.map((id) => { const q = byId(id); return "<li>" + escapeHtml(q.q.split("\n").pop().slice(0, 150)) + ' <span class="small muted">· ' + escapeHtml(q.domain) + "</span></li>"; }).join("") + "</ol></div>";
   return h;
 }
@@ -5039,12 +5041,12 @@ function predictorHtml() {
   const a = p.act;
   if (a.composite) tiles += tile(a.composite.point, a.composite.lo + "–" + a.composite.hi, "ACT composite" + (a.composite.partial ? " (sections taken so far)" : ""));
   ["english", "math", "reading", "science"].forEach((k) => { if (a[k]) tiles += tile(a[k].point, a[k].lo + "–" + a[k].hi, "ACT " + defByKey("act", k).label + " · " + a[k].n + " Q"); });
-  return '<div class="pred-card"><div class="pred-head"><h3>📈 Predicted score</h3><span class="pred-conf ' + conf + '">' + conf + " confidence</span></div>" +
+  return '<div class="pred-card"><div class="pred-head"><h3>'+ico('chart')+' Predicted score</h3><span class="pred-conf ' + conf + '">' + conf + " confidence</span></div>" +
     '<div class="pred-grid">' + tiles + "</div>" +
     '<p class="small muted" style="margin:8px 0 0">Based on ' + p.questions + " questions across " + p.attempts + " attempt" + (p.attempts > 1 ? "s" : "") +
     " completed practice tests. Topic drills and bookmarked retries are excluded. Harder questions and recent tests count more. Uses the " + curCurve().short + ". " + (conf === "low" ? "Answer more questions to narrow the range." : "") + "</p>" +
     unansweredReminderHtml() +
-    '<p style="margin:10px 0 0"><button type="button" class="secondary" data-college-open="predicted">🏛️ Compare with colleges →</button></p>' + scoreImprovementHtml() + "</div>";
+    '<p style="margin:10px 0 0"><button type="button" class="secondary" data-college-open="predicted">' + ico("building") + ' Compare with colleges ' + ico("arrow-right") + '</button></p>' + scoreImprovementHtml() + "</div>";
 }
 
 // ---- AI TUTOR: exclusively Groq, through the site’s Worker or a personal Groq key. ----
@@ -5103,7 +5105,7 @@ function aiErrorText(e) {
     e && e.code === "invalid_response" ? "The AI tutor's explanation came back incomplete. Try asking again." :
     e && e.code === "upstream" ? "The AI tutor is temporarily unavailable. Please retry." :
     e && e.code === "forbidden" ? "The tutor only works on funsat.bid. Open the app there to use it." :
-    e && e.code === "bad_key" ? "Your Groq key was rejected. Check it in 👤 Account → AI tutor." :
+    e && e.code === "bad_key" ? "Your Groq key was rejected. Check it in Account → AI tutor." :
     e && e.code === "empty" ? "The AI tutor didn't answer that time. Try asking again." :
     e && e.name === "AbortError" ? "The AI took too long to answer. Try again." :
     "Couldn't reach the AI. Check your internet connection and try again.";
@@ -5629,7 +5631,7 @@ function paintAvatar() {
   const art = avatarSvg(30, true);
   slot.classList.toggle("has-avatar", !!art);
   slot.innerHTML = art || "";
-  if (!art) slot.textContent = u ? (u.email[0] || "?").toUpperCase() : "👤";
+  if (!art) if (u) slot.textContent = (u.email[0] || "?").toUpperCase(); else slot.innerHTML = ico("user");
   slot.setAttribute("aria-hidden", "true");
   renderAvatarPicker();
 }
@@ -5930,7 +5932,7 @@ const arcade = {
       '<div class="cab-selected-rules" id="cabSelectedRules" aria-live="polite"></div>' +
       '<div class="cab-bank"><span>TIME BANK ' + fmtTime(carry) + '</span><span class="cab-bar"><i style="width:' + Math.min(100, carry / RUN_MAX_SEC * 100) + '%"></i></span><span>3 Q = 1 CREDIT</span></div>' +
       '<div class="cab-rules">Round-based games (marked FULL RUN) play until game over, 5:00 max. Everything else uses 30s per credit, spent automatically when time runs out.' + (profile.tokens ? '' : '<br>No credits? You still get a free 30s.') + '</div>' +
-      '<div class="cab-hint" style="display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap"><button type="button" class="ghost" id="cabGarageBtn">🏁 GARAGE' + (window.DriftCircuit ? ' · $' + DriftCircuit.garage().cash : '') + '</button><span>← → CHOOSE · ENTER START · ESC BACK</span></div></div>';
+      '<div class="cab-hint" style="display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap"><button type="button" class="ghost" id="cabGarageBtn">' + ico("flag") + ' GARAGE' + (window.DriftCircuit ? ' · $' + DriftCircuit.garage().cash : '') + '</button><span>← → CHOOSE · ENTER START · ESC BACK</span></div></div>';
     this.menu.querySelectorAll('.cab-tile').forEach((t) => {
       t.addEventListener('click', (e) => { if (e.target && e.target.closest && e.target.closest('.cab-fav') && t.dataset.game !== 'racing') return; if (this.enter) this.enter(t.dataset.game); else this.select(t.dataset.game); });
       t.addEventListener('mouseenter', () => { this.menuSel = +t.dataset.i; this.paintMenuSel(); });
@@ -6073,7 +6075,7 @@ const arcade = {
       if (recover) recover.style.display = showGarage ? '' : 'none';
       if (hudGarage) {
         hudGarage.style.display = showGarage ? '' : 'none';
-        try { hudGarage.textContent = '🏁 Garage · $' + DriftCircuit.garage().cash; } catch (e) { hudGarage.textContent = '🏁 Garage'; }
+        try { hudGarage.innerHTML = ico('flag') + ' Garage · $' + DriftCircuit.garage().cash; } catch (e) { hudGarage.textContent = '🏁 Garage'; }
       }
       const job = washCustomize.querySelector('.wash-job'); if (job) job.style.display = game === 'pressurewash' ? '' : 'none';
     }
@@ -12342,7 +12344,7 @@ class DriftCircuit {
     if (!Array.isArray(g.ownedKits)) g.ownedKits = ["stock"];
     if (!Array.isArray(g.ownedWings)) g.ownedWings = ["none", "lip"];
     if (cashEl()) cashEl().textContent = '$' + g.cash;
-    const hudGarage = document.getElementById('btnDriftGarage'); if (hudGarage) hudGarage.textContent = '🏁 Garage · $' + g.cash;
+    const hudGarage = document.getElementById('btnDriftGarage'); if (hudGarage) hudGarage.innerHTML = ico('flag') + ' Garage · $' + g.cash;
     const stat = (label, v) => '<span class="dg-stat"><span>' + label + '</span><b>' + v.toFixed(2) + 'x</b></span>';
     const pill = (on, attr, value, label, disabled) => '<button type="button" class="dg-pill' + (on ? ' on' : '') + '" data-' + attr + '="' + value + '"' + (disabled ? ' disabled' : '') + '>' + label + '</button>';
     // Tokens -> cash
@@ -12657,7 +12659,7 @@ addEventListener('pointercancel', clearArcadeInput);
   arcade[name] = function () { const r = orig.apply(arcade, arguments); if (name !== 'pause' || arcade.mode !== 'playing') clearArcadeInput(); else clearArcadeInput(); return r; };
 });
 // initial sound button
-$('btnSound').textContent = profile.soundOn ? '🔊' : '🔇';
+$('btnSound').textContent = '';
 if (!profile.soundOn) $('btnSound').classList.add('muted');
 
 // ---- FINAL LOAD ----
@@ -12678,10 +12680,10 @@ let testPaused = false;
 function setPaused(p) {
   testPaused = p;
   document.getElementById("pauseModal").classList.toggle("show", p);
-  document.getElementById("btnPause").textContent = p ? "▶" : "⏸";
+  document.getElementById("btnPause").innerHTML = ico(p ? "play" : "pause");
   document.getElementById("btnPause").title = p ? "Resume" : "Pause the timer";
   const zp = document.getElementById("zenPause");
-  if (zp) { zp.textContent = p ? "▶ Resume" : "⏸ Pause"; zp.setAttribute("aria-label", p ? "Resume" : "Pause"); zp.classList.toggle("on", p); }
+  if (zp) { zp.innerHTML = ico(p ? "play" : "pause") + (p ? " Resume" : " Pause"); zp.setAttribute("aria-label", p ? "Resume" : "Pause"); zp.classList.toggle("on", p); }
 }
 document.getElementById("zenPause").addEventListener("click", () => setPaused(!testPaused));
 addEventListener("keydown", (e) => {

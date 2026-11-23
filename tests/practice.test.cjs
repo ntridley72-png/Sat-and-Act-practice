@@ -10,7 +10,7 @@ if (appSrc) new vm.Script(appSrc, { filename: 'app.js' });
 const source = (appSrc && appSrc.includes('function sample(')) ? appSrc : scripts.find(s => s.includes('function sample('));
 assert(source, 'app source with function sample() not found');
 const extract = (from, to) => source.slice(source.indexOf(from), source.indexOf(to, source.indexOf(from)));
-const context = vm.createContext({ console, profile: {seen:{},served:{},lastServed:{},recentQuestions:[],selectionSequence:0}, saveProfile(){}, escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');} });
+const context = vm.createContext({ console, profile: {seen:{},served:{},lastServed:{},recentQuestions:[],selectionSequence:0}, saveProfile(){}, ico(){return '';}, escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');} });
 vm.runInContext(extract('function shuffle(', 'function defByKey'), context);
 vm.runInContext(extract('const STUDY_TOOLS', 'function renderQuestion'), context);
 const pool = Array.from({length: 80}, (_, i) => ({id:`q${i}`,domain:i%2?'Algebra':'Geometry & Trigonometry',exp:'Subtract 3 from both sides. Divide by 2.',q:'Find x.',choices:['2','3','4','5'],ans:2}));

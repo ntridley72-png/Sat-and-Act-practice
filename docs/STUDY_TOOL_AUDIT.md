@@ -45,7 +45,10 @@ the features students expect from Bluebook, Khan Academy, UWorld, Magoosh/PrepSc
 | **Daily goal** with progress | Khan, Duolingo-style tools | **Added:** 10 to 100 questions a day |
 | **Installable app that works offline** | Bluebook (native app), Khan | **Added:** web manifest, service worker (network first, so online users always get the current version), install button |
 | Practice tests that match the real domain mix | Bluebook | **Fixed** (above) |
-| Grid-in answer entry | Bluebook | Missing |
+| **AI tutor that teaches** | Khan (Khanmigo), UWorld | **Added:** one set of teaching instructions (`tutor-instructions.js`): starts from the student's own wrong choice, teaches the method and the pattern, never reveals an unanswered question's answer, offers a self-check, says so when a key looks wrong, and adapts to the student's record on the skill. Replies include "why the other choices miss" and "try it yourself"; the passage is now sent for Reading questions |
+| **A test question fits the screen** | Bluebook | **Added:** on every desktop and tablet size the question, choices and controls fit with no scrolling (content scales 0.68 to 1.3; passages scroll in their own pane); phones keep their own layout |
+| Movable calculator window | Bluebook | Had; hardened (touch cancel, stays on screen when the window shrinks). The live Desmos itself could not be loaded from the build environment, so it is tested against a stand-in |
+| Grid-in answer entry | Bluebook | **Still missing.** The 69 existing grid-in questions are nine formula templates with whole-number answers, so they are not worth releasing as they are; the engine (typed input, fraction/decimal equivalence, scoring, review) and a richer grid-in set are the top remaining job |
 | Charts and figures in questions | Bluebook, Khan | Missing |
 | Video or long-form lessons | Khan, Magoosh | Missing |
 | Performance compared with other students | UWorld | Missing (needs a user base and a server) |

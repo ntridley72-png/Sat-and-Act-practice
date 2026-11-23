@@ -95,6 +95,26 @@ body[data-workspace="exam"].workspace-practicing #screen-test .workspace-canvas{
 body[data-workspace="exam"].workspace-practicing #screen-test .workspace-question-body{width:100%;max-width:none;margin:0;padding:0 0 32px;overflow-y:auto;overflow-x:hidden;max-height:none;min-height:0}
 body[data-workspace="exam"].workspace-practicing #screen-test .split{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:0;min-height:100%}
 body[data-workspace="exam"].workspace-practicing #screen-test .split-l{padding:28px 40px;border-right:2px solid var(--bb-ink);overflow:auto}
+/* Fit to the screen. bluebook.js sets --fit (0.68 to 1.3) on the question pane so the question, its choices and the controls fit
+   the window without scrolling: smaller on a short or small window, a little larger on a big monitor. The passage scrolls in its
+   own pane. The scale is applied to the pane's contents, never to the pane, so the pane's own measurements stay true. */
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-question-body > :not(.split):not(.bb-qhead),
+body[data-workspace="exam"].workspace-practicing #screen-test .split-l > *,
+body[data-workspace="exam"].workspace-practicing #screen-test .split-r > :not(.bb-qhead),
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-qhead > *{zoom:var(--fit,1)}
+body[data-workspace="exam"].workspace-practicing #screen-test .split-r{overflow-y:auto;min-height:0}
+/* A narrower desktop or tablet window: the question column gets more of the width and the side padding comes in, so choices wrap less. */
+@media (min-width:861px) and (max-width:1180px){
+  body[data-workspace="exam"].workspace-practicing #screen-test .split{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}
+  body[data-workspace="exam"].workspace-practicing #screen-test .split-l{padding:20px 24px}
+  body[data-workspace="exam"].workspace-practicing #screen-test .split-r{padding:0 24px}
+  body[data-workspace="exam"].workspace-practicing #screen-test .bb-qhead{margin:0 -24px 16px;padding:8px 24px}
+}
+/* A small window: the "Stuck?" helper loses its title row and tightens up, so the question keeps more of the space. */
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-question-body.fit-tight .qfx-stuck-head{display:none}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-question-body.fit-tight #qfxStuck{padding:8px 10px;margin-top:8px}
+body[data-workspace="exam"].workspace-practicing #screen-test .workspace-question-body.fit-tight .idk-btn{margin:4px 0}
+body[data-workspace="exam"].workspace-practicing #screen-test .split{min-height:0}
 body[data-workspace="exam"].workspace-practicing #screen-test .split-r{padding:0 40px}
 body[data-workspace="exam"].workspace-practicing #screen-test .passage{font-family:Georgia,"Times New Roman",serif;font-size:17px;line-height:1.7;color:var(--bb-ink);background:transparent;border:0;padding:0}
 body[data-workspace="exam"].workspace-practicing #screen-test .workspace-question-body:not(:has(.split)){max-width:820px;margin:0 auto;padding-left:24px;padding-right:24px}

@@ -3782,6 +3782,20 @@ const MATH_COACH = {
 const DESMOS_LABEL = { yes:"✅ Yes — you can do this in Desmos", calc:"🟡 Only as a calculator — graphing doesn't help much", no:"❌ No — Desmos isn't the right tool for this one" };
 function isMathQ(q) { return !!q && /^m\d+$/.test(q.id); }
 function coachInfo(q) { return MATH_COACH[q.id] || ["calc", "Type the equations into the graphing calculator to check your work, or graph both sides and look for where they meet.", "Re-read what the question is asking for, then check each step."]; }
+// ---- Tutor prompts: the teaching instructions live in tutor-instructions.js (FunSATTutor); these build one request. ----
+function tutorTestOf(q) { return q && q.test ? q.test : (q && /^a[a-z]\d/.test(q.id) ? "act" : "sat"); }
+function tutorSystem(mode, q, chosen, extra) {
+  const T = window.FunSATTutor;
+  if (!T) return "You are a careful SAT/ACT tutor. Teach the method and the reason for each step." + (chosen == null && mode !== "calc" ? " The student has not answered: never reveal which choice is correct." : "") + (extra ? "\n" + extra : "");
+  let record; try { if (window.FunSATSubjects && FunSATSubjects.recordFor) record = FunSATSubjects.recordFor(q); } catch (e) { record = undefined; }
+  return T.system(mode, { test: tutorTestOf(q), answered: chosen != null, record, extra });
+}
+function tutorQuestion(q, chosen) {
+  const T = window.FunSATTutor;
+  if (T) return T.questionBlock(q, { chosen });
+  return (q.passage ? "Passage: " + q.passage + "\n" : "") + "Question: " + q.q + "\nChoices: " + q.choices.map((c, i) => String.fromCharCode(65 + i) + ") " + c).join("  ") +
+    (chosen == null ? "" : "\nCorrect answer: " + String.fromCharCode(65 + q.ans));
+}
 const coachChats = {};
 const coachBusy = {};
 
@@ -3804,16 +3818,17 @@ function parseTutorResponse(raw, opts = {}) {
     detailedSteps: strings(value.detailedSteps, 6), simpleSteps: strings(value.simpleSteps, 6),
     memoryTip: typeof value.memoryTip === "string" ? value.memoryTip.trim() : "",
     equations: strings(value.equations, 8),
+    whyOthers: strings(value.whyOthers, 4),
     verification: typeof value.verification === "string" ? value.verification.trim() : "",
     nextPractice: typeof value.nextPractice === "string" ? value.nextPractice.trim() : ""
   };
   // Help before answering intentionally has no answer in it; only steps are required then.
-  if (opts.noAnswer) out.shortAnswer = "";
+  if (opts.noAnswer) { out.shortAnswer = ""; out.whyOthers = []; }
   if ((!opts.noAnswer && !out.shortAnswer) || (!out.detailedSteps.length && !out.simpleSteps.length)) throw { code: "invalid_response" };
   return out;
 }
 function tutorResponseText(s) {
-  return [s.shortAnswer, "Detailed steps:", ...s.detailedSteps.map((x, i) => (i + 1) + ". " + x), "Simple steps:", ...s.simpleSteps.map((x) => "• " + x), s.memoryTip && "Memory tip: " + s.memoryTip, s.equations.length && "Equations: " + s.equations.join("; "), s.verification && "Checked: " + s.verification, s.nextPractice && "Next: " + s.nextPractice].filter(Boolean).join("\n");
+  return [s.shortAnswer, "Detailed steps:", ...s.detailedSteps.map((x, i) => (i + 1) + ". " + x), "Simple steps:", ...s.simpleSteps.map((x) => "• " + x), s.memoryTip && "Memory tip: " + s.memoryTip, s.whyOthers && s.whyOthers.length && "Why the other choices miss:\n" + s.whyOthers.map((x) => "• " + x).join("\n"), s.equations.length && "Equations: " + s.equations.join("; "), s.verification && "Checked: " + s.verification, s.nextPractice && "Next: " + s.nextPractice].filter(Boolean).join("\n");
 }
 function plainEquation(text) {
   const superscripts = {"⁰":"0","¹":"1","²":"2","³":"3","⁴":"4","⁵":"5","⁶":"6","⁷":"7","⁸":"8","⁹":"9"};
@@ -3952,7 +3967,7 @@ function coachPaint(qid) {
     if (m.structured) {
       const s = m.structured;
       const add = (tag, label, value) => { if (!value || (Array.isArray(value) && !value.length)) return; const section=document.createElement("div");section.className="tutor-block";const title=document.createElement("strong");title.textContent=label;section.append(title);if(Array.isArray(value)){const list=document.createElement(tag);value.forEach((x)=>{const item=document.createElement("li");item.textContent=x;list.append(item);});section.append(list);}else{const p=document.createElement("p");p.textContent=value;section.append(p);}d.append(section); };
-      add("div", "Answer or hint", s.shortAnswer); add("ol", "Detailed steps", s.detailedSteps); add("ul", "Simple steps", s.simpleSteps); add("div", "Memory tip", s.memoryTip);
+      add("div", "Answer or hint", s.shortAnswer); add("ol", "Detailed steps", s.detailedSteps); add("ul", "Simple steps", s.simpleSteps); add("div", "Memory tip", s.memoryTip); add("ul", "Why the other choices miss", s.whyOthers);
       if (s.equations.length) { const section=document.createElement("div");section.className="tutor-block tutor-equations";const title=document.createElement("strong");title.textContent="Equations";section.append(title);s.equations.forEach((eq)=>{const row=document.createElement("div");const code=document.createElement("code");code.className="ai-math";code.append(mathFragment(cleanAiText(eq)));row.append(code);section.append(row);});d.append(section); }
       add("div", "Answer check", s.verification); add("div", "Try next", s.nextPractice);
     } else renderAiText(d, parsed.text);
@@ -3982,14 +3997,8 @@ function wireCoach(q, chosen) {
     const idx = hist.length - 1;
     try {
       const info = coachInfo(q);
-      const ctx = "You are a precise SAT/ACT tutor. Internally use three bounded passes: solve the supplied problem, independently verify the result and every choice, then present only the concise checked result. Never reveal private chain-of-thought. Write only what the student needs: no greetings, filler, or restating the question. Keep sentences short and concrete. Use plain characters for math (^ for powers, sqrt() for roots, / for fractions) and never nest or double parentheses. Quote the exact words being tested in English questions. Return ONLY valid JSON with exactly these fields: shortAnswer (string), detailedSteps (3-6 strings), simpleSteps (2-5 shorter strings), memoryTip (string or empty), equations (array of plain-text copyable expressions using ^, sqrt(), /, parentheses, and pi), verification (one short sentence explaining the independent check), nextPractice (one short suggestion or empty). If the question is unanswered or asks for a hint, do not reveal the correct answer or choice in any field. If the stored answer conflicts with your independent solution or two choices are defensible, set shortAnswer to 'This question needs review' and explain the conflict in verification. For English, cite the exact wording or rule. For math, check substitution, units, restrictions, extraneous roots, and the quantity requested.\n" +
-        "Question: " + q.q + "\nChoices: " + q.choices.map((c, i) => String.fromCharCode(65 + i) + ") " + c).join("  ") +
-        (chosen == null ? "" : "\nCorrect answer: " + String.fromCharCode(65 + q.ans) + ") " + q.choices[q.ans]) +
-        "\nStudent chose: " + (chosen == null ? "Not answered yet. Explain the method without revealing the correct answer or choice." : chosen === -1 ? "I don't know" : String.fromCharCode(65 + chosen) + ") " + q.choices[chosen]) +
-        (chosen == null ? "" : "\nPractice explanation: " + q.exp) + "\nDesmos verdict: " + info[0] + " — " + info[1] +
-        "\nKeep the full response under 350 words. Give relevant Desmos expressions in equations. If the student says idk, include a useful memory tip and guided first step. If asked for a similar question, put it in nextPractice and do not reveal its answer." +
-        "\n" + CALC_AI_RULES;
-      const turns = [{ role: "system", content: ctx }];
+      const extra = (isMathQ(q) ? "Desmos verdict for this question: " + info[0] + " (" + info[1] + ")\n" + CALC_AI_RULES + "\nIf the student asks for a similar question, put it in nextPractice and do not reveal its answer." : "If the student asks for a similar question, put it in nextPractice and do not reveal its answer.");
+      const turns = [{ role: "system", content: tutorSystem("coach", q, chosen, extra) }, { role: "system", content: tutorQuestion(q, chosen) }];
       hist.slice(0, -1).forEach((m) => turns.push({ role: m.role, content: m.content }));
       const raw = await aiChat(turns, { teaching:true, noAnswer: chosen == null, correctLetter: chosen == null ? String.fromCharCode(65 + q.ans) : "" });
       const structured = parseTutorResponse(raw, { noAnswer: chosen == null });
@@ -4037,12 +4046,14 @@ async function loadTeachingHelp(q) {
   if (teachingCache[q.id] || teachingBusy[q.id]) return;
   teachingBusy[q.id] = true;
   try {
+    const picked = state.answers[q.id] == null ? -1 : state.answers[q.id];
     const reply = await aiChat([
-      { role: "system", content: "You teach SAT/ACT math and English. Internally solve, independently verify every choice, then present the checked result without exposing private chain-of-thought. Return ONLY JSON with shortAnswer (string), detailedSteps (3-6 strings), simpleSteps (2-5 short strings), memoryTip (string), equations (plain-text strings), verification (short string), and nextPractice (string or empty). Do not blindly trust the supplied key: if it conflicts with your check or another choice is defensible, say the question needs review. For English, cite exact words or the grammar rule. For math, check substitution, units, restrictions, extraneous roots, and the quantity requested. Simple steps must explain this exact problem in shorter words. Avoid playful labels. Keep under 350 words." },
-      { role: "user", content: JSON.stringify({question:q.q, passage:q.passage || "",choices:q.choices,correctAnswer:q.choices[q.ans],explanation:q.exp,skill:q.skill || q.domain}) }
+      { role: "system", content: tutorSystem("explain", q, picked) },
+      { role: "system", content: tutorQuestion(q, picked) },
+      { role: "user", content: "Explain this question so I can get the next one like it right." }
     ], { teaching: true });
     const help = parseTutorResponse(reply);
-    teachingCache[q.id] = {simple:help.simpleSteps,detailed:help.detailedSteps,memory:help.memoryTip,equations:help.equations,verification:help.verification};
+    teachingCache[q.id] = {simple:help.simpleSteps,detailed:help.detailedSteps,memory:help.memoryTip,equations:help.equations,verification:help.verification,why:help.whyOthers,next:help.nextPractice};
     recordTutorHelp(q, "Automatic explanation after an incorrect or I don't know answer", tutorResponseText(help), state.answers[q.id] === -1 ? "i-dont-know" : "wrong-answer-explanation", "complete");
   } catch (e) {
     const message = aiErrorText(e instanceof SyntaxError ? {code:"invalid_response"} : e);
@@ -4059,6 +4070,8 @@ function explanationHtml(q, chosen) {
   const help = teachingCache[q.id];
   const simpleSteps = help && help.simple || simpleWhy.split(/(?<=[.!?])\s+(?=[A-Z“])/).filter(Boolean);
   return '<div class="explain"><strong>Detailed explanation</strong><ol><li>' + (help && help.detailed ? help.detailed.map((step) => escapeHtml(step)).join('</li><li>') : escapeHtml(tips[1]) + '</li><li>' + escapeHtml(q.exp) + '</li><li>Check the result: the correct choice is ' + escapeHtml(q.choices[q.ans]) + '.') + '</li></ol></div>' +
+    (help && help.why && help.why.length ? '<div class="explain why-others"><strong>Why the other choices miss</strong><ul>' + help.why.map((step) => '<li>' + escapeHtml(step) + '</li>').join('') + '</ul></div>' : '') +
+    (help && help.next ? '<div class="explain try-next"><strong>Try it yourself</strong><p>' + escapeHtml(help.next) + '</p></div>' : '') +
     (chosen !== q.ans ? '<div class="idk-box"><strong>Simple explanation</strong><ul>' + simpleSteps.map((step) => '<li>' + escapeHtml(step) + '</li>').join('') + '<li><strong>Answer:</strong> ' + escapeHtml(q.choices[q.ans]) + '</li></ul>' + (teachingBusy[q.id] ? '<p class="small muted">The AI tutor is simplifying these steps…</p>' : help && help.error ? '<p class="small muted">' + escapeHtml(help.error) + '</p><button type="button" id="btnRetryTeaching" class="secondary">Retry Groq explanation</button>' : help && help.simple ? '<p class="small muted">Simplified with Groq. Check the steps against the explanation above.</p>' : '') + '</div>' : '');
 }
 
@@ -4081,8 +4094,9 @@ async function askStuck(q, mode) {
   stuckOut("Thinking…");
   try {
     const raw = await aiChat([
-      { role: "system", content: "You are a careful SAT/ACT tutor. Never reveal, hint at, or rank the correct choice; never state the final answer. Return ONLY JSON: {\"shortAnswer\": string, \"detailedSteps\": [], \"simpleSteps\": [], \"memoryTip\": \"\", \"equations\": [], \"verification\": \"\", \"nextPractice\": \"\" }. Put the requested one-liner in shortAnswer." },
-      { role: "user", content: prompt + "\nQuestion: " + q.q + "\nChoices: " + q.choices.map((c, i) => String.fromCharCode(65 + i) + ") " + c).join("  ") }
+      { role: "system", content: tutorSystem(mode === "nudge" ? "nudge" : "restate", q, null) },
+      { role: "system", content: tutorQuestion(q, null) },
+      { role: "user", content: mode === "nudge" ? "Give me one nudge." : "What is this question asking?" }
     ], { teaching: true, noAnswer: true, correctLetter: String.fromCharCode(65 + q.ans) });
     let structured = null;
     try { structured = parseTutorResponse(raw, { noAnswer: true }); } catch (e) { structured = null; }
@@ -5262,10 +5276,10 @@ const calcTool = {
     let q = null; try { if (state.view === "test") q = byId(currentQids()[state.qi]); } catch (e) {}
     msg.textContent = "Thinking…";
     try {
-      const ctx = "You are a friendly SAT/ACT tutor helping a high-school student use the graphing calculator. Reply in under 90 words, plain text.\n" + CALC_AI_RULES +
-        (q ? "\nCurrent question: " + q.q + "\nChoices: " + q.choices.map((c, i) => String.fromCharCode(65 + i) + ") " + c).join("  ") +
-          (state.answers[q.id] == null ? "\nThe student has NOT answered yet: show the calculator method but do not state which choice is correct." : "\nCorrect answer: " + String.fromCharCode(65 + q.ans)) : "");
-      const parsed = parseCalcSteps(await aiChat([{ role: "system", content: ctx }, { role: "user", content: text }]));
+      const picked = q ? state.answers[q.id] : undefined;
+      const noAnswerNote = q && picked == null ? "The student has NOT answered yet: show the calculator method and what to look for, but do not state which choice is correct or the final value." : "";
+      const ctx = (q ? tutorSystem("calc", q, picked, CALC_AI_RULES + (noAnswerNote ? "\n" + noAnswerNote : "")) : "You are the tutor inside FunSAT helping a high-school student use the built-in graphing calculator. Reply in plain text, under 90 words.\n" + CALC_AI_RULES) + (q ? "\n\n" + tutorQuestion(q, picked) : "");
+      const parsed = parseCalcSteps(await aiChat([{ role: "system", content: ctx }, { role: "user", content: text }], q && picked == null ? { noAnswer: true, correctLetter: String.fromCharCode(65 + q.ans) } : {}));
       renderAiText(msg, parsed.text);
       if (parsed.exprs.length) this.demo(parsed.exprs);
     } catch (e) {
@@ -5915,7 +5929,6 @@ const arcade = {
       '<div class="cab-grid-b" id="cabGrid">' + GAME_LIST.map((g) => tile(g)).join('') + '</div>' +
       '<div class="cab-selected-rules" id="cabSelectedRules" aria-live="polite"></div>' +
       '<div class="cab-bank"><span>TIME BANK ' + fmtTime(carry) + '</span><span class="cab-bar"><i style="width:' + Math.min(100, carry / RUN_MAX_SEC * 100) + '%"></i></span><span>3 Q = 1 CREDIT</span></div>' +
-      '<aside class="sponsor-slot arcade-sponsor" data-ad-slot="arcade-menu" aria-label="Sponsored content" hidden></aside>' +
       '<div class="cab-rules">Round-based games (marked FULL RUN) play until game over, 5:00 max. Everything else uses 30s per credit, spent automatically when time runs out.' + (profile.tokens ? '' : '<br>No credits? You still get a free 30s.') + '</div>' +
       '<div class="cab-hint" style="display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap"><button type="button" class="ghost" id="cabGarageBtn">🏁 GARAGE' + (window.DriftCircuit ? ' · $' + DriftCircuit.garage().cash : '') + '</button><span>← → CHOOSE · ENTER START · ESC BACK</span></div></div>';
     this.menu.querySelectorAll('.cab-tile').forEach((t) => {

@@ -372,7 +372,7 @@ const AI_PER_WINDOW = 45, AI_WINDOW_MIN = 10;
 // cap that thinking used up the budget and the explanation came back cut off, so give them low
 // reasoning effort, hide the reasoning text, and a bigger cap.
 function groqParams(model, teaching) {
-  const p = { temperature: 0.3, max_tokens: teaching ? 1000 : 700 };
+  const p = { temperature: 0.3, max_tokens: teaching ? 1400 : 700 };
   if (model.startsWith("openai/gpt-oss")) Object.assign(p, { reasoning_effort: "low", include_reasoning: false, max_tokens: 3000 });
   else if (model.startsWith("qwen/")) Object.assign(p, { reasoning_format: "hidden", max_tokens: 3000 });
   if (teaching) p.response_format = { type: "json_object" };
@@ -382,7 +382,7 @@ function groqParams(model, teaching) {
 const CF_MODELS = ["@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/meta/llama-3.1-8b-instruct-fast"];
 const TUTOR_SCHEMA = { type: "object", properties: {
   shortAnswer: { type: "string" }, detailedSteps: { type: "array", items: { type: "string" } }, simpleSteps: { type: "array", items: { type: "string" } },
-  memoryTip: { type: "string" }, equations: { type: "array", items: { type: "string" } }, verification: { type: "string" }, nextPractice: { type: "string" } },
+  memoryTip: { type: "string" }, equations: { type: "array", items: { type: "string" } }, whyOthers: { type: "array", items: { type: "string" } }, verification: { type: "string" }, nextPractice: { type: "string" } },
   required: ["detailedSteps", "simpleSteps"] };
 const CONTEXT_SCHEMA = { type: "object", properties: {
   category: { type: "string" }, summary: { type: "string" }, affectedYears: { type: "string" },
@@ -400,7 +400,7 @@ async function workersAi(env, messages, teaching, schema) {
   const attempts = {};
   for (const model of CF_MODELS) {
     try {
-      const out = await env.AI.run(model, Object.assign({ messages, max_tokens: teaching ? 1400 : 900, temperature: 0.3 },
+      const out = await env.AI.run(model, Object.assign({ messages, max_tokens: teaching ? 1800 : 900, temperature: 0.3 },
         teaching ? { response_format: { type: "json_schema", json_schema: schema || TUTOR_SCHEMA } } : {}));
       let content = out && out.response;
       if (content && typeof content === "object") content = JSON.stringify(content);
@@ -417,9 +417,11 @@ async function aiTutor(req, env) {
   // Only the app's own pages may use the tutor, so the key can't be borrowed by other sites.
   if (!AI_ORIGINS.test(req.headers.get("Origin") || "")) { console.log("AI tutor refused origin", req.headers.get("Origin")); return json({ code: "forbidden" }, 403, req); }
   let body; try { body = await req.json(); } catch { return json({ error: "Bad request." }, 400, req); }
-  const messages = Array.isArray(body.messages) ? body.messages.slice(-12)
+  // Keep the instructions and the question (system messages) however long the chat gets; trim only the oldest chat turns.
+  const clean = Array.isArray(body.messages) ? body.messages
     .filter((m) => m && ["system", "user", "assistant"].includes(m.role) && typeof m.content === "string")
     .map((m) => ({ role: m.role, content: m.content.slice(0, 6000) })) : [];
+  const messages = clean.filter((m) => m.role === "system").slice(0, 3).concat(clean.filter((m) => m.role !== "system").slice(-10));
   if (!messages.length) return json({ error: "Bad request." }, 400, req);
   const noAnswer = !!body.noAnswer, correctLetter = /^[A-E]$/i.test(String(body.correctLetter || "")) ? String(body.correctLetter) : "";
   if (noAnswer) messages.push({ role: "system", content: NO_REVEAL_RULE });

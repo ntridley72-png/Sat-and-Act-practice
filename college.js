@@ -962,7 +962,7 @@
     host.innerHTML =
       '<header class="st-head college-head"><div class="st-kicker">College comparison · data from the U.S. Department of Education</div>' +
       '<h1>How your scores compare</h1>' +
-      '<p class="small muted">Ranges describe enrolled students, not admitted applicants. Percentages are fit estimates, never admission predictions.</p>' +
+      '<p class="small muted">Ranges describe enrolled students, not admitted applicants. Percentages are rough, uncalibrated planning estimates built from aggregate score ranges and acceptance rates. They are not admission predictions and are not based on individual applicant outcomes.</p>' +
       '<div class="college-top-actions"><button type="button" class="secondary" id="collegeBack">← Back</button><span class="small muted">' + escapeHtml(CD.meta.source || "") + " · release " + escapeHtml(CD.meta.release || "") + "</span></div></header>" +
       '<div class="cc-body">' + ccRailHtml() +
       '<section class="cc-main" aria-label="Your college list">' +

@@ -77,7 +77,7 @@
       const r = dock.getBoundingClientRect();
       const dx = e.clientX - r.left, dy = e.clientY - r.top;
       dock.classList.add("dragging");
-      head.setPointerCapture && head.setPointerCapture(e.pointerId);
+      try { head.setPointerCapture && head.setPointerCapture(e.pointerId); } catch (er) { /* the pointer is already gone; the drag still works from move events */ }
       const move = (ev) => {
         const x = Math.min(Math.max(0, ev.clientX - dx), window.innerWidth - 120);
         const y = Math.min(Math.max(60, ev.clientY - dy), window.innerHeight - 80);
@@ -85,14 +85,23 @@
       };
       const up = () => {
         dock.classList.remove("dragging");
-        head.removeEventListener("pointermove", move); head.removeEventListener("pointerup", up);
+        head.removeEventListener("pointermove", move); head.removeEventListener("pointerup", up); head.removeEventListener("pointercancel", up);
         try { localStorage.setItem(POS_KEY, JSON.stringify({ l: dock.style.left, t: dock.style.top })); } catch (er) {}
         try { if (calcTool.engine === "desmos" && calcTool.calc) calcTool.calc.resize(); } catch (er) {}
       };
-      head.addEventListener("pointermove", move); head.addEventListener("pointerup", up);
+      head.addEventListener("pointermove", move); head.addEventListener("pointerup", up); head.addEventListener("pointercancel", up);   // a cancelled touch must not leave it stuck mid-drag
       e.preventDefault();
     });
   }
+  // If the window shrinks (or the device rotates) after the calculator was moved, bring it back on screen.
+  function clampDock() {
+    const dock = $id("workspaceCalcDock");
+    if (!dock || !dock.style.left || window.matchMedia("(max-width:820px)").matches) return;
+    const r = dock.getBoundingClientRect();
+    dock.style.left = Math.max(0, Math.min(r.left, window.innerWidth - 140)) + "px";
+    dock.style.top = Math.max(60, Math.min(r.top, window.innerHeight - 100)) + "px";
+  }
+  window.addEventListener("resize", () => { try { clampDock(); if (calcTool.engine === "desmos" && calcTool.calc) calcTool.calc.resize(); } catch (e) {} });
   function restorePos() {
     const dock = $id("workspaceCalcDock");
     if (!dock || window.matchMedia("(max-width:820px)").matches) { if (dock) { dock.style.left = ""; dock.style.top = ""; dock.style.right = ""; } return; }
@@ -113,6 +122,60 @@
     if (chk && narrow && /^Check answer$/.test(chk.textContent)) chk.textContent = "Check";
   }
 
+  // ---- Fit the question to the screen ------------------------------------------------------------------------------
+  // The question, its choices and the controls should fit the window without scrolling. The panes already fill the screen;
+  // this scales the question's contents (see --fit in bluebook.css) to the space they have: smaller on a short or small window,
+  // a little larger on a big monitor. A long passage scrolls in its own pane instead. Phones keep their own layout and scroll.
+  // Once an answer is checked the explanation appears; the scale used before the answer is kept so the text does not jump.
+  const FIT_MIN = 0.68, FIT_MAX = 1.3;
+  const fitMemo = {};
+  function fitQuestion() {
+    const body = document.querySelector("#screen-test .workspace-question-body");
+    if (!body) return;
+    const set = (z) => body.style.setProperty("--fit", String(Math.round(z * 1000) / 1000));
+    if (window.matchMedia("(max-width:700px)").matches) { body.style.removeProperty("--fit"); return; }
+    let id = ""; try { id = currentQids()[state.qi] || ""; } catch (e) {}
+    if (body.querySelector(".feedback")) { if (fitMemo[id]) set(fitMemo[id]); return; }
+    const split = body.querySelector(".split"), right = split && body.querySelector(".split-r");
+    const cs = getComputedStyle(body);
+    const room = body.clientHeight - (parseFloat(cs.paddingTop) || 0) - (parseFloat(cs.paddingBottom) || 0);
+    if (room < 120) return;
+    if (split) {
+      // The passage/question grid takes whatever is left under anything above it (the topic-practice notice).
+      const above = split.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - (parseFloat(cs.paddingTop) || 0);
+      split.style.height = Math.max(120, room - above) + "px";
+    }
+    const need = () => split ? right.scrollHeight : body.scrollHeight - (parseFloat(cs.paddingBottom) || 0) - (parseFloat(cs.paddingTop) || 0);
+    const have = () => split ? right.clientHeight : room;
+    const solve = () => {
+      let z = 1; set(z);
+      for (let i = 0; i < 5; i++) {
+        const n = need(), h = have();
+        if (n > h + 1) { const next = Math.max(FIT_MIN, z * (h / n) - 0.01); if (next >= z - 0.004) break; z = next; set(z); }
+        else if (n < h * 0.9 && z < FIT_MAX && window.innerWidth >= 1500) { const next = Math.min(FIT_MAX, z * (h / n) * 0.97); if (next <= z + 0.01) break; z = next; set(z); }
+        else break;
+      }
+      if (need() > have() + 1 && z > FIT_MIN) { z = Math.max(FIT_MIN, z - 0.03); set(z); }   // rounding: one last nudge
+      return z;
+    };
+    // First try the normal layout. If that would make the text small, compact the "Stuck?" helper (its title row) and scale again.
+    body.classList.remove("fit-tight");
+    let z = solve();
+    const normalFits = need() <= have() + 1;
+    if (z < 0.84 || !normalFits) {
+      body.classList.add("fit-tight");
+      const tightZ = solve();
+      const tightFits = need() <= have() + 1;
+      // Keep the compact layout only if it genuinely does better: it fits where the normal one did not, or it allows bigger text.
+      if (tightFits && (!normalFits || tightZ > z)) z = tightZ;
+      else { body.classList.remove("fit-tight"); z = solve(); }
+    }
+    fitMemo[id] = z;
+  }
+  let fitTimer = 0;
+  window.addEventListener("resize", () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => { if (isBB()) { const b = document.querySelector("#screen-test .workspace-question-body"); if (b && !b.querySelector(".feedback")) { delete fitMemo[(currentQids()[state.qi]) || ""]; } fitQuestion(); } }, 150); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { try { if (isBB()) fitQuestion(); } catch (e) {} });
+
   const baseRender = renderQuestion;
   renderQuestion = function () {
     baseRender.apply(this, arguments);
@@ -120,6 +183,7 @@
       syncTestType();
       if (!isBB()) return;
       groupFoot(); placeDock(); ensureMore(); ensureBubble(); wireDrag(); restorePos(); shortLabels();
+      fitQuestion();
     } catch (e) { /* keep the stock layout */ }
   };
 

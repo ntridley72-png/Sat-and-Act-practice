@@ -333,7 +333,7 @@ body[data-workspace] .college-row-main:hover:not(:disabled){background:var(--ws-
 .sponsor-rail{display:none;position:fixed;top:104px;left:calc(50% + 434px);width:160px;min-height:0;padding:0;border:0;background:transparent;z-index:5}
 @media(min-width:1240px){.sponsor-rail:not([hidden]){display:block}}
 .sponsor-rail .sponsor-label{text-align:center}
-.sponsor-app-rail{left:auto;right:16px;top:24px}
+.sponsor-app-rail{left:auto;right:16px;top:104px}
 @media(min-width:1700px){body.pd-shell:not(.workspace-practicing) .wrap{padding-right:210px!important}}
 .sponsor-inline{margin:14px auto;max-width:360px;text-align:center}
 .sponsor-anchor{position:fixed;left:0;right:0;bottom:0;z-index:60;margin:0;min-height:0;border-width:1px 0 0;padding:6px 40px max(6px,env(safe-area-inset-bottom)) 10px;max-height:34vh;box-shadow:0 -2px 12px rgba(15,23,42,.14)}
@@ -342,6 +342,11 @@ body:has(.sponsor-anchor){padding-bottom:124px}
 .sponsor-dismiss{position:absolute;top:4px;right:4px;width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center;border:1px solid var(--ws-line,#d7dce2);border-radius:50%;background:var(--ws-surface,#fff);color:var(--ws-muted,#64748b);font-size:17px;line-height:1;cursor:pointer}
 .sponsor-dismiss:hover{color:var(--ws-ink,#111827)}
 .sponsor-dismiss:focus-visible{outline:3px solid var(--ws-focus,#c43b00);outline-offset:2px}
+/* Where ads sit. A fixed gap from anything clickable (never beside a button, input or link), and no footprint at all
+   until an ad has actually loaded: a loading or empty slot has no height, margin or border, so nothing moves when it fills. */
+.sponsor-slot:not(.sponsor-rail):not(.sponsor-anchor){margin:72px auto 56px}
+.sponsor-slot.sponsor-inline:not(.sponsor-rail):not(.sponsor-anchor){margin:56px auto 56px}
+.sponsor-slot.is-loading{height:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;overflow:hidden;visibility:hidden}
 .arcade-sponsor{width:min(728px,100%);min-height:90px;margin:12px auto;background:#090f1d;border-color:#334155;color:#cbd5e1}
 body.practice-test-active [data-ad-slot],html.practice-test-active [data-ad-slot],body.practice-test-active ins.adsbygoogle,html.practice-test-active ins.adsbygoogle,body.practice-test-active .google-auto-placed,html.practice-test-active .google-auto-placed,body.practice-test-active #google_vignette,html.practice-test-active #google_vignette{display:none!important;visibility:hidden!important;max-height:0!important;min-height:0!important;margin:0!important;padding:0!important}
 .noscript-summary{max-width:920px;margin:24px auto;padding:24px;border:1px solid #dcdcd8;background:#fff;color:#1a1a1a}.noscript-summary nav{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0}.noscript-summary a{color:#195de6}

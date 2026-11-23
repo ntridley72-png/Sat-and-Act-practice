@@ -58,23 +58,23 @@
     return true;
   }
 
-  // Adsterra in-page units only (sidebar skyscraper + native banner). No
-  // popunder or social bar: this site is student-facing, so nothing may open
-  // unvetted third-party pages without a deliberate click. Units are
-  // production-only, exactly like the AdSense loader this replaced, so local
-  // previews and test runs never fire real ad traffic. The native widget uses
-  // one container that migrates to whichever ad slot is on screen (only one
-  // instance may exist per page), and display units run inside a sandboxed
-  // iframe because Adsterra's atOptions snippet writes its container with
-  // document.write.
+  // Adsterra units only (sidebar skyscraper, phone banner and the native banner). No popunder or
+  // social bar: this site is student-facing, so nothing may open unvetted third-party pages
+  // without a deliberate click on the ad itself.
+  //
+  // EVERY third-party ad script runs inside a sandboxed iframe (no allow-same-origin, no
+  // allow-top-navigation). That is what guarantees an ad only ever reacts to a click on the ad:
+  // a script in the page itself could listen to every click on the site (and open tabs from
+  // them); a script in a sandboxed frame cannot see our page, our clicks or our DOM at all.
+  // Units are production-only, so local previews and test runs never fire real ad traffic.
+  // Display units write their container with document.write, which is why they live in frames
+  // anyway. The native widget fills a container in its own frame; a small script of ours in that
+  // frame (frameReporter) reports its height and runs the family-safe text filter, because the
+  // page cannot read into the frame.
   const ADSTERRA = config.units || {};
+  const AD_SANDBOX = "allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox";
   let rotateIndex = 0;
-  let nativeHost = null, nativeOwner = null;
-  function slotOnScreen(hostEl) {
-    const box = hostEl && hostEl.parentElement;
-    return !!(hostEl && hostEl.isConnected && box && (box.offsetWidth || box.getClientRects().length));
-  }
-
+  const adFrames = [];
   function resolveSpec(spec) {
     if (Array.isArray(spec)) { spec = spec[rotateIndex++ % spec.length]; return resolveSpec(spec); }
     if (spec && spec.unit && ADSTERRA[spec.unit]) return Object.assign({ kind: "iframe" }, ADSTERRA[spec.unit], spec);
@@ -89,15 +89,90 @@
     frame.setAttribute("scrolling", "no");
     // srcdoc inherits the page origin, so the frame is sandboxed without
     // allow-same-origin: the ad script runs, the parent page stays opaque.
-    frame.setAttribute("sandbox", "allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox");
-    frame.style.cssText = "display:block;border:0;width:" + width + "px;height:" + height + "px;max-width:100%;margin:0 auto;background:#0b0e14";
+    frame.setAttribute("sandbox", AD_SANDBOX);
+    frame.style.cssText = "display:block;border:0;width:" + width + "px;height:" + height + "px;max-width:100%;margin:0 auto;background:transparent";
     const atOptions = JSON.stringify({ key: String(unit.key || ""), format: "iframe", height: height, width: width, params: {} }).replace(/</g, "\\u003c");
     const src = String(unit.script).replace(/"/g, "%22");
-    frame.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;overflow:hidden;background:#0b0e14}</style></head><body>' +
+    frame.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;overflow:hidden;background:transparent}</style></head><body>' +
       "<script>atOptions=" + atOptions + ";<\/script>" +
-      '<script src="' + src + '"><\/script></body></html>';
+      '<script src="' + src + '"><\/script>' + reporterTag(null) + "</body></html>";
+    adFrames.push(frame);
     return frame;
   }
+
+  // Runs INSIDE an ad frame (stringified into its srcdoc, so it must not use anything from this file).
+  // Reports whether the ad has filled (and a native widget's height), and clears the frame and says so if it ever
+  // shows a listing that fails the family-safe filter. cfg.cid names the widget's container; null means "the whole body".
+  function frameReporter(cfg) {
+    var FLIRTY = new RegExp(cfg.flirty, "i"), BLOCKED = new RegExp(cfg.blocked, "i");
+    var box = cfg.cid ? document.getElementById(cfg.cid) : document.body, lastHeight = -1, dead = false;
+    function post(message) { try { parent.postMessage({ funsatAd: message }, "*"); } catch (e) {} }
+    function ownText(node) { var p = node.parentNode; return p && /^(SCRIPT|STYLE|NOSCRIPT)$/.test(p.tagName); }
+    function unsafe() {
+      if (!box) return false;
+      var walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT, null), node;
+      while ((node = walker.nextNode())) { if (ownText(node)) continue; if (FLIRTY.test((node.textContent || "").slice(0, 240))) return true; }
+      var els = box.querySelectorAll("img, a, iframe");
+      for (var i = 0; i < els.length; i++) {
+        var el = els[i], tag = el.tagName;
+        if (tag === "IMG" && (FLIRTY.test(el.alt || "") || BLOCKED.test(el.src || ""))) return true;
+        if (tag === "A" && (FLIRTY.test((el.textContent || "").slice(0, 240)) || BLOCKED.test(el.href || ""))) return true;
+        if (tag === "IFRAME" && BLOCKED.test(el.src || "")) return true;
+      }
+      return false;
+    }
+    function measure() {
+      if (!box) return 0;
+      if (cfg.cid) return Math.ceil(box.getBoundingClientRect().height);
+      var h = 0, kids = document.body.children;
+      for (var i = 0; i < kids.length; i++) { if (/^(SCRIPT|STYLE)$/.test(kids[i].tagName)) continue; h = Math.max(h, Math.ceil(kids[i].getBoundingClientRect().bottom)); }
+      return h;
+    }
+    function report() {
+      if (dead) return;
+      if (unsafe()) { dead = true; if (box) box.textContent = ""; post({ unsafe: true }); return; }
+      var height = measure();
+      if (height !== lastHeight) { lastHeight = height; post({ height: height }); }
+    }
+    new MutationObserver(report).observe(document.documentElement, { childList: true, subtree: true, attributes: true, characterData: true });
+    [300, 1000, 2500, 6000, 12000].forEach(function (ms) { setTimeout(report, ms); });
+    window.addEventListener("load", report);
+  }
+
+  function reporterTag(cid) {
+    const code = "(" + frameReporter.toString() + ")(" + JSON.stringify({ cid, flirty: FLIRTY.source, blocked: BLOCKED_HOSTS.source }) + ");";
+    return "<script>" + code.replace(/<\//g, "<\\/") + "<\/script>";
+  }
+
+  function nativeFrame(unit) {
+    const frame = document.createElement("iframe");
+    frame.title = "Sponsored";
+    frame.setAttribute("scrolling", "no");
+    frame.setAttribute("sandbox", AD_SANDBOX);
+    frame.dataset.funsatNative = "true";
+    frame.style.cssText = "display:block;border:0;width:100%;height:0;max-width:100%;margin:0 auto;background:transparent";
+    const cid = String(unit.container).replace(/[^\w-]/g, "");
+    const src = String(unit.script).replace(/"/g, "%22");
+    frame.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;overflow:hidden;background:transparent}</style></head><body>' +
+      '<script async data-cfasync="false" src="' + src + '"><\/script><div id="' + cid + '"></div>' + reporterTag(cid) + "</body></html>";
+    adFrames.push(frame);
+    return frame;
+  }
+
+  // Messages from ad frames: "filled" (and a native widget's height) or "unsafe" (the family-safe filter tripped inside it).
+  // Only a frame we created is believed, and the height is clamped.
+  window.addEventListener("message", (event) => {
+    const data = event.data && event.data.funsatAd;
+    if (!data || typeof data !== "object") return;
+    const frame = adFrames.find((f) => f.contentWindow === event.source);
+    if (!frame) return;
+    const host = frame.closest("[data-ad-slot]");
+    if (data.unsafe === true) { try { console.info("[funsat ads] hid a listing that failed the family-safe filter"); } catch (error) {} frame.remove(); if (host) { host.hidden = true; host.dataset.adState = "blocked"; pending.delete(host); } return; }
+    const height = Math.max(0, Math.min(600, Math.floor(Number(data.height) || 0)));
+    if (frame.dataset.funsatNative) frame.style.height = height + "px";
+    frame.dataset.adHeight = String(height);
+    if (host && height > (frame.dataset.funsatNative ? 24 : 8)) markFilled(host);
+  });
 
   function renderAdsterra(host, rawSpec) {
     const spec = resolveSpec(rawSpec);
@@ -106,29 +181,7 @@
     // never request live ad traffic or execute third-party ad scripts.
     if (location.hostname !== "funsat.bid") return false;
     if (spec.kind === "native" && ADSTERRA.native && ADSTERRA.native.script && ADSTERRA.native.container) {
-      // Only one native container may exist per page, and it belongs to the
-      // slot that is actually on screen. If another screen already owns it,
-      // leave this slot hidden and let a later mount retry once that owner
-      // goes off screen (showScreen remounts on every switch).
-      if (nativeOwner && nativeOwner !== host && slotOnScreen(nativeOwner)) { delete host.dataset.adMounted; return false; }
-      if (!nativeHost) {
-        nativeHost = document.createElement("div");
-        nativeHost.id = ADSTERRA.native.container;
-        nativeHost.style.cssText = "display:block;margin:0 auto;width:100%";
-        const script = document.createElement("script");
-        script.async = true;
-        script.dataset.funsatAds = "native";
-        script.src = ADSTERRA.native.script;
-        document.body.appendChild(script);
-      }
-      if (nativeOwner && nativeOwner !== host) {
-        nativeOwner.hidden = true;
-        delete nativeOwner.dataset.adMounted;
-        delete nativeOwner.dataset.adsterraNative;
-      }
-      host.appendChild(nativeHost);
-      host.dataset.adsterraNative = "true";
-      nativeOwner = host;
+      host.appendChild(nativeFrame(ADSTERRA.native));
       return true;
     }
     if (spec.kind === "grid") {
@@ -291,26 +344,89 @@
     return FLIRTY.test(String(creative.label || "")) || FLIRTY.test(String(creative.alt || "")) || urlIsUnsafe(creative.href) || urlIsUnsafe(creative.image);
   }
 
-  // A slot whose network returned nothing (no inventory, blocked script, unapproved zone) would
-  // sit on the page as a bare "Sponsored" label over an empty box. Native widgets fill the
-  // container we own, so a still-empty container after a few seconds means there is no ad:
-  // collapse the slot, and bring it back if a fill arrives late. Sandboxed iframes are opaque
-  // to us, so they cannot be checked this way.
-  function collapseWhenEmpty(host) {
-    if (!host.dataset.adsterraNative) return;
-    const filled = () => !!(nativeHost && nativeHost.children.length && nativeHost.offsetHeight > 24);
-    const apply = () => {
-      if (!host.isConnected || host.dataset.adsterraNative !== "true") return;
-      const ok = filled();
-      if (!ok && !host.hidden) { host.hidden = true; host.dataset.adEmpty = "true"; try { console.info("[funsat ads] native unit returned no ad; slot collapsed"); } catch (error) {} }
-      if (ok && host.dataset.adEmpty) { host.hidden = false; delete host.dataset.adEmpty; }
-    };
-    [4000, 9000, 16000].forEach((ms) => setTimeout(apply, ms));
-    if (typeof MutationObserver === "function" && nativeHost) {
-      const mo = new MutationObserver(() => { if (host.dataset.adEmpty) apply(); });
-      mo.observe(nativeHost, { childList: true, subtree: true });
-      setTimeout(() => mo.disconnect(), 60000);
+  // ---- When an ad may load, and when it may appear ----------------------------------------------------------------
+  // An ad that pops into the layout while you are about to click something moves that thing under your cursor, and the
+  // click lands on the ad. So a slot goes through three steps:
+  //   1. LOAD: only when it is within about a screen of the viewport (or is a fixed side rail), so far-off units
+  //      are not requested at all.
+  //   2. HIDDEN: while loading it has no height, margin or border (class "is-loading"), so a unit that never fills
+  //      takes no space and leaves no empty box. The ad frame itself is laid out at full size, so it still renders.
+  //   3. SHOW: once filled, and only when showing it cannot move anything you are looking at. That is: it is a fixed
+  //      side rail; or nothing clickable follows it on the screen; or it is still off-screen below; or you have not
+  //      touched the page for a moment. Never while a dialog is open.
+  let lastInput = 0;
+  ["pointermove", "pointerdown", "touchstart", "touchmove", "keydown", "wheel", "scroll"].forEach((type) =>
+    window.addEventListener(type, () => { lastInput = Date.now(); }, { passive: true, capture: true }));
+  const pending = new Set();
+  const INTERACTIVE = "a[href],button,input,select,textarea,summary,[role=button],[tabindex]:not([tabindex='-1'])";
+
+  function isFixedSlot(host) { try { return getComputedStyle(host).position === "fixed"; } catch (error) { return false; } }
+
+  // Where the slot sits (or would sit) in the viewport, even before it has a layout box of its own.
+  function slotTop(host) {
+    if (host.getClientRects().length) return host.getBoundingClientRect().top;
+    let node = host.previousElementSibling;
+    while (node) { if (node.getClientRects().length) return node.getBoundingClientRect().bottom; node = node.previousElementSibling; }
+    const parent = host.parentElement;
+    return parent ? parent.getBoundingClientRect().top : 0;
+  }
+
+  function controlsAfter(host) {
+    const scope = host.closest("section, main, article, .gwrap") || document.body;
+    return Array.from(scope.querySelectorAll(INTERACTIVE)).some((el) =>
+      !host.contains(el) && (host.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) && el.getClientRects().length && !el.closest("[hidden]"));
+  }
+
+  const canLoad = (host) => isFixedSlot(host) || slotTop(host) - window.innerHeight < 1200;
+
+  const inFixedBar = (el) => { for (let n = el; n && n !== document.body; n = n.parentElement) { const p = getComputedStyle(n).position; if (p === "fixed" || p === "sticky") return true; } return false; };
+
+  // A side rail follows the reader down the page, so it needs a column to itself: nothing clickable and no text may share its
+  // horizontal span (with 16px to spare) at ANY scroll position. On a page whose content is too wide for the window the rail
+  // simply does not appear; the page's in-content unit is still there.
+  function railIsClear(host) {
+    const now = Date.now();
+    if (host._railCheck && now - host._railCheck.at < 2000) return host._railCheck.clear;
+    const r = host.getBoundingClientRect();
+    let clear = r.width > 0;
+    if (clear) {
+      const left = r.left - 16, right = r.right + 16;
+      clear = !Array.from(document.querySelectorAll(INTERACTIVE + ",p,h1,h2,h3,li,table,img,figure")).some((el) => {
+        if (host.contains(el) || !el.getClientRects().length || el.closest("[hidden]") || inFixedBar(el)) return false;
+        const b = el.getBoundingClientRect();
+        return b.width > 4 && b.right > left && b.left < right;
+      });
     }
+    host._railCheck = { at: now, clear };
+    return clear;
+  }
+
+  function canShow(host) {
+    if (document.querySelector(".modal-overlay.show")) return false;
+    if (isFixedSlot(host)) return railIsClear(host);
+    if (!controlsAfter(host)) return true;
+    if (slotTop(host) - window.innerHeight >= 100) return true;
+    return Date.now() - lastInput > 1500;
+  }
+
+  function reveal(host) {
+    host.classList.remove("is-loading");
+    host.dataset.adState = "shown";
+    pending.delete(host);
+  }
+
+  function markFilled(host) {
+    if (!host || host.dataset.adState === "shown" || host.dataset.adState === "blocked") return;
+    if (host.hidden && host.dataset.adEmpty) { host.hidden = false; delete host.dataset.adEmpty; }
+    host.dataset.adState = "ready";
+    if (canShow(host)) reveal(host); else { host._pendingSince = Date.now(); pending.add(host); armTick(); }
+  }
+
+  let tickTimer = 0;
+  function armTick() { if (!tickTimer) tickTimer = setInterval(tick, 400); }
+  function tick() {
+    pending.forEach((host) => { if (!host.isConnected || Date.now() - (host._pendingSince || 0) > 120000) pending.delete(host); else if (canShow(host)) reveal(host); });
+    if (!pending.size) { clearInterval(tickTimer); tickTimer = 0; }
   }
 
   function mount() {
@@ -331,6 +447,12 @@
       // gets measured.
       const box = host.parentElement;
       if (box && !box.offsetWidth && !box.getClientRects().length) return;
+      // An app screen's slot follows its (initially empty) body container; wait until that has rendered, so the slot is
+      // judged by where it really sits.
+      let before = host.previousElementSibling;
+      while (before && before.hasAttribute("data-ad-slot")) before = before.previousElementSibling;
+      if (before && /Body$/.test(before.id || "") && before.offsetHeight < 40) return;
+      if (!canLoad(host)) return;
       host.dataset.adMounted = "true";
       const label = document.createElement("span");
       label.className = "sponsor-label";
@@ -345,14 +467,17 @@
             : config.provider === "adsense"
               ? renderAdSense(host, (config.slots || {})[name])
               : false;
+      if (!rendered) { host.hidden = true; if (isAnchor) host.remove(); return; }
       if (rendered && isAnchor) addAnchorDismiss(host);
-      host.hidden = !rendered;
-      // After the hidden state is final, or a synchronous block would be
-      // overwritten by the show above.
-      if (rendered && !PREVIEW) watchForUnsafeListings(host);
-      if (rendered && !PREVIEW) collapseWhenEmpty(host);
-      // An unfilled anchor would otherwise hold a fixed strip of empty page.
-      if (!rendered && isAnchor) host.remove();
+      host.hidden = false;
+      host.classList.add("is-loading");
+      host.dataset.adState = "loading";
+      // Networks that report back (our frames) call markFilled themselves. Direct creatives, previews and AdSense have
+      // nothing to wait for. A unit that has not filled after 30 seconds is taken out of the page entirely.
+      if (PREVIEW || config.provider !== "adsterra") markFilled(host);
+      else setTimeout(() => { if (host.isConnected && host.dataset.adState === "loading") { host.hidden = true; host.dataset.adEmpty = "true"; } }, 30000);
+      // After the hidden state is final, or a synchronous block would be overwritten by the show above.
+      if (!PREVIEW) watchForUnsafeListings(host);
     });
   }
 
@@ -372,7 +497,9 @@
   }
 
   let resizeTimer = 0;
-  window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(mount, 250); });
+  window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { mount(); if (pending.size) { pending.forEach((h) => { h._railCheck = null; }); tick(); } }, 250); });
+  let scrollTimer = 0;
+  window.addEventListener("scroll", () => { if (scrollTimer) return; scrollTimer = setTimeout(() => { scrollTimer = 0; mount(); if (pending.size) tick(); }, 200); }, { passive: true });
 
   window.FunSatAds = { mount, setPracticeMode };
   if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
@@ -380,7 +507,10 @@
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount);
   else mount();
+  let mountSoon = 0;
   new MutationObserver(() => {
     if (document.body && document.body.classList.contains("practice-test-active")) setPracticeMode(true);
+    // A screen that has just rendered its content may now have a slot worth loading.
+    if (!mountSoon) mountSoon = setTimeout(() => { mountSoon = 0; mount(); }, 600);
   }).observe(document.documentElement, { childList: true, subtree: true });
 })();

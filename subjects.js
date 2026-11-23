@@ -308,6 +308,13 @@
     if (btn) btn.addEventListener("click", openSubjects);
     window.FunSATSubjects = {
       open: openSubjects, inventory: () => (refreshInventory(), INVENTORY), start: startSubjectDrill,
+      // The student's drill record on the skill a question belongs to (used to pitch the AI tutor's help).
+      recordFor: (q) => {
+        refreshInventory();
+        const item = Object.values(INVENTORY).find((it) => it.ids.includes(q.id)); if (!item) return undefined;
+        const st = profile.skillStats[item.key], r = st ? st.r : 0, w = st ? st.w : 0, H = window.FunSATHabits;
+        return { skill: item.skill, attempts: r + w, correct: r, accuracy: r + w ? Math.round(100 * r / (r + w)) : null, label: H ? H.mastery(r, w).label : "" };
+      },
       choose: (key) => {
         refreshInventory(); const item = INVENTORY[key]; if (!item) return;
         pick.test = item.test; pick.section = item.section; pick.sort = 'weak';

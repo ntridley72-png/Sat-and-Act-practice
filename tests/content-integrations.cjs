@@ -17,7 +17,7 @@ for (const expected of [
   'defer src="app.js"',
   'provider:"adsterra"',
   'data-ad-slot="home-sidebar"',
-  'data-ad-slot="results-grid"',
+  'data-ad-slot="results-top"',
 ]) {
   if (!html.includes(expected)) throw new Error("missing integration marker: " + expected);
 }
@@ -32,8 +32,12 @@ for (const expected of [
 for (const expected of ["FLIRTY", "watchForUnsafeListings", "family-safe filter"]) {
   if (!adsJs.includes(expected)) throw new Error("family-safe ad filter missing: " + expected);
 }
-for (const expected of ['data-ad-slot="arcade-menu"', 'key: "dirtbike"']) {
+for (const expected of ['key: "dirtbike"']) {
   if (!(html + appJs).includes(expected)) throw new Error("missing app integration marker: " + expected);
+}
+// Ads stay out of click-heavy and form screens: the arcade menu (a grid of game buttons) and the Plan form carry none.
+for (const banned of ['data-ad-slot="arcade-menu"', 'data-ad-slot="plan-list"', 'data-ad-slot="plan-mobile"']) {
+  if ((html + appJs).includes(banned)) throw new Error("an ad slot sits where clicks must not land on it: " + banned);
 }
 const jsonLd = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((match) => JSON.parse(match[1]));
 if (!jsonLd.length || !jsonLd.some((item) => Array.isArray(item["@graph"]))) throw new Error("structured data graph is missing or invalid");

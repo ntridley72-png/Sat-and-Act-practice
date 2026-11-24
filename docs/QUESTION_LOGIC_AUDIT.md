@@ -12,7 +12,7 @@ node tests/question-logic.test.cjs              # the same, as a test (fails on 
 
 ## Result
 
-All **2,141 live questions** (everything not withheld) are covered by an independent check. **No wrong keys.**
+All **about 2,264 live questions** (including 123 typed-answer grid-ins, re-solved from their stems) (everything not withheld) are covered by an independent check. **No wrong keys.**
 The audit did find and fix real defects (below), so it is not a rubber stamp.
 
 | Set | Live | Re-solved by code | Solved by hand, blind to the key |

@@ -55,7 +55,7 @@ const workerContext = vm.createContext({console});vm.runInContext(workerSource, 
 workerContext.local=context.local;workerContext.remote=context.remote;
 assert.equal(vm.runInContext('mergeAttemptHistory(local,remote)',workerContext).length,3);
 console.log('PASS: account history merges across devices without losing completed attempts; finishing triggers account save.');
-const bankContext=vm.createContext({console});
+const bankContext=vm.createContext({console,FunSATGridIn:require('../gridin.js')});
 vm.runInContext(extract('/*__DATA_START__*/','const STORAGE_KEY'),bankContext);
 const actual=vm.runInContext('({math:BANK.math,rw:BANK.rw,science:BANK.science,english:BANK.english,reading:BANK.reading})',bankContext);
 const all=[...actual.math,...actual.rw,...actual.science];

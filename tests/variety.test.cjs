@@ -2,7 +2,7 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
 const html=fs.readFileSync('SAT & ACT Practice.html','utf8');
 const inline=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)].filter(m=>!/src=|ld\+json|application\//.test(m[1])).map(m=>m[2]).find(s=>s.includes('function sample('));
 const source=(fs.existsSync('app.js')&&fs.readFileSync('app.js','utf8').includes('function sample('))?fs.readFileSync('app.js','utf8'):inline;
-const c=vm.createContext({console,profile:{seen:{},served:{},lastServed:{},recentQuestions:[]},saveProfile(){}});
+const c=vm.createContext({console,FunSATGridIn:require('../gridin.js'),profile:{seen:{},served:{},lastServed:{},recentQuestions:[]},saveProfile(){}});
 vm.runInContext(source.slice(source.indexOf('/*__DATA_START__*/'),source.indexOf('const STORAGE_KEY')),c);
 vm.runInContext(source.slice(source.indexOf('function shuffle('),source.indexOf('function defByKey')),c);
 const banks=vm.runInContext('({math:BANK.math,rw:BANK.rw,science:ACT_SCIENCE})',c);

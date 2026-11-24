@@ -22,8 +22,9 @@ the features students expect from Bluebook, Khan Academy, UWorld, Magoosh/PrepSc
 - **ACT English has 20 live questions and ACT Reading 37.** A real ACT has 50 and 36 per test. These are too few to
   practise from, and English covers only Conventions (no Production of Writing or Knowledge of Language).
 - **No figures.** Only 29 math items mention a graph or table, all as text. The real digital SAT leans on charts and graphs.
-- **Grid-in (student-produced response).** 69 questions exist but are withheld because the engine cannot take a typed
-  answer. The real SAT has about 25% of its math in this format.
+- **Grid-in (student-produced response).** Now built: typed input with SAT rules, fraction/decimal equivalence, scoring,
+  review and tutor support, and 123 verified grid-in questions (a real SAT math module has about 6 to 7 of 22). More
+  variety would still help; the 69 older template-only items stay withheld.
 - **Explanation depth.** Median explanation is 73 characters; 80 questions have generic "this option misreads..."
   distractor notes. Leading tools write a full worked solution per question and a reason per wrong choice.
 - **Vocabulary-in-context items** do not constrain the word by context (the keys are defensible, the items are guessable).
@@ -48,7 +49,7 @@ the features students expect from Bluebook, Khan Academy, UWorld, Magoosh/PrepSc
 | **AI tutor that teaches** | Khan (Khanmigo), UWorld | **Added:** one set of teaching instructions (`tutor-instructions.js`): starts from the student's own wrong choice, teaches the method and the pattern, never reveals an unanswered question's answer, offers a self-check, says so when a key looks wrong, and adapts to the student's record on the skill. Replies include "why the other choices miss" and "try it yourself"; the passage is now sent for Reading questions |
 | **A test question fits the screen** | Bluebook | **Added:** on every desktop and tablet size the question, choices and controls fit with no scrolling (content scales 0.68 to 1.3; passages scroll in their own pane); phones keep their own layout |
 | Movable calculator window | Bluebook | Had; hardened (touch cancel, stays on screen when the window shrinks). The live Desmos itself could not be loaded from the build environment, so it is tested against a stand-in |
-| Grid-in answer entry | Bluebook | **Still missing.** The 69 existing grid-in questions are nine formula templates with whole-number answers, so they are not worth releasing as they are; the engine (typed input, fraction/decimal equivalence, scoring, review) and a richer grid-in set are the top remaining job |
+| Grid-in answer entry | Bluebook | **Added:** typed input (5 or 6 characters, no mixed numbers or commas), equal fractions and decimals count, repeating decimals need 3 places, scored and shown in review; 123 verified questions feed tests and practice |
 | Charts and figures in questions | Bluebook, Khan | Missing |
 | Video or long-form lessons | Khan, Magoosh | Missing |
 | Performance compared with other students | UWorld | Missing (needs a user base and a server) |
@@ -56,7 +57,7 @@ the features students expect from Bluebook, Khan Academy, UWorld, Magoosh/PrepSc
 
 ## 3. What to do next, in order of value
 
-1. Grid-in input and scoring (unlocks 69 questions and the realistic math section).
+1. (Done) Grid-in input and scoring.
 2. Many more Algebra, Advanced Math and Craft & Structure questions, then a full ACT English and Reading bank.
 3. Worked-solution explanations with a reason per wrong choice, starting with the most-missed skills.
 4. Charts and tables rendered as figures.

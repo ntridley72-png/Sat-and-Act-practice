@@ -251,3 +251,21 @@ body[data-workspace="exam"].workspace-practicing:has(#routingCard[style*="block"
 body[data-workspace="exam"].workspace-practicing:has(#routingCard[style*="block"]) #screen-test{display:block!important;height:auto;overflow:visible}
 body[data-workspace="exam"].workspace-practicing:has(#routingCard[style*="block"]) .bbx-bubble{display:none}
 body[data-workspace="exam"].workspace-practicing:has(#routingCard[style*="block"]) .wrap{padding:0 24px 24px!important}
+
+/* ---------- Typed answers (student-produced response, "grid-in") ---------- */
+body[data-workspace="exam"].workspace-practicing #screen-test .gridin{margin:2px 0 22px}
+body[data-workspace="exam"].workspace-practicing #screen-test .gi-howto{margin:0 0 14px;font-size:13px;line-height:1.5;color:#5b6470}
+body[data-workspace="exam"].workspace-practicing #screen-test .gi-label{display:block;margin:0 0 6px;font-size:14px;font-weight:800;color:var(--bb-ink)}
+body[data-workspace="exam"].workspace-practicing #screen-test .gi-input{display:block;box-sizing:border-box;width:min(280px,100%);padding:10px 14px;font:700 28px/1.2 ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;letter-spacing:.08em;color:var(--bb-ink);background:#fff;border:2px solid var(--bb-ink);border-radius:10px}
+body[data-workspace="exam"].workspace-practicing #screen-test .gi-input:focus-visible{outline:3px solid #0b5fff;outline-offset:2px}
+body[data-workspace="exam"].workspace-practicing #screen-test .gi-input:disabled{opacity:1;color:var(--bb-ink)}
+body[data-workspace="exam"].workspace-practicing #screen-test .gi-preview{display:flex;align-items:center;gap:12px;box-sizing:border-box;width:min(280px,100%);min-height:62px;margin:12px 0 0;padding:8px 14px;border:2px dashed var(--bb-line);border-radius:10px}
+body[data-workspace="exam"].workspace-practicing #screen-test .gi-pl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5b6470}
+body[data-workspace="exam"].workspace-practicing #screen-test .gi-pv{margin-left:auto;font:700 26px/1 ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;color:var(--bb-ink)}
+body[data-workspace="exam"].workspace-practicing #screen-test .gi-empty{color:#9aa1ab}
+body[data-workspace="exam"].workspace-practicing #screen-test .gi-frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin-left:2px;font-size:.82em;line-height:1.05}
+body[data-workspace="exam"].workspace-practicing #screen-test .gi-frac>span:first-child{padding:0 6px 3px;border-bottom:3px solid currentColor}
+body[data-workspace="exam"].workspace-practicing #screen-test .gi-frac>span:last-child{padding:3px 6px 0}
+body[data-workspace="exam"].workspace-practicing #screen-test .gi-err{min-height:20px;margin-top:6px;font-size:13px;font-weight:600;color:#a62d29}
+body[data-workspace="exam"].workspace-practicing #screen-test .gridin.right .gi-input{border-color:#176341;background:#e7f4ec}
+body[data-workspace="exam"].workspace-practicing #screen-test .gridin.wrong .gi-input{border-color:#a62d29;background:#fbece9}

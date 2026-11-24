@@ -36,6 +36,8 @@
 
   // ---- the sheet ----
   const letter = (i) => String.fromCharCode(65 + i);
+  // A grid-in (typed answer) stores its answer as its only "choice"; it must print as a blank line and key as the answer itself.
+  const hasChoices = (q) => q.kind !== "gridin" && Array.isArray(q.choices) && q.choices.length > 0;
   function sheetTitle() {
     const inv = inventory();
     const names = ws.keys.map((k) => inv[k] && inv[k].skill).filter(Boolean);
@@ -55,15 +57,15 @@
         else { seenPassage.set(q.passage, n); passage = '<div class="ws-passage">' + esc(q.passage) + "</div>"; }
       }
       const isMath = q.domain && /Algebra|Advanced Math|Problem-Solving|Geometry/.test(q.domain);
-      const choices = Array.isArray(q.choices) && q.choices.length
+      const choices = hasChoices(q)
         ? '<ol class="ws-ch" type="A">' + q.choices.map((c, ci) => '<li><span class="ws-bub">' + letter(ci) + "</span><span>" + esc(c) + "</span></li>").join("") + "</ol>"
         : '<p class="ws-free">Answer: <span class="ws-line"></span></p>';
       return '<li class="ws-q"><div class="ws-qn">' + n + '</div><div class="ws-qb">' + passage + '<div class="ws-stem">' + esc(q.q) + "</div>" + choices +
         (ws.work && isMath ? '<div class="ws-work" aria-hidden="true"></div>' : "") + "</div></li>";
     }).join("");
     const key = ws.key ? '<section class="ws-keypage"><h2>Answer key</h2><p class="ws-sub">' + esc(sheetTitle()) + "</p>" +
-      '<ol class="ws-keygrid">' + qs.map((q) => '<li><b>' + (Array.isArray(q.choices) && q.choices.length ? letter(q.ans) : esc(q.answer == null ? "?" : q.answer)) + "</b></li>").join("") + "</ol>" +
-      (ws.explain ? '<ol class="ws-exps">' + qs.map((q) => '<li><b>' + (Array.isArray(q.choices) && q.choices.length ? letter(q.ans) + ".</b> " : "</b>") + esc(q.exp || "") + "</li>").join("") + "</ol>" : "") + "</section>" : "";
+      '<ol class="ws-keygrid">' + qs.map((q) => '<li><b>' + (hasChoices(q) ? letter(q.ans) : esc(q.answer == null ? "?" : q.answer)) + "</b></li>").join("") + "</ol>" +
+      (ws.explain ? '<ol class="ws-exps">' + qs.map((q) => '<li><b>' + (hasChoices(q) ? letter(q.ans) + ".</b> " : "</b>") + esc(q.exp || "") + "</li>").join("") + "</ol>" : "") + "</section>" : "";
     return '<div class="ws-sheet"><header class="ws-head"><div><div class="ws-brand">FunSAT</div><h2 class="ws-title">' + esc(sheetTitle()) + '</h2><div class="ws-sub">' +
       esc(ws.test.toUpperCase()) + " practice · " + qs.length + " question" + (qs.length === 1 ? "" : "s") + " · " + esc(date) + "</div></div>" +
       (ws.name ? '<div class="ws-who"><div>Name <span class="ws-line"></span></div><div>Date <span class="ws-line"></span></div><div>Score <span class="ws-line short"></span> / ' + qs.length + "</div></div>" : "") +

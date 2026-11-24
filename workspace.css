@@ -1381,3 +1381,16 @@ body #helpHistoryList{max-height:45vh;min-height:120px;overflow:auto;resize:vert
 /* The interface icon set (icons.js): sized to the text it sits in, drawn in that text's colour. */
 .ic{display:inline-block;width:1.15em;height:1.15em;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.22em}
 button>.ic:only-child,.icon-btn>.ic{width:1.3em;height:1.3em;vertical-align:middle}
+
+/* Typed answers (grid-in) in the other layouts; the exam layout restyles them in bluebook.css. */
+body[data-workspace] .gridin{margin:2px 0 22px}
+body[data-workspace] .gi-howto{margin:0 0 12px;font-size:13px;line-height:1.5;color:var(--ws-muted,#64748b)}
+body[data-workspace] .gi-label{display:block;margin:0 0 6px;font-weight:700}
+body[data-workspace] .gi-input{display:block;box-sizing:border-box;width:min(280px,100%);padding:10px 14px;font:700 26px/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em}
+body[data-workspace] .gi-preview{display:flex;align-items:center;gap:12px;box-sizing:border-box;width:min(280px,100%);min-height:60px;margin:12px 0 0;padding:8px 14px;border:1px dashed var(--ws-line,#c9ced6)}
+body[data-workspace] .gi-pl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ws-muted,#64748b)}
+body[data-workspace] .gi-pv{margin-left:auto;font:700 24px/1 ui-monospace,Menlo,Consolas,monospace}
+body[data-workspace] .gi-frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;font-size:.82em;line-height:1.05}
+body[data-workspace] .gi-frac>span:first-child{padding:0 6px 3px;border-bottom:2px solid currentColor}
+body[data-workspace] .gi-frac>span:last-child{padding:3px 6px 0}
+body[data-workspace] .gi-err{min-height:20px;margin-top:6px;font-size:13px;font-weight:600;color:var(--ws-error,#a62d29)}

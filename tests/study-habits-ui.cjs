@@ -22,7 +22,7 @@ async function open(browser, width, height) {
   return { ctx, page, errs };
 }
 const startMath = async (page, n) => {
-  await page.evaluate((total) => { state.cfg.testType = "sat"; state.cfg.section = "math"; state.cfg.total = total; }, n);
+  await page.evaluate((total) => { state.cfg.testType = "sat"; state.cfg.section = "rw"; state.cfg.total = total; }, n);
   await page.click("#btnStart");
   await page.waitForSelector("#questionCard .choice", { timeout: 15000 });
   await page.waitForTimeout(300);

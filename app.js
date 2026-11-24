@@ -2912,8 +2912,13 @@ function applyQuestionQuality(q) {
   q.auditStatus = "passed";
   q.auditReason = "Structure, answer index, distinct choices, and explanation checked.";
   if (q.kind === "gridin") {
-    q.auditStatus = "passed"; q.withheld = true;
-    q.auditReason = "Student-produced response: valid grid-in, excluded from new sets until the engine renders free-response input.";
+    // Student-produced response: served only if the typed-answer rules are loaded, the stored answer is something the grid can take
+    // (or a long decimal that matches it), and there is an explanation.
+    const G = typeof FunSATGridIn !== "undefined" ? FunSATGridIn : undefined;   // a global in the browser; passed in by the verifier and tests
+    const okAnswer = !!(G && q.answer != null && G.target(q.answer) && G.target(q.answer).value === G.target(q.answer).value);
+    if (!okAnswer || !q.exp || !Array.isArray(q.choices) || q.choices.length !== 1 || q.choices[0] !== q.answer) {
+      q.auditStatus = "withheld"; q.withheld = true; q.auditReason = "Grid-in without a usable stored answer, explanation or typed-answer rules.";
+    } else { q.auditStatus = "passed"; q.auditReason = "Student-produced response: answer readable by the grid rules, explanation present."; }
     return q;
   }
   const wantChoices = /^am/.test(q.id) ? 5 : 4;
@@ -2928,6 +2933,66 @@ function applyQuestionQuality(q) {
   if (q.templateVariant) { q.auditStatus = "revised"; q.auditReason = "Valid template item grouped with its structural family and deprioritized to prevent superficial repetition."; }
   return q;
 }
+/*__GRIDIN2_START__*/
+// Typed-answer (grid-in) practice beyond the nine whole-number formulas: scripts/gen-gridin.cjs. Re-solved from the stem by scripts/verify-question-logic.cjs.
+const GRIDIN_MATH = [
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5601","domain":"Algebra","skill":"Systems of two linear equations","diff":"easy","family":"gi-systems","q":"If 2x + y = 11 and x − y = 1, what is the value of x? (Enter a number.)","answer":"4","exp":"Eliminate one variable. Solving the two equations together gives x = 4 and y = 3. The question asks for x, which is 4. Check: 2(4) + 1(3) = 11 and 1(4) + -1(3) = 1.","choices":["4"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5602","domain":"Algebra","skill":"Systems of two linear equations","diff":"easy","family":"gi-systems","q":"If 3x + 2y = 16 and x − y = 2, what is the value of y? (Enter a number.)","answer":"2","exp":"Eliminate one variable. Solving the two equations together gives x = 4 and y = 2. The question asks for y, which is 2. Check: 3(4) + 2(2) = 16 and 1(4) + -1(2) = 2.","choices":["2"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5603","domain":"Algebra","skill":"Systems of two linear equations","diff":"medium","family":"gi-systems","q":"If x + y = 3 and 2x − y = 12, what is the value of x? (Enter a number.)","answer":"5","exp":"Eliminate one variable. Solving the two equations together gives x = 5 and y = −2. The question asks for x, which is 5. Check: 1(5) + 1(−2) = 3 and 2(5) + -1(−2) = 12.","choices":["5"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5604","domain":"Algebra","skill":"Systems of two linear equations","diff":"medium","family":"gi-systems","q":"If 4x − y = 14 and x + 2y = −1, what is the value of x + y? (Enter a number.)","answer":"1","exp":"Eliminate one variable. Solving the two equations together gives x = 3 and y = −2. The question asks for x + y, which is 1. Check: 4(3) + -1(−2) = 14 and 1(3) + 2(−2) = −1.","choices":["1"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5605","domain":"Algebra","skill":"Systems of two linear equations","diff":"hard","family":"gi-systems","q":"If 5x + 2y = 4 and 3x − 4y = 18, what is the value of y? (Enter a number.)","answer":"-3","exp":"Eliminate one variable. Solving the two equations together gives x = 2 and y = −3. The question asks for y, which is −3. Check: 5(2) + 2(−3) = 4 and 3(2) + -4(−3) = 18.","choices":["-3"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5606","domain":"Algebra","skill":"Systems of two linear equations","diff":"hard","family":"gi-systems","q":"If 2x + 3y = 14 and 5x − y = 1, what is the value of x + y? (Enter a number.)","answer":"5","exp":"Eliminate one variable. Solving the two equations together gives x = 1 and y = 4. The question asks for x + y, which is 5. Check: 2(1) + 3(4) = 14 and 5(1) + -1(4) = 1.","choices":["5"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5607","domain":"Problem-Solving & Data Analysis","skill":"Percentages","diff":"easy","family":"gi-percent-off","q":"After a 35% discount, a jacket sells for $52. What was the original price of the jacket, in dollars? (Enter a number.)","answer":"80","exp":"A 35% discount means the sale price is 65% of the original. So 0.65 × (original) = 52. Divide: 52 ÷ 0.65 = 80.","choices":["80"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5608","domain":"Problem-Solving & Data Analysis","skill":"Percentages","diff":"easy","family":"gi-percent-off","q":"After a 25% discount, a backpack sells for $90. What was the original price of the backpack, in dollars? (Enter a number.)","answer":"120","exp":"A 25% discount means the sale price is 75% of the original. So 0.75 × (original) = 90. Divide: 90 ÷ 0.75 = 120.","choices":["120"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5609","domain":"Problem-Solving & Data Analysis","skill":"Percentages","diff":"medium","family":"gi-percent-off","q":"After a 40% discount, a bicycle sells for $150. What was the original price of the bicycle, in dollars? (Enter a number.)","answer":"250","exp":"A 40% discount means the sale price is 60% of the original. So 0.6 × (original) = 150. Divide: 150 ÷ 0.6 = 250.","choices":["250"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5610","domain":"Problem-Solving & Data Analysis","skill":"Percentages","diff":"hard","family":"gi-percent-change","q":"A club's membership grew from 400 to 462. By what percent did the membership increase? (Enter the number only, without the percent sign.)","answer":"15.5","exp":"Percent change = (new − old) ÷ old × 100 = (462 − 400) ÷ 400 × 100 = 62 ÷ 400 × 100 = 15.5.","choices":["15.5"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5611","domain":"Problem-Solving & Data Analysis","skill":"Percentages","diff":"medium","family":"gi-percent-change","q":"A school's enrollment rose from 250 students to 300 students. By what percent did the enrollment increase? (Enter the number only, without the percent sign.)","answer":"20","exp":"Percent change = (new − old) ÷ old × 100 = (300 − 250) ÷ 250 × 100 = 50 ÷ 250 × 100 = 20.","choices":["20"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5612","domain":"Problem-Solving & Data Analysis","skill":"Percentages","diff":"medium","family":"gi-percent-change","q":"A website had 60 visitors on Monday and 81 visitors on Friday. By what percent did the number of visitors increase? (Enter the number only, without the percent sign.)","answer":"35","exp":"Percent change = (new − old) ÷ old × 100 = (81 − 60) ÷ 60 × 100 = 21 ÷ 60 × 100 = 35.","choices":["35"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5613","domain":"Problem-Solving & Data Analysis","skill":"Probability","diff":"easy","family":"gi-probability","q":"A bag contains 4 red marbles, 6 blue marbles, and 5 green marbles. One marble is chosen at random. What is the probability that the marble is blue? (Enter a fraction or a decimal.)","answer":"2/5","exp":"Probability = favorable ÷ total. There are 6 blue marbles out of 4 + 6 + 5 = 15, so the probability is 6/15 = 2/5. (The decimal 0.4 is accepted too.)","choices":["2/5"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5614","domain":"Problem-Solving & Data Analysis","skill":"Probability","diff":"easy","family":"gi-probability","q":"A bag contains 3 red marbles, 7 blue marbles, and 2 green marbles. One marble is chosen at random. What is the probability that the marble is red? (Enter a fraction or a decimal.)","answer":"1/4","exp":"Probability = favorable ÷ total. There are 3 red marbles out of 3 + 7 + 2 = 12, so the probability is 3/12 = 1/4. (The decimal 0.25 is accepted too.)","choices":["1/4"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5615","domain":"Problem-Solving & Data Analysis","skill":"Probability","diff":"easy","family":"gi-probability","q":"A bag contains 5 red marbles, 5 blue marbles, and 10 green marbles. One marble is chosen at random. What is the probability that the marble is green? (Enter a fraction or a decimal.)","answer":"1/2","exp":"Probability = favorable ÷ total. There are 10 green marbles out of 5 + 5 + 10 = 20, so the probability is 10/20 = 1/2. (The decimal 0.5 is accepted too.)","choices":["1/2"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5616","domain":"Problem-Solving & Data Analysis","skill":"Probability","diff":"medium","family":"gi-probability","q":"A bag contains 8 red marbles, 4 blue marbles, and 3 green marbles. One marble is chosen at random. What is the probability that the marble is red? (Enter a fraction or a decimal.)","answer":"8/15","exp":"Probability = favorable ÷ total. There are 8 red marbles out of 8 + 4 + 3 = 15, so the probability is 8/15. (A decimal is accepted too if it has at least 3 decimal places, such as 0.533.)","choices":["8/15"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5617","domain":"Problem-Solving & Data Analysis","skill":"Probability","diff":"easy","family":"gi-probability","q":"A bag contains 2 red marbles, 3 blue marbles, and 5 green marbles. One marble is chosen at random. What is the probability that the marble is red? (Enter a fraction or a decimal.)","answer":"1/5","exp":"Probability = favorable ÷ total. There are 2 red marbles out of 2 + 3 + 5 = 10, so the probability is 2/10 = 1/5. (The decimal 0.2 is accepted too.)","choices":["1/5"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5618","domain":"Problem-Solving & Data Analysis","skill":"Probability","diff":"medium","family":"gi-probability","q":"A bag contains 7 red marbles, 2 blue marbles, and 6 green marbles. One marble is chosen at random. What is the probability that the marble is blue? (Enter a fraction or a decimal.)","answer":"2/15","exp":"Probability = favorable ÷ total. There are 2 blue marbles out of 7 + 2 + 6 = 15, so the probability is 2/15. (A decimal is accepted too if it has at least 3 decimal places, such as 0.133.)","choices":["2/15"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5619","domain":"Algebra","skill":"Linear equations in two variables","diff":"easy","family":"gi-slope","q":"What is the slope of the line that passes through the points (−2, 5) and (4, −1) in the xy-plane? (Enter a number.)","answer":"-1","exp":"Slope = (change in y) ÷ (change in x) = (−1 − 5) ÷ (4 − −2) = −6/6 = −1.","choices":["-1"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5620","domain":"Algebra","skill":"Linear equations in two variables","diff":"medium","family":"gi-slope","q":"What is the slope of the line that passes through the points (1, 2) and (5, 5) in the xy-plane? (Enter a number.)","answer":"3/4","exp":"Slope = (change in y) ÷ (change in x) = (5 − 2) ÷ (5 − 1) = 3/4. (The decimal 0.75 is accepted too.)","choices":["3/4"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5621","domain":"Algebra","skill":"Linear equations in two variables","diff":"medium","family":"gi-slope","q":"What is the slope of the line that passes through the points (0, −3) and (6, 1) in the xy-plane? (Enter a number.)","answer":"2/3","exp":"Slope = (change in y) ÷ (change in x) = (1 − −3) ÷ (6 − 0) = 4/6 = 2/3. (A decimal is accepted too if it has at least 3 decimal places, such as 0.666.)","choices":["2/3"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5622","domain":"Algebra","skill":"Linear equations in two variables","diff":"medium","family":"gi-slope","q":"What is the slope of the line that passes through the points (−4, −2) and (2, 7) in the xy-plane? (Enter a number.)","answer":"3/2","exp":"Slope = (change in y) ÷ (change in x) = (7 − −2) ÷ (2 − −4) = 9/6 = 3/2. (The decimal 1.5 is accepted too.)","choices":["3/2"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5623","domain":"Algebra","skill":"Linear equations in two variables","diff":"medium","family":"gi-slope","q":"What is the slope of the line that passes through the points (3, 8) and (7, 2) in the xy-plane? (Enter a number.)","answer":"-3/2","exp":"Slope = (change in y) ÷ (change in x) = (2 − 8) ÷ (7 − 3) = −6/4 = −3/2. (The decimal -1.5 is accepted too.)","choices":["-3/2"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5624","domain":"Algebra","skill":"Linear equations in two variables","diff":"medium","family":"gi-slope","q":"What is the slope of the line that passes through the points (2, −5) and (5, −6) in the xy-plane? (Enter a number.)","answer":"-1/3","exp":"Slope = (change in y) ÷ (change in x) = (−6 − −5) ÷ (5 − 2) = −1/3. (A decimal is accepted too if it has at least 3 decimal places, such as -0.334.)","choices":["-1/3"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5625","domain":"Problem-Solving & Data Analysis","skill":"Unit rates","diff":"easy","family":"gi-rates","q":"A recipe uses 2.5 cups of flour for 6 servings. At the same rate, how many cups of flour are needed for 15 servings? (Enter a number.)","answer":"6.25","exp":"Find the rate: 2.5 ÷ 6 = 0.4166666666666667 per unit. Multiply by 15: 0.4166666666666667 × 15 = 6.25.","choices":["6.25"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5626","domain":"Problem-Solving & Data Analysis","skill":"Unit rates","diff":"easy","family":"gi-rates","q":"A car travels 150 miles in 2.5 hours. At the same constant speed, how many miles does it travel in 4 hours? (Enter a number.)","answer":"240","exp":"Find the rate: 150 ÷ 2.5 = 60 per unit. Multiply by 4: 60 × 4 = 240.","choices":["240"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5627","domain":"Problem-Solving & Data Analysis","skill":"Unit rates","diff":"medium","family":"gi-rates","q":"A recipe uses 1.5 cups of broth for 4 servings. At the same rate, how many cups of broth are needed for 10 servings? (Enter a number.)","answer":"3.75","exp":"Find the rate: 1.5 ÷ 4 = 0.375 per unit. Multiply by 10: 0.375 × 10 = 3.75.","choices":["3.75"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5628","domain":"Problem-Solving & Data Analysis","skill":"Unit rates","diff":"medium","family":"gi-rates","q":"A printer prints 84 pages in 6 minutes. At the same rate, how many pages does it print in 15 minutes? (Enter a number.)","answer":"210","exp":"Find the rate: 84 ÷ 6 = 14 per unit. Multiply by 15: 14 × 15 = 210.","choices":["210"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5629","domain":"Problem-Solving & Data Analysis","skill":"Unit rates","diff":"medium","family":"gi-rates","q":"A hose fills 7.5 gallons in 3 minutes. At the same rate, how many gallons does it fill in 8 minutes? (Enter a number.)","answer":"20","exp":"Find the rate: 7.5 ÷ 3 = 2.5 per unit. Multiply by 8: 2.5 × 8 = 20.","choices":["20"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5630","domain":"Problem-Solving & Data Analysis","skill":"Unit rates","diff":"medium","family":"gi-rates","q":"A machine uses 0.6 liters of oil in 4 hours of running. At the same rate, how many liters of oil does it use in 10 hours? (Enter a number.)","answer":"1.5","exp":"Find the rate: 0.6 ÷ 4 = 0.15 per unit. Multiply by 10: 0.15 × 10 = 1.5.","choices":["1.5"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5631","domain":"Problem-Solving & Data Analysis","skill":"Measures of center","diff":"easy","family":"gi-mean","q":"The mean of five numbers is 18. Four of the numbers are 12, 20, 15 and 25. What is the remaining number? (Enter a number.)","answer":"18","exp":"The sum of all 5 numbers is 5 × 18 = 90. The known numbers add to 72, so the remaining number is 90 − 72 = 18.","choices":["18"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5632","domain":"Problem-Solving & Data Analysis","skill":"Measures of center","diff":"easy","family":"gi-mean","q":"The mean of five numbers is 24. Four of the numbers are 10, 30, 22 and 28. What is the remaining number? (Enter a number.)","answer":"30","exp":"The sum of all 5 numbers is 5 × 24 = 120. The known numbers add to 90, so the remaining number is 120 − 90 = 30.","choices":["30"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5633","domain":"Problem-Solving & Data Analysis","skill":"Measures of center","diff":"medium","family":"gi-mean","q":"The mean of four numbers is 15. Three of the numbers are 9, 12 and 20. What is the remaining number? (Enter a number.)","answer":"19","exp":"The sum of all 4 numbers is 4 × 15 = 60. The known numbers add to 41, so the remaining number is 60 − 41 = 19.","choices":["19"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5634","domain":"Problem-Solving & Data Analysis","skill":"Measures of center","diff":"medium","family":"gi-mean","q":"The mean of six numbers is 12.5. Five of the numbers are 10, 14, 8, 16 and 12. What is the remaining number? (Enter a number.)","answer":"15","exp":"The sum of all 6 numbers is 6 × 12.5 = 75. The known numbers add to 60, so the remaining number is 75 − 60 = 15.","choices":["15"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5635","domain":"Problem-Solving & Data Analysis","skill":"Measures of center","diff":"medium","family":"gi-mean","q":"The mean of five numbers is 9.2. Four of the numbers are 8, 11, 7 and 10. What is the remaining number? (Enter a number.)","answer":"10","exp":"The sum of all 5 numbers is 5 × 9.2 = 46. The known numbers add to 36, so the remaining number is 46 − 36 = 10.","choices":["10"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5636","domain":"Problem-Solving & Data Analysis","skill":"Measures of center","diff":"medium","family":"gi-mean","q":"The mean of four numbers is 5. Three of the numbers are 12, −3 and 4. What is the remaining number? (Enter a number.)","answer":"7","exp":"The sum of all 4 numbers is 4 × 5 = 20. The known numbers add to 13, so the remaining number is 20 − 13 = 7.","choices":["7"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5637","domain":"Advanced Math","skill":"Exponential functions","diff":"medium","family":"gi-exponential","q":"A bacteria culture starts with 250 bacteria and doubles every 3 hours. How many bacteria are in the culture after 12 hours? (Enter a number.)","answer":"4000","exp":"12 ÷ 3 = 4 periods. Each period multiplies by 2: 250 × 2^4 = 4000.","choices":["4000"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5638","domain":"Advanced Math","skill":"Exponential functions","diff":"medium","family":"gi-exponential","q":"The number of people who have seen a post is 40 now and triples every 2 hours. How many people have seen the post after 6 hours? (Enter a number.)","answer":"1080","exp":"6 ÷ 2 = 3 periods. Each period multiplies by 3: 40 × 3^3 = 1080.","choices":["1080"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5639","domain":"Advanced Math","skill":"Exponential functions","diff":"medium","family":"gi-exponential","q":"A sample of a radioactive substance has a mass of 500 grams. Its mass is cut in half every 5 days. What is the mass of the sample, in grams, after 15 days? (Enter a number.)","answer":"62.5","exp":"15 ÷ 5 = 3 periods. Each period halves the amount: 500 × (1/2)^3 = 62.5.","choices":["62.5"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5640","domain":"Advanced Math","skill":"Exponential functions","diff":"medium","family":"gi-exponential","q":"An investment is worth $1200 now and doubles in value every 4 years. How much will it be worth, in dollars, after 12 years? (Enter a number.)","answer":"9600","exp":"12 ÷ 4 = 3 periods. Each period multiplies by 2: 1200 × 2^3 = 9600.","choices":["9600"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5641","domain":"Advanced Math","skill":"Exponential functions","diff":"medium","family":"gi-exponential","q":"A patient takes 960 milligrams of a medicine. The amount of medicine in the body is cut in half every 2 hours. How many milligrams remain after 6 hours? (Enter a number.)","answer":"120","exp":"6 ÷ 2 = 3 periods. Each period halves the amount: 960 × (1/2)^3 = 120.","choices":["120"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5642","domain":"Advanced Math","skill":"Exponential functions","diff":"medium","family":"gi-exponential","q":"A collector's item is worth $2000 and doubles in value every 6 years. How much will it be worth, in dollars, after 18 years? (Enter a number.)","answer":"16000","exp":"18 ÷ 6 = 3 periods. Each period multiplies by 2: 2000 × 2^3 = 16000.","choices":["16000"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5643","domain":"Algebra","skill":"Linear equations in one variable","diff":"hard","family":"gi-linear-eq","q":"If 4(2x − 3) = 3x + 11, what is the value of x? (Enter a number.)","answer":"4.6","exp":"Distribute: 8x − 12 = 3x + 11. Subtract 3x from both sides: 5x − 12 = 11. Add 12: 5x = 23. Divide by 5: x = 23/5 = 4.6. (The decimal 4.6 is accepted too.)","choices":["4.6"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5644","domain":"Algebra","skill":"Linear equations in one variable","diff":"medium","family":"gi-linear-eq","q":"If 3(x − 2) = 5x + 4, what is the value of x? (Enter a number.)","answer":"-5","exp":"Distribute: 3x − 6 = 5x + 4. Subtract 5x from both sides: -2x − 6 = 4. Add 6: -2x = 10. Divide by -2: x = −5.","choices":["-5"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5645","domain":"Algebra","skill":"Linear equations in one variable","diff":"hard","family":"gi-linear-eq","q":"If 2(3x − 1) = 4x + 7, what is the value of x? (Enter a number.)","answer":"4.5","exp":"Distribute: 6x − 2 = 4x + 7. Subtract 4x from both sides: 2x − 2 = 7. Add 2: 2x = 9. Divide by 2: x = 9/2 = 4.5. (The decimal 4.5 is accepted too.)","choices":["4.5"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5646","domain":"Algebra","skill":"Linear equations in one variable","diff":"hard","family":"gi-linear-eq","q":"If 5(2x − 4) = 6x + 1, what is the value of x? (Enter a number.)","answer":"5.25","exp":"Distribute: 10x − 20 = 6x + 1. Subtract 6x from both sides: 4x − 20 = 1. Add 20: 4x = 21. Divide by 4: x = 21/4 = 5.25. (The decimal 5.25 is accepted too.)","choices":["5.25"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5647","domain":"Algebra","skill":"Linear equations in one variable","diff":"hard","family":"gi-linear-eq","q":"If 6(x − 3) = 2x + 5, what is the value of x? (Enter a number.)","answer":"5.75","exp":"Distribute: 6x − 18 = 2x + 5. Subtract 2x from both sides: 4x − 18 = 5. Add 18: 4x = 23. Divide by 4: x = 23/4 = 5.75. (The decimal 5.75 is accepted too.)","choices":["5.75"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5648","domain":"Algebra","skill":"Linear equations in one variable","diff":"hard","family":"gi-linear-eq","q":"If 3(4x − 5) = 7x + 2, what is the value of x? (Enter a number.)","answer":"3.4","exp":"Distribute: 12x − 15 = 7x + 2. Subtract 7x from both sides: 5x − 15 = 2. Add 15: 5x = 17. Divide by 5: x = 17/5 = 3.4. (The decimal 3.4 is accepted too.)","choices":["3.4"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5649","domain":"Advanced Math","skill":"Quadratic equations","diff":"medium","family":"gi-vertex","q":"The function f(x) = x² − 10x + 7 has its minimum value at x = k. What is the value of k? (Enter a number.)","answer":"5","exp":"A parabola y = ax² + bx + c opens upward when a > 0 and reaches its minimum at x = −b/(2a). Here a = 1 and b = −10, so k = −(−10)/(2·1) = 10/2 = 5.","choices":["5"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5650","domain":"Advanced Math","skill":"Quadratic equations","diff":"medium","family":"gi-vertex","q":"The function f(x) = 2x² − 12x + 5 has its minimum value at x = k. What is the value of k? (Enter a number.)","answer":"3","exp":"A parabola y = ax² + bx + c opens upward when a > 0 and reaches its minimum at x = −b/(2a). Here a = 2 and b = −12, so k = −(−12)/(2·2) = 12/4 = 3.","choices":["3"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5651","domain":"Advanced Math","skill":"Quadratic equations","diff":"medium","family":"gi-vertex","q":"The function f(x) = x² + 6x − 4 has its minimum value at x = k. What is the value of k? (Enter a number.)","answer":"-3","exp":"A parabola y = ax² + bx + c opens upward when a > 0 and reaches its minimum at x = −b/(2a). Here a = 1 and b = 6, so k = −(6)/(2·1) = −6/2 = −3.","choices":["-3"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5652","domain":"Advanced Math","skill":"Quadratic equations","diff":"medium","family":"gi-vertex","q":"The function f(x) = 3x² − 18x + 2 has its minimum value at x = k. What is the value of k? (Enter a number.)","answer":"3","exp":"A parabola y = ax² + bx + c opens upward when a > 0 and reaches its minimum at x = −b/(2a). Here a = 3 and b = −18, so k = −(−18)/(2·3) = 18/6 = 3.","choices":["3"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5653","domain":"Advanced Math","skill":"Quadratic equations","diff":"hard","family":"gi-vertex","q":"The function f(x) = 2x² + 10x + 1 has its minimum value at x = k. What is the value of k? (Enter a number.)","answer":"-2.5","exp":"A parabola y = ax² + bx + c opens upward when a > 0 and reaches its minimum at x = −b/(2a). Here a = 2 and b = 10, so k = −(10)/(2·2) = −10/4 = −2.5. (The decimal -2.5 is accepted too.)","choices":["-2.5"],"ans":0},
+{"bank":"math","test":"sat","section":"math","source":"Original practice modeled on published test skills","kind":"gridin","id":"m5654","domain":"Advanced Math","skill":"Quadratic equations","diff":"hard","family":"gi-vertex","q":"The function f(x) = 4x² − 12x + 9 has its minimum value at x = k. What is the value of k? (Enter a number.)","answer":"1.5","exp":"A parabola y = ax² + bx + c opens upward when a > 0 and reaches its minimum at x = −b/(2a). Here a = 4 and b = −12, so k = −(−12)/(2·4) = 12/8 = 1.5. (The decimal 1.5 is accepted too.)","choices":["1.5"],"ans":0}
+];
+BANK.math.push(...GRIDIN_MATH);
+/*__GRIDIN2_END__*/
 const ALL_UNIQUE_QUESTIONS = BANK.math.concat(BANK.rw, ACT_SCIENCE);
 ALL_UNIQUE_QUESTIONS.forEach(applyQuestionQuality);
 
@@ -3113,9 +3178,20 @@ function sample(a, n, weightFn = () => 1, avoidIds = []) {
     for (let guard = 0; left > 0 && guard < 4; guard++) exact.forEach(({ d }) => { if (left > 0 && q[d] < sizes[d]) { q[d]++; left--; } });
     return q;
   })();
+  // Typed-answer (grid-in) questions: a real SAT math module is about a quarter student-produced response. Only SAT math pools carry them,
+  // so ACT math and the Reading & Writing pools are untouched. They are spread through the set (not clumped) and never overshoot the share.
+  const isGrid = (q) => q.kind === "gridin";
+  const gridTarget = n >= 8 && usable.some(isGrid) && usable.every((q) => /^(?:m\d+|variety-math-\d+)$/.test(q.id)) ? Math.min(Math.round(n * 0.25), usable.filter(isGrid).length) : 0;
   while (picked.length < n && remaining.length) {
     const open = quota ? remaining.filter((q) => (counts[q.domain] || 0) < (quota[q.domain] || 0)) : remaining;
-    const base = open.length ? open : remaining;
+    let base = open.length ? open : remaining;
+    if (gridTarget) {
+      const need = gridTarget - picked.filter(isGrid).length, slots = n - picked.length;
+      const grids = base.filter(isGrid), others = base.filter((q) => !isGrid(q));
+      if (need <= 0) { if (others.length) base = others; }
+      else if (grids.length && (need >= slots || Math.random() < need / slots)) base = grids;
+      else if (others.length && need < slots) base = others;
+    }
     const outsideBuffer = base.filter((q) => !recent.includes(q.id));
     const eligible = outsideBuffer.length ? outsideBuffer : base.filter((q) => recent.indexOf(q.id) === Math.min(...base.map((item) => recent.indexOf(item.id))));
     // Prefer a different structure before using a near-duplicate, while the
@@ -3280,7 +3356,7 @@ function newState(cfg, suppliedPlan) {
   return {
     v: 4, cfg, elapsed: 0, startedAt: Date.now(),
     keys: activeKeys(cfg), counts: countsFor(cfg), plan,
-    routes, answers: {}, secIdx: 0, modIdx: 0, qi: 0,
+    routes, answers: {}, typed: {}, secIdx: 0, modIdx: 0, qi: 0,
     view: "start", done: false, scores: null,
     attemptId: "attempt_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8)
   };
@@ -3366,7 +3442,7 @@ function makeAttemptRecord() {
     accuracy: totalA ? Math.round((totalC / totalA) * 100) : 0,
     bestStreak: profileBestStreak(), tokensEarned: sessionTokensEarned,
     unlocks: sessionUnlocks.slice(), routes: { ...state.routes },
-    answers: { ...state.answers }, savedPlan: JSON.parse(JSON.stringify(state.plan)),
+    answers: { ...state.answers }, typed: { ...(state.typed || {}) }, savedPlan: JSON.parse(JSON.stringify(state.plan)),
     practiceKind, scoreEligible: practiceKind === "test",
     secScores, domainStats: domainStatsAny(state.keys, state.plan, state.answers),
     // per-question log so the score predictor can weigh question difficulty
@@ -3708,7 +3784,7 @@ function renderHistorySummary() {
         e.stopPropagation();
         if (div.querySelector(".saved-review")) return;
         const area = document.createElement("div"); area.className = "saved-review";
-        area.innerHTML = rec.savedPlan && rec.answers ? renderReviewHtml(rec.testType, historyKeysFor(rec), rec.savedPlan, rec.answers) : '<p class="small">Older results saved correctness but not your chosen answers.</p>' + (rec.qlog || []).filter(([id]) => byId(id)).map(([id, correct]) => '<div class="review"><strong>' + escapeHtml(byId(id).q) + '</strong><p>' + (correct ? "Correct" : "Incorrect") + '</p>' + explanationHtml(byId(id), correct ? byId(id).ans : -1) + '</div>').join('');
+        area.innerHTML = rec.savedPlan && rec.answers ? renderReviewHtml(rec.testType, historyKeysFor(rec), rec.savedPlan, rec.answers, rec.typed) : '<p class="small">Older results saved correctness but not your chosen answers.</p>' + (rec.qlog || []).filter(([id]) => byId(id)).map(([id, correct]) => '<div class="review"><strong>' + escapeHtml(byId(id).q) + '</strong><p>' + (correct ? "Correct" : "Incorrect") + '</p>' + explanationHtml(byId(id), correct ? byId(id).ans : -1) + '</div>').join('');
         div.appendChild(area);
       });
     });
@@ -3794,7 +3870,7 @@ function tutorSystem(mode, q, chosen, extra) {
 }
 function tutorQuestion(q, chosen) {
   const T = window.FunSATTutor;
-  if (T) return T.questionBlock(q, { chosen });
+  if (T) return T.questionBlock(q, { chosen, typed: state.typed && state.typed[q.id] });
   return (q.passage ? "Passage: " + q.passage + "\n" : "") + "Question: " + q.q + "\nChoices: " + q.choices.map((c, i) => String.fromCharCode(65 + i) + ") " + c).join("  ") +
     (chosen == null ? "" : "\nCorrect answer: " + String.fromCharCode(65 + q.ans));
 }
@@ -3954,7 +4030,7 @@ function coachHtml(q, chosen) {
        (info[0] !== "no" ? '<div class="small muted" style="margin-top:3px"><a href="https://www.desmos.com/calculator" target="_blank" rel="noopener">Open Desmos</a> — the SAT has it built in (and it is allowed on every math question).</div>' : '') + '</div>';
   h += '<div class="sec"><div class="sec-t">Step by step</div><ol>' + steps.map((t) => "<li>" + escapeHtml(t) + "</li>").join("") + "</ol></div>";
   h += '<div class="sec"><div class="sec-t">' + (good ? "Watch out next time" : "Where it probably went wrong") + '</div><div>' +
-       (good || chosen === -1 ? "" : "You picked <strong>" + String.fromCharCode(65 + chosen) + ". " + escapeHtml(q.choices[chosen]) + "</strong>. ") + escapeHtml(info[2]) + "</div></div>";
+       (good || chosen === -1 ? "" : q.kind === "gridin" ? "You typed <strong>" + gridinAnswerText(q, state.typed && state.typed[q.id]) + "</strong>. " : "You picked <strong>" + String.fromCharCode(65 + chosen) + ". " + escapeHtml(q.choices[chosen]) + "</strong>. ") + escapeHtml(info[2]) + "</div></div>";
   h += '<div class="sec"><div class="sec-t">Skill &amp; difficulty</div><div>' + escapeHtml(q.domain) + " · " + escapeHtml(q.diff) + (good ? "" : " · Worth redoing a similar one") + "</div></div>";
   h += tutorChatHtml(q) + "</div>";
   return h;
@@ -4085,6 +4161,7 @@ function studyHelpHtml(q) {
 }
 
 const qSelect = {};
+const gridDraft = {};   // what a student has typed into a grid-in box but not yet checked, by question id
 const stuckCache = {};
 function stuckOut(msg) { const el = document.getElementById("qfxStuckOut"); if (el) el.textContent = msg; }
 async function askStuck(q, mode) {
@@ -4128,6 +4205,35 @@ function stuckFormula(q) {
   const hit = SHEET.find((row) => row[0].some((k) => text.indexOf(k) >= 0));
   stuckOut(hit ? hit[1] : "Identify what changes between the choices \u2014 the tested rule is almost always the difference. Write the given values down and name the unknown.");
 }
+// ---- Student-produced response (grid-in): the typed-answer box, shown in place of the four choices ----
+function gridinHtml(q, chosen, draft) {
+  const answered = chosen != null && chosen !== -1;
+  const typed = (state.typed && state.typed[q.id]) || "";
+  const text = answered ? typed : draft;
+  const state2 = chosen == null || chosen === -1 ? "" : chosen === q.ans ? " right" : " wrong";
+  return '<div class="gridin' + state2 + '">' +
+    '<p class="gi-howto" id="gridHelp">Type your answer: a whole number, a decimal such as 0.75, or a fraction such as 3/4. Up to 5 characters (6 with a minus sign). Mixed numbers are not accepted.</p>' +
+    '<label class="gi-label" for="gridInput">Your answer</label>' +
+    '<input id="gridInput" class="gi-input" type="text" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="9" ' +
+      'aria-describedby="gridHelp gridPreview gridErr" value="' + escapeHtml(text) + '"' + (chosen != null ? " disabled" : "") + '>' +
+    '<div class="gi-preview" id="gridPreview" aria-live="polite"><span class="gi-pl">Answer preview</span><span class="gi-pv" id="gridPv">' + gridinPreview(text) + '</span></div>' +
+    '<div class="gi-err" id="gridErr" role="status"></div></div>';
+}
+// A fraction is drawn stacked, like the grid on the real test; everything else is shown as typed.
+function gridinPreview(text) {
+  const G = window.FunSATGridIn, t = G ? G.normalize(text) : String(text || "");
+  if (!t) return '<span class="gi-empty">\u2014</span>';
+  const m = /^(-?)(\d+)\/(\d+)$/.exec(t);
+  if (m) return (m[1] ? "\u2212" : "") + '<span class="gi-frac"><span>' + escapeHtml(m[2]) + "</span><span>" + escapeHtml(m[3]) + "</span></span>";
+  return escapeHtml(G ? G.display(t) : t);
+}
+// What the student typed, for feedback and review; notes an equivalent form when it differs from the stored answer.
+function gridinAnswerText(q, typed) {
+  const G = window.FunSATGridIn;
+  if (!typed) return "No answer";
+  return escapeHtml(G ? G.display(typed) : typed);
+}
+
 function renderQuestion() {
   const sec = curSection();
   const def = defByKey(state.cfg.testType, sec);
@@ -4159,7 +4265,10 @@ function renderQuestion() {
   document.body.classList.toggle("wide-test", split);
   const elims = (state.elims && state.elims[q.id]) || [];
   const flagged = !!(state.flags && state.flags[q.id]);
+  const isGrid = q.kind === "gridin";
   const picked = chosen == null ? qSelect[q.id] : null;
+  const draft = isGrid && chosen == null ? (gridDraft[q.id] || "") : "";
+  const gridReady = isGrid && !!(window.FunSATGridIn && FunSATGridIn.valid(draft));
   if (chosen != null && qSelect[q.id] != null) delete qSelect[q.id];
   const coinLeftQ = QUESTIONS_PER_TOKEN - (profile.qSinceToken || 0);
   const streakEl = $("qfxStreak");
@@ -4185,6 +4294,8 @@ function renderQuestion() {
   html += '<div class="bb-qhead"><span class="bb-num">' + (qi + 1) + '</span>' +
     '<button type="button" class="bb-star' + ((profile.bookmarks || []).indexOf(q.id) >= 0 ? " on" : "") + '" id="btnStar" title="Save this question to retry later">' + ((profile.bookmarks || []).indexOf(q.id) >= 0 ? "Starred" : "Star") + '</button></div>';
   html += '<div class="qtext">' + escapeHtml(q.q) + "</div>";
+  if (isGrid) html += gridinHtml(q, chosen, draft);
+  else {
   html += '<div class="choices">';
   q.choices.forEach((c, i) => {
     let cls = "choice";
@@ -4195,6 +4306,7 @@ function renderQuestion() {
       (elimMode && chosen == null ? '<button type="button" class="elim-btn" data-elim="' + i + '" aria-label="' + (struck ? "Undo cross-out for " : "Cross out ") + String.fromCharCode(65 + i) + '">' + (struck ? "Undo" : String.fromCharCode(65 + i)) + "</button>" : "") + "</div>";
   });
   html += "</div>";
+  }
   if (chosen == null) html += '<button class="idk-btn" id="btnIdk" type="button">' + ico("help") + ' I don\'t know — show me</button>';
 
   if (chosen != null) {
@@ -4207,7 +4319,7 @@ function renderQuestion() {
     }
     html += '<div class="feedback ' + (good ? "good" : skipped ? "idk" : "bad") + '">' +
       '<div class="head">' + head + "</div>" +
-      "<div>" + (skipped ? "You chose “I don't know.”" : "Your answer: <strong>" + String.fromCharCode(65 + chosen) + "</strong>.") + " Correct answer: <strong>" + String.fromCharCode(65 + q.ans) + "</strong>.</div>" +
+      "<div>" + (skipped ? "You chose “I don't know.”" : isGrid ? "Your answer: <strong>" + gridinAnswerText(q, state.typed && state.typed[q.id]) + "</strong>." : "Your answer: <strong>" + String.fromCharCode(65 + chosen) + "</strong>.") + " Correct answer: <strong>" + (isGrid ? escapeHtml(q.answer) : String.fromCharCode(65 + q.ans)) + "</strong>.</div>" +
       explanationHtml(q, chosen) + "</div>";
     if (skipped) html += studyHelpHtml(q);
     html += coachHtml(q, chosen);
@@ -4231,9 +4343,9 @@ function renderQuestion() {
   if (chosen == null) {
     html += '<div class="bb-foot">' +
       '<div class="qfx-bar">' +
-      '<button type="button" class="qfx-icon' + (elimMode ? " on" : "") + '" id="btnElim" aria-label="Cross-out mode: cross out choices you have ruled out" aria-pressed="' + elimMode + '">\u2298</button>' +
+      (isGrid ? "" : '<button type="button" class="qfx-icon' + (elimMode ? " on" : "") + '" id="btnElim" aria-label="Cross-out mode: cross out choices you have ruled out" aria-pressed="' + elimMode + '">\u2298</button>') +
       '<button type="button" class="qfx-icon' + (flagged ? " on" : "") + '" id="btnFlag" aria-label="Mark this question for review" aria-pressed="' + flagged + '">\u2691</button>' +
-      '<button type="button" class="qfx-check" id="btnCheck"' + (picked == null ? " disabled" : "") + ">Check answer</button></div>" +
+      '<button type="button" class="qfx-check" id="btnCheck"' + ((isGrid ? !gridReady : picked == null) ? " disabled" : "") + ">Check answer</button></div>" +
       '<div class="bb-coin" title="Every ' + QUESTIONS_PER_TOKEN + ' questions = 1 credit">\ud83e\ude99 <span class="meter"><i style="width:' + Math.round(((profile.qSinceToken || 0) / QUESTIONS_PER_TOKEN) * 100) + '%"></i></span><span>' + coinLeft + " more for +1 credit</span>" + navPop + "</div>" +
       '<div class="bb-btns bb-btns-pre"><button id="btnPrev" class="secondary"' + (qi === 0 ? " disabled" : "") + ">Back</button></div></div>";
   } else {
@@ -4253,7 +4365,31 @@ function renderQuestion() {
       renderQuestion();
     });
   });
+  const gi = $("gridInput");
+  if (gi && chosen == null) {
+    const G = window.FunSATGridIn, chkBtn = $("btnCheck");
+    const sync = (final) => {
+      const v = gi.value, p = G ? G.parse(v) : { ok: false, error: "" };
+      gridDraft[q.id] = v;
+      $("gridPv").innerHTML = gridinPreview(v);
+      $("gridErr").textContent = v.trim() && !p.ok && (final || /[^0-9./\-\u2212]|\s/.test(v) || v.length > 6) ? p.error : "";
+      if (chkBtn) chkBtn.disabled = !p.ok;
+    };
+    gi.addEventListener("input", () => sync(false));
+    gi.addEventListener("blur", () => sync(true));
+    gi.addEventListener("keydown", (e) => { e.stopPropagation(); if (e.key === "Enter") { e.preventDefault(); sync(true); if (chkBtn && !chkBtn.disabled) chkBtn.click(); } });
+    sync(false);
+    if (!window.matchMedia("(max-width:700px)").matches || gi.value) { try { gi.focus({ preventScroll: true }); gi.setSelectionRange(gi.value.length, gi.value.length); } catch (e) {} }
+  }
   const chk = $("btnCheck"); if (chk) chk.addEventListener("click", () => {
+    if (isGrid) {
+      const G = window.FunSATGridIn, text = gridDraft[q.id] || "";
+      if (!G || !G.valid(text)) return;
+      state.typed = state.typed || {}; state.typed[q.id] = G.normalize(text);
+      delete gridDraft[q.id];
+      handleAnswer(G.matches(q, text) ? q.ans : -2, chk);
+      return;
+    }
     const sel = qSelect[q.id];
     if (sel == null) return;
     const el = $("questionCard").querySelector('.choice[data-choice="' + sel + '"]');
@@ -4603,7 +4739,7 @@ function rwRouteLine(sec) {
 // ---- REVIEW ----
 function renderReview() {
   const area = $("reviewArea");
-  area.innerHTML = renderReviewHtml(state.cfg.testType, state.keys, state.plan, state.answers);
+  area.innerHTML = renderReviewHtml(state.cfg.testType, state.keys, state.plan, state.answers, state.typed);
   area.style.display = "block";
   // Opens on the wrong answers when there are any; the filter is CSS-only, so
   // switching it never re-renders the explanations.
@@ -4618,7 +4754,7 @@ function renderReview() {
   }));
 }
 
-function renderReviewHtml(testType, keys, plan, answers) {
+function renderReviewHtml(testType, keys, plan, answers, typed) {
   const tally = { right: 0, wrong: 0, skipped: 0 };
   keys.forEach((sec) => (plan[sec].mods || []).forEach((qids) => (qids || []).forEach((id) => {
     const q = byId(id); if (!q) return;
@@ -4645,8 +4781,8 @@ function renderReviewHtml(testType, keys, plan, answers) {
         const outcome = chosen == null ? "skipped" : correct ? "right" : "wrong";
         html += '<div class="review" data-outcome="' + outcome + '"><div class="review-head"><span><strong>' + (i + 1) + ".</strong> " + escapeHtml(q.q.replace(/\n/g, " ")) + ' <span class="tag dom">' + q.domain + "</span></span>" +
           '<span class="tag ' + (correct ? "right" : "wrong") + '">' + (correct ? "Correct" : "Incorrect") + "</span></div>" +
-          '<div class="review-body"><div>Your answer: <span class="' + (correct ? "correct-ans" : "your-ans") + '">' + (chosen == null ? "No answer" : chosen === -1 ? "I don't know" : String.fromCharCode(65 + chosen) + ". " + escapeHtml(q.choices[chosen])) + "</span></div>" +
-          "<div>Correct: <span class=\"correct-ans\">" + String.fromCharCode(65 + q.ans) + ". " + escapeHtml(q.choices[q.ans]) + "</span></div>" +
+          '<div class="review-body"><div>Your answer: <span class="' + (correct ? "correct-ans" : "your-ans") + '">' + (chosen == null ? "No answer" : chosen === -1 ? "I don't know" : q.kind === "gridin" ? gridinAnswerText(q, (typed || {})[id]) : String.fromCharCode(65 + chosen) + ". " + escapeHtml(q.choices[chosen])) + "</span></div>" +
+          "<div>Correct: <span class=\"correct-ans\">" + (q.kind === "gridin" ? escapeHtml(q.answer) : String.fromCharCode(65 + q.ans) + ". " + escapeHtml(q.choices[q.ans])) + "</span></div>" +
           explanationHtml(q, chosen) + coachReviewHtml(q);
         if (q.kind === "reading") html += "<details><summary>Show passage</summary><div class=\"passage\" style=\"max-height:160px\">" + escapeHtml(q.passage) + "</div></details>";
         html += "</div></div>";

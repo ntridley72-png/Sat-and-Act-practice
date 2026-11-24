@@ -25,7 +25,7 @@ function loadBank(root) {
   const start = app.indexOf("/*__DATA_START__*/");
   const end = app.indexOf("const STORAGE_KEY", start);
   if (start < 0 || end < 0) throw new Error("Question bank data region not found in app.js");
-  const ctx = vm.createContext({ console });
+  const ctx = vm.createContext({ console, FunSATGridIn: require("../gridin.js") });
   vm.runInContext(app.slice(start, end), ctx);
   const get = (expr) => vm.runInContext(expr, ctx);
   return {
@@ -58,7 +58,7 @@ const sign = (s) => (s === "+" ? 1 : -1);
 const SOLVERS = [
   ["least integer x for ax±b>c", (q) => { const m = q.match(/(?:least integer(?: value)?(?: of)? x(?: for which)?|least integer x for which)\s*(\d+)x\s*([+−-])\s*(\d+)\s*>\s*(-?\d+)/); if (!m) return null; const v = (N(m[4]) - sign(m[2]) * N(m[3])) / N(m[1]); return Math.floor(v) + 1; }],
   ["y = ax±b at x", (q) => { const m = q.match(/y\s*=\s*(\d+)x\s*([+−-])\s*(\d+)\.\s*What is (?:the value of )?y when x\s*=\s*(-?\d+)/); return m ? N(m[1]) * N(m[4]) + sign(m[2]) * N(m[3]) : null; }],
-  ["system x+y=a, x-y=b", (q) => { const m = q.match(/x\s*\+\s*y\s*=\s*(-?\d+)\s*(?:and|\n)\s*x\s*[−-]\s*y\s*=\s*(-?\d+)[\s\S]*?(?:value of )?(x|y)\?/); if (!m) return null; return m[3] === "x" ? (N(m[1]) + N(m[2])) / 2 : (N(m[1]) - N(m[2])) / 2; }],
+  ["system x+y=a, x-y=b", (q) => { const m = q.match(/(?<![\w.])x\s*\+\s*y\s*=\s*(-?\d+)\s*(?:and|\n)\s*x\s*[−-]\s*y\s*=\s*(-?\d+)[\s\S]*?(?:value of )?(x|y)\?/); if (!m) return null; return m[3] === "x" ? (N(m[1]) + N(m[2])) / 2 : (N(m[1]) - N(m[2])) / 2; }],
   ["(x-a)(x-b)=0 larger/sum", (q) => { const m = q.match(/\(x\s*[−-]\s*(\d+)\)\(x\s*[−-]\s*(\d+)\)\s*=\s*0[\s\S]*?(larger solution|smaller solution|sum)/); if (!m) return null; const a = N(m[1]), b = N(m[2]); return /larger/.test(m[3]) ? Math.max(a, b) : /smaller/.test(m[3]) ? Math.min(a, b) : a + b; }],
   ["larger solution of (x-a)(x-b)=0", (q) => { const m = q.match(/larger solution of \(x\s*[−-]\s*(\d+)\)\(x\s*[−-]\s*(\d+)\)\s*=\s*0/); return m ? Math.max(N(m[1]), N(m[2])) : null; }],
   ["price change by percent", (q) => { const m = q.match(/costs \$(\d+(?:\.\d+)?)\. Its price (increases|decreases) by (\d+)%/); return m ? N(m[1]) * (1 + (m[2] === "increases" ? 1 : -1) * N(m[3]) / 100) : null; }],
@@ -109,6 +109,49 @@ const SOLVERS = [
   ["scatterplot bends upward", (q) => (/bends upward: gains in y grow larger as x increases/.test(q) ? { text: ["positive association that is not linear"] } : null)],
   ["strong positive linear r", (q) => (/strong positive linear association between hours practiced \(x\) and score \(y\)[\s\S]*correlation coefficient r/.test(q) ? { pred: (n) => n >= 0.8 && n <= 1, label: "r between 0.8 and 1" } : null)],
   ["gridin ax+b=c", (q) => { const m = q.match(/What value of x satisfies (\d+)x\s*([+−-])\s*(\d+)\s*=\s*(-?\d+)\? \(Enter a number\.\)/); return m ? (N(m[4]) - sign(m[2]) * N(m[3])) / N(m[1]) : null; }],
+  // ---- typed-answer (grid-in) families: each is re-solved from the stem alone ----
+  ["gridin y = ax±b at x", (q) => { const m = q.match(/A line is defined by y\s*=\s*(\d+)x\s*([+−-])\s*(\d+)\.\s*What value of y when x\s*=\s*(-?\d+)\?/); return m ? N(m[1]) * N(m[4]) + sign(m[2]) * N(m[3]) : null; }],
+  ["gridin fixed fee + hourly rate", (q) => { const m = q.match(/fixed \$(\d+) plus \$(\d+) per hour\. A customer pays \$(\d+)\./); return m ? (N(m[3]) - N(m[1])) / N(m[2]) : null; }],
+  ["gridin larger root of a factored quadratic", (q) => { const m = q.match(/\(x\s*([+−-])\s*(\d+)\)\(x\s*([+−-])\s*(\d+)\)\s*=\s*0[^?]*larger solution/); return m ? Math.max(-sign(m[1]) * N(m[2]), -sign(m[3]) * N(m[4])) : null; }],
+  ["gridin sqrt(x + a) = b", (q) => { const m = q.match(/√\(x\s*\+\s*(\d+)\)\s*=\s*(\d+)\?/); return m ? N(m[2]) ** 2 - N(m[1]) : null; }],
+  ["gridin right-triangle area from legs (cm)", (q) => { const m = q.match(/perpendicular sides of lengths (\d+) cm and (\d+) cm\. What is its area/); return m ? (N(m[1]) * N(m[2])) / 2 : null; }],
+  ["gridin circumference = c*pi", (q) => { const m = q.match(/radius (\d+) centimeters\. Its circumference is cπ centimeters/); return m ? 2 * N(m[1]) : null; }],
+  ["gridin hypotenuse from legs", (q) => { const m = q.match(/legs of lengths (\d+) and (\d+)\. What is the length of its hypotenuse/); return m ? Math.hypot(N(m[1]), N(m[2])) : null; }],
+  ["gridin complementary angles", (q) => { const m = q.match(/complementary\. One angle measures (\d+) degrees/); return m ? 90 - N(m[1]) : null; }],
+  ["gridin system of two equations (Cramer's rule)", (q) => {
+    const m = q.match(/^If (.+?) = (−?\d+) and (.+?) = (−?\d+), what is the value of (x \+ y|x|y)\?/); if (!m) return null;
+    const lin = (t) => { const k = t.match(/^(−?\d*)x\s*([+−-])\s*(\d*)y$/); if (!k) return null; const a = k[1] === "" ? 1 : k[1] === "−" ? -1 : N(k[1]); return [a, sign(k[2]) * (k[3] === "" ? 1 : N(k[3]))]; };
+    const e1 = lin(m[1]), e2 = lin(m[3]); if (!e1 || !e2) return null;
+    const det = e1[0] * e2[1] - e2[0] * e1[1]; if (!det) return { bad: "the two equations do not have exactly one solution" };
+    const x = (N(m[2]) * e2[1] - N(m[4]) * e1[1]) / det, y = (e1[0] * N(m[4]) - e2[0] * N(m[2])) / det;
+    return m[5] === "x" ? x : m[5] === "y" ? y : x + y;
+  }],
+  ["gridin original price before a discount", (q) => { const m = q.match(/After a (\d+)% discount, a [a-z]+ sells for \$(\d+(?:\.\d+)?)\. What was the original price/); return m ? N(m[2]) / (1 - N(m[1]) / 100) : null; }],
+  ["gridin percent increase", (q) => {
+    if (!/By what percent/.test(q)) return null;
+    const m = q.match(/from (\d+)(?: students)? to (\d+)(?: students)?\./) || q.match(/had (\d+) visitors on Monday and (\d+) visitors on Friday/);
+    return m ? ((N(m[2]) - N(m[1])) / N(m[1])) * 100 : null;
+  }],
+  ["gridin probability of a colour", (q) => { const m = q.match(/contains (\d+) red marbles, (\d+) blue marbles, and (\d+) green marbles\..*probability that the marble is (red|blue|green)/); if (!m) return null; const counts = { red: N(m[1]), blue: N(m[2]), green: N(m[3]) }; return counts[m[4]] / (counts.red + counts.blue + counts.green); }],
+  ["gridin slope through two points", (q) => { const m = q.match(/slope of the line that passes through the points \((−?\d+), (−?\d+)\) and \((−?\d+), (−?\d+)\)/); return m ? (N(m[4]) - N(m[2])) / (N(m[3]) - N(m[1])) : null; }],
+  ["gridin proportional rate", (q) => {
+    if (!/At the same (?:constant speed|rate)/.test(q)) return null;
+    const nums = (q.replace(/\(Enter[^)]*\)/, "").match(/\d+(?:\.\d+)?/g) || []).map(Number); if (nums.length !== 3) return null;
+    return (nums[0] / nums[1]) * nums[2];
+  }],
+  ["gridin mean with a missing value", (q) => {
+    const m = q.match(/^The mean of (\w+) numbers is (-?\d+(?:\.\d+)?)\. \w+ of the numbers are ([^.]+)\. What is the remaining number/); if (!m) return null;
+    const n = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7 }[m[1]]; if (!n) return null;
+    const known = m[3].replace(/ and /, ", ").split(",").map((t) => N(t.trim())); if (known.length !== n - 1) return { bad: "the stem lists " + known.length + " known numbers for a mean of " + n };
+    return Math.round((n * N(m[2]) - known.reduce((a, b) => a + b, 0)) * 1e6) / 1e6;
+  }],
+  ["gridin exponential growth or decay", (q) => {
+    const factor = /triples/.test(q) ? 3 : /doubles/.test(q) ? 2 : /cut in half/.test(q) ? 0.5 : null; if (!factor || !/after \d+ (?:hours|days|years)/.test(q)) return null;
+    const nums = (q.replace(/\(Enter[^)]*\)/, "").replace(/,/g, "").match(/\d+(?:\.\d+)?/g) || []).map(Number); if (nums.length !== 3) return null;
+    return nums[0] * factor ** (nums[2] / nums[1]);
+  }],
+  ["gridin a(bx − c) = dx + e", (q) => { const m = q.match(/^If (\d+)\((\d*)x\s*[−-]\s*(\d+)\)\s*=\s*(\d+)x\s*\+\s*(\d+), what is the value of x/); if (!m) return null; const [a, b, c, d, e] = [N(m[1]), m[2] === "" ? 1 : N(m[2]), N(m[3]), N(m[4]), N(m[5])]; return (e + a * c) / (a * b - d); }],
+  ["gridin vertex of an upward parabola", (q) => { const m = q.match(/f\(x\)\s*=\s*(\d*)x²\s*([+−-])\s*(\d+)x\s*([+−-])\s*(\d+) has its minimum value at x = k/); if (!m) return null; const a = m[1] === "" ? 1 : N(m[1]); return -(sign(m[2]) * N(m[3])) / (2 * a); }],
 ];
 
 function expectedFor(q) {
@@ -442,6 +485,13 @@ function generic(q, bank) {
     const withDecimal = q.choices.map((c) => /\.\d/.test(String(c)));
     if (nums.every((n) => n != null) && withDecimal.filter(Boolean).length === 1 && withDecimal[q.ans] && !q.choices.some((c, i) => i !== q.ans && /\.\d/.test(String(c)))) out.push({ level: "warn", rule: "format-leak", msg: `only the keyed choice has a decimal point: ${JSON.stringify(q.choices)}` });
   } else if (q.answer == null || choiceNumber(q.answer) == null && !/^[\d./\-−]+$/.test(String(q.answer))) out.push({ level: "fail", rule: "gridin-answer", msg: `grid-in answer ${JSON.stringify(q.answer)} is not a number` });
+  if (gridin) {
+    const G = require("../gridin.js"), parsed = G.parse(q.answer);
+    if (!parsed.ok) out.push({ level: "fail", rule: "gridin-untypeable", msg: `the stored answer ${JSON.stringify(q.answer)} cannot be typed in the grid: ${parsed.error}` });
+    else if (!G.matches(q, q.answer)) out.push({ level: "fail", rule: "gridin-self-match", msg: "the stored answer does not match itself" });
+    if (!Array.isArray(q.choices) || q.choices.length !== 1 || q.choices[0] !== q.answer || q.ans !== 0) out.push({ level: "fail", rule: "gridin-shape", msg: "a grid-in stores its answer as its only choice, with ans 0" });
+    if (!/\(Enter [^)]*\)\s*$/.test(String(q.q))) out.push({ level: "warn", rule: "gridin-prompt", msg: "a grid-in should end by saying how to enter the answer" });
+  }
   if (!q.exp || String(q.exp).length < 20) out.push({ level: "warn", rule: "short-explanation", msg: "explanation is missing or very short" });
   return out;
 }

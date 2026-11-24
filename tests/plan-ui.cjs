@@ -178,8 +178,8 @@ const openPlan = async (page, phone) => {
   ok((await page.locator(".ws-q").count()) === 10, "ten questions by default");
   ok((await page.locator(".ws-keygrid li").count()) === 10 && (await page.locator(".ws-exps li").count()) === 10, "an answer key and explanations are included");
   const ids = await page.evaluate(() => FunSATWorksheet.state.ids.slice());
-  const keyOk = await page.evaluate(() => FunSATWorksheet.state.ids.every((id, i) => { const q = byId(id); return document.querySelectorAll(".ws-keygrid li b")[i].textContent === String.fromCharCode(65 + q.ans); }));
-  ok(keyOk, "every answer-key letter matches the question's correct choice");
+  const keyOk = await page.evaluate(() => FunSATWorksheet.state.ids.every((id, i) => { const q = byId(id); return document.querySelectorAll(".ws-keygrid li b")[i].textContent === (q.kind === "gridin" ? q.answer : String.fromCharCode(65 + q.ans)); }));
+  ok(keyOk, "every answer-key entry matches the question's correct choice (the typed answer for a grid-in)");
   ok(await page.evaluate(() => FunSATWorksheet.state.ids.every((id) => /Algebra|Advanced|Problem|Geometry/.test(byId(id).domain))), "questions come from the math bank");
   await page.selectOption("#wsCount", "5");
   ok((await page.locator(".ws-q").count()) === 5, "the count changes the sheet");

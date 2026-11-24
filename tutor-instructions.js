@@ -87,7 +87,7 @@
   const letter = (i) => String.fromCharCode(65 + i);
 
   /** The question as the tutor sees it. The key and the practice explanation appear ONLY when the student has answered or given up.
-   *  opts: { chosen: undefined/null (not answered) | -1 ("I don't know") | index } */
+   *  opts: { chosen: undefined/null (not answered) | -1 ("I don't know") | index | -2 (typed and wrong), typed: the text a student typed } */
   function questionBlock(q, opts) {
     opts = opts || {};
     const chosen = opts.chosen;
@@ -97,12 +97,20 @@
     if (meta.length) lines.push("Topic: " + meta.join(" / "));
     if (q.passage && !String(q.q || "").includes(String(q.passage).slice(0, 40))) lines.push("Passage: " + clip(q.passage, 2400));
     lines.push("Question: " + clip(q.q, 2400));
-    lines.push("Choices: " + (q.choices || []).map((c, i) => letter(i) + ") " + c).join("   "));
+    const grid = q.kind === "gridin";
+    // A student-produced response has no choices: the student types a number (whole, decimal or fraction).
+    if (grid) lines.push("Answer format: student-produced response (no choices); the student types a number, a decimal or a fraction.");
+    else lines.push("Choices: " + (q.choices || []).map((c, i) => letter(i) + ") " + c).join("   "));
     if (answered) {
-      lines.push("Student's choice: " + (chosen === -1 ? "\"I don't know\"" : letter(chosen) + ") " + q.choices[chosen]));
-      lines.push("Correct answer: " + letter(q.ans) + ") " + q.choices[q.ans]);
+      if (grid) {
+        lines.push("Student's answer: " + (chosen === -1 ? "\"I don't know\"" : (opts.typed ? clip(opts.typed, 20) : "(not recorded)")));
+        lines.push("Correct answer: " + q.answer);
+      } else {
+        lines.push("Student's choice: " + (chosen === -1 ? "\"I don't know\"" : letter(chosen) + ") " + q.choices[chosen]));
+        lines.push("Correct answer: " + letter(q.ans) + ") " + q.choices[q.ans]);
+      }
       if (q.exp) lines.push("Practice explanation: " + clip(q.exp, 600));
-    } else lines.push("Student's choice: not answered yet.");
+    } else lines.push(grid ? "Student's answer: not answered yet." : "Student's choice: not answered yet.");
     return lines.join("\n");
   }
 

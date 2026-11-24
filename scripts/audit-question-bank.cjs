@@ -13,7 +13,7 @@ if (end < 0) {
   end = nextBrowser >= 0 ? app.indexOf('ALL_UNIQUE_QUESTIONS.push(...SUBJECT_PACK)', start) + nextBrowser : app.length;
 }
 const script = app;
-const context = vm.createContext({ console });
+const context = vm.createContext({ console, FunSATGridIn: require("../gridin.js") });
 vm.runInContext(script.slice(start, end), context);
 const questions = vm.runInContext('ALL_UNIQUE_QUESTIONS', context);
 

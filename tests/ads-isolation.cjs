@@ -56,7 +56,7 @@ const homeSlotState = (page) => page.evaluate(() => { const h = document.querySe
     // ---- no ads while a test runs, is paused, or is full screen
     await page.evaluate(() => { state.cfg.testType = "sat"; state.cfg.section = "math"; state.cfg.total = 6; });
     await page.click("#btnStart");
-    await page.waitForSelector("#questionCard .choice");
+    await require("./helpers/to-choice.cjs")(page);
     await page.waitForTimeout(500);
     ok((await visibleAds(page)).length === 0, "no ad is visible during a test: " + JSON.stringify(await visibleAds(page)));
     await page.evaluate(() => setPaused(true)); await page.waitForTimeout(200);

@@ -27,7 +27,7 @@ const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent
   await page.waitForSelector("body[data-workspace]");
   await page.evaluate(() => { try { arcade.close(); } catch (e) {} });
   await page.click("#btnStart");
-  await page.waitForSelector("#questionCard .choice", { timeout: 8000 });
+  await require("./helpers/to-choice.cjs")(page, { timeout: 8000 });
 
   await page.click("#btnStuckNudge");
   await page.waitForFunction(() => { const el = document.getElementById("qfxStuckOut"); return el && el.textContent.trim().length > 0 && el.textContent.indexOf("Thinking") < 0; }, { timeout: 8000 });

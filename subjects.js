@@ -306,6 +306,14 @@
   function init() {
     const btn = $id("btnSubjectPractice");
     if (btn) btn.addEventListener("click", openSubjects);
+    // Deep link from the /sat-math/ and /sat-reading-writing/ skill pages: /?practice=<test|section|domain|skill> opens the
+    // skill picker on that skill. It never starts a drill by itself, so an unfinished test is not replaced.
+    setTimeout(() => {
+      try {
+        const key = new URLSearchParams(location.search).get("practice");
+        if (key && window.FunSATSubjects) { refreshInventory(); if (INVENTORY[key]) window.FunSATSubjects.choose(key); }
+      } catch (e) {}
+    }, 0);
     window.FunSATSubjects = {
       open: openSubjects, inventory: () => (refreshInventory(), INVENTORY), start: startSubjectDrill,
       // The student's drill record on the skill a question belongs to (used to pitch the AI tutor's help).

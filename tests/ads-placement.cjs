@@ -111,7 +111,7 @@ const STATIC = [
       }
       // Results (after a short test), and the places that must carry nothing.
       await page.evaluate(() => { document.getElementById("btnHome").click(); state.cfg.testType = "sat"; state.cfg.section = "rw"; state.cfg.total = 4; });
-      await page.click("#btnStart"); await page.waitForSelector("#questionCard .choice");
+      await page.click("#btnStart"); await require("./helpers/to-choice.cjs")(page);
       for (let i = 0; i < 2; i++) { await page.locator("#questionCard .choice").nth(i % 2).click().catch(() => {}); await page.click("#btnCheck").catch(() => {}); await page.waitForTimeout(150); const nx = await page.$("#btnNext"); if (nx) await nx.click().catch(() => {}); await page.waitForTimeout(150); }
       const inTest = await measure(page);
       ok(inTest.shown.length === 0, label + " / test: ads showing during a test: " + inTest.shown.join(","));

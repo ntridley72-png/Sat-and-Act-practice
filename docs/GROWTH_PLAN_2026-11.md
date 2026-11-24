@@ -25,6 +25,37 @@ crawl, Lighthouse run or field data exists. Items are tagged **[measured locally
 2. Verified, not changed: ads are child-directed treatment, suppressed in tests and gameplay, and the privacy page says so;
    `ads.txt` correctly declares no third-party sellers; copy audit found no banned filler phrases in site copy.
 
+### Second pass (same day)
+
+3. **College admissions by year.** Every college profile in the app has an "Admissions by year" card (Latest, Fall 2023,
+   Fall 2022, Fall 2021) that shows one year at a time; the static college pages carry the same years in a crawlable
+   table. Source: IPEDS final files ADM2021/2022 (revised) and ADM2023, prices from IC2023_AY. The data loads only when a
+   profile opens. Test: `tests/college-years-ui.cjs`.
+4. **Corrected period labels.** The Scorecard dictionary labels admissions "Fall 2022" and tuition "2022-23", but the
+   shipped values match IPEDS Fall 2022 for only 27 of 500 colleges and match colleges' own Fall 2024 / 2024-25 figures
+   (Harvard 3.6% and $61,676; MIT 4.5% and $62,396). Labels now say Fall 2024 / 2024-25 and explain the discrepancy.
+5. **Photo audit.** 200 of 1,260 college photos removed by rules in `scripts/college_photo_audit.py` (run on every data
+   build): 149 dated before 2011 or archival survey scans, 25 scanned book or yearbook pages, 10 off topic (a NASA Mars
+   image for Caltech, Florida license plates, a FedEx jet, a weather sensor), 2 showing a different school (Fairleigh
+   Dickinson filed under Dickinson College), 13 with no recorded license, 1 undescribed. 16 colleges now show no photo
+   rather than a wrong one. Full list: `docs/college-photo-audit.json`. Test: `tests/college-photo-audit.test.cjs`.
+6. **Smaller and better-cached JavaScript.** The deployed `college-data.js` drops fields the browser never reads
+   (1.65 MB to 0.95 MB to parse, 214 KB to 175 KB gzip). `app.js` ships as `questions.js` (2.4 MB raw, 223 KB gzip) plus
+   `app.js` (650 KB, 181 KB gzip) so a code fix no longer re-downloads the question bank. Every css/js URL now carries its
+   own content hash, so a deploy invalidates only files that changed. The repository keeps single source files; the
+   split happens in the build (`scripts/slim-college-data.py`, `scripts/split-app-data.py`, `scripts/stamp-assets.py`).
+7. **SAT skill pages.** 28 pages (one per official Digital SAT skill) plus `/sat-math/` and `/sat-reading-writing/` hubs:
+   what the skill tests, how to approach it, 2 to 4 sample questions from the corrected bank with answers and per-choice
+   explanations in plain HTML, and drill links that open the app's skill picker on that skill (`/?practice=`). Linked from
+   the site-wide footer, /sat-practice/ and /free-test-prep/. Test: `tests/skill-pages.cjs`.
+8. **Test fixes.** Twelve browser tests assumed the first math question has choices; a module can now open on a typed
+   answer. They share `tests/helpers/to-choice.cjs`.
+9. Docs: `docs/KEYWORD_MAP.md`, `docs/DISTRIBUTION_KIT.md`, `docs/DESIGN_SYSTEM.md`.
+
+Found, not fixed: some templated Boundaries writing items pair the sentence being edited with an unrelated passage (the
+skill pages skip them; the app still serves them). The orange `--ws-accent` still exists under the blue skin (see
+DESIGN_SYSTEM.md).
+
 ## 3. Why pages may not be indexed (what is known)
 
 - Bing indexed one URL as of Oct 6; the site was new and mostly generated pages. Public guidance (Ahrefs, SE Roundtable)
@@ -62,5 +93,6 @@ the 20-site hands-on review asked for; that still needs to be done with a normal
 | 5 | Hands-on competitor review in a real browser, then a one-page brand/design brief | ~65 | Cannot be done from this sandbox |
 | 6 | Distribution: free-resource lists, school counselor lists, teacher directories | ~60 | Each needs verification of current submission rules before anyone submits; none were submitted |
 
-Not done: hands-on competitor visits, live crawl and Lighthouse, field Core Web Vitals, keyword volumes (none are
-invented), submissions to any directory, the college year selector, JS splitting, a design-system rewrite.
+Still not done: hands-on competitor visits, live crawl and Lighthouse, field Core Web Vitals, keyword volumes (none are
+invented), submissions to any directory (copy is ready in DISTRIBUTION_KIT.md), a full visual design overhaul (the
+system is documented and the accent debt named), and lazy-loading the question bank on demand.

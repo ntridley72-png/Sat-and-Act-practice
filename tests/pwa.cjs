@@ -49,7 +49,7 @@ const ok = (c, m) => { if (!c) fails.push(m); };
   ok(await page.evaluate(() => getComputedStyle(document.getElementById("screen-start")).display !== "none"), "the app opens with the network off");
   await page.evaluate(() => { state.cfg.testType = "sat"; state.cfg.section = "math"; state.cfg.total = 6; });
   await page.click("#btnStart");
-  await page.waitForSelector("#questionCard .choice", { timeout: 15000 });
+  await require("./helpers/to-choice.cjs")(page, { timeout: 15000 });
   const info = await page.evaluate(() => { const id = currentQids()[state.qi]; return { id, ans: byId(id).ans }; });
   await page.locator("#questionCard .choice").nth(info.ans === 0 ? 1 : 0).click();
   await page.click("#btnCheck");

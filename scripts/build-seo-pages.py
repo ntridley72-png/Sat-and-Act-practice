@@ -1549,9 +1549,23 @@ def asset_version():
     return h.hexdigest()[:8]
 
 
-def stamp_assets(html, version):
-    """Append ?v=<hash> to local css/js references."""
-    return ASSET_RE.sub(lambda m: f'{m.group(1)}="{m.group(2)}?v={version}"', html)
+def stamp_assets(html, version, page=None, out=None, _cache={}):
+    """Append ?v=<hash> to local css/js references. With page and out, the hash is that file's own content hash, so a
+    deploy changes the URL of exactly the files that changed and returning visitors keep the rest cached; the global
+    version is the fallback for a reference that does not resolve to a built file."""
+    def ver(ref):
+        if page is None or out is None:
+            return version
+        target = (out / ref.lstrip("/")) if ref.startswith("/") else (page.parent / ref)
+        try:
+            key = target.resolve()
+        except OSError:
+            return version
+        if key not in _cache:
+            import hashlib
+            _cache[key] = hashlib.sha1(key.read_bytes()).hexdigest()[:8] if key.is_file() else version
+        return _cache[key]
+    return ASSET_RE.sub(lambda m: f'{m.group(1)}="{m.group(2)}?v={ver(m.group(2))}"', html)
 
 
 def stamp_tree(out, version):
@@ -1561,7 +1575,7 @@ def stamp_tree(out, version):
     n = 0
     for f in out.rglob("*.html"):
         text = f.read_text(encoding="utf8")
-        stamped = stamp_assets(text, version)
+        stamped = stamp_assets(text, version, f, out)
         if stamped != text:
             f.write_text(stamped, encoding="utf8")
             n += 1

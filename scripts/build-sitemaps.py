@@ -20,7 +20,7 @@ TODAY = date.today().isoformat()
 
 SEGMENTS = {
     "colleges": (("colleges", "college-costs"), "0.7", "monthly"),
-    "sat-act": (("sat-scores", "act-scores", "sat-act-conversion"), "0.7", "monthly"),
+    "sat-act": (("sat-scores", "act-scores", "sat-act-conversion", "sat-math", "sat-reading-writing"), "0.7", "monthly"),
     "scholarships": (("scholarships",), "0.7", "monthly"),
     "guides": (("guides",), "0.7", "monthly"),
     "games": (("games", "unblocked-games"), "0.6", "monthly"),

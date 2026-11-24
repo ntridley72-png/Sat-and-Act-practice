@@ -24,7 +24,7 @@ async function openCalc(page) {
   await page.goto(APP, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => !!window.FunSATPlanScreen);
   await page.evaluate(() => { state.cfg.testType = "sat"; state.cfg.section = "math"; state.cfg.total = 6; document.getElementById("btnStart").click(); });
-  await page.waitForSelector("#questionCard .choice");
+  await require("./helpers/to-choice.cjs")(page);
   await page.click("#btnCalc");
   await page.waitForSelector("#calcPanel.show");
   await page.waitForTimeout(400);
@@ -101,7 +101,7 @@ async function dragHeader(page, dx, dy) {
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => !!window.FunSATPlanScreen);
     await page.evaluate(() => { state.cfg.testType = "sat"; state.cfg.section = "math"; state.cfg.total = 6; document.getElementById("btnStart").click(); });
-    await page.waitForSelector("#questionCard .choice");
+    await require("./helpers/to-choice.cjs")(page);
     await page.click("#btnCalc"); await page.waitForSelector("#calcPanel.show"); await page.waitForTimeout(400);
     const back = await dockRect(page);
     ok(Math.abs(back.l - saved.l) <= 2 && Math.abs(back.t - saved.t) <= 2, `the window reopens where it was left (${saved.l},${saved.t} -> ${back.l},${back.t})`);

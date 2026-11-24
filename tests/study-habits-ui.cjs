@@ -24,7 +24,7 @@ async function open(browser, width, height) {
 const startMath = async (page, n) => {
   await page.evaluate((total) => { state.cfg.testType = "sat"; state.cfg.section = "rw"; state.cfg.total = total; }, n);
   await page.click("#btnStart");
-  await page.waitForSelector("#questionCard .choice", { timeout: 15000 });
+  await require("./helpers/to-choice.cjs")(page, { timeout: 15000 });
   await page.waitForTimeout(300);
 };
 const answer = async (page, wantRight) => {
@@ -72,7 +72,7 @@ const answer = async (page, wantRight) => {
   await page.evaluate((id) => { profile.srs[id].due = Date.now() - 1000; saveProfile(); FunSATPlanScreen.render(); }, missed);
   ok(/Review 1 due now/.test(await page.textContent("#hbPlanReview")), "a due question offers a review");
   await page.click("#hbPlanReview");
-  await page.waitForSelector("#questionCard .choice", { timeout: 15000 });
+  await require("./helpers/to-choice.cjs")(page, { timeout: 15000 });
   ok((await page.evaluate(() => currentQids().length)) === 1 && (await page.evaluate((id) => currentQids()[0] === id, missed)), "the review session contains exactly the due question");
 
   // Right when due: advances to box 2, due in 3 days.

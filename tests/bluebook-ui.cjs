@@ -32,7 +32,7 @@ async function open(browser, width, height, kind) {
   }
   await page.evaluate(() => { state.cfg.total = 6; });
   await page.click("#btnStart");
-  await page.waitForSelector("#questionCard .choice", { timeout: 15000 });
+  await require("./helpers/to-choice.cjs")(page, { timeout: 15000 });
   await page.waitForTimeout(400);
   return { ctx, page, errs, requested };
 }

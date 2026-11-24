@@ -20,7 +20,12 @@ CUTOFF = date.today().year - 15
 YEAR = re.compile(r"(?<![0-9])(1[89][0-9]{2}|20[0-9]{2})(?![0-9])")
 BOOK_SCAN = re.compile(r"\((1[0-9]{3}|20[0-9]{2})\)[ _]?\(\d{9,12}\)")
 BOOK_WORDS = ("yearbook", "transactions of", "best literature", "report of the", "annual report", "bulletin of", "catalogue of", "the kaldron")
-OFF_TOPIC = ("mars odyssey", "mars reconnaissance", "hirise", "sulci", "crater", "nebula", "galaxy", "asteroid", "jupiter", "saturn")
+OFF_TOPIC = ("mars odyssey", "mars reconnaissance", "hirise", "sulci", "crater", "nebula", "galaxy", "asteroid", "jupiter", "saturn",
+             "license plate", "lcense plate", "police car", "weather station", "temperature sensor", "boeing", "locomotive")
+OLD_MARKERS = (" postcard", "loc gsc", "gottscho", " habs ")
+# A file about a different school whose name contains this college's name.
+CONFUSABLE = {"Dickinson College": "fairleigh"}
+UNDESCRIBED = re.compile(r"^(?:file:)?(?:book|image|photo|img|dsc|p\d*)[ _-]*\(?\d+\)?\.[a-z]+$", re.I)
 NO_LICENSE = {"wikimedia commons", ""}
 
 
@@ -30,17 +35,21 @@ def file_name(p):
     return urllib.parse.unquote(urllib.parse.unquote(name)).replace("_", " ").split("?")[0]
 
 
-def audit_photo(p):
+def audit_photo(p, college=""):
     """(keep, reason). reason is empty when kept."""
     name = file_name(p)
     low = name.lower()
+    if CONFUSABLE.get(college) and CONFUSABLE[college] in low:
+        return False, "shows a different school with a similar name"
+    if UNDESCRIBED.match(name.strip()):
+        return False, "file name says nothing about the college"
     years = [int(y) for y in YEAR.findall(name) if int(y) <= date.today().year]
     if BOOK_SCAN.search(name) or any(w in low for w in BOOK_WORDS):
         return False, "scanned book, journal or yearbook page"
     if any(w in low for w in OFF_TOPIC):
         return False, "not a campus photo"
-    if " habs " in f" {low} " or re.search(r"\bhabs\b", low):
-        return False, "historic survey scan (decades old)"
+    if re.search(r"\bhabs\b", low) or any(m in f" {low} " for m in OLD_MARKERS):
+        return False, "historic survey scan, archive print or postcard (decades old)"
     if years and max(years) < CUTOFF:
         return False, f"photo dated {max(years)} (older than {CUTOFF})"
     if str(p.get("license") or "").strip().lower() in NO_LICENSE:
@@ -59,7 +68,7 @@ def main(check=False):
         before += len(imgs)
         keep = []
         for p in imgs:
-            ok, why = audit_photo(p)
+            ok, why = audit_photo(p, c["n"])
             if ok:
                 keep.append(p)
             else:

@@ -56,7 +56,7 @@ const ok = (c, m) => { if (!c) fails.push(m); };
     await page.goto(APP + "?nosw", { waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => !!window.FunSATPlanScreen); await page.waitForTimeout(400);
     await page.evaluate(() => { state.cfg.testType = "sat"; state.cfg.section = "math"; state.cfg.total = 6; document.getElementById("btnStart").click(); });
-    await page.waitForSelector("#questionCard .choice"); await page.waitForTimeout(400);
+    await require("./helpers/to-choice.cjs")(page); await page.waitForTimeout(400);
     ok(await page.evaluate(() => document.querySelector("#screen-test .workspace-question-body").style.getPropertyValue("--fit") === ""), "a phone was given a fit scale (phones keep their own layout)");
     await page.context().close();
   }

@@ -28,7 +28,7 @@ const ok = (c, m) => { if (!c) fails.push(m); };
   ok(await page.evaluate(() => typeof FunSATTutor.system === "function"), "tutor instructions module is loaded in the app");
   await page.evaluate(() => { state.cfg.testType = "sat"; state.cfg.section = "math"; state.cfg.total = 6; });
   await page.click("#btnStart");
-  await page.waitForSelector("#questionCard .choice");
+  await require("./helpers/to-choice.cjs")(page);
   const info = await page.evaluate(() => { const q = byId(currentQids()[state.qi]); return { id: q.id, ans: q.ans, key: q.choices[q.ans], exp: q.exp, math: isMathQ(q) }; });
 
   // ---- 1) A follow-up question before answering: instructions first, question second, key withheld, server guard on.

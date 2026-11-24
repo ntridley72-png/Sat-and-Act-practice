@@ -163,6 +163,7 @@ installed; everything runs in a browser tab, including on managed school Chromeb
 <li><a href="/sat-practice-test/">Free digital SAT practice test</a> with module timing and an unofficial 400-1600 estimate.</li>
 <li><a href="/act-practice-test/">Free ACT practice test</a> covering English, Math, Reading, and optional Science, with a 1-36 estimate.</li>
 <li><a href="/sat-practice/">SAT practice overview</a> and <a href="/act-practice/">ACT practice overview</a> for section-by-section advice.</li>
+<li>Practice one skill at a time: <a href="/sat-math/">SAT math by skill</a> and <a href="/sat-reading-writing/">SAT reading and writing by skill</a>, each with worked examples.</li>
 </ul>
 <h2>Score tools</h2>
 <p><a href="/score-calculators/">Score calculators</a> explain how the estimates are produced and what they cannot
@@ -190,6 +191,8 @@ section, each split into two modules, with the built-in Desmos graphing calculat
 <li><a href="/sat-practice-test/">Full digital SAT practice test</a> with an unofficial 400-1600 estimate.</li>
 <li>Reading &amp; Writing: <a href="/guides/what-is-a-good-sat-score/">what a good score looks like</a> before you set targets.</li>
 <li>Math: get fluent with the <a href="/guides/desmos-calculator-digital-sat/">Desmos calculator</a>; it is the single fastest score lever for many students.</li>
+<li>One skill at a time: <a href="/sat-math/">SAT math by skill</a> (algebra, advanced math, data analysis, geometry) and
+<a href="/sat-reading-writing/">SAT reading and writing by skill</a> (evidence, inferences, transitions, boundaries and more), each with worked examples.</li>
 </ul>
 <h2>Timing</h2>
 <p><a href="/guides/how-long-is-the-digital-sat/">How long the digital SAT is</a> covers the exact section timings and

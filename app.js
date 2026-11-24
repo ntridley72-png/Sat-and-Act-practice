@@ -3004,6 +3004,7 @@ BANK.rw.push(...SUBJECT_PACK.filter((q) => q.bank === "rw"));
 if (typeof ACT_SCIENCE !== "undefined") ACT_SCIENCE.push(...SUBJECT_PACK.filter((q) => q.bank === "science"));
 ALL_UNIQUE_QUESTIONS.push(...SUBJECT_PACK);
 
+/*__APP_CODE_START__ (the build ships everything above this line as questions.js; see scripts/split-app-data.py) */
 /* Logic-audit pass (see scripts/verify-question-logic.cjs and docs/QUESTION_LOGIC_AUDIT.md).
    Deterministic corrections applied to the loaded bank:
    1. withhold items that cannot be repaired in place (no grammatical answer exists, or an exact duplicate);

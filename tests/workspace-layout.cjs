@@ -118,7 +118,7 @@ const MEASURE = function () {
             await page.waitForSelector("body[data-workspace]");
             await page.evaluate(() => { try { arcade.close(); } catch (e) {} });
             await page.click("#btnStart");
-            await page.waitForSelector("#questionCard .choice", { timeout: 15000 });
+            await require("./helpers/to-choice.cjs")(page, { timeout: 15000 });
             if (stem === "long") {
               await page.evaluate((text) => {
                 const el = document.querySelector(".qtext");

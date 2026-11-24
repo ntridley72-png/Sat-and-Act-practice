@@ -7,6 +7,9 @@ const http = require("node:http");
 const assert = require("node:assert/strict");
 
 const ROOT = path.join(__dirname, "..");
+// SERVE_PUBLIC=1 runs the same checks against the built site (public/), which ships the slimmed college-data.js.
+const SERVE = process.env.SERVE_PUBLIC ? path.join(ROOT, "public") : ROOT;
+const SHELL = process.env.SERVE_PUBLIC ? "index.html" : "SAT & ACT Practice.html";
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".svg": "image/svg+xml", ".json": "application/json" };
 const years = JSON.parse(fs.readFileSync(path.join(ROOT, "scripts/data/college-years.json"), "utf8"));
 const HARVARD = 166027;
@@ -16,7 +19,7 @@ const HARVARD = 166027;
   const server = http.createServer((req, res) => {
     const url = decodeURIComponent(req.url.split("?")[0]);
     requested.push(url);
-    const file = path.join(ROOT, url === "/" ? "SAT & ACT Practice.html" : url.slice(1));
+    const file = path.join(SERVE, url === "/" ? SHELL : url.slice(1));
     fs.readFile(file, (err, buf) => {
       if (err) { res.writeHead(404); res.end(); return; }
       res.writeHead(200, { "Content-Type": TYPES[path.extname(file)] || "application/octet-stream" });
@@ -61,6 +64,14 @@ const HARVARD = 166027;
       const o = years.colleges[HARVARD][other];
       if (o.ti !== y.ti) assert.ok(!text.includes("$" + o.ti.toLocaleString("en-US")), "no " + other + " tuition mixed into " + key);
     }
+  }
+  const gallery = await page.evaluate(() => [...document.querySelectorAll("#collegeDetail .college-photo")].map((f) => ({
+    src: f.querySelector("img").getAttribute("src"), credit: f.querySelector("figcaption").textContent, href: (f.querySelector("figcaption a") || {}).href || "" })));
+  assert.ok(gallery.length >= 1, "Harvard gallery renders");
+  for (const g of gallery) {
+    assert.match(g.src, /^https:\/\/(upload|thumb)\.wikimedia\.org\//);
+    assert.match(g.credit, / · /, "credit shows author and license: " + g.credit);
+    assert.match(g.href, /commons\.wikimedia\.org\/wiki\//);
   }
   await card.locator('[data-cyear="latest"]').click();
   assert.ok((await card.textContent()).includes("3.6%"));

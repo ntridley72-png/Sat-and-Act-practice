@@ -155,7 +155,7 @@ const scenarios = [
     name: "practice",
     async go(page) {
       await page.click("#btnStart");
-      await page.waitForSelector("#questionCard .choice", { timeout: 15000 });
+      await require("./helpers/to-choice.cjs")(page, { timeout: 15000 });
       await page.waitForTimeout(200);
     },
   },
@@ -163,7 +163,7 @@ const scenarios = [
     name: "practice-answered",
     async go(page) {
       await page.click("#btnStart");
-      await page.waitForSelector("#questionCard .choice", { timeout: 15000 });
+      await require("./helpers/to-choice.cjs")(page, { timeout: 15000 });
       await page.locator("#questionCard .choice").first().click();
       await page.locator(".qfx-check, #btnCheck").first().click().catch(() => {});
       await page.waitForTimeout(400);
@@ -173,7 +173,7 @@ const scenarios = [
     name: "practice-calc",
     async go(page) {
       await page.click("#btnStart");
-      await page.waitForSelector("#questionCard .choice", { timeout: 15000 });
+      await require("./helpers/to-choice.cjs")(page, { timeout: 15000 });
       await page.click("#btnCalc");
       await page.waitForTimeout(500);
     },

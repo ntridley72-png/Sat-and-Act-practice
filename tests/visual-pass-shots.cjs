@@ -27,9 +27,9 @@ const SEED = {
 
 const SCREENS = [
   ["home", async (p) => { const c = p.locator("#homeScoreCard"); if (await c.count()) await c.click().catch(() => {}); await p.waitForTimeout(400); }],
-  ["practice", async (p) => { await p.click("#btnStart"); await p.waitForSelector("#questionCard .choice", { timeout: 15000 }); await p.waitForTimeout(250); }],
-  ["practice-answered", async (p) => { await p.click("#btnStart"); await p.waitForSelector("#questionCard .choice", { timeout: 15000 }); await p.locator("#questionCard .choice").first().click(); await p.locator(".qfx-check").first().click().catch(() => {}); await p.waitForTimeout(500); }],
-  ["practice-calc", async (p) => { await p.click("#btnStart"); await p.waitForSelector("#questionCard .choice", { timeout: 15000 }); await p.click("#btnCalc"); await p.waitForTimeout(700); }],
+  ["practice", async (p) => { await p.click("#btnStart"); await require("./helpers/to-choice.cjs")(p, { timeout: 15000 }); await p.waitForTimeout(250); }],
+  ["practice-answered", async (p) => { await p.click("#btnStart"); await require("./helpers/to-choice.cjs")(p, { timeout: 15000 }); await p.locator("#questionCard .choice").first().click(); await p.locator(".qfx-check").first().click().catch(() => {}); await p.waitForTimeout(500); }],
+  ["practice-calc", async (p) => { await p.click("#btnStart"); await require("./helpers/to-choice.cjs")(p, { timeout: 15000 }); await p.click("#btnCalc"); await p.waitForTimeout(700); }],
   ["college", async (p) => { await p.click("#btnCollege"); await p.waitForSelector("#screen-college", { state: "visible" }); await p.waitForTimeout(1200); }],
   ["scholarships", async (p) => { await p.click("#btnScholarships"); await p.waitForSelector("#screen-scholarships", { state: "visible" }); const c = p.locator(".schl-card").first(); if (await c.count()) await c.click(); await p.waitForTimeout(500); }],
 ];

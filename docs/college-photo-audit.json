@@ -1,14 +1,16 @@
 {
  "cutoffYear": 2011,
  "photosBefore": 1260,
- "photosAfter": 1072,
- "removed": 188,
+ "photosAfter": 1060,
+ "removed": 200,
  "byReason": {
   "scanned book, journal or yearbook page": 25,
-  "photo dated YYYY (older than YYYY)": 113,
-  "historic survey scan (decades old)": 36,
+  "photo dated YYYY (older than YYYY)": 109,
+  "historic survey scan, archive print or postcard (decades old)": 40,
+  "not a campus photo": 10,
+  "file name says nothing about the college": 1,
   "license not recorded": 13,
-  "not a campus photo": 1
+  "shows a different school with a similar name": 2
  },
  "collegesLeftWithoutPhotos": [
   "Bennington College",
@@ -17,6 +19,7 @@
   "Clemson University",
   "College of the Ozarks",
   "Dartmouth College",
+  "Dickinson College",
   "Hallmark University",
   "North Carolina A & T State University",
   "Oklahoma State University",
@@ -44,7 +47,7 @@
    "college": "Allegheny College",
    "id": 210669,
    "file": "File:Historic American Buildings Survey, William J. Bulger, Photographer, 1937 EXTERIOR (FRONT ELEVATION). - Allegheny College, Bentley Hall, Meadville, Crawford County, PA HABS PA,20-MEDVI,2A-1.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Anderson University",
@@ -53,10 +56,28 @@
    "reason": "photo dated 1920 (older than 2011)"
   },
   {
+   "college": "Appalachian State University",
+   "id": 197869,
+   "file": "File:App State campus police car.jpg",
+   "reason": "not a campus photo"
+  },
+  {
    "college": "Auburn University",
    "id": 100858,
    "file": "File:Aerial View of the Gator Bowl Stadium During Show at the 1954 Game Between Auburn University and Baylor University- Jacksonville, Florida (5296888516).jpg",
    "reason": "photo dated 1954 (older than 2011)"
+  },
+  {
+   "college": "Ave Maria University",
+   "id": 446048,
+   "file": "File:Ave Maria University - Florida sample license plate.png",
+   "reason": "not a campus photo"
+  },
+  {
+   "college": "Ball State University",
+   "id": 150136,
+   "file": "File:Book (6130919542).jpg",
+   "reason": "file name says nothing about the college"
   },
   {
    "college": "Baylor University",
@@ -92,7 +113,7 @@
    "college": "Berea College",
    "id": 156295,
    "file": "File:EAST VIEW OF SIDE ELEVATION - Berea College, Lincoln Hall, Berea College, Berea, Madison County, KY HABS KY,76-BER,1A-4.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Boston College",
@@ -110,25 +131,31 @@
    "college": "Bowdoin College",
    "id": 161004,
    "file": "File:Historic American Buildings Survey COPY OF DRAWING SECTION THROUGH MUSEUM, MAY 1873 ORIGINAL IN BOWDOIN LIBRARY ARCHIVES - Bowdoin College, Massachusetts Hall, Bath Street, Brunswick HABS ME,3-BRU,1-4.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Bowdoin College",
    "id": 161004,
    "file": "File:Historic American Buildings Survey COPY OF ELEVATION SKETCH WITH DOOR AND PORCH AT END, ORIGINAL IN BOWDOIN LIBRARY ARCHIVES - Bowdoin College, Massachusetts Hall, Bath Street, HABS ME,3-BRU,1-5.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Bowdoin College",
    "id": 161004,
    "file": "File:Historic American Buildings Survey COPY OF FIRST FLOOR PLAN, ORIGINAL IN BOWDOIN LIBRARY ARCHIVES - Bowdoin College, Massachusetts Hall, Bath Street, Brunswick, Cumberland County, ME HABS ME,3-BRU,1-7.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Brandeis University",
    "id": 165015,
    "file": "File:Elementa physiologiae corporis humani (1776) (14596400880).jpg",
    "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Brandeis University",
+   "id": 165015,
+   "file": "File:Brandeis University entrance booth and police car.jpg",
+   "reason": "not a campus photo"
   },
   {
    "college": "Brigham Young University",
@@ -194,7 +221,7 @@
    "college": "California State University-Long Beach",
    "id": 110583,
    "file": "File:Copy Photograph (original print in Whittington Photograph Collection, California State University Long Beach, Special Collections) Dick Whittington, photographer, May 1939 HABS CAL,19-LOSAN,64-A-53.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Carleton College",
@@ -218,19 +245,19 @@
    "college": "Clemson University",
    "id": 217882,
    "file": "File:EAST FRONT - Fort Hill, Clemson University Campus, Clemson, Pickens County, SC HABS SC,39-CLEM,1-1.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Clemson University",
    "id": 217882,
    "file": "File:East elevation - Fort Hill, Clemson University Campus, Clemson, Pickens County, SC HABS SC,39-CLEM,1-18.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Clemson University",
    "id": 217882,
    "file": "File:Fort Hill, Clemson University Campus, Clemson, Pickens County, SC HABS SC,39-CLEM,1- (sheet 15 of 28).tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "College of the Holy Cross",
@@ -302,13 +329,13 @@
    "college": "Davidson College",
    "id": 198385,
    "file": "File:Davidson College, Eumanean Hall, Davidson, Mecklenburg County, NC HABS NC,60-DAVSO,1A- (sheet 0 of 2).tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Davidson College",
    "id": 198385,
    "file": "File:Davidson College, Philanthropic Hall, Davidson, Mecklenburg County, NC HABS NC,60-DAVSO,1B- (sheet 0 of 2).png",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Denison University",
@@ -323,6 +350,18 @@
    "reason": "photo dated 1905 (older than 2011)"
   },
   {
+   "college": "Dickinson College",
+   "id": 212009,
+   "file": "File:Fairleigh Dickinson College Library, Rutherford, New Jersey. LOC gsc.5a24544.jpg",
+   "reason": "shows a different school with a similar name"
+  },
+  {
+   "college": "Dickinson College",
+   "id": 212009,
+   "file": "File:Fairleigh-Dickinson College, Rutherford, New Jersey. LOC gsc.5a16751.jpg",
+   "reason": "shows a different school with a similar name"
+  },
+  {
    "college": "Emory University",
    "id": 139658,
    "file": "File:Emory-university-quad.jpg",
@@ -332,31 +371,37 @@
    "college": "Fisk University",
    "id": 220181,
    "file": "File:Detail, south (principal) entrance - Fisk University, Jubilee Hall, Seventeenth Avenue, North, Nashville, Davidson County, TN HABS TENN,19-NASH,7A-4.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Fisk University",
    "id": 220181,
    "file": "File:Detail, tower from east - Fisk University, Jubilee Hall, Seventeenth Avenue, North, Nashville, Davidson County, TN HABS TENN,19-NASH,7A-6.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Fisk University",
    "id": 220181,
    "file": "File:Detail, tower from southwest - Fisk University, Jubilee Hall, Seventeenth Avenue, North, Nashville, Davidson County, TN HABS TENN,19-NASH,7A-5.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Fisk University",
    "id": 220181,
    "file": "File:EAST SIDE AND NORTH (REAR) ELEVATIONS - Fisk University, Jubilee Hall, Seventeenth Avenue, North, Nashville, Davidson County, TN HABS TENN,19-NASH,7A-13.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Fisk University",
    "id": 220181,
    "file": "File:EAST SIDE ELEVATION - Fisk University, Jubilee Hall, Seventeenth Avenue, North, Nashville, Davidson County, TN HABS TENN,19-NASH,7A-12.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
+  },
+  {
+   "college": "Florida Gulf Coast University",
+   "id": 433660,
+   "file": "File:Florida Gulf Coast University - Florida sample license plate.png",
+   "reason": "not a campus photo"
   },
   {
    "college": "Franklin and Marshall College",
@@ -386,7 +431,7 @@
    "college": "Hallmark University",
    "id": 225201,
    "file": "File:N168FE Hallmark University (FEDEX) 1966 Boeing 727-22(F) serial 18865 (24572030866).jpg",
-   "reason": "photo dated 1966 (older than 2011)"
+   "reason": "not a campus photo"
   },
   {
    "college": "Hamilton College",
@@ -434,19 +479,19 @@
    "college": "Howard University",
    "id": 131520,
    "file": "File:DETAIL, NORTH ENTRANCE - Howard University, Founders Library, 2400 Sixth Street Northwest, Washington, District of Columbia, DC HABS DC,WASH,236-A-7.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Howard University",
    "id": 131520,
    "file": "File:DETAIL, PLAQUE ON NORTH FACADE - Howard University, Founders Library, 2400 Sixth Street Northwest, Washington, District of Columbia, DC HABS DC,WASH,236-A-10.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Howard University",
    "id": 131520,
    "file": "File:DETAIL, PLAQUE ON SOUTH FACADE - Howard University, Founders Library, 2400 Sixth Street Northwest, Washington, District of Columbia, DC HABS DC,WASH,236-A-9.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Illinois Wesleyan University",
@@ -459,6 +504,12 @@
    "id": 151351,
    "file": "File:Sample Gates, Indiana University Bloomington, 2010.jpg",
    "reason": "photo dated 2010 (older than 2011)"
+  },
+  {
+   "college": "James Madison University",
+   "id": 232423,
+   "file": "File:James Madison University Cleveland Hall postcard.png",
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "James Madison University",
@@ -650,43 +701,55 @@
    "college": "Oklahoma State University",
    "id": 207388,
    "file": "File:VIEW OF BELLTOWER, SOUTHEAST CORNER OF BUILDING - Cherokee Female Seminary, Northeastern Oklahoma State University Campus, Tahlequah, Cherokee County, OK HABS OKLA,11-TAHL,1A-5.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Oklahoma State University",
    "id": 207388,
    "file": "File:DETAIL OF MAIN (SOUTH) ENTRANCE - Cherokee Female Seminary, Northeastern Oklahoma State University Campus, Tahlequah, Cherokee County, OK HABS OKLA,11-TAHL,1A-6.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Oklahoma State University",
    "id": 207388,
    "file": "File:DETAIL OF NEWEL POST AND BALUSTER WORK - Cherokee Female Seminary, Northeastern Oklahoma State University Campus, Tahlequah, Cherokee County, OK HABS OKLA,11-TAHL,1A-10.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Oklahoma State University",
    "id": 207388,
    "file": "File:EAST ELEVATION - Cherokee Female Seminary, Northeastern Oklahoma State University Campus, Tahlequah, Cherokee County, OK HABS OKLA,11-TAHL,1A-3.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Oklahoma State University",
    "id": 207388,
    "file": "File:GENERAL VIEW, CLOSER - Cherokee Female Seminary, Northeastern Oklahoma State University Campus, Tahlequah, Cherokee County, OK HABS OKLA,11-TAHL,1A-2.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Oklahoma State University",
    "id": 207388,
    "file": "File:GENERAL VIEW OF SEMINARY, FROM SOUTH - Cherokee Female Seminary, Northeastern Oklahoma State University Campus, Tahlequah, Cherokee County, OK HABS OKLA,11-TAHL,1A-1.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Paul Quinn College",
    "id": 227429,
    "file": "File:Paul Quinn College 1898.jpg",
    "reason": "photo dated 1898 (older than 2011)"
+  },
+  {
+   "college": "Pennsylvania State University",
+   "id": 214777,
+   "file": "File:2025-08-30 19 50 57 The State College cooperative weather station (with the Walker Building visible in the background) on the campus of Pennsylvania State University in State College, Centre County, Pennsylvania.jpg",
+   "reason": "not a campus photo"
+  },
+  {
+   "college": "Pennsylvania State University",
+   "id": 214777,
+   "file": "File:2025-08-30 19 51 03 A Cotton Region Shelter and a Nimbus electronic temperature sensor housing at the weather station at the Walker Building on the campus of Pennsylvania State University in State College, Centre County, Pennsylvania.jpg",
+   "reason": "not a campus photo"
   },
   {
    "college": "Pomona College",
@@ -782,7 +845,7 @@
    "college": "Swarthmore College",
    "id": 216287,
    "file": "File:Swarthmore College postcard 1960s.png",
-   "reason": "photo dated 1960 (older than 2011)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Syracuse University",
@@ -794,13 +857,19 @@
    "college": "Syracuse University",
    "id": 196413,
    "file": "File:NORTH FRONT - Syracuse University, Hall of Languages, Syracuse University Campus, Syracuse, Onondaga County, NY HABS NY,34-SYRA,25B-1.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "The University of Texas at Austin",
    "id": 228778,
    "file": "File:Jester Dormitory on the campus of the University of Texas at Austin (19 03 2003).jpg",
    "reason": "photo dated 2003 (older than 2011)"
+  },
+  {
+   "college": "Thomas University",
+   "id": 141167,
+   "file": "File:Florida St.Thomas University lcense plate.jpg",
+   "reason": "not a campus photo"
   },
   {
    "college": "Tufts University",
@@ -836,7 +905,7 @@
    "college": "Tuskegee University",
    "id": 102377,
    "file": "File:Rockefeller Hall Bath House, Tuskegee University Campus, Tuskegee, Macon County, AL HABS ALA,44-TUSG,11- (sheet 1 of 6).png",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "United States Air Force Academy",
@@ -878,7 +947,7 @@
    "college": "University of California-Los Angeles",
    "id": 110662,
    "file": "File:Detail view of Powell Library main reading room rotunda ceiling, east section. - University of California Los Angeles, Powell Library, Westwood, Los Angeles, Los Angeles County, CA HABS CA-2678-A-13.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "University of California-Santa Cruz",
@@ -902,7 +971,7 @@
    "college": "University of Cincinnati",
    "id": 201885,
    "file": "File:RPPC postcard of the University of Cincinnati main campus in 1912, depicting Baldwin Hall on the left and Schmidlapp Gymnasium on the right.jpg",
-   "reason": "photo dated 1912 (older than 2011)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "University of Florida",
@@ -962,7 +1031,7 @@
    "college": "University of Miami",
    "id": 135726,
    "file": "File:University of Miami, Chemistry Laboratory Building, 1300 Campo Santo Drive, Coral Gables, Miami-Dade County, FL HABS FL-471-B (sheet 1 of 4).tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "University of Missouri-Columbia",
@@ -987,6 +1056,12 @@
    "id": 199148,
    "file": "File:Bulletin of the University of North Carolina at Greensboro (1969-1970) - DPLA - 277b6446dccc26ddd6798fd3539e3ed5 (page 272).jpg",
    "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "University of North Florida",
+   "id": 136172,
+   "file": "File:University of North Florida - Florida sample license plate.png",
+   "reason": "not a campus photo"
   },
   {
    "college": "University of Oregon",
@@ -1028,13 +1103,13 @@
    "college": "University of Virginia",
    "id": 234076,
    "file": "File:University of Virginia, Pavilion III, West Lawn, University of Virginia Campus, Charlottesville, Charlottesville, VA HABS VA,2-CHAR,1D- (sheet 1 of 10).tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "University of Virginia",
    "id": 234076,
    "file": "File:University of Virginia, Pavilion IV, East Lawn, University of Virginia campus, Charlottesville, Charlottesville, VA HABS VA,2-CHAR,1J- (sheet 10 of 10).tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "University of Washington-Seattle Campus",
@@ -1052,13 +1127,13 @@
    "college": "Utah State University",
    "id": 230728,
    "file": "File:Cover Sheet - Utah State University, Lund Hall, 3500 Old Main Hill, Logan, Cache County, UT HABS UT-140-A (sheet 1 of 7).png",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Vanderbilt University",
    "id": 221999,
    "file": "File:Detail, east tower roof - Vanderbilt University, Gymnasium, Twenty-third Avenue, South and West End Boulevard, Nashville, Davidson County, TN HABS TENN,19-NASH,5B-4.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Vanderbilt University",
@@ -1070,13 +1145,13 @@
    "college": "Vanderbilt University",
    "id": 221999,
    "file": "File:Detail, west tower roof - Vanderbilt University, Gymnasium, Twenty-third Avenue, South and West End Boulevard, Nashville, Davidson County, TN HABS TENN,19-NASH,5B-5.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Vassar College",
    "id": 197133,
    "file": "File:Josselyn Hall postcard, Vassar College, 1927 or before.jpg",
-   "reason": "photo dated 1927 (older than 2011)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Vassar College",
@@ -1148,13 +1223,13 @@
    "college": "Williams College",
    "id": 168342,
    "file": "File:GENERAL VIEW FROM SOUTHEAST - Williams College, President's House, Williams College Campus, Williamstown, Berkshire County, MA HABS MASS,2-WILL,1-1.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   },
   {
    "college": "Williams College",
    "id": 168342,
    "file": "File:SOUTHWEST CORNER OF SOUTH SIDE, WOOD QUOINING, DENTIL BAND WITH CROWNING BALLUSTRADE - Williams College, President's House, Williams College Campus, Williamstown, Berkshire County HABS MASS,2-WILL,1-3.tif",
-   "reason": "historic survey scan (decades old)"
+   "reason": "historic survey scan, archive print or postcard (decades old)"
   }
  ]
 }

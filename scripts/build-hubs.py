@@ -165,6 +165,8 @@ installed; everything runs in a browser tab, including on managed school Chromeb
 <li><a href="/sat-practice/">SAT practice overview</a> and <a href="/act-practice/">ACT practice overview</a> for section-by-section advice.</li>
 <li>Practice one skill at a time: <a href="/sat-math/">SAT math by skill</a> and <a href="/sat-reading-writing/">SAT reading and writing by skill</a>, each with worked examples.</li>
 </ul>
+<h2>Calculators</h2>
+<p><a href="/calculators/">GPA, grade and superscore calculators</a>: weighted and unweighted GPA, cumulative GPA, what you need on a final, and SAT and ACT superscores.</p>
 <h2>Score tools</h2>
 <p><a href="/score-calculators/">Score calculators</a> explain how the estimates are produced and what they cannot
 do. For a single number, jump straight to the <a href="/sat-practice-test/">SAT</a> or
@@ -235,6 +237,7 @@ estimate, shown as a range rather than a single false-precision number.</p>
 <ul>
 <li><a href="/sat-practice-test/">SAT practice test with score estimate</a></li>
 <li><a href="/act-practice-test/">ACT practice test with composite estimate</a></li>
+<li><a href="/calculators/sat-superscore/">SAT superscore calculator</a>, <a href="/calculators/act-score/">ACT composite calculator</a> and <a href="/calculators/act-superscore/">ACT superscore calculator</a> for official scores you already have</li>
 </ul>
 <h2>How the maths works</h2>
 <p>The full explanation, including the published curves and the ACT composite rule, is on the

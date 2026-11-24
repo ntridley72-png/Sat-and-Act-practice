@@ -41,7 +41,7 @@ def segment_for(path):
 def priority_for(path, seg):
     if path == "/":
         return "1.0"
-    if path in ("/sat-practice-test/", "/act-practice-test/", "/score-calculator/", "/games/", "/unblocked-games/"):
+    if path in ("/sat-practice-test/", "/act-practice-test/", "/score-calculator/", "/games/", "/unblocked-games/", "/calculators/"):
         return "0.9"
     if path in ("/free-test-prep/", "/sat-practice/", "/act-practice/", "/score-calculators/", "/colleges-by-state/", "/college-admissions/"):
         return "0.8"

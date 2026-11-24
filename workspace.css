@@ -1398,3 +1398,7 @@ body[data-workspace] .gi-frac{display:inline-flex;flex-direction:column;align-it
 body[data-workspace] .gi-frac>span:first-child{padding:0 6px 3px;border-bottom:2px solid currentColor}
 body[data-workspace] .gi-frac>span:last-child{padding:3px 6px 0}
 body[data-workspace] .gi-err{min-height:20px;margin-top:6px;font-size:13px;font-weight:600;color:var(--ws-error,#a62d29)}
+/* What-if numbers from a calculator link: on screen only until the student keeps them. */
+.college-whatif{border:1px solid var(--ws-ink);background:var(--ws-soft);padding:10px 14px;margin:0 0 14px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between}
+.college-whatif p{margin:0;font-size:14px}
+.cc-calc-link{margin:2px 0 8px;font-size:12.5px}

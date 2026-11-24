@@ -22,7 +22,44 @@
     if (!Array.isArray(profile.college.activities)) profile.college.activities = [];
     return profile.college;
   }
-  function saveCollege() { try { saveProfile(); } catch (e) {} }
+  // What-if numbers from a calculator link (/?open=college&gpa=3.2&hyp=1). They change the estimates on screen only;
+  // saving the profile always writes the student's own numbers until they choose to keep the what-if ones.
+  let linkWhatIf = null;   // { fields: {gpa, gpaScale, sat, act, testType}, original: {...} }
+  function saveCollege() {
+    if (!linkWhatIf) { try { saveProfile(); } catch (e) {} return; }
+    const c = cp(), shown = {};
+    Object.keys(linkWhatIf.original).forEach((k) => { shown[k] = c[k]; c[k] = linkWhatIf.original[k]; });
+    try { saveProfile(); } catch (e) {}
+    Object.assign(c, shown);
+  }
+  function applyLinkNumbers() {
+    let q; try { q = new URLSearchParams(location.search); } catch (e) { return false; }
+    if (q.get("open") !== "college") return false;
+    const c = cp(), fields = {};
+    const gpa = Number(q.get("gpa")), sat = Number(q.get("sat")), act = Number(q.get("act"));
+    if (Number.isFinite(gpa) && gpa > 0 && gpa <= 5) { fields.gpa = Math.round(gpa * 100) / 100; fields.gpaScale = ["4uw", "4w", "5w", "100"].includes(q.get("scale")) ? q.get("scale") : "4uw"; }
+    if (Number.isFinite(sat) && sat >= 400 && sat <= 1600) { fields.sat = Math.round(sat / 10) * 10; fields.testType = "sat"; }
+    if (Number.isFinite(act) && act >= 1 && act <= 36) { fields.act = Math.round(act); if (!fields.sat) fields.testType = "act"; }
+    if (Object.keys(fields).length) {
+      if (q.get("hyp") === "1") {
+        const original = {}; Object.keys(fields).forEach((k) => { original[k] = c[k]; });
+        linkWhatIf = { fields, original };
+      }
+      Object.assign(c, fields);
+      if (!linkWhatIf) saveCollege();
+    }
+    try { history.replaceState(null, "", location.pathname); } catch (e) {}
+    return true;
+  }
+  function whatIfBanner() {
+    if (!linkWhatIf) return "";
+    const f = linkWhatIf.fields, o = linkWhatIf.original, bits = [];
+    if (f.gpa != null) bits.push("GPA " + f.gpa.toFixed(2) + (o.gpa != null ? " (saved: " + Number(o.gpa).toFixed(2) + ")" : ""));
+    if (f.sat != null) bits.push("SAT " + f.sat + (o.sat != null ? " (saved: " + o.sat + ")" : ""));
+    if (f.act != null) bits.push("ACT " + f.act + (o.act != null ? " (saved: " + o.act + ")" : ""));
+    return '<div class="college-whatif" role="status"><p><strong>What-if:</strong> showing colleges for ' + escapeHtml(bits.join(", ")) + '. Your saved profile has not changed.</p>' +
+      '<div><button type="button" class="secondary" data-whatif="keep">Keep these numbers</button> <button type="button" class="secondary" data-whatif="restore">Back to my saved numbers</button></div></div>';
+  }
   function collegeSaveStatus() {
     return cloud.user ? "Your profile and saved colleges sync to your account on every device." : "Saved on this device. Sign in to sync your profile and college list across devices.";
   }
@@ -946,6 +983,7 @@
       '<div class="cc-field-row">' +
       '<label class="cc-field">GPA<input type="number" id="ccGpa" min="0" max="100" step="0.01" value="' + (c.gpa != null ? c.gpa : "") + '" placeholder="3.8"></label>' +
       '<label class="cc-field">Scale<select id="collegeGpaScale">' + opts([["4uw", "4.0 unweighted"], ["4w", "4.0 weighted"], ["5w", "5.0 weighted"], ["100", "100-point"]], c.gpaScale || "4uw") + "</select></label></div>" +
+      '<p class="cc-calc-link"><a href="/calculators/high-school-gpa/">Calculate your GPA</a> · <a href="/calculators/gpa-improvement/">What GPA could you reach?</a></p>' +
       '<div class="cc-field-row">' +
       '<label class="cc-field">Grade<select id="ccGrade">' + opts([["9", "9th"], ["10", "10th"], ["11", "11th"], ["12", "12th"], ["gap", "Gap year"]], c.grade) + "</select></label>" +
       '<label class="cc-field">Home state<select id="ccHomeState" aria-label="Your home state">' + states.map((st) => '<option value="' + st + '"' + sel(c.homeState, st) + ">" + (st || "Choose") + "</option>").join("") + "</select></label></div>" +
@@ -1017,7 +1055,7 @@
     const c = cp();
     const you = ccYou();
     const rows = ccRows();
-    host.innerHTML =
+    host.innerHTML = whatIfBanner() +
       '<header class="st-head college-head"><div class="st-kicker">College comparison · data from the U.S. Department of Education</div>' +
       '<h1>How your scores compare</h1>' +
       '<p class="small muted">Ranges describe enrolled students, not admitted applicants. Percentages are rough, uncalibrated planning estimates built from aggregate score ranges and acceptance rates. They are not admission predictions and are not based on individual applicant outcomes.</p>' +
@@ -1269,6 +1307,15 @@
     baseRender();
   };
   // Delegated entry points so buttons added by other screens and re-rendered result rows always work.
+  document.addEventListener("click", (e) => {
+    const wb = e.target.closest("[data-whatif]");
+    if (!wb || !linkWhatIf) return;
+    const c = cp();
+    if (wb.dataset.whatif === "restore") Object.assign(c, linkWhatIf.original);
+    linkWhatIf = null;
+    saveCollege(); renderCollegeScreen();
+  });
+  if (applyLinkNumbers()) setTimeout(() => { try { openCollege(""); } catch (e) {} }, 0);
   document.addEventListener("click", (e) => {
     const yb = e.target.closest("[data-cyear]");
     if (!yb) return;

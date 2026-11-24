@@ -789,6 +789,8 @@ def college_page(c, data):
              f'<a href="/guides/what-is-a-good-sat-score/">What is a good SAT score?</a>'
              f'<a href="/guides/college-admissions-chances/">Admissions chances</a>'
              f'<a href="/college-match/">Find colleges that fit you</a>'
+             f'<a href="/calculators/high-school-gpa/">Calculate your GPA</a>'
+             f'<a href="/calculators/sat-superscore/">SAT superscore calculator</a>'
              f'<a href="/guides/is-a-college-campus-safe/">Is a college campus safe?</a>'
              f'<a href="/guides/how-much-does-college-really-cost/">What college really costs</a>'
              f'<a href="/guides/college-graduation-rates-and-earnings/">Graduation rates and earnings</a>'

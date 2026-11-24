@@ -269,3 +269,37 @@ body[data-workspace="exam"].workspace-practicing #screen-test .gi-frac>span:last
 body[data-workspace="exam"].workspace-practicing #screen-test .gi-err{min-height:20px;margin-top:6px;font-size:13px;font-weight:600;color:#a62d29}
 body[data-workspace="exam"].workspace-practicing #screen-test .gridin.right .gi-input{border-color:#176341;background:#e7f4ec}
 body[data-workspace="exam"].workspace-practicing #screen-test .gridin.wrong .gi-input{border-color:#a62d29;background:#fbece9}
+
+/* ---------- Calculator docked on the left (computers and tablets) ----------
+   Its own full-height section between the test header and the footer, like the Digital SAT; the question moves right.
+   bluebook.js sets top, bottom and width (drag the right edge to resize). */
+.bb-dock-edge{display:none}
+@media (min-width:821px){
+  body[data-workspace="exam"].workspace-practicing.bb-calc-docked #screen-test .workspace-calculator-dock{
+    position:fixed;z-index:40;border:0;border-right:2px solid var(--bb-ink);border-radius:0;box-shadow:none;display:flex;flex-direction:column;overflow:visible;background:#fff}
+  body[data-workspace="exam"].workspace-practicing.bb-calc-docked #screen-test .workspace-calculator-dock #calcPanel{
+    flex:1 1 auto;min-height:0;height:auto!important;display:flex;flex-direction:column;border-bottom:0!important}
+  body[data-workspace="exam"].workspace-practicing.bb-calc-docked #screen-test .workspace-calculator-dock #calcHost{flex:1 1 auto;min-height:0;height:auto}
+  body[data-workspace="exam"].workspace-practicing.bb-calc-docked #screen-test .workspace-calculator-dock .calc-resizer{display:none}
+  body[data-workspace="exam"].workspace-practicing.bb-calc-docked #screen-test .workspace-calculator-dock .calc-head{cursor:default}
+  body[data-workspace="exam"].workspace-practicing.bb-calc-docked .bb-dock-edge{
+    display:block;position:absolute;top:0;bottom:0;right:-7px;width:12px;cursor:ew-resize;z-index:3;touch-action:none}
+  body[data-workspace="exam"].workspace-practicing.bb-calc-docked .bb-dock-edge::after{
+    content:"";position:absolute;top:50%;left:3px;width:6px;height:56px;margin-top:-28px;border-radius:3px;background:var(--bb-ink)}
+  body[data-workspace="exam"].workspace-practicing.bb-calc-docked .bb-dock-edge:focus-visible{outline:3px solid var(--ws-accent);outline-offset:0}
+  body[data-workspace="exam"].workspace-practicing.bb-calc-docked #screen-test .workspace-grid{transition:none}
+}
+
+/* ---------- Zoom ---------- */
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-zoom{
+  display:grid;grid-template-columns:repeat(3,auto);grid-template-rows:auto auto;align-items:center;justify-items:center;column-gap:2px;
+  min-height:48px;padding:3px 6px;font-size:12px;font-weight:600}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-zoom span{grid-column:1/-1}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-zoom button{
+  min-width:30px;height:26px;padding:0 6px;border:1px solid var(--bb-line);border-radius:4px;background:#fff;color:var(--bb-ink);font:700 13px/1 inherit;cursor:pointer}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-zoom #bbZoomVal{min-width:46px;font-variant-numeric:tabular-nums;font-weight:600}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-zoom button:disabled{opacity:.4;cursor:default}
+body[data-workspace="exam"].workspace-practicing #screen-test .bb-zoom button:focus-visible{outline:2px solid var(--ws-accent);outline-offset:1px}
+/* Zoomed in: the question scrolls rather than being shrunk back to fit. */
+body[data-workspace="exam"].workspace-practicing.bb-zoomed #screen-test .workspace-question-body,
+body[data-workspace="exam"].workspace-practicing.bb-zoomed #screen-test .split-r{overflow:auto}

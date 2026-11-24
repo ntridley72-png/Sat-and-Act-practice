@@ -1,9 +1,10 @@
-/* The Desmos calculator window works and can be moved.
+/* The Desmos calculator works and has its own section on the left, like the Digital SAT.
  *
  * Desmos itself comes from desmos.com, which a test cannot reach, so a stand-in Desmos records what the app asks of it.
- * This proves the app's side: the calculator opens as Desmos and is told to resize, the AI's steps are typed into it, the
- * window drags by its header (mouse and touch) and stays on screen, remembers where it was left across a reload and when
- * the window shrinks, and still opens, moves and says so when Desmos cannot load. Phones get a bottom sheet instead of a window.
+ * This proves the app's side: the calculator opens as Desmos and is told to resize, the AI's steps are typed into it, it docks
+ * on the left between the header and the footer with the question moved right, resizes by its edge (mouse, touch, keys)
+ * within limits, remembers its width, expands, survives a smaller window, undocks when closed, and still opens when Desmos
+ * cannot load. Phones get a bottom sheet instead.
  * Needs the source tree on http://localhost:8899. */
 const { chromium } = require("playwright-core");
 const path = require("node:path");
@@ -55,63 +56,71 @@ async function dragHeader(page, dx, dy) {
     await page.waitForTimeout(1700);
     ok(await page.evaluate(() => window.__desmos.includes("expr:y=x^2-5x+6") && window.__desmos.includes("expr:y=0")), "the tutor's calculator steps are entered into Desmos");
 
-    // ---- drag by the header
-    const start = await dockRect(page);
+    // ---- docked on the left between the test header and the footer, like the Digital SAT
+    const geo = () => page.evaluate(() => {
+      const d = document.getElementById("workspaceCalcDock").getBoundingClientRect();
+      const h = document.querySelector("#screen-test .module-head").getBoundingClientRect(), f = document.querySelector("#screen-test .bb-foot").getBoundingClientRect();
+      const q = document.querySelector("#screen-test .workspace-question-body").getBoundingClientRect();
+      return { l: Math.round(d.left), t: Math.round(d.top), b: Math.round(d.bottom), w: Math.round(d.width), headB: Math.round(h.bottom), footT: Math.round(f.top), qL: Math.round(q.left),
+        docked: document.body.classList.contains("bb-calc-docked"), xScroll: document.documentElement.scrollWidth - innerWidth };
+    });
+    let g = await geo();
+    ok(g.docked && g.l === 0, "the calculator opens docked on the left: " + JSON.stringify(g));
+    ok(Math.abs(g.t - g.headB) <= 2 && Math.abs(g.b - g.footT) <= 2, "it fills the height between the header and the footer: " + JSON.stringify(g));
+    ok(g.qL >= g.l + g.w - 2, "the question moves right instead of being covered: " + JSON.stringify(g));
+    ok(g.xScroll <= 1, "no sideways scrolling");
+    // The header no longer drags it around.
+    await dragHeader(page, 300, 120);
+    ok((await geo()).l === 0, "dragging the header does not move the docked calculator");
+
+    // ---- resize by dragging the right edge (mouse), remembered, Desmos told to resize
     const resizesBefore = await page.evaluate(() => window.__desmos.filter((x) => x === "resize").length);
-    await dragHeader(page, -320, 140);
-    const moved = await dockRect(page);
-    ok(Math.abs((moved.l - start.l) + 320) <= 3 && Math.abs((moved.t - start.t) - 140) <= 3, `the window follows the pointer (moved ${moved.l - start.l}, ${moved.t - start.t}; wanted -320, 140)`);
-    ok(moved.w === start.w && moved.h === start.h, "moving the window does not change its size");
-    ok(await page.evaluate((n) => window.__desmos.filter((x) => x === "resize").length > n, resizesBefore), "Desmos is told to resize after the window is dropped");
-    ok(await page.evaluate(() => getComputedStyle(document.getElementById("workspaceCalcDock")).position === "fixed"), "the calculator is a floating window");
-
-    // ---- it cannot be dragged off screen
-    await dragHeader(page, -3000, -3000);
-    let r = await dockRect(page);
-    ok(r.l >= 0 && r.t >= 60 && r.r >= 100, `dragged far up-left it stays reachable (left ${r.l}, top ${r.t}, right ${r.r})`);
-    await dragHeader(page, 4000, 4000);
-    r = await dockRect(page);
-    ok(r.l <= 1440 - 100 && r.t <= 900 - 60, `dragged far down-right it stays reachable (left ${r.l}, top ${r.t})`);
-
-    // ---- touch drag (pointer events from a finger)
-    await dragHeader(page, -600, -600);   // bring it back near the top-left first
-    const t0 = await dockRect(page);
+    const edge = await page.locator(".bb-dock-edge").boundingBox();
+    await page.mouse.move(edge.x + 6, edge.y + 200); await page.mouse.down(); await page.mouse.move(edge.x + 206, edge.y + 200, { steps: 6 }); await page.mouse.up();
+    let g2 = await geo();
+    ok(Math.abs(g2.w - (g.w + 200)) <= 8, `dragging the edge resizes it (${g.w} -> ${g2.w})`);
+    ok(g2.qL >= g2.w - 2, "the question moves with it");
+    ok(await page.evaluate((n) => window.__desmos.filter((x) => x === "resize").length > n, resizesBefore), "Desmos is told to resize");
+    // Touch, then keyboard.
     await page.evaluate(() => {
-      const head = document.querySelector("#workspaceCalcDock .calc-head"), r = head.getBoundingClientRect(), x = r.left + 14, y = r.top + r.height / 2;
-      const ev = (type, dx, dy, target) => target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 7, pointerType: "touch", isPrimary: true, clientX: x + dx, clientY: y + dy, buttons: 1 }));
-      ev("pointerdown", 0, 0, head); ev("pointermove", 100, 60, head); ev("pointermove", 200, 120, head); ev("pointerup", 200, 120, head);
+      const e = document.querySelector(".bb-dock-edge"), r = e.getBoundingClientRect(), x = r.left + 6, y = r.top + 200;
+      const ev = (type, dx) => e.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 7, pointerType: "touch", isPrimary: true, clientX: x + dx, clientY: y, buttons: 1 }));
+      ev("pointerdown", 0); ev("pointermove", -60); ev("pointermove", -120); ev("pointerup", -120);
     });
-    await page.waitForTimeout(150);
-    const t1 = await dockRect(page);
-    ok(Math.abs((t1.l - t0.l) - 200) <= 3 && Math.abs((t1.t - t0.t) - 120) <= 3, `a finger can drag the window (moved ${t1.l - t0.l}, ${t1.t - t0.t}; wanted 200, 120)`);
-    // A cancelled touch (the browser took the gesture) must not leave the window stuck in drag mode.
-    await page.evaluate(() => {
-      const head = document.querySelector("#workspaceCalcDock .calc-head"), r = head.getBoundingClientRect(), x = r.left + 14, y = r.top + r.height / 2;
-      const ev = (type, dx, dy) => head.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 8, pointerType: "touch", isPrimary: true, clientX: x + dx, clientY: y + dy, buttons: 1 }));
-      ev("pointerdown", 0, 0); ev("pointermove", 20, 20); ev("pointercancel", 20, 20);
-    });
-    ok(await page.evaluate(() => !document.getElementById("workspaceCalcDock").classList.contains("dragging")), "a cancelled touch ends the drag");
-    const afterCancel = await dockRect(page);
-    await page.evaluate(() => { const head = document.querySelector("#workspaceCalcDock .calc-head"), r = head.getBoundingClientRect(); head.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, pointerId: 8, pointerType: "touch", clientX: r.left + 300, clientY: r.top + 200, buttons: 1 })); });
-    ok((await dockRect(page)).l === afterCancel.l, "after a cancelled touch the window no longer follows the pointer");
-
-    // ---- remembered across a reload
-    await dragHeader(page, 0, 0);
-    const saved = await dockRect(page);
+    const g3 = await geo();
+    ok(Math.abs(g3.w - (g2.w - 120)) <= 8, `a finger can resize it (${g2.w} -> ${g3.w})`);
+    await page.focus(".bb-dock-edge"); await page.keyboard.press("ArrowLeft");
+    ok(Math.abs((await geo()).w - (g3.w - 40)) <= 2, "arrow keys resize it");
+    // Limits: it can't swallow the question or vanish.
+    let eb = await page.locator(".bb-dock-edge").boundingBox();
+    await page.mouse.move(eb.x + 6, eb.y + 100); await page.mouse.down(); await page.mouse.move(1430, eb.y + 100, { steps: 4 }); await page.mouse.up();
+    ok((await geo()).w <= 1440 - 420, "the question keeps at least 420px");
+    eb = await page.locator(".bb-dock-edge").boundingBox();
+    await page.mouse.move(eb.x + 6, eb.y + 100); await page.mouse.down(); await page.mouse.move(20, eb.y + 100, { steps: 4 }); await page.mouse.up();
+    ok((await geo()).w >= 300, "the calculator keeps at least 300px");
+    // Remembered across a reload.
+    eb = await page.locator(".bb-dock-edge").boundingBox();
+    await page.mouse.move(eb.x + 6, eb.y + 100); await page.mouse.down(); await page.mouse.move(600, eb.y + 100, { steps: 4 }); await page.mouse.up();
+    const saved = await geo();
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => !!window.FunSATPlanScreen);
     await page.evaluate(() => { state.cfg.testType = "sat"; state.cfg.section = "math"; state.cfg.total = 6; document.getElementById("btnStart").click(); });
     await require("./helpers/to-choice.cjs")(page);
     await page.click("#btnCalc"); await page.waitForSelector("#calcPanel.show"); await page.waitForTimeout(400);
-    const back = await dockRect(page);
-    ok(Math.abs(back.l - saved.l) <= 2 && Math.abs(back.t - saved.t) <= 2, `the window reopens where it was left (${saved.l},${saved.t} -> ${back.l},${back.t})`);
-
-    // ---- the window shrinks: it comes back on screen
-    await dragHeader(page, 900, 500);
+    ok(Math.abs((await geo()).w - saved.w) <= 2, `the width is remembered (${saved.w})`);
+    // Expand button: wide, then back.
+    await page.click("#calcWide"); await page.waitForTimeout(150);
+    ok((await geo()).w >= Math.round(1440 * 0.58) - 2, "the expand button makes it wide");
+    await page.click("#calcWide"); await page.waitForTimeout(150);
+    ok(Math.abs((await geo()).w - saved.w) <= 2, "and back");
+    // Smaller window: still docked and inside the screen.
     await page.setViewportSize({ width: 1000, height: 600 });
     await page.waitForTimeout(400);
-    r = await dockRect(page);
-    ok(r.l <= 1000 - 100 && r.t <= 600 - 60 && r.l >= 0, `after the window shrinks the calculator is still reachable (left ${r.l}, top ${r.t})`);
+    const small = await geo();
+    ok(small.docked && small.w <= 1000 - 420 && small.xScroll <= 1, "after the window shrinks it stays docked and leaves room for the question: " + JSON.stringify(small));
+    // Closing gives the question its full width back.
+    await page.click("#calcClose"); await page.waitForTimeout(200);
+    ok(await page.evaluate(() => !document.body.classList.contains("bb-calc-docked") && !document.querySelector("#screen-test .workspace-grid").style.marginLeft), "closing the calculator undocks it");
     ok(!errs.length, "no page errors: " + errs.join(" | "));
     await ctx.close();
   }
@@ -126,10 +135,7 @@ async function dragHeader(page, dx, dy) {
     await page.waitForTimeout(800);
     const engine = await page.evaluate(() => document.getElementById("calcEngine").textContent + " | " + document.getElementById("calcHost").textContent);
     ok(/basic|couldn't load|open Desmos/i.test(engine), "when Desmos cannot load the panel says so and offers a way to open Desmos: " + engine.slice(0, 120));
-    const s = await dockRect(page);
-    await dragHeader(page, -200, 80);
-    const m = await dockRect(page);
-    ok(Math.abs((m.l - s.l) + 200) <= 3, "the window still moves when Desmos cannot load");
+    ok(await page.evaluate(() => document.body.classList.contains("bb-calc-docked") && document.getElementById("workspaceCalcDock").getBoundingClientRect().left === 0), "the docked calculator still opens when Desmos cannot load");
     ok(!errs.length, "no page errors (Desmos blocked): " + errs.join(" | "));
     await ctx.close();
   }
@@ -151,5 +157,5 @@ async function dragHeader(page, dx, dy) {
 
   await browser.close();
   if (fails.length) { console.error("FAIL:\n - " + fails.join("\n - ")); process.exit(1); }
-  console.log("PASS: the calculator opens as Desmos, takes the tutor's steps, drags by mouse or finger, stays on screen, is remembered, recovers when the window shrinks, works without Desmos, and is a sheet on phones.");
+  console.log("PASS: the calculator opens as Desmos, takes the tutor's steps, docks on the left with the question beside it, resizes by mouse, finger or keys within limits, is remembered, expands, survives a smaller window, works without Desmos, and is a sheet on phones.");
 })().catch((e) => { console.error(e); process.exit(1); });

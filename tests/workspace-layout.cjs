@@ -13,7 +13,7 @@ const EXEC = path.join(os.homedir(), "Library/Caches/ms-playwright/chromium_head
 const BASE = process.env.BASE_URL || "http://localhost:8899";
 const APP = "/" + encodeURIComponent("SAT & ACT Practice.html");
 const WIDTHS = [320, 390, 768, 1024, 1280, 1440, 1920];
-const THEMES = ["exam", "notebook", "focus"];
+const THEMES = ["exam"];   // the one standard layout; older Notebook/Focus layouts were retired
 const shotsAt = process.argv.indexOf("--shots");
 const SHOTS = shotsAt > 0 ? process.argv[shotsAt + 1] : "";
 

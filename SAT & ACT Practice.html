@@ -564,7 +564,7 @@ button.glow{animation:glowPulse 1.5s infinite alternate}
 </head>
 <body class="pd-shell" data-workspace="exam"><script>
 /* Apply the saved workspace before visible content; appearance was applied in head. */
-(()=>{try{const saved=localStorage.getItem('funsatWorkspaceTheme');if(['exam','notebook','focus'].includes(saved))document.body.dataset.workspace=saved;}catch(e){}})();
+document.body.dataset.workspace='exam';
 </script>
 <noscript>
   <main class="noscript-summary">

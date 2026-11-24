@@ -41,11 +41,12 @@ const EXEC = path.join(os.homedir(), 'Library/Caches/ms-playwright/chromium_head
       /* Wide screens keep appearance and workspace theme in the header's More menu. */
       if (await page.locator('#bbMore').isVisible()) await page.click('#bbMore');
       await page.selectOption('#deskAppearance',appearance);
-      await page.selectOption('#workspaceTheme','notebook');
+      await page.evaluate(() => localStorage.setItem('funsatWorkspaceTheme','notebook'));   // a layout saved before Exam became the only one
       await page.reload();
       await page.waitForFunction(() => !!window.FunSATDesk);
       assert.equal(await page.getAttribute('html','data-desk-appearance'), appearance);
-      assert.equal(await page.getAttribute('body','data-workspace'), 'notebook');
+      assert.equal(await page.getAttribute('body','data-workspace'), 'exam', 'an old saved layout falls back to the standard Exam layout');
+      assert.equal(await page.locator('#workspaceTheme').count(), 0, 'no layout picker');
     }
     for (const width of [320,390,768,1024,1440,1920]) {
       await page.setViewportSize({width,height:960});

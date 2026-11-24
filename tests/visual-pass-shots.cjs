@@ -12,7 +12,7 @@ const APP = "/" + encodeURIComponent("SAT & ACT Practice.html");
 const PAGES = process.env.PAGES_URL || "";
 const OUT = path.join(path.dirname(__dirname), "docs", "screenshots", "visual-pass");
 const WIDTHS = [320, 390, 768, 1024, 1280, 1440];
-const THEMES = ["exam", "notebook", "focus"];
+const THEMES = ["exam"];   // the one standard layout; older Notebook/Focus layouts were retired
 const SEED = {
   college: { sat: 1280, gpa: 3.7, grade: "11", homeState: "CA", saved: [110662, 170976, 166027] },
   scoreComparisonEnabled: true,

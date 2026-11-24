@@ -7,7 +7,7 @@ const EXEC = path.join(os.homedir(), "Library/Caches/ms-playwright/chromium_head
 const BASE = process.env.BASE_URL || "http://localhost:8899";
 const PAGE_PATH = /localhost|127\.0\.0\.1/.test(BASE) ? "/" + encodeURIComponent("SAT & ACT Practice.html") : "/";
 const SHOTS = path.join(__dirname, "screenshots");
-const THEMES = ["exam", "notebook", "focus"];
+const THEMES = ["exam"];   // the one standard layout; older Notebook/Focus layouts were retired
 const EXPECTED_BACKGROUND = {
   dark: "rgb(23, 27, 29)",
   light: "rgb(255, 255, 255)",
@@ -59,7 +59,7 @@ function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); re
           colorScheme: document.documentElement.style.colorScheme,
         })));
       }
-      const expectedTheme = theme || "exam";
+      const expectedTheme = "exam";   // every load paints the standard Exam layout, even with an old saved Notebook/Focus choice
       for (const [index, frame] of frames.entries()) {
         if (frame.workspace !== expectedTheme) throw new Error(`${label}/${kind} frame ${index} painted workspace ${frame.workspace}, expected ${expectedTheme}`);
         const expectedScheme = blockStorage ? 'light' : appearance;
@@ -79,6 +79,7 @@ function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); re
       await captureStartupFrames({ label: `saved-${theme}-${appearance}`, theme, appearance, warm: true, reload: true, slow: true });
     }
   }
+  await captureStartupFrames({ label: "saved-old-focus-layout", theme: "focus", appearance: "light", warm: true, reload: true });
   await captureStartupFrames({ label: "empty-storage", slow: true });
   await captureStartupFrames({ label: "blocked-storage", blockStorage: true, slow: true });
 
@@ -117,8 +118,6 @@ function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); re
 
   for (const theme of THEMES) {
     // The page between modules has the site header, where the layout picker lives in the "More" menu; other layouts show it inline.
-    if (!(await page.locator("#workspaceTheme").isVisible()) && (await page.locator("#bbMore").isVisible().catch(() => false))) await page.click("#bbMore");
-    await page.selectOption("#workspaceTheme", theme);
     await page.keyboard.press("Escape");
     await page.waitForTimeout(120);
     await page.evaluate(() => render());
@@ -145,5 +144,5 @@ function contrast(l1, l2) { const a = Math.max(l1, l2), b = Math.min(l1, l2); re
 
   await browser.close();
   if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
-  console.log("PASS: startup frames keep the selected theme on cold, warm, reload, slow, empty-storage, and blocked-storage loads; module-transition contrast passes in all three themes.");
+  console.log("PASS: startup frames keep the selected theme on cold, warm, reload, slow, empty-storage, and blocked-storage loads; module-transition contrast passes; an old saved Notebook or Focus layout loads as the standard Exam layout.");
 })().catch((error) => { console.error(error); process.exit(1); });

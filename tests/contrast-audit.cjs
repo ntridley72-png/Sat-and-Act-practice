@@ -14,7 +14,7 @@ const EXEC = path.join(os.homedir(), "Library/Caches/ms-playwright/chromium_head
 const BASE = process.env.BASE_URL || "http://localhost:8899";
 const APP = "/" + encodeURIComponent("SAT & ACT Practice.html");
 const COLLEGE_PAGE = process.env.COLLEGE_PAGE_URL || "";
-const THEMES = ["exam", "notebook", "focus"];
+const THEMES = ["exam"];   // the one standard layout; older Notebook/Focus layouts were retired
 const APPEARANCE = process.env.DESK_APPEARANCE === 'light' ? 'light' : 'dark';
 const WIDTHS = process.argv.includes("--wide") ? [390, 768, 1280] : [390, 1280];
 const jsonAt = process.argv.indexOf("--json");

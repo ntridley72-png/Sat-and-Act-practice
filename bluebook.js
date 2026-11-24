@@ -72,7 +72,7 @@
     dragWired = true;
     document.addEventListener("pointerdown", (e) => {
       const head = e.target.closest && e.target.closest(".workspace-calculator-dock .calc-head");
-      if (!head || e.target.closest("button") || window.matchMedia("(max-width:820px)").matches || !isBB()) return;
+      if (!head || e.target.closest("button") || window.matchMedia("(max-width:820px)").matches || !isBB() || document.body.classList.contains("bb-calc-docked")) return;
       const dock = head.closest(".workspace-calculator-dock");
       const r = dock.getBoundingClientRect();
       const dx = e.clientX - r.left, dy = e.clientY - r.top;
@@ -96,7 +96,7 @@
   // If the window shrinks (or the device rotates) after the calculator was moved, bring it back on screen.
   function clampDock() {
     const dock = $id("workspaceCalcDock");
-    if (!dock || !dock.style.left || window.matchMedia("(max-width:820px)").matches) return;
+    if (!dock || !dock.style.left || window.matchMedia("(max-width:820px)").matches || document.body.classList.contains("bb-calc-docked")) return;
     const r = dock.getBoundingClientRect();
     dock.style.left = Math.max(0, Math.min(r.left, window.innerWidth - 140)) + "px";
     dock.style.top = Math.max(60, Math.min(r.top, window.innerHeight - 100)) + "px";
@@ -105,6 +105,7 @@
   function restorePos() {
     const dock = $id("workspaceCalcDock");
     if (!dock || window.matchMedia("(max-width:820px)").matches) { if (dock) { dock.style.left = ""; dock.style.top = ""; dock.style.right = ""; } return; }
+    if (document.body.classList.contains("bb-calc-docked")) return;
     try {
       const p = JSON.parse(localStorage.getItem(POS_KEY) || "null");
       if (p && p.l && p.t) {
@@ -122,6 +123,111 @@
     if (chk && narrow && /^Check answer$/.test(chk.textContent)) chk.textContent = "Check";
   }
 
+  // ---- Calculator docked on the left, like the Digital SAT ----------------------------------------------------------
+  // On a computer or tablet the calculator gets its own full-height section on the left, between the test header and the
+  // footer; the question moves right to make room. Drag the right edge to resize (remembered per device); the expand button
+  // switches between standard and wide. Phones keep the bottom sheet.
+  const DOCK_W_KEY = "funsat.calcDockW";
+  const dockWidthLimits = () => ({ min: 300, max: Math.max(320, window.innerWidth - 420) });
+  function dockWidth() {
+    const L = dockWidthLimits(), wide = document.body.classList.contains("calc-wide");
+    let w = 0; try { w = parseInt(localStorage.getItem(DOCK_W_KEY), 10) || 0; } catch (e) {}
+    if (!w) w = wide ? Math.round(window.innerWidth * 0.58) : Math.round(Math.min(640, Math.max(360, window.innerWidth * 0.38)));
+    else if (wide) w = Math.max(w, Math.round(window.innerWidth * 0.58));
+    return Math.max(L.min, Math.min(L.max, w));
+  }
+  function layoutDock() {
+    const dock = $id("workspaceCalcDock"), grid = document.querySelector("#screen-test .workspace-grid");
+    const want = isBB() && document.body.classList.contains("calc-open") && !window.matchMedia("(max-width:820px)").matches;
+    if (!dock || !grid || !want) {
+      if (document.body.classList.contains("bb-calc-docked")) {
+        document.body.classList.remove("bb-calc-docked");
+        if (grid) grid.style.marginLeft = "";
+        if (dock) { dock.style.top = ""; dock.style.bottom = ""; dock.style.width = ""; dock.style.left = ""; restorePos(); }
+        refit();
+      }
+      return;
+    }
+    document.body.classList.add("bb-calc-docked");
+    const head = document.querySelector("#screen-test .module-head"), foot = document.querySelector("#screen-test .bb-foot");
+    const top = head ? Math.max(0, Math.round(head.getBoundingClientRect().bottom)) : 64;
+    const bottom = foot ? Math.max(0, Math.round(window.innerHeight - foot.getBoundingClientRect().top)) : 64;
+    const w = dockWidth();
+    Object.assign(dock.style, { left: "0px", right: "auto", top: top + "px", bottom: bottom + "px", width: w + "px" });
+    grid.style.marginLeft = w + "px";
+    if (!dock.querySelector(".bb-dock-edge")) {
+      const edge = el("div", "bb-dock-edge", "");
+      edge.setAttribute("role", "separator"); edge.setAttribute("aria-orientation", "vertical"); edge.tabIndex = 0;
+      edge.setAttribute("aria-label", "Resize the calculator. Left and right arrow keys resize.");
+      const setW = (px, save) => {
+        const L = dockWidthLimits(), v = Math.max(L.min, Math.min(L.max, Math.round(px)));
+        dock.style.width = v + "px"; grid.style.marginLeft = v + "px";
+        if (save) { try { localStorage.setItem(DOCK_W_KEY, String(v)); } catch (e) {} }
+        try { if (calcTool.engine === "desmos" && calcTool.calc) calcTool.calc.resize(); } catch (e) {}
+      };
+      edge.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        try { edge.setPointerCapture(e.pointerId); } catch (er) {}
+        document.body.classList.add("calc-resizing");
+        const move = (ev) => setW(ev.clientX, false);
+        const up = (ev) => {
+          document.body.classList.remove("calc-resizing");
+          edge.removeEventListener("pointermove", move); edge.removeEventListener("pointerup", up); edge.removeEventListener("pointercancel", up);
+          setW(parseFloat(dock.style.width), true); refit();
+        };
+        edge.addEventListener("pointermove", move); edge.addEventListener("pointerup", up); edge.addEventListener("pointercancel", up);
+      });
+      edge.addEventListener("keydown", (e) => {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+        e.preventDefault(); setW(parseFloat(dock.style.width) + (e.key === "ArrowRight" ? 40 : -40), true); refit();
+      });
+      dock.append(edge);
+    }
+    try { if (calcTool.engine === "desmos" && calcTool.calc) calcTool.calc.resize(); } catch (e) {}
+    refit();
+  }
+  function refit() {
+    try { const b = document.querySelector("#screen-test .workspace-question-body"); if (b && !b.querySelector(".feedback")) delete fitMemo[(currentQids()[state.qi]) || ""]; fitQuestion(); } catch (e) {}
+  }
+  // The calculator opens and closes outside this file (and the expand button toggles calc-wide), so watch the body class.
+  let lastDockState = "";
+  new MutationObserver(() => {
+    const k = ["calc-open", "calc-wide", "workspace-practicing"].map((c) => document.body.classList.contains(c) ? 1 : 0).join("");
+    if (k !== lastDockState) { lastDockState = k; layoutDock(); }
+  }).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+  window.addEventListener("resize", () => { try { layoutDock(); } catch (e) {} });
+
+  // ---- Zoom ---------------------------------------------------------------------------------------------------------
+  // Text size on the test screen, on top of fit-to-screen: 80% to 200%, remembered per device. Above 100% the question
+  // scrolls instead of shrinking back. Ctrl/Cmd and + / - / 0 use it while a test is open (instead of browser zoom, which
+  // fit-to-screen would undo).
+  const ZOOM_KEY = "funsat.testZoom", ZOOMS = [0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2];
+  let zoom = 1; try { const z = parseFloat(localStorage.getItem(ZOOM_KEY)); if (ZOOMS.includes(z)) zoom = z; } catch (e) {}
+  function setZoom(z) {
+    zoom = z; try { localStorage.setItem(ZOOM_KEY, String(z)); } catch (e) {}
+    document.body.classList.toggle("bb-zoomed", zoom > 1);
+    const label = $id("bbZoomVal"); if (label) label.textContent = Math.round(zoom * 100) + "%";
+    const out = $id("bbZoomOut"), inn = $id("bbZoomIn");
+    if (out) out.disabled = zoom <= ZOOMS[0]; if (inn) inn.disabled = zoom >= ZOOMS[ZOOMS.length - 1];
+    refit();
+  }
+  const stepZoom = (d) => { const i = ZOOMS.indexOf(zoom); setZoom(ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, (i < 0 ? 2 : i) + d))]); };
+  function ensureZoom() {
+    const bar = $id("toolsBar"); if (!bar || $id("bbZoom")) return;
+    const box = el("div", "bb-zoom", "");
+    box.id = "bbZoom"; box.setAttribute("role", "group"); box.setAttribute("aria-label", "Zoom");
+    box.innerHTML = '<button type="button" id="bbZoomOut" aria-label="Zoom out">−</button><button type="button" id="bbZoomVal" aria-label="Reset zoom to 100%">100%</button><button type="button" id="bbZoomIn" aria-label="Zoom in">+</button><span>Zoom</span>';
+    box.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; e.stopPropagation(); if (b.id === "bbZoomOut") stepZoom(-1); else if (b.id === "bbZoomIn") stepZoom(1); else setZoom(1); });
+    const more = $id("btnMore"); if (more && more.parentNode === bar) bar.insertBefore(box, more); else bar.append(box);
+    setZoom(zoom);
+  }
+  document.addEventListener("keydown", (e) => {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey || !isBB() || state.view !== "test") return;
+    if (e.key === "=" || e.key === "+") { e.preventDefault(); stepZoom(1); }
+    else if (e.key === "-" || e.key === "_") { e.preventDefault(); stepZoom(-1); }
+    else if (e.key === "0") { e.preventDefault(); setZoom(1); }
+  });
+
   // ---- Fit the question to the screen ------------------------------------------------------------------------------
   // The question, its choices and the controls should fit the window without scrolling. The panes already fill the screen;
   // this scales the question's contents (see --fit in bluebook.css) to the space they have: smaller on a short or small window,
@@ -133,9 +239,9 @@
     const body = document.querySelector("#screen-test .workspace-question-body");
     if (!body) return;
     const set = (z) => body.style.setProperty("--fit", String(Math.round(z * 1000) / 1000));
-    if (window.matchMedia("(max-width:700px)").matches) { body.style.removeProperty("--fit"); return; }
+    if (window.matchMedia("(max-width:700px)").matches) { if (zoom === 1) body.style.removeProperty("--fit"); else set(zoom); return; }
     let id = ""; try { id = currentQids()[state.qi] || ""; } catch (e) {}
-    if (body.querySelector(".feedback")) { if (fitMemo[id]) set(fitMemo[id]); return; }
+    if (body.querySelector(".feedback")) { if (fitMemo[id]) set(fitMemo[id] * zoom); return; }
     const split = body.querySelector(".split"), right = split && body.querySelector(".split-r");
     const cs = getComputedStyle(body);
     const room = body.clientHeight - (parseFloat(cs.paddingTop) || 0) - (parseFloat(cs.paddingBottom) || 0);
@@ -171,6 +277,7 @@
       else { body.classList.remove("fit-tight"); z = solve(); }
     }
     fitMemo[id] = z;
+    if (zoom !== 1) set(z * zoom);
   }
   let fitTimer = 0;
   window.addEventListener("resize", () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => { if (isBB()) { const b = document.querySelector("#screen-test .workspace-question-body"); if (b && !b.querySelector(".feedback")) { delete fitMemo[(currentQids()[state.qi]) || ""]; } fitQuestion(); } }, 150); });
@@ -182,7 +289,7 @@
     try {
       syncTestType();
       if (!isBB()) return;
-      groupFoot(); placeDock(); ensureMore(); ensureBubble(); wireDrag(); restorePos(); shortLabels();
+      groupFoot(); placeDock(); ensureMore(); ensureZoom(); ensureBubble(); wireDrag(); restorePos(); shortLabels(); layoutDock();
       fitQuestion();
     } catch (e) { /* keep the stock layout */ }
   };

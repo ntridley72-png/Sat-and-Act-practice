@@ -1,7 +1,5 @@
 /* Three complete practice layouts share the same questions, tools, and saved progress. */
 (() => {
-  const themes = ['exam', 'notebook', 'focus'];
-  const labels = {exam:'Exam', notebook:'Notebook', focus:'Focus'};
   const icons = {
     calc:'<rect x="5" y="3" width="14" height="18" rx="1"/><path d="M8 7h8M8 11h2m4 0h2m-8 4h2m4 0h2m-8 4h2m4 0h2"/>',
     highlight:'<path d="m5 15 9-11 5 4-9 11-5-4ZM3 21h12"/>',
@@ -9,8 +7,10 @@
     notes:'<path d="M6 3h9l4 4v14H6ZM14 3v5h5M9 12h7M9 16h7"/>'
   };
   const icon = (name) => '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">'+icons[name]+'</svg>';
-  let theme = 'exam';
-  try { const saved = localStorage.getItem('funsatWorkspaceTheme'); if (themes.includes(saved)) theme = saved; } catch(e) {}
+  // One standard test layout: the Bluebook-style "exam" layout. The old Notebook and Focus layouts are retired (they
+  // dropped the Bluebook screen, fit-to-screen and zoom); a saved choice of either is cleared. Light/dark is Appearance.
+  const theme = 'exam';
+  try { if (localStorage.getItem('funsatWorkspaceTheme') && localStorage.getItem('funsatWorkspaceTheme') !== 'exam') localStorage.removeItem('funsatWorkspaceTheme'); } catch(e) {}
   let activeTab = 'tutor', lastQuestion = '', lastAnswer = null;
   const toolbar = $('toolsBar');
   const toolsHome = document.createElement('div'); toolsHome.className='workspace-tools-home';
@@ -19,13 +19,8 @@
   tools.forEach(([id,i,label]) => { $(id).innerHTML=icon(i)+'<span>'+label+'</span>'; });
   const notesButton = document.createElement('button'); notesButton.type='button'; notesButton.id='btnNotes'; notesButton.className='tool-btn';
   notesButton.innerHTML=icon('notes')+'<span>Notes</span>'; notesButton.onclick=()=>selectLearningTab('notes'); toolbar.append(notesButton);
-  const select = document.createElement('select'); select.id='workspaceTheme'; select.setAttribute('aria-label','Workspace layout');
-  themes.forEach((t)=>{const option=document.createElement('option');option.value=t;option.textContent=labels[t];select.append(option);}); select.value=theme;
-  const themeLabel=document.createElement('label');themeLabel.className='workspace-theme-label';themeLabel.innerHTML='<span class="theme-label-text">Theme</span>';themeLabel.append(select);
-  const badges=document.querySelector('.badges'),account=document.getElementById('btnAccount');badges.insertBefore(themeLabel,account);
   document.querySelector('.brand').innerHTML='Fun<span class="brand-sat">SAT</span>';
-  const applyTheme=()=>{document.body.dataset.workspace=theme;document.documentElement.style.colorScheme=document.documentElement.dataset.deskAppearance||(theme==='focus'?'dark':'light');};
-  select.onchange=()=>{theme=select.value;applyTheme();try{localStorage.setItem('funsatWorkspaceTheme',theme);}catch(e){}if(state.view==='test')renderQuestion();};
+  const applyTheme=()=>{document.body.dataset.workspace=theme;document.documentElement.style.colorScheme=document.documentElement.dataset.deskAppearance||'light';};
   applyTheme();
   function selectLearningTab(name) {
     activeTab=name;
@@ -123,8 +118,6 @@
     const provider=document.createElement('p');provider.className='small muted';provider.textContent='Powered by Groq · Ask for a method, memory tip, or another example.';sections.tutor.prepend(provider);
     const dock=document.createElement('div');dock.className='workspace-calculator-dock';dock.id='workspaceCalcDock';
     if(theme==='exam'){toolsHome.append(toolbar);learn.prepend(dock);grid.append(nav,canvas,learn);}
-    if(theme==='notebook'){toolsHome.append(toolbar);canvas.insertBefore(dock,foot||null);grid.append(canvas,learn,nav);}
-    if(theme==='focus'){rail.append(toolbar);grid.append(rail,dock,canvas,learn,nav);}
     dock.append($('calcPanel'));card.append(grid);selectLearningTab(activeTab);
     trackFooterHeight(canvas,foot);
   }

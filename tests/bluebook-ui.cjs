@@ -93,11 +93,9 @@ async function open(browser, width, height, kind) {
     "Desmos is created with the original options: " + JSON.stringify(opts));
   ok(requested.length >= 1 && /api\/v1\.12\/calculator\.js\?apiKey=/.test(requested[0]), "Desmos API v1.12 is requested with its key: " + requested[0]);
   const dock = await page.evaluate(() => { const d = document.getElementById("workspaceCalcDock"); const b = d.getBoundingClientRect(); return { pos: getComputedStyle(d).position, l: b.left, t: b.top, w: b.width }; });
-  ok(dock.pos === "fixed" && dock.w > 300, "calculator is a floating window: " + JSON.stringify(dock));
-  const hb = await page.evaluate(() => { const h = document.querySelector(".workspace-calculator-dock .calc-head").getBoundingClientRect(); return { x: h.left + 40, y: h.top + h.height / 2 }; });
-  await page.mouse.move(hb.x, hb.y); await page.mouse.down(); await page.mouse.move(hb.x - 300, hb.y + 120, { steps: 6 }); await page.mouse.up();
-  const moved = await page.evaluate(() => document.getElementById("workspaceCalcDock").getBoundingClientRect().left);
-  ok(moved < dock.l - 200, "dragging the header moves the calculator (" + Math.round(dock.l) + " -> " + Math.round(moved) + ")");
+  ok(dock.pos === "fixed" && dock.w > 300 && Math.round(dock.l) === 0, "calculator is docked on the left, like the Digital SAT: " + JSON.stringify(dock));
+  const qLeft = await page.evaluate(() => document.querySelector("#screen-test .workspace-question-body").getBoundingClientRect().left);
+  ok(qLeft >= dock.l + dock.w - 2, "the question sits beside the calculator, not under it (" + Math.round(qLeft) + ")");
   await page.click("#btnCalc");
   ok(await page.evaluate(() => getComputedStyle(document.getElementById("workspaceCalcDock")).display === "none"), "calculator closes");
 

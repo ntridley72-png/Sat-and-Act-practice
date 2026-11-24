@@ -245,7 +245,7 @@ def load_js_object(filename, global_name):
 
 
 def _short_period(period):
-    return (period or "").replace(" (documented in the Scorecard dictionary)", "")
+    return re.sub(r" \((?:documented in|checked against)[^)]*\)$", "", period or "")
 
 
 def stat_source_line(keys, defs, release, verified):
@@ -488,6 +488,42 @@ def safety_pointer(c):
             'Reported counts do not measure how safe a campus feels, so read '
             '<a href="/guides/is-a-college-campus-safe/">how to check whether a college campus is safe</a> '
             'before comparing schools.</p></section>')
+
+
+def years_section(c):
+    """Admissions and published prices for each reported year, one column per year, never mixed."""
+    yrs, meta = c.get("_years") or (None, None)
+    if not yrs or not meta:
+        return ""
+    cols = [y for y in meta["years"] if y["key"] in yrs]
+    if not cols:
+        return ""
+    def cell(v, fmt):
+        return '<span class="muted">not reported</span>' if v is None else fmt(v)
+    def rng(a, b):
+        return None if a is None or b is None else f"{a}&ndash;{b}"
+    spec = [
+        ("Applicants", lambda y: cell(y.get("apps"), num)),
+        ("Admitted", lambda y: cell(y.get("admits"), num)),
+        ("Acceptance rate", lambda y: cell(y.get("adm"), lambda v: f"{v:.1f}%")),
+        ("SAT middle 50% (enrolled)", lambda y: cell(rng(y.get("sr25"), y.get("sr75")), str)),
+        ("ACT middle 50% (enrolled)", lambda y: cell(rng(y.get("ar25"), y.get("ar75")), str)),
+        ("Enrolled students who sent SAT / ACT", lambda y: cell(None if y.get("satPct") is None and y.get("actPct") is None else
+                                                              f"{y.get('satPct') if y.get('satPct') is not None else '&ndash;'}% / {y.get('actPct') if y.get('actPct') is not None else '&ndash;'}%", str)),
+        ("Test policy", lambda y: cell(y.get("test"), e)),
+        ("In-state tuition and fees", lambda y: cell(y.get("ti"), money)),
+        ("Out-of-state tuition and fees", lambda y: cell(y.get("to"), money)),
+        ("On-campus food and housing", lambda y: cell(y.get("rb"), money)),
+    ]
+    head = "".join(f'<th scope="col">{e(y["admissions"])}<br><small class="muted">prices {e(y["price"])}</small></th>' for y in cols)
+    body = "".join("<tr><th scope=\"row\">" + label + "</th>" + "".join(f"<td>{fn(yrs[y['key']])}</td>" for y in cols) + "</tr>" for label, fn in spec)
+    return (f'<h2 id="by-year">Admissions and price by year at {e(c["n"])}</h2>'
+            f'<p>Each column is one admissions cycle as the college reported it to the federal government. Compare a '
+            f'trend across years rather than a single number; the newest figures are in the tables above.</p>'
+            f'<div class="gtable-scroll"><table class="gtable gyears"><thead><tr><th scope="col">Measure</th>{head}</tr></thead>'
+            f'<tbody>{body}</tbody></table></div>'
+            f'<p class="muted gsrc"><small>Source: <a href="{e(meta["sourceUrl"])}" rel="nofollow">{e(meta["source"])}</a> '
+            f'({e(", ".join(sorted(meta["files"].values())))}). {e(meta["notes"])}</small></p>')
 
 
 def college_page(c, data):
@@ -773,7 +809,7 @@ def college_page(c, data):
             f'<a href="/colleges/">All colleges</a></nav>'
             f'<p class="gkicker">{e(state)} &middot; College profile</p>'
             f'<h1>{e(name)}: SAT &amp; ACT Scores, Acceptance Rate and Costs</h1>'
-            f'{intro}{personal}{img}{extras_photos}{scores}{sel}{cost}{out}{social}{majors}{safety or safety_pointer(c)}{about}{standing(c)}{cta}{faq_html}{src}{links}')
+            f'{intro}{personal}{img}{extras_photos}{scores}{sel}{years_section(c)}{cost}{out}{social}{majors}{safety or safety_pointer(c)}{about}{standing(c)}{cta}{faq_html}{src}{links}')
 
     schema = [
         {"@type": "CollegeOrUniversity", "name": name,
@@ -1551,6 +1587,10 @@ def main():
         c["_defs"] = data["meta"].get("statsDefs") or {}
         c["_release"] = c.get("rel") or data["meta"].get("release", "")
         c["_verified"] = data["meta"].get("fetched", "")
+    years_path = ROOT / "scripts" / "data" / "college-years.json"
+    years_all = json.loads(years_path.read_text()) if years_path.exists() else {"meta": {}, "colleges": {}}
+    for c in colleges:
+        c["_years"] = (years_all["colleges"].get(str(c["id"])), years_all["meta"])
     by_state = {}
     for c in colleges:
         by_state.setdefault(STATES.get(c["st"], c["st"]), []).append(c)

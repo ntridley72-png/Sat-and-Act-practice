@@ -626,6 +626,63 @@
   }
 
 
+  // ---- Admissions and price by year (IPEDS final files, loaded only when a profile opens) ---- //
+  const yearsUi = { key: "latest", loading: false, failed: false };
+  function loadCollegeYears() {
+    if (window.COLLEGE_YEARS || yearsUi.loading || yearsUi.failed) return;
+    yearsUi.loading = true;
+    const s = document.createElement("script");
+    s.src = "/college-years.js";
+    s.async = true;
+    const done = (ok) => {
+      yearsUi.loading = false;
+      if (!ok) yearsUi.failed = true;
+      document.querySelectorAll("[data-cyears]").forEach((el) => { const col = BY_ID.get(Number(el.dataset.cyears)); if (col) el.innerHTML = yearsInnerHtml(col); });
+    };
+    s.onload = () => done(true);
+    s.onerror = () => done(false);
+    document.head.appendChild(s);
+  }
+  function shortPeriod(key) {
+    const d = (CD.meta.statsDefs || {})[key];
+    return d && d.period ? String(d.period).replace(/ \((?:documented in|checked against)[^)]*\)$/, "") : "most recent release";
+  }
+  function yearsInnerHtml(college) {
+    const money = (n) => n == null ? null : "$" + Number(n).toLocaleString();
+    const Y = window.COLLEGE_YEARS;
+    const rows = Y && Y.colleges[String(college.id)] || {};
+    const cols = [{ key: "latest", label: "Latest", sub: shortPeriod("adm") }].concat(Y ? Y.meta.years.filter((y) => rows[y.key]).map((y) => ({ key: y.key, label: y.admissions, sub: "prices " + y.price })) : []);
+    if (!cols.some((c) => c.key === yearsUi.key)) yearsUi.key = "latest";
+    const latest = { adm: college.adm, sr25: college.sr25, sr75: college.sr75, ar25: college.ar25, ar75: college.ar75, test: college.test, ti: college.ti, to: college.to, rb: college.rbScope === "on campus" ? college.rb : null };
+    const y = yearsUi.key === "latest" ? latest : rows[yearsUi.key];
+    const nr = '<span class="muted">not reported</span>';
+    const line = (label, v) => '<div class="cf-line"><span>' + label + "</span><b>" + (v == null ? nr : v) + "</b></div>";
+    const rng = (a, b) => a == null || b == null ? null : a + "–" + b;
+    const picker = '<div class="cf-years-pick" role="group" aria-label="Choose an admissions year">' + cols.map((c) =>
+      '<button type="button" class="secondary' + (c.key === yearsUi.key ? " on" : "") + '" data-cyear="' + c.key + '" data-college="' + college.id + '" aria-pressed="' + (c.key === yearsUi.key) + '">' + escapeHtml(c.label) + "</button>").join("") + "</div>";
+    const col = cols.find((c) => c.key === yearsUi.key);
+    const status = !Y ? '<p class="cf-note">' + (yearsUi.failed ? "Earlier years could not load. Check your connection and reopen this college." : "Loading earlier years…") + "</p>" : "";
+    const note = yearsUi.key === "latest"
+      ? "Latest: College Scorecard " + escapeHtml(CD.meta.release || "") + ". Admissions " + escapeHtml(shortPeriod("adm")) + ", prices " + escapeHtml(shortPeriod("ti")) + "."
+      : "IPEDS final data, " + escapeHtml(col.label) + " admissions and " + escapeHtml(col.sub.replace("prices ", "")) + " published prices. SAT adds the reading-writing and math percentiles, which only approximates a combined percentile.";
+    return "<h4>Admissions by year</h4>" + picker + status +
+      '<p class="cf-years-sub small muted">' + escapeHtml(col.label) + " · " + escapeHtml(col.sub) + "</p>" +
+      line("Acceptance rate", y.adm != null ? y.adm + "%" : null) +
+      (yearsUi.key === "latest" ? "" : line("Applied / admitted", y.apps != null && y.admits != null ? Number(y.apps).toLocaleString() + " / " + Number(y.admits).toLocaleString() : null)) +
+      line("SAT middle 50% (enrolled)", rng(y.sr25, y.sr75)) +
+      line("ACT middle 50% (enrolled)", rng(y.ar25, y.ar75)) +
+      (yearsUi.key === "latest" ? "" : line("Enrolled who sent SAT / ACT", y.satPct == null && y.actPct == null ? null : (y.satPct != null ? y.satPct : "–") + "% / " + (y.actPct != null ? y.actPct : "–") + "%")) +
+      line("Test policy", y.test ? escapeHtml(y.test) : null) +
+      line("In-state tuition and fees", money(y.ti)) +
+      line("Out-of-state tuition and fees", money(y.to)) +
+      line("On-campus food and housing", money(y.rb)) +
+      '<div class="cf-note">' + note + " Years are never mixed in this card.</div>";
+  }
+  function yearsCardHtml(college) {
+    loadCollegeYears();
+    return '<section class="cf-card cf-years" data-cyears="' + college.id + '">' + yearsInnerHtml(college) + "</section>";
+  }
+
   function detailExtrasHtml(college) {
     const money = (n) => n == null ? "—" : "$" + Number(n).toLocaleString();
     const race = college.race || {};
@@ -677,6 +734,7 @@
       '<div class="cf-line total"><span>Est. total, in-state</span><b>' + money(totalIn) + "</b></div>" +
       '<div class="cf-line total"><span>Est. total, out-of-state</span><b>' + money(totalOut) + "</b></div>" +
       '<div class="cf-note">Tuition, room and board, and net price are the college\'s most recent federal reporting. The state-adjusted row scales reported room and board by the state housing price parity (BEA 2024, U.S. = 100). Actual costs depend on aid and housing choices — verify with the college.</div></section>' +
+      yearsCardHtml(college) +
       '<section class="cf-card"><h4>Outcomes & academics</h4>' +
       '<div class="cf-line"><span>Graduation rate</span><b>' + (college.gr != null ? college.gr + "%" : "—") + "</b></div>" +
       '<div class="cf-line"><span>First-year retention</span><b>' + (college.ret != null ? college.ret + "%" : "—") + "</b></div>" +
@@ -1211,6 +1269,17 @@
     baseRender();
   };
   // Delegated entry points so buttons added by other screens and re-rendered result rows always work.
+  document.addEventListener("click", (e) => {
+    const yb = e.target.closest("[data-cyear]");
+    if (!yb) return;
+    yearsUi.key = yb.dataset.cyear;
+    const card = yb.closest("[data-cyears]"), col = BY_ID.get(Number(yb.dataset.college));
+    if (card && col) {
+      card.innerHTML = yearsInnerHtml(col);
+      const again = card.querySelector('[data-cyear="' + yearsUi.key + '"]');
+      if (again) again.focus();
+    }
+  });
   document.addEventListener("click", (e) => {
     if (!e.target || !e.target.closest) return;
     const open = e.target.closest("[data-college-open]");

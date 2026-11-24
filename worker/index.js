@@ -44,6 +44,10 @@ export default {
         headers.set("Cache-Control", url.pathname === "/"
           ? "no-cache, must-revalidate"
           : "public, max-age=3600, stale-while-revalidate=86400");
+      } else if (/\.(?:css|js)$/i.test(url.pathname) && /^[0-9a-f]{8}$/.test(url.searchParams.get("v") || "") && url.pathname !== "/sw.js") {
+        // Stamped by the build with a hash of every script and stylesheet, so the URL changes whenever any file does.
+        // The app shell and content pages revalidate, so a deploy hands out new URLs immediately; old ones stay valid.
+        headers.set("Cache-Control", "public, max-age=31536000, immutable");
       } else if (/\.(?:css|js|json|xml|txt)$/i.test(url.pathname)) {
         // Code and data are referenced WITHOUT a version string (/app.js, not
         // /app.js?v=3), so a long max-age pins returning visitors to whatever

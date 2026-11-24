@@ -1502,11 +1502,14 @@ def asset_version():
     invalidates every cached copy without waiting for max-age to expire."""
     import hashlib
     h = hashlib.sha1()
-    for name in ("app.js", "redesign.css", "workspace.css", "ads.js", "progress-desk.css", "progress-desk.js",
-                 "guides/guide.css", "subjects.css", "college.js"):
+    # Every local script and stylesheet a page can reference. The hash must cover all of them: the worker serves
+    # ?v= URLs as immutable, so a file missing from this list would stay stale in visitors' caches after a deploy.
+    names = sorted({p.relative_to(ROOT).as_posix() for pat in ("*.js", "*.css", "racing/*.js", "guides/*.css")
+                    for p in ROOT.glob(pat) if p.name != "sw.js"})
+    for name in names:
         f = ROOT / name
-        if f.exists():
-            h.update(f.read_bytes())
+        h.update(name.encode())
+        h.update(f.read_bytes())
     return h.hexdigest()[:8]
 
 

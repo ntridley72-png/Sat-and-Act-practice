@@ -1,0 +1,1160 @@
+{
+ "cutoffYear": 2011,
+ "photosBefore": 1260,
+ "photosAfter": 1072,
+ "removed": 188,
+ "byReason": {
+  "scanned book, journal or yearbook page": 25,
+  "photo dated YYYY (older than YYYY)": 113,
+  "historic survey scan (decades old)": 36,
+  "license not recorded": 13,
+  "not a campus photo": 1
+ },
+ "collegesLeftWithoutPhotos": [
+  "Bennington College",
+  "Brigham Young University-Hawaii",
+  "California State University-Long Beach",
+  "Clemson University",
+  "College of the Ozarks",
+  "Dartmouth College",
+  "Hallmark University",
+  "North Carolina A & T State University",
+  "Oklahoma State University",
+  "Paul Quinn College",
+  "Sterling College",
+  "University of California-Los Angeles",
+  "University of North Carolina at Greensboro",
+  "University of Virginia",
+  "William Jewell College"
+ ],
+ "removedPhotos": [
+  {
+   "college": "Allegheny College",
+   "id": 210669,
+   "file": "File:The Kaldron (1922) (14774261404).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Allegheny College",
+   "id": 210669,
+   "file": "File:Allegheny College Meadville 1909 Pennsylvania Historic Campus.jpg",
+   "reason": "photo dated 1909 (older than 2011)"
+  },
+  {
+   "college": "Allegheny College",
+   "id": 210669,
+   "file": "File:Historic American Buildings Survey, William J. Bulger, Photographer, 1937 EXTERIOR (FRONT ELEVATION). - Allegheny College, Bentley Hall, Meadville, Crawford County, PA HABS PA,20-MEDVI,2A-1.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Anderson University",
+   "id": 217633,
+   "file": "File:AU1920sview.png",
+   "reason": "photo dated 1920 (older than 2011)"
+  },
+  {
+   "college": "Auburn University",
+   "id": 100858,
+   "file": "File:Aerial View of the Gator Bowl Stadium During Show at the 1954 Game Between Auburn University and Baylor University- Jacksonville, Florida (5296888516).jpg",
+   "reason": "photo dated 1954 (older than 2011)"
+  },
+  {
+   "college": "Baylor University",
+   "id": 223232,
+   "file": "File:Aerial View of the Gator Bowl Stadium During Show at the 1954 Game Between Auburn University and Baylor University- Jacksonville, Florida (5296888516).jpg",
+   "reason": "photo dated 1954 (older than 2011)"
+  },
+  {
+   "college": "Baylor University",
+   "id": 223232,
+   "file": "File:Baylor University 1892.png",
+   "reason": "photo dated 1892 (older than 2011)"
+  },
+  {
+   "college": "Baylor University",
+   "id": 223232,
+   "file": "File:Baylor University 1892 front.png",
+   "reason": "photo dated 1892 (older than 2011)"
+  },
+  {
+   "college": "Bennington College",
+   "id": 230816,
+   "file": "File:Bennington college admissions building 20041121.jpg",
+   "reason": "license not recorded"
+  },
+  {
+   "college": "Bennington College",
+   "id": 230816,
+   "file": "File:James Robison Bennington College 1987.jpg",
+   "reason": "photo dated 1987 (older than 2011)"
+  },
+  {
+   "college": "Berea College",
+   "id": 156295,
+   "file": "File:EAST VIEW OF SIDE ELEVATION - Berea College, Lincoln Hall, Berea College, Berea, Madison County, KY HABS KY,76-BER,1A-4.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Boston College",
+   "id": 164924,
+   "file": "File:Sub turri = Under the tower - the yearbook of Boston College (1980) (14763601934).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Bowdoin College",
+   "id": 161004,
+   "file": "File:Bowdoin College 1845.jpeg",
+   "reason": "photo dated 1845 (older than 2011)"
+  },
+  {
+   "college": "Bowdoin College",
+   "id": 161004,
+   "file": "File:Historic American Buildings Survey COPY OF DRAWING SECTION THROUGH MUSEUM, MAY 1873 ORIGINAL IN BOWDOIN LIBRARY ARCHIVES - Bowdoin College, Massachusetts Hall, Bath Street, Brunswick HABS ME,3-BRU,1-4.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Bowdoin College",
+   "id": 161004,
+   "file": "File:Historic American Buildings Survey COPY OF ELEVATION SKETCH WITH DOOR AND PORCH AT END, ORIGINAL IN BOWDOIN LIBRARY ARCHIVES - Bowdoin College, Massachusetts Hall, Bath Street, HABS ME,3-BRU,1-5.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Bowdoin College",
+   "id": 161004,
+   "file": "File:Historic American Buildings Survey COPY OF FIRST FLOOR PLAN, ORIGINAL IN BOWDOIN LIBRARY ARCHIVES - Bowdoin College, Massachusetts Hall, Bath Street, Brunswick, Cumberland County, ME HABS ME,3-BRU,1-7.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Brandeis University",
+   "id": 165015,
+   "file": "File:Elementa physiologiae corporis humani (1776) (14596400880).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Brigham Young University",
+   "id": 230038,
+   "file": "File:Library of the world's best literature, ancient and modern (1902) (14740142836).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Brigham Young University",
+   "id": 230038,
+   "file": "File:Bulwell Hall, from, A series of picturesque views of seats of the noblemen and gentlemen of Great Britain and Ireland (1840).jpg",
+   "reason": "photo dated 1840 (older than 2011)"
+  },
+  {
+   "college": "Brigham Young University-Hawaii",
+   "id": 230047,
+   "file": "File:Men of Hawaii; a biographical reference library, complete and authentic, of the men of note and substantial achievement in the Hawaiian Islands v. 1-5 (1917) (14579222188).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Brigham Young University-Hawaii",
+   "id": 230047,
+   "file": "File:Library of the world's best literature, ancient and modern (1902) (14778508294).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Brigham Young University-Hawaii",
+   "id": 230047,
+   "file": "File:Transactions of the Royal Society of New Zealand (1920) (14765246105).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Brigham Young University-Hawaii",
+   "id": 230047,
+   "file": "File:Annual report of the Bureau of ethnology to the secretary of the Smithsonian Institution (1881) (14761458186).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Brown University",
+   "id": 217156,
+   "file": "File:Delta Sigma women's fraternity, Pembroke College at Brown University, 1905.jpg",
+   "reason": "photo dated 1905 (older than 2011)"
+  },
+  {
+   "college": "Bucknell University",
+   "id": 211291,
+   "file": "File:Bucknell University, 1870s.jpg",
+   "reason": "photo dated 1870 (older than 2011)"
+  },
+  {
+   "college": "California Institute of Technology",
+   "id": 110404,
+   "file": "File:National Aeronautics and Space Administration Jet Propulsion Laboratory-California Institute of Technology Arizona State University Mars Odyssey Apollinaris Sulci Yardangs 2001.jpg",
+   "reason": "not a campus photo"
+  },
+  {
+   "college": "California Institute of Technology",
+   "id": 110404,
+   "file": "File:Faculty Club Caltech 1923.png",
+   "reason": "photo dated 1923 (older than 2011)"
+  },
+  {
+   "college": "California State University-Long Beach",
+   "id": 110583,
+   "file": "File:Copy Photograph (original print in Whittington Photograph Collection, California State University Long Beach, Special Collections) Dick Whittington, photographer, May 1939 HABS CAL,19-LOSAN,64-A-53.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Carleton College",
+   "id": 173258,
+   "file": "File:Aerial view of Campus, Carleton College, Northfield, Minnesota - DPLA - d5222eabcb0a5cb7cb02f118d751f6f5.jpg",
+   "reason": "license not recorded"
+  },
+  {
+   "college": "Carleton College",
+   "id": 173258,
+   "file": "File:Campus view of Laird Hall and Goodsell Observatory, Carleton College, Northfield, Minnesota - DPLA - 54c34b6e9c96e7b4b082954f0b201f4d.jpg",
+   "reason": "license not recorded"
+  },
+  {
+   "college": "Carleton College",
+   "id": 173258,
+   "file": "File:Carleton College entrance to campus, Northfield, Minnesota - DPLA - c6c0eb297a438cafeba0dfc546c561bb.jpg",
+   "reason": "license not recorded"
+  },
+  {
+   "college": "Clemson University",
+   "id": 217882,
+   "file": "File:EAST FRONT - Fort Hill, Clemson University Campus, Clemson, Pickens County, SC HABS SC,39-CLEM,1-1.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Clemson University",
+   "id": 217882,
+   "file": "File:East elevation - Fort Hill, Clemson University Campus, Clemson, Pickens County, SC HABS SC,39-CLEM,1-18.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Clemson University",
+   "id": 217882,
+   "file": "File:Fort Hill, Clemson University Campus, Clemson, Pickens County, SC HABS SC,39-CLEM,1- (sheet 15 of 28).tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "College of the Holy Cross",
+   "id": 166124,
+   "file": "File:DGHoly Cross College in 1861.jpg",
+   "reason": "photo dated 1861 (older than 2011)"
+  },
+  {
+   "college": "College of the Holy Cross",
+   "id": 166124,
+   "file": "File:DGHoly Cross College in 1861 (cropped).jpg",
+   "reason": "photo dated 1861 (older than 2011)"
+  },
+  {
+   "college": "College of the Ozarks",
+   "id": 178697,
+   "file": "File:UserKTrimble AP College of the Ozarks Pt Lookout Mo Oct 2009.jpg",
+   "reason": "photo dated 2009 (older than 2011)"
+  },
+  {
+   "college": "Colorado College",
+   "id": 126678,
+   "file": "File:Cutler Hall, Colorado College, 1882.jpg",
+   "reason": "photo dated 1882 (older than 2011)"
+  },
+  {
+   "college": "Colorado College",
+   "id": 126678,
+   "file": "File:Cutler Hall, Colorado College, about 1901.jpg",
+   "reason": "photo dated 1901 (older than 2011)"
+  },
+  {
+   "college": "Columbia University in the City of New York",
+   "id": 190150,
+   "file": "File:Announcement; afternoon, evening and Saturday classes, Morningside Heights (1908) (14577327958).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Dartmouth College",
+   "id": 182670,
+   "file": "File:Dartmouth College campus 2007-10-03 Buchanan Hall.jpg",
+   "reason": "photo dated 2007 (older than 2011)"
+  },
+  {
+   "college": "Dartmouth College",
+   "id": 182670,
+   "file": "File:Dartmouth College campus - The Green, 1881.jpg",
+   "reason": "photo dated 1881 (older than 2011)"
+  },
+  {
+   "college": "Dartmouth College",
+   "id": 182670,
+   "file": "File:Dartmouth College campus - view to west from Bartlett Tower, early 1900s.jpg",
+   "reason": "photo dated 1900 (older than 2011)"
+  },
+  {
+   "college": "Dartmouth College",
+   "id": 182670,
+   "file": "File:Dartmouth College campus - The Green, early 1900s.jpg",
+   "reason": "photo dated 1900 (older than 2011)"
+  },
+  {
+   "college": "Dartmouth College",
+   "id": 182670,
+   "file": "File:Dartmouth College campus 2007-10-02 03 - Charter.jpg",
+   "reason": "photo dated 2007 (older than 2011)"
+  },
+  {
+   "college": "Davidson College",
+   "id": 198385,
+   "file": "File:Davidson College, Eumanean Hall, Davidson, Mecklenburg County, NC HABS NC,60-DAVSO,1A- (sheet 0 of 2).tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Davidson College",
+   "id": 198385,
+   "file": "File:Davidson College, Philanthropic Hall, Davidson, Mecklenburg County, NC HABS NC,60-DAVSO,1B- (sheet 0 of 2).png",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Denison University",
+   "id": 202523,
+   "file": "File:1904 Queen (2236247511).jpg",
+   "reason": "photo dated 1904 (older than 2011)"
+  },
+  {
+   "college": "Denison University",
+   "id": 202523,
+   "file": "File:Doane Dance Hall (1905).jpg",
+   "reason": "photo dated 1905 (older than 2011)"
+  },
+  {
+   "college": "Emory University",
+   "id": 139658,
+   "file": "File:Emory-university-quad.jpg",
+   "reason": "license not recorded"
+  },
+  {
+   "college": "Fisk University",
+   "id": 220181,
+   "file": "File:Detail, south (principal) entrance - Fisk University, Jubilee Hall, Seventeenth Avenue, North, Nashville, Davidson County, TN HABS TENN,19-NASH,7A-4.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Fisk University",
+   "id": 220181,
+   "file": "File:Detail, tower from east - Fisk University, Jubilee Hall, Seventeenth Avenue, North, Nashville, Davidson County, TN HABS TENN,19-NASH,7A-6.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Fisk University",
+   "id": 220181,
+   "file": "File:Detail, tower from southwest - Fisk University, Jubilee Hall, Seventeenth Avenue, North, Nashville, Davidson County, TN HABS TENN,19-NASH,7A-5.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Fisk University",
+   "id": 220181,
+   "file": "File:EAST SIDE AND NORTH (REAR) ELEVATIONS - Fisk University, Jubilee Hall, Seventeenth Avenue, North, Nashville, Davidson County, TN HABS TENN,19-NASH,7A-13.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Fisk University",
+   "id": 220181,
+   "file": "File:EAST SIDE ELEVATION - Fisk University, Jubilee Hall, Seventeenth Avenue, North, Nashville, Davidson County, TN HABS TENN,19-NASH,7A-12.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Franklin and Marshall College",
+   "id": 212577,
+   "file": "File:F&MOldMain1910.jpg",
+   "reason": "photo dated 1910 (older than 2011)"
+  },
+  {
+   "college": "George Washington University",
+   "id": 131469,
+   "file": "File:The Washington Daily News 1939 12 20 37.jpg",
+   "reason": "photo dated 1939 (older than 2011)"
+  },
+  {
+   "college": "Georgetown University",
+   "id": 131496,
+   "file": "File:1907-04-16 Georgetown University, Washington DC, the campus A.jpg",
+   "reason": "photo dated 1907 (older than 2011)"
+  },
+  {
+   "college": "Georgetown University",
+   "id": 131496,
+   "file": "File:1907-04-16 Georgetown University, Washington DC, the campus B.jpg",
+   "reason": "photo dated 1907 (older than 2011)"
+  },
+  {
+   "college": "Hallmark University",
+   "id": 225201,
+   "file": "File:N168FE Hallmark University (FEDEX) 1966 Boeing 727-22(F) serial 18865 (24572030866).jpg",
+   "reason": "photo dated 1966 (older than 2011)"
+  },
+  {
+   "college": "Hamilton College",
+   "id": 191515,
+   "file": "File:Hamilton College Campus view no. 3, by Seward, H. W. (H. Walton), d. 1871.jpg",
+   "reason": "photo dated 1871 (older than 2011)"
+  },
+  {
+   "college": "Hampden-Sydney College",
+   "id": 232256,
+   "file": "File:Kaleidoscope (1901) (14597250377).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Hampden-Sydney College",
+   "id": 232256,
+   "file": "File:Lawrence, Charles B., Samuel Stanhope Smith (1750–1819), Class of 1769, President (1795–1812).jpg",
+   "reason": "photo dated 1819 (older than 2011)"
+  },
+  {
+   "college": "Harvard University",
+   "id": 166027,
+   "file": "File:Harvard Radcliffe Program in Business Administration, Student life in Putnam House, 1938 (13083780805).jpg",
+   "reason": "photo dated 1938 (older than 2011)"
+  },
+  {
+   "college": "Haverford College",
+   "id": 212911,
+   "file": "File:Haverford College - Roberts Hall (1958).jpg",
+   "reason": "photo dated 1958 (older than 2011)"
+  },
+  {
+   "college": "Haverford College",
+   "id": 212911,
+   "file": "File:Haverford College - Roberts Hall and Commencement (1958).jpg",
+   "reason": "photo dated 1958 (older than 2011)"
+  },
+  {
+   "college": "Haverford College",
+   "id": 212911,
+   "file": "File:Haverford College - Union Building (1958).jpg",
+   "reason": "photo dated 1958 (older than 2011)"
+  },
+  {
+   "college": "Howard University",
+   "id": 131520,
+   "file": "File:DETAIL, NORTH ENTRANCE - Howard University, Founders Library, 2400 Sixth Street Northwest, Washington, District of Columbia, DC HABS DC,WASH,236-A-7.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Howard University",
+   "id": 131520,
+   "file": "File:DETAIL, PLAQUE ON NORTH FACADE - Howard University, Founders Library, 2400 Sixth Street Northwest, Washington, District of Columbia, DC HABS DC,WASH,236-A-10.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Howard University",
+   "id": 131520,
+   "file": "File:DETAIL, PLAQUE ON SOUTH FACADE - Howard University, Founders Library, 2400 Sixth Street Northwest, Washington, District of Columbia, DC HABS DC,WASH,236-A-9.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Illinois Wesleyan University",
+   "id": 145646,
+   "file": "File:The Orange blossom (1906) (14783137583).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Indiana University-Bloomington",
+   "id": 151351,
+   "file": "File:Sample Gates, Indiana University Bloomington, 2010.jpg",
+   "reason": "photo dated 2010 (older than 2011)"
+  },
+  {
+   "college": "James Madison University",
+   "id": 232423,
+   "file": "File:Ron Copeland with James Madison University students Our Community Place Harrisonburg VA March 2008.jpg",
+   "reason": "photo dated 2008 (older than 2011)"
+  },
+  {
+   "college": "Johnson C Smith University",
+   "id": 198756,
+   "file": "File:Johnson C. Smith University Bulletin (1932) - DPLA - 8e924b1573a4351d12343361edacc9bd (page 558).jpg",
+   "reason": "photo dated 1932 (older than 2011)"
+  },
+  {
+   "college": "Loyola Marymount University",
+   "id": 117946,
+   "file": "File:StVincents-1866.jpg",
+   "reason": "photo dated 1866 (older than 2011)"
+  },
+  {
+   "college": "Massachusetts Institute of Technology",
+   "id": 166683,
+   "file": "File:Massachusetts Institute of Technology campus aerial all buildings 1921 US Army.jpg",
+   "reason": "photo dated 1921 (older than 2011)"
+  },
+  {
+   "college": "Massachusetts Institute of Technology",
+   "id": 166683,
+   "file": "File:Massachusetts Institute of Technology campus aerial 1921 US Army.jpg",
+   "reason": "photo dated 1921 (older than 2011)"
+  },
+  {
+   "college": "Massachusetts Institute of Technology",
+   "id": 166683,
+   "file": "File:Massachusetts Institute of Technology campus aerial War Department 1925.jpg",
+   "reason": "photo dated 1925 (older than 2011)"
+  },
+  {
+   "college": "Miami University-Oxford",
+   "id": 204024,
+   "file": "File:Bishop Hall, Miami University, Oxford, Ohio. - DPLA - 6b6a6526fc5d3112322600d8d6b20226 (page 1).jpg",
+   "reason": "license not recorded"
+  },
+  {
+   "college": "Michigan State University",
+   "id": 171100,
+   "file": "File:Mass wasting in coastal Alaska (1969) (19952553643).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Millsaps College",
+   "id": 175980,
+   "file": "File:1930 Western Union telegram Millsaps College Mississippi State University.jpg",
+   "reason": "photo dated 1930 (older than 2011)"
+  },
+  {
+   "college": "Minneapolis College of Art and Design",
+   "id": 174127,
+   "file": "File:The Grammar of Ornament- Plate XXXIX - Owen Jones, British designer, 1809-1874 Examples from various styles of ornament, B. Quaritch, Folio ed., London 1910.jpg",
+   "reason": "photo dated 1910 (older than 2011)"
+  },
+  {
+   "college": "Mississippi State University",
+   "id": 176080,
+   "file": "File:Mississippi State College aerial photograph, circa 1938.png",
+   "reason": "photo dated 1938 (older than 2011)"
+  },
+  {
+   "college": "New York University",
+   "id": 193900,
+   "file": "File:Birds of other lands, reptiles, fishes, jointed animals and lower forms; (1917) (14768850253).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "North Carolina A & T State University",
+   "id": 199102,
+   "file": "File:Aggie Stadium Home Gate and Pressbox in 2010.jpg",
+   "reason": "photo dated 2010 (older than 2011)"
+  },
+  {
+   "college": "North Carolina A & T State University",
+   "id": 199102,
+   "file": "File:Morrison Hall in 1926.png",
+   "reason": "photo dated 1926 (older than 2011)"
+  },
+  {
+   "college": "North Carolina A & T State University",
+   "id": 199102,
+   "file": "File:North Dormitory (1926).png",
+   "reason": "photo dated 1926 (older than 2011)"
+  },
+  {
+   "college": "North Carolina A & T State University",
+   "id": 199102,
+   "file": "File:Aggievision Jumbotron in 2010.jpg",
+   "reason": "photo dated 2010 (older than 2011)"
+  },
+  {
+   "college": "North Carolina A & T State University",
+   "id": 199102,
+   "file": "File:Murphy Hall (Front View) 1926.png",
+   "reason": "photo dated 1926 (older than 2011)"
+  },
+  {
+   "college": "North Carolina A & T State University",
+   "id": 199102,
+   "file": "File:Murphy Hall in 1926.png",
+   "reason": "photo dated 1926 (older than 2011)"
+  },
+  {
+   "college": "North Carolina State University at Raleigh",
+   "id": 199193,
+   "file": "File:Coast watch (1979) (20474027019).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Northern Arizona University",
+   "id": 105330,
+   "file": "File:Northern Arizona University - Fall 2008 II (3196985417).jpg",
+   "reason": "photo dated 2008 (older than 2011)"
+  },
+  {
+   "college": "Northern Arizona University",
+   "id": 105330,
+   "file": "File:Northern Arizona University - Fall 2008 I (3197830602).jpg",
+   "reason": "photo dated 2008 (older than 2011)"
+  },
+  {
+   "college": "Oakwood University",
+   "id": 101912,
+   "file": "File:Bradford Cleveland Brooks Leadership Center (Oakwood University, 2007).jpg",
+   "reason": "photo dated 2007 (older than 2011)"
+  },
+  {
+   "college": "Oberlin College",
+   "id": 204501,
+   "file": "File:Oberlin Campus, Oberlin, Ohio, 1894 - DPLA - 9254935644d43837f21566cd58680ce3.jpg",
+   "reason": "photo dated 1894 (older than 2011)"
+  },
+  {
+   "college": "Oberlin College",
+   "id": 204501,
+   "file": "File:148th Aero Squadron - 1912-S8 - P2.jpg",
+   "reason": "photo dated 1912 (older than 2011)"
+  },
+  {
+   "college": "Oberlin College",
+   "id": 204501,
+   "file": "File:Oberlin Campus, Oberlin, Ohio, 1894 - DPLA - 94451323f58059969fd053bda0ff5056.jpg",
+   "reason": "photo dated 1894 (older than 2011)"
+  },
+  {
+   "college": "Occidental College",
+   "id": 120254,
+   "file": "File:Highland Park Campus of Occidental College showing the Stimson Library, the Hall of Letters, and the Academy Building, Los Angeles, ca.1908 (CHS-5326).jpg",
+   "reason": "photo dated 1908 (older than 2011)"
+  },
+  {
+   "college": "Occidental College",
+   "id": 120254,
+   "file": "File:Exterior view of the Chas. M. Stimson Library, built in 1904 on the Occidental College Highland Park Campus, ca.1908 (CHS-5327).jpg",
+   "reason": "photo dated 1908 (older than 2011)"
+  },
+  {
+   "college": "Ohio State University",
+   "id": 204796,
+   "file": "File:Campus buildings, Ohio State University, illustrations - DPLA - 17f24ca98e0c96b69fe57edde7cda8e1.jpg",
+   "reason": "license not recorded"
+  },
+  {
+   "college": "Ohio State University",
+   "id": 204796,
+   "file": "File:Orton Hall and Campus and View of Ohio State University Campus - DPLA - 887a5d2745cf9e7a158b57ffe35ff6d1 (page 1).jpg",
+   "reason": "license not recorded"
+  },
+  {
+   "college": "Ohio University",
+   "id": 204857,
+   "file": "File:Campus 1865 Ohio University Athena yearbook, 1915 (page 59 crop).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Ohio University",
+   "id": 204857,
+   "file": "File:Main Entrance and Campus, Ohio University, Athens, Ohio - DPLA - 1e7d3f5b65c19f6e818250b244386674 (page 1).jpg",
+   "reason": "license not recorded"
+  },
+  {
+   "college": "Oklahoma State University",
+   "id": 207388,
+   "file": "File:VIEW OF BELLTOWER, SOUTHEAST CORNER OF BUILDING - Cherokee Female Seminary, Northeastern Oklahoma State University Campus, Tahlequah, Cherokee County, OK HABS OKLA,11-TAHL,1A-5.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Oklahoma State University",
+   "id": 207388,
+   "file": "File:DETAIL OF MAIN (SOUTH) ENTRANCE - Cherokee Female Seminary, Northeastern Oklahoma State University Campus, Tahlequah, Cherokee County, OK HABS OKLA,11-TAHL,1A-6.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Oklahoma State University",
+   "id": 207388,
+   "file": "File:DETAIL OF NEWEL POST AND BALUSTER WORK - Cherokee Female Seminary, Northeastern Oklahoma State University Campus, Tahlequah, Cherokee County, OK HABS OKLA,11-TAHL,1A-10.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Oklahoma State University",
+   "id": 207388,
+   "file": "File:EAST ELEVATION - Cherokee Female Seminary, Northeastern Oklahoma State University Campus, Tahlequah, Cherokee County, OK HABS OKLA,11-TAHL,1A-3.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Oklahoma State University",
+   "id": 207388,
+   "file": "File:GENERAL VIEW, CLOSER - Cherokee Female Seminary, Northeastern Oklahoma State University Campus, Tahlequah, Cherokee County, OK HABS OKLA,11-TAHL,1A-2.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Oklahoma State University",
+   "id": 207388,
+   "file": "File:GENERAL VIEW OF SEMINARY, FROM SOUTH - Cherokee Female Seminary, Northeastern Oklahoma State University Campus, Tahlequah, Cherokee County, OK HABS OKLA,11-TAHL,1A-1.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Paul Quinn College",
+   "id": 227429,
+   "file": "File:Paul Quinn College 1898.jpg",
+   "reason": "photo dated 1898 (older than 2011)"
+  },
+  {
+   "college": "Pomona College",
+   "id": 121345,
+   "file": "File:Exterior view of Rembrandt Hall and the Claremont Inn on the Pomona College Campus, ca.1930.jpg",
+   "reason": "photo dated 1930 (older than 2011)"
+  },
+  {
+   "college": "Pomona College",
+   "id": 121345,
+   "file": "File:Courtyard of the women's campus at Pomona College, ca.1940.jpg",
+   "reason": "photo dated 1940 (older than 2011)"
+  },
+  {
+   "college": "Princeton University",
+   "id": 186131,
+   "file": "File:Aerial view of Princeton University campus, 1895.jpg",
+   "reason": "photo dated 1895 (older than 2011)"
+  },
+  {
+   "college": "Princeton University",
+   "id": 186131,
+   "file": "File:Princeton University Campus, Princeton, New Jersey, USA. October 28, 2006 - panoramio.jpg",
+   "reason": "photo dated 2006 (older than 2011)"
+  },
+  {
+   "college": "Rhodes College",
+   "id": 221351,
+   "file": "File:Halliburton Tower Rhodes College 2009.jpg",
+   "reason": "photo dated 2009 (older than 2011)"
+  },
+  {
+   "college": "San Diego State University",
+   "id": 122409,
+   "file": "File:23 0069263 Convair Negative Image - Convair employees posing for photograph outside of building 05-28-1959 at San Diego State University (54202183703).jpg",
+   "reason": "photo dated 1959 (older than 2011)"
+  },
+  {
+   "college": "San Jose State University",
+   "id": 122755,
+   "file": "File:MacQuarrie Hall, San José State University (2006).jpg",
+   "reason": "photo dated 2006 (older than 2011)"
+  },
+  {
+   "college": "Southeastern University",
+   "id": 137564,
+   "file": "File:'Bowlers, La Ciotat', 1930, William Glackens, Nova Southeastern University Museum of Art.jpg",
+   "reason": "photo dated 1930 (older than 2011)"
+  },
+  {
+   "college": "Southeastern University",
+   "id": 137564,
+   "file": "File:'Dancer in Blue', circa 1905, William Glackens, Nova Southeastern University Museum of Art.jpg",
+   "reason": "photo dated 1905 (older than 2011)"
+  },
+  {
+   "college": "Southeastern University",
+   "id": 137564,
+   "file": "File:'The Night After San Juan', 1898, William Glackens, Nova Southeastern University Museum of Art.jpg",
+   "reason": "photo dated 1898 (older than 2011)"
+  },
+  {
+   "college": "Southeastern University",
+   "id": 137564,
+   "file": "File:'Wickford, Low Tide', 1909, William Glackens, Nova Southeastern University Museum of Art.jpg",
+   "reason": "photo dated 1909 (older than 2011)"
+  },
+  {
+   "college": "Southwestern University",
+   "id": 228343,
+   "file": "File:Bullocks Wilshire Building, Southwestern University School of Law (skyline).jpg",
+   "reason": "license not recorded"
+  },
+  {
+   "college": "St Lawrence University",
+   "id": 195216,
+   "file": "File:The sentinel (1920) (14595569787).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Sterling College",
+   "id": 155937,
+   "file": "File:Annual catalogue of the officers and students of Cooper Memorial College, Sterling, Kansas (1898) (14595663460).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Stevens Institute of Technology",
+   "id": 186867,
+   "file": "File:Stevens Institute of Technology campus, seen from the Hudson, Hoboken, 2007.jpg",
+   "reason": "photo dated 2007 (older than 2011)"
+  },
+  {
+   "college": "Swarthmore College",
+   "id": 216287,
+   "file": "File:Swarthmore College postcard 1960s.png",
+   "reason": "photo dated 1960 (older than 2011)"
+  },
+  {
+   "college": "Syracuse University",
+   "id": 196413,
+   "file": "File:View from top of Hill in rear of Syracuse University campus (Observatory, library incomplete, Hall of Languages) (Circa 1870-80s).jpg",
+   "reason": "photo dated 1870 (older than 2011)"
+  },
+  {
+   "college": "Syracuse University",
+   "id": 196413,
+   "file": "File:NORTH FRONT - Syracuse University, Hall of Languages, Syracuse University Campus, Syracuse, Onondaga County, NY HABS NY,34-SYRA,25B-1.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "The University of Texas at Austin",
+   "id": 228778,
+   "file": "File:Jester Dormitory on the campus of the University of Texas at Austin (19 03 2003).jpg",
+   "reason": "photo dated 2003 (older than 2011)"
+  },
+  {
+   "college": "Tufts University",
+   "id": 168148,
+   "file": "File:The coaching era (1900) (14592442540).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Tufts University",
+   "id": 168148,
+   "file": "File:Horse-breeder's handbook - together with a history of the rise and progress of the British stud... (1898) (14757193306).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Tulane University of Louisiana",
+   "id": 160755,
+   "file": "File:Tulane University Uptown Campus - Jambalaya 1961 - North end towards Claiborne.jpg",
+   "reason": "photo dated 1961 (older than 2011)"
+  },
+  {
+   "college": "Tulane University of Louisiana",
+   "id": 160755,
+   "file": "File:Tulane University Campus Scenes 1924 Jambalaya p 358.jpg",
+   "reason": "photo dated 1924 (older than 2011)"
+  },
+  {
+   "college": "Tulane University of Louisiana",
+   "id": 160755,
+   "file": "File:Tulane University Campus Quad 1980.jpg",
+   "reason": "photo dated 1980 (older than 2011)"
+  },
+  {
+   "college": "Tuskegee University",
+   "id": 102377,
+   "file": "File:Rockefeller Hall Bath House, Tuskegee University Campus, Tuskegee, Macon County, AL HABS ALA,44-TUSG,11- (sheet 1 of 6).png",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "United States Air Force Academy",
+   "id": 128328,
+   "file": "File:USAFA Campus July 2007 1.jpg",
+   "reason": "photo dated 2007 (older than 2011)"
+  },
+  {
+   "college": "United States Naval Academy",
+   "id": 164155,
+   "file": "File:Japanse klok en een gezicht op de campus van de United States Naval Academy te Annapolis Japanese bell (titel op object) View on campus (titel op object), RP-F-2001-7-1060-24.jpg",
+   "reason": "photo dated 2001 (older than 2011)"
+  },
+  {
+   "college": "University of California-Berkeley",
+   "id": 110635,
+   "file": "File:University of California, Berkeley Campus (1902).jpg",
+   "reason": "photo dated 1902 (older than 2011)"
+  },
+  {
+   "college": "University of California-Irvine",
+   "id": 110653,
+   "file": "File:Campus of the University of California, Irvine (aerial view, circa 2006).jpg",
+   "reason": "photo dated 2006 (older than 2011)"
+  },
+  {
+   "college": "University of California-Irvine",
+   "id": 110653,
+   "file": "File:Ring Road encircling the campus of the University of California, Irvine (September 10 2003).jpg",
+   "reason": "photo dated 2003 (older than 2011)"
+  },
+  {
+   "college": "University of California-Los Angeles",
+   "id": 110662,
+   "file": "File:Buildings and the courtyard of the Southern Branch of the University of California, Los Angeles, after 1914 (CHS-5026).jpg",
+   "reason": "photo dated 1914 (older than 2011)"
+  },
+  {
+   "college": "University of California-Los Angeles",
+   "id": 110662,
+   "file": "File:Detail view of Powell Library main reading room rotunda ceiling, east section. - University of California Los Angeles, Powell Library, Westwood, Los Angeles, Los Angeles County, CA HABS CA-2678-A-13.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "University of California-Santa Cruz",
+   "id": 110714,
+   "file": "File:Robert Trivers speaking at University of California, Santa Cruz (1978).jpg",
+   "reason": "photo dated 1978 (older than 2011)"
+  },
+  {
+   "college": "University of Central Florida",
+   "id": 132903,
+   "file": "File:UCF1988TowelGameRockmarker.jpg",
+   "reason": "photo dated 1988 (older than 2011)"
+  },
+  {
+   "college": "University of Cincinnati",
+   "id": 201885,
+   "file": "File:Aerial View of the University of Cincinnati, Main Campus, Cincinnati, Ohio - DPLA - 7e829f2a1943b9e7a68af3abf6b4eba1 (page 1).jpg",
+   "reason": "photo dated 1943 (older than 2011)"
+  },
+  {
+   "college": "University of Cincinnati",
+   "id": 201885,
+   "file": "File:RPPC postcard of the University of Cincinnati main campus in 1912, depicting Baldwin Hall on the left and Schmidlapp Gymnasium on the right.jpg",
+   "reason": "photo dated 1912 (older than 2011)"
+  },
+  {
+   "college": "University of Florida",
+   "id": 134130,
+   "file": "File:1911 University of Florida campus view.png",
+   "reason": "photo dated 1911 (older than 2011)"
+  },
+  {
+   "college": "University of Houston",
+   "id": 225511,
+   "file": "File:Aerial view of the University of Houston (1950).JPG",
+   "reason": "photo dated 1950 (older than 2011)"
+  },
+  {
+   "college": "University of Illinois Urbana-Champaign",
+   "id": 145637,
+   "file": "File:University of Illinois (Urbana-Champaign campus) Press - DPLA - 946774152a6bbfda71bb7621bc04ad84.jpg",
+   "reason": "license not recorded"
+  },
+  {
+   "college": "University of Illinois Urbana-Champaign",
+   "id": 145637,
+   "file": "File:Adolf Hitler caricature pincushion figurine made of painted plaster and cotton, United States, circa 1941, Spurlock Museum, University of Illinois, Urbana-Champaign (Gary Todd).jpg",
+   "reason": "photo dated 1941 (older than 2011)"
+  },
+  {
+   "college": "University of Iowa",
+   "id": 153658,
+   "file": "File:University of Iowa Art Campus during the Iowa Flood of 2008.jpg",
+   "reason": "photo dated 2008 (older than 2011)"
+  },
+  {
+   "college": "University of Kansas",
+   "id": 155317,
+   "file": "File:US-KS(1891) p272 LAWRENCE, UNIVERSITY OF KANSAS, CAMPUS.jpg",
+   "reason": "photo dated 1891 (older than 2011)"
+  },
+  {
+   "college": "University of Maryland-College Park",
+   "id": 163286,
+   "file": "File:Reveille (1902) (14742021836).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "University of Maryland-College Park",
+   "id": 163286,
+   "file": "File:Chevy Chase Field at Byrd Stadium 4-20-2008.jpg",
+   "reason": "photo dated 2008 (older than 2011)"
+  },
+  {
+   "college": "University of Massachusetts-Amherst",
+   "id": 166629,
+   "file": "File:Old North Hall, UMassAmherst, site of founding of Phi Sigma Kappa, 1875.jpg",
+   "reason": "photo dated 1875 (older than 2011)"
+  },
+  {
+   "college": "University of Miami",
+   "id": 135726,
+   "file": "File:University of Miami, Chemistry Laboratory Building, 1300 Campo Santo Drive, Coral Gables, Miami-Dade County, FL HABS FL-471-B (sheet 1 of 4).tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "University of Missouri-Columbia",
+   "id": 178396,
+   "file": "File:1875 University of Missouri Columbia University of MissouriArchives.png",
+   "reason": "photo dated 1875 (older than 2011)"
+  },
+  {
+   "college": "University of Nevada-Reno",
+   "id": 182290,
+   "file": "File:University of Nevada, Reno Campus Players, 1932.jpg",
+   "reason": "photo dated 1932 (older than 2011)"
+  },
+  {
+   "college": "University of North Carolina at Chapel Hill",
+   "id": 199120,
+   "file": "File:St. Nicholas (serial) (1921) (14598206309).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "University of North Carolina at Greensboro",
+   "id": 199148,
+   "file": "File:Bulletin of the University of North Carolina at Greensboro (1969-1970) - DPLA - 277b6446dccc26ddd6798fd3539e3ed5 (page 272).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "University of Oregon",
+   "id": 209551,
+   "file": "File:2007 University Day plaque on the University of Oregon campus.jpg",
+   "reason": "photo dated 2007 (older than 2011)"
+  },
+  {
+   "college": "University of Oregon",
+   "id": 209551,
+   "file": "File:1907 University Day paver on the University of Oregon campus.jpg",
+   "reason": "photo dated 1907 (older than 2011)"
+  },
+  {
+   "college": "University of Pennsylvania",
+   "id": 215062,
+   "file": "File:University of Pennsylvania- its history, traditions, buildings and memorials- also a brief guide to Philadelphia (1918) (14578142278).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "University of Richmond",
+   "id": 233374,
+   "file": "File:Fanny Graves Crenshaw - 1922 University of Richmond (page 38 crop).jpg",
+   "reason": "photo dated 1922 (older than 2011)"
+  },
+  {
+   "college": "University of South Florida",
+   "id": 137351,
+   "file": "File:Residence Hall One, University of South Florida St. Petersburg.jpg",
+   "reason": "license not recorded"
+  },
+  {
+   "college": "University of Utah",
+   "id": 230764,
+   "file": "File:SLC-1. Fort Douglas National Historic Landmark and Fort Douglas Military Museum (University of Utah campus) on the California National Historic Trail (2009) (891fdd22-13c9-4618-800f-63bf83ca1d48).jpg",
+   "reason": "photo dated 2009 (older than 2011)"
+  },
+  {
+   "college": "University of Virginia",
+   "id": 234076,
+   "file": "File:University of Virginia, Pavilion III, West Lawn, University of Virginia Campus, Charlottesville, Charlottesville, VA HABS VA,2-CHAR,1D- (sheet 1 of 10).tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "University of Virginia",
+   "id": 234076,
+   "file": "File:University of Virginia, Pavilion IV, East Lawn, University of Virginia campus, Charlottesville, Charlottesville, VA HABS VA,2-CHAR,1J- (sheet 10 of 10).tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "University of Washington-Seattle Campus",
+   "id": 236948,
+   "file": "File:University of Washington campus, 1906, from the south, as seen across Lake Union (SEATTLE 3776).jpg",
+   "reason": "photo dated 1906 (older than 2011)"
+  },
+  {
+   "college": "University of Wisconsin-Madison",
+   "id": 240444,
+   "file": "File:North Hall, constructed in 1851, on the campus of the University of Wisconsin, Madison. From 1851 to about 1855 it was the University of Wisconsiny, featuring dormitories, lecture rooms, study rooms and a chapel. (6937324543).jpg",
+   "reason": "photo dated 1855 (older than 2011)"
+  },
+  {
+   "college": "Utah State University",
+   "id": 230728,
+   "file": "File:Cover Sheet - Utah State University, Lund Hall, 3500 Old Main Hill, Logan, Cache County, UT HABS UT-140-A (sheet 1 of 7).png",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Vanderbilt University",
+   "id": 221999,
+   "file": "File:Detail, east tower roof - Vanderbilt University, Gymnasium, Twenty-third Avenue, South and West End Boulevard, Nashville, Davidson County, TN HABS TENN,19-NASH,5B-4.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Vanderbilt University",
+   "id": 221999,
+   "file": "File:Vanderbilt University campus circa 1875.png",
+   "reason": "photo dated 1875 (older than 2011)"
+  },
+  {
+   "college": "Vanderbilt University",
+   "id": 221999,
+   "file": "File:Detail, west tower roof - Vanderbilt University, Gymnasium, Twenty-third Avenue, South and West End Boulevard, Nashville, Davidson County, TN HABS TENN,19-NASH,5B-5.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Vassar College",
+   "id": 197133,
+   "file": "File:Josselyn Hall postcard, Vassar College, 1927 or before.jpg",
+   "reason": "photo dated 1927 (older than 2011)"
+  },
+  {
+   "college": "Vassar College",
+   "id": 197133,
+   "file": "File:Vassar College Library - DPLA - 31b72d6ae328ea8d284b77429bfe8945.jpg",
+   "reason": "license not recorded"
+  },
+  {
+   "college": "Villanova University",
+   "id": 216597,
+   "file": "File:PSTC 205 (Brill Bullet) at substation and interlocking near Villanova University, PA taken from railfan seat of Libertylinere Independence Hall on August 28, 1964 (22067481853).jpg",
+   "reason": "photo dated 1964 (older than 2011)"
+  },
+  {
+   "college": "Washington State University",
+   "id": 236939,
+   "file": "File:Early stages of the construction of Clark Hall; Johnson Hall & campus in background; Washington State University; 1969 (52548518980).jpg",
+   "reason": "photo dated 1969 (older than 2011)"
+  },
+  {
+   "college": "Washington State University",
+   "id": 236939,
+   "file": "File:Washington State University campus, 1921 - DPLA - c782ef6a6cbe5a2b38fd5528e937e176.jpg",
+   "reason": "photo dated 1921 (older than 2011)"
+  },
+  {
+   "college": "Wesleyan University",
+   "id": 130697,
+   "file": "File:Hamilton-Williams Campus Center (Ohio Wesleyan University - exterior, 2006).jpg",
+   "reason": "photo dated 2006 (older than 2011)"
+  },
+  {
+   "college": "Wesleyan University",
+   "id": 130697,
+   "file": "File:Entrance Gate, Ohio Wesleyan University Campus, gift of Class of 1908, Delaware, Ohio - DPLA - f71b2fa95a3f5acd94e3a514edfacd7e (page 1).jpg",
+   "reason": "photo dated 1908 (older than 2011)"
+  },
+  {
+   "college": "Whitman College",
+   "id": 237057,
+   "file": "File:Whitman College (1889) (ADVERT 157).jpeg",
+   "reason": "photo dated 1889 (older than 2011)"
+  },
+  {
+   "college": "Whitman College",
+   "id": 237057,
+   "file": "File:The Town Crier, v.29, no.27, Sep. 1, 1934 - DPLA - ae6bad3d38b4a75b3bbbdefdc7f0e65e (page 2).jpg",
+   "reason": "photo dated 1934 (older than 2011)"
+  },
+  {
+   "college": "William & Mary",
+   "id": 231624,
+   "file": "File:On the Campus of the College of William and Mary (1916) (14580246358).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "William Jewell College",
+   "id": 179955,
+   "file": "File:History of Daviess and Gentry counties, Missouri (1922) (14591631499).jpg",
+   "reason": "scanned book, journal or yearbook page"
+  },
+  {
+   "college": "Williams College",
+   "id": 168342,
+   "file": "File:Campus Buildings, Williams College, Massachusetts-saam 1994.91.275.jpg",
+   "reason": "photo dated 1994 (older than 2011)"
+  },
+  {
+   "college": "Williams College",
+   "id": 168342,
+   "file": "File:GENERAL VIEW FROM SOUTHEAST - Williams College, President's House, Williams College Campus, Williamstown, Berkshire County, MA HABS MASS,2-WILL,1-1.tif",
+   "reason": "historic survey scan (decades old)"
+  },
+  {
+   "college": "Williams College",
+   "id": 168342,
+   "file": "File:SOUTHWEST CORNER OF SOUTH SIDE, WOOD QUOINING, DENTIL BAND WITH CROWNING BALLUSTRADE - Williams College, President's House, Williams College Campus, Williamstown, Berkshire County HABS MASS,2-WILL,1-3.tif",
+   "reason": "historic survey scan (decades old)"
+  }
+ ]
+}

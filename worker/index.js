@@ -17,6 +17,8 @@
 // Passwords are hashed with PBKDF2-SHA256 and a per-user salt. Session tokens are random and only
 // their SHA-256 hash is stored, so a database leak doesn't expose usable logins.
 
+import { collegeResearch, reportResearch } from "./college-research.js";
+
 const SESSION_DAYS = 60;
 const PBKDF2_ITERATIONS = 100000; // the most Workers' Web Crypto allows
 const MAX_FAILS = 8, LOCK_MINUTES = 15;
@@ -114,6 +116,8 @@ async function route(req, env, path) {
   if (path === "forgot" && req.method === "POST") return forgot(req, env);
   if (path === "reset" && req.method === "POST") return reset(req, env);
   if (path === "ai" && req.method === "POST") return aiTutor(req, env);
+  if (path === "college-research" && req.method === "POST") return collegeResearch(req, env, json, AI_ORIGINS);
+  if (path === "college-research/report" && req.method === "POST") return reportResearch(req, env, json, AI_ORIGINS);
   if (path === "auth/providers" && req.method === "GET") return json({ google: !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) }, 200, req);
   if (path === "auth/google" && req.method === "GET") return googleStart(req, env);
   if (path === "auth/google/callback" && req.method === "GET") return googleCallback(req, env);

@@ -31,3 +31,7 @@ CREATE TABLE IF NOT EXISTS help_history (
   PRIMARY KEY (user_id, id)
 );
 CREATE INDEX IF NOT EXISTS help_history_user_created ON help_history(user_id, created_at DESC);
+
+-- College research cache (public official pages only, no student data) and reported answers awaiting review.
+CREATE TABLE IF NOT EXISTS research_pages (url TEXT PRIMARY KEY, title TEXT, text TEXT, fetched_at INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS research_reports (id INTEGER PRIMARY KEY AUTOINCREMENT, college_id INTEGER NOT NULL, answer TEXT, created_at INTEGER NOT NULL);

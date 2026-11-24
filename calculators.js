@@ -166,8 +166,10 @@
     if (opts.sat != null) params.sat = opts.sat;
     if (opts.act != null) params.act = opts.act;
     params.hyp = "1";
+    const mq = new URLSearchParams(); if (params.gpa != null) mq.set("gpa", params.gpa); if (params.sat != null) mq.set("sat", params.sat); if (params.act != null) mq.set("act", params.act);
     return '<div class="calc-next"><h2 class="calc-h">Next step</h2><p>' + (opts.label || "See which colleges fit these numbers.") + "</p>" +
-      '<div class="calc-actions"><a class="calc-btn primary" href="' + esc(collegeLink(params)) + '">Find colleges that fit these results</a>' + btns.join("") + "</div>" +
+      '<div class="calc-actions"><a class="calc-btn primary" href="' + esc(collegeLink(params)) + '">Find colleges that fit these results</a>' +
+      '<a class="calc-btn" href="/college-match/?' + esc(mq.toString()) + '">Take the full college match quiz</a>' + btns.join("") + "</div>" +
       '<p class="small muted">"Find colleges" shows these numbers as a what-if: your saved profile is not changed unless you choose "Use ... in my college profile".</p></div>';
   }
 

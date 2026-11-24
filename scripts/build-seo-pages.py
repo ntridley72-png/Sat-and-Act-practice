@@ -22,7 +22,7 @@ from seo_common import (ORIGIN, ROOT, SITE_NAME, STATES, TODAY, breadcrumbs, e,
                         faq_schema, inject_ads, inject_fonts, load_colleges, load_scholarships,
                         money, num, page, pct, slugify, write)
 
-from college_match import college_match_page
+from college_match import college_match_page, how_it_works_page
 
 HOME = ("Home", "/")
 
@@ -1638,6 +1638,9 @@ def main():
     p, h = college_match_page(colleges)
     write(out / p.strip("/") / "index.html", h)
     entries.append((p, "0.9", "monthly"))
+    p, h = how_it_works_page()
+    write(out / p.strip("/") / "index.html", h)
+    entries.append((p, "0.6", "monthly"))
 
     for state, cols in sorted(by_state.items()):
         p, h = state_hub(state, cols)

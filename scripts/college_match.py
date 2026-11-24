@@ -1,286 +1,12 @@
-"""The college matcher page: a client-side tool over a compact copy of the profile data.
-
-Everything runs in the browser from the JSON embedded in the page, so it works without a
-server, is indexable as ordinary text around the tool, and adds no network requests.
+"""The college matcher page (/college-match/): the questionnaire and results run in the browser from college-matcher.js
+and college-match-engine.js over college-data.js and college-match-data.js (loaded after the page appears). The page text
+around the tool (score tables, FAQs) is generated here from the same data so it is crawlable.
 """
+
+
 import json
 
 from seo_common import SITE_NAME, STATES, breadcrumbs, e, faq_schema, page
-
-STYLE = """<style>
-.cm-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:14px 0}
-.cm-form label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:700;color:var(--ws-ink)}
-.cm-form input,.cm-form select{font:inherit;font-weight:400;padding:9px 10px;border:1px solid var(--ws-line);background:var(--ws-surface);color:var(--ws-ink);border-radius:2px;min-height:40px}
-.cm-form .cm-check{flex-direction:row;align-items:center;gap:8px;font-weight:600}
-.cm-form .cm-check input{min-height:0;width:auto}
-.cm-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:6px 0 18px}
-body[data-workspace] .cm-actions button{font:inherit;font-weight:700;cursor:pointer;border:1px solid var(--ws-line);background:var(--ws-surface);color:var(--ws-ink);padding:11px 16px;border-radius:2px}
-body[data-workspace] .cm-actions button.cm-go{background:var(--ws-accent);color:#fff;border-color:var(--ws-accent)}
-.cm-summary{margin:10px 0;color:var(--ws-ink)}
-.cm-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}
-.cm-tabs button,body[data-workspace] .cm-tabs button{font:inherit;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--ws-line);background:var(--ws-surface);color:var(--ws-ink);padding:7px 12px;border-radius:2px}
-body[data-workspace] .cm-tabs button[aria-pressed="false"]{background:var(--ws-surface);color:var(--ws-ink)}
-.cm-tabs button[aria-pressed="true"],body[data-workspace] .cm-tabs button[aria-pressed="true"]{background:var(--ws-accent);color:#fff;border-color:var(--ws-accent)}
-.cm-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
-.cm-card{border:1px solid var(--ws-line);background:var(--ws-surface);padding:12px 14px;border-radius:2px;display:grid;gap:6px}
-.cm-card h3{margin:0;font-size:17px}
-.cm-card h3 a{color:var(--ws-ink);text-decoration:none}
-.cm-card h3 a:hover{text-decoration:underline}
-.cm-meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--ws-muted)}
-.cm-chip{justify-self:start;display:inline-block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:2px;border:1px solid currentColor}
-.cm-likely{color:#0a7a3b}.cm-match{color:#8a5a00}.cm-reach{color:#b3261e}.cm-unk{color:var(--ws-muted)}
-.cm-fs{border:1px solid var(--ws-line);background:var(--ws-surface);padding:12px 14px 14px;margin:0 0 12px;border-radius:2px}
-.cm-fs legend{font-weight:800;font-size:14px;padding:0 6px;color:var(--ws-ink)}
-.cm-fs .cm-form{margin:6px 0 0}
-.cm-fs summary{cursor:pointer;color:var(--ws-ink)}
-.cm-fs[open] summary{margin-bottom:8px}
-.cm-hint{font-size:12px;font-weight:400;color:var(--ws-muted)}
-.cm-profile{border-left:4px solid var(--ws-accent);padding:8px 12px;margin:10px 0;background:var(--ws-surface);color:var(--ws-ink)}
-.cm-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.cm-fit{font-size:13px;font-weight:800;white-space:nowrap;color:var(--ws-accent)}
-.cm-why{margin:2px 0 0;padding-left:18px;font-size:13px;color:var(--ws-ink)}
-.cm-why li{line-height:1.5;margin:1px 0}
-.cm-note{font-size:12px;color:var(--ws-muted)}
-.cm-more{margin:14px 0}
-body[data-workspace] .cm-more button{font:inherit;font-weight:700;cursor:pointer;border:1px solid var(--ws-line);background:var(--ws-surface);color:var(--ws-ink);padding:10px 16px;border-radius:2px}
-@media (prefers-color-scheme:dark){.cm-likely{color:#5fd391}.cm-match{color:#f0b84a}.cm-reach{color:#ff8a80}}
-</style>"""
-
-SCRIPT = r"""
-(function(){
-  var data = JSON.parse(document.getElementById('cm-data').textContent);
-  var form = document.getElementById('cm-form'), out = document.getElementById('cm-results');
-  var tabs = document.getElementById('cm-tabs'), sum = document.getElementById('cm-summary'), more = document.getElementById('cm-more');
-  var prof = document.getElementById('cm-profile');
-  var KEY = 'funsatCollegeMatch2', PAGE = 12, shown = PAGE, filter = 'all', last = [];
-  var LOC = {city:'City', suburb:'Suburb', town:'Town', rural:'Rural'};
-  var FIELDS = ['sat','act','state','income','price','ctrl','size','loc','region','home','reach','major','ratio','gradMin','retMin','earnMin','debtMax','select','pCost','pGrad','pEarn','pSmall','pDiv','pFirst','pDebt','pRet','sort'];
-  var NUMERIC = {sat:1, act:1, price:1, ratio:1, gradMin:1, retMin:1, earnMin:1, debtMax:1};
-  var ADJ = JSON.parse(document.getElementById('cm-adj').textContent), REG = JSON.parse(document.getElementById('cm-reg').textContent);
-  var BANDS = {'0':'$0–$30,000','1':'$30,001–$48,000','2':'$48,001–$75,000','3':'$75,001–$110,000','4':'$110,000+'};
-  function num(v){ var n = parseFloat(v); return isFinite(n) ? n : null; }
-  function money(n){ return '$' + Math.round(n).toLocaleString('en-US'); }
-  function pick(sel){ return sel.options[sel.selectedIndex].text; }
-  function read(){
-    var v = {hbcu:form.hbcu.checked, major_only:form.majorOnly.checked, notest:form.notest.checked};
-    FIELDS.forEach(function(k){ var el = form[k]; v[k] = NUMERIC[k] ? num(el.value) : el.value; });
-    return v;
-  }
-  function save(v){ try{ localStorage.setItem(KEY, JSON.stringify(v)); }catch(e){} }
-  function restore(){
-    try{ var v = JSON.parse(localStorage.getItem(KEY)||'null'); if(!v) return;
-      FIELDS.forEach(function(k){ if(v[k] != null) form[k].value = v[k]; });
-      form.hbcu.checked = !!v.hbcu; form.majorOnly.checked = !!v.major_only; form.notest.checked = !!v.notest; }catch(e){}
-  }
-  // Percentile (0..1) of each college among all colleges for one measure; "low" means lower is better.
-  function ranks(key, low){
-    var vals = data.map(function(c){ return c[key]; }).filter(function(x){ return x != null; }).sort(function(a, b){ return a - b; });
-    var n = vals.length;
-    return function(x){
-      if(x == null || !n) return null;
-      var lo = 0, hi = n; while(lo < hi){ var m = (lo + hi) >> 1; if(vals[m] < x) lo = m + 1; else hi = m; }
-      var p = lo / Math.max(1, n - 1); p = Math.min(1, p);
-      return low ? 1 - p : p;
-    };
-  }
-  var R = {np:ranks('np', true), gr:ranks('gr', false), er:ranks('er', false), sf:ranks('sf', true), dv:ranks('dv', false), fg:ranks('fg', false), db:ranks('db', true), rt:ranks('rt', false)};
-  function price(c, v){
-    if(v.income !== '' && c.bd && c.bd[+v.income] != null) return c.bd[+v.income];
-    return c.np;
-  }
-  function position(c, v){
-    var best = null;
-    if(v.sat && c.s1 && c.s2) best = (v.sat - c.s1) / (c.s2 - c.s1);
-    if(v.act && c.a1 && c.a2){ var t = (v.act - c.a1) / (c.a2 - c.a1); if(best === null || t > best) best = t; }
-    return best;
-  }
-  function band(c, t){
-    var adm = c.ad;
-    if(t === null){ return adm >= 60 ? 'likely' : adm >= 25 ? 'match' : 'reach'; }
-    if(adm < 15) return 'reach';
-    if(t >= 1) return adm >= 40 ? 'likely' : 'match';
-    if(t >= 0) return adm < 25 ? 'reach' : 'match';
-    return 'reach';
-  }
-  function far(c, v){
-    if(v.sat && c.s1 && v.sat < c.s1 - 200) return true;
-    if(!v.sat && v.act && c.a1 && v.act < c.a1 - 5) return true;
-    return false;
-  }
-  function size(c){ return c.en < 3000 ? 'small' : c.en <= 10000 ? 'medium' : 'large'; }
-  function w(x){ return x === 'high' ? 2 : x === 'some' ? 1 : 0; }
-  function personalize(c, v, t, bd){
-    var pts = 0, max = 0, why = [];
-    // Admission fit always counts: it is the part of "ideal" that a score can speak to.
-    var base = bd === 'match' ? 40 : bd === 'likely' ? 34 : 22;
-    if(t !== null && bd !== 'reach') base += Math.max(0, 6 - 12 * Math.abs(t - .55));
-    // A college that reports no score range cannot be compared with the student's score, so
-    // it is sorted by acceptance rate alone and ranks below colleges we can actually compare.
-    if(t === null && (v.sat || v.act)){ base = Math.min(base, 26); why.push('It does not report a score range, so this match uses its ' + Math.round(c.ad) + '% acceptance rate only.'); }
-    pts += base; max += 46;
-    if(t !== null){
-      var sc = v.sat && c.s1 ? 'Your ' + v.sat + ' SAT' : 'Your ' + v.act + ' ACT';
-      var lo = v.sat && c.s1 ? c.s1 : c.a1, hi = v.sat && c.s1 ? c.s2 : c.a2;
-      var sv = v.sat && c.s1 ? v.sat : v.act;
-      if(t > 1) why.push(sc + ' is above its typical range (' + lo + '–' + hi + ').');
-      else if(t >= 0) why.push(sc + ' sits inside its typical range (' + lo + '–' + hi + ').');
-      else why.push(sc + ' is below its typical range (' + lo + '–' + hi + '), so treat it as a stretch.');
-    }
-    var pr = price(c, v);
-    var wc = w(v.pCost);
-    if(wc){ var r = R.np(pr); if(r != null){ pts += 8 * wc * r; max += 8 * wc; } }
-    if(pr != null){
-      var tag = (v.income !== '' && c.bd && c.bd[+v.income] != null) ? 'for a household earning ' + BANDS[v.income] : 'on average';
-      if(v.price && pr <= v.price) why.push('Net price about ' + money(pr) + '/yr ' + tag + ', inside your ' + money(v.price) + ' budget.');
-      else if(wc || v.income !== '') why.push('Net price about ' + money(pr) + '/yr ' + tag + '.');
-    }
-    var wg = w(v.pGrad); if(wg){ var rg = R.gr(c.gr); if(rg != null){ pts += 8 * wg * rg; max += 8 * wg; } if(c.gr && c.gr >= 70) why.push(Math.round(c.gr) + '% of students graduate within 6 years.'); }
-    var we = w(v.pEarn); if(we){ var re = R.er(c.er); if(re != null){ pts += 8 * we * re; max += 8 * we; } if(c.er && re > .6) why.push('Graduates earn about ' + money(c.er) + ' a year ten years after entry.'); }
-    var ws = w(v.pSmall); if(ws){ var rs = R.sf(c.sf); if(rs != null){ pts += 8 * ws * rs; max += 8 * ws; } if(c.sf && c.sf <= 14) why.push('Small classes: about ' + Math.round(c.sf) + ' students per faculty member.'); }
-    var wd = w(v.pDiv); if(wd){ var rd = R.dv(c.dv); if(rd != null){ pts += 8 * wd * rd; max += 8 * wd; } if(c.dv && rd > .6) why.push('A more diverse student body than most colleges here.'); }
-    var wf = w(v.pFirst); if(wf){ var rf = R.fg(c.fg); if(rf != null){ pts += 8 * wf * rf; max += 8 * wf; } if(c.fg && rf > .6) why.push(Math.round(c.fg) + '% of students are first-generation.'); }
-    var wdb = w(v.pDebt); if(wdb){ var rdb = R.db(c.db); if(rdb != null){ pts += 8 * wdb * rdb; max += 8 * wdb; } if(c.db && c.db <= 17000) why.push('Typical federal loan debt is ' + money(c.db) + ', lower than at most colleges here.'); }
-    var wr = w(v.pRet); if(wr){ var rr = R.rt(c.rt); if(rr != null){ pts += 8 * wr * rr; max += 8 * wr; } if(c.rt && c.rt >= 85) why.push(Math.round(c.rt) + '% of first-year students return for a second year.'); }
-    if(v.ratio && c.sf != null) why.push('Student-to-faculty ratio of about ' + Math.round(c.sf) + ':1.');
-    if(v.reach === 'near' && v.home && c.st !== v.home) why.push('In a state bordering ' + v.home + ', so home stays within reach.');
-    if(v.reach === 'state' && v.home && c.st === v.home) why.push('In your home state.');
-    if(v.region && c.rg === v.region) why.push('In the ' + v.region + ' region.');
-    if(v.major){
-      var share = c.mj && c.mj[v.major];
-      if(share){ pts += 12 * Math.min(1, share / 20); why.push(share + '% of degrees are in ' + v.major + ', one of its biggest programs.'); }
-      max += 12;
-    }
-    if(c.hb && v.hbcu) why.push('A historically Black college or university.');
-    if(v.state && c.st === v.state) why.push('In ' + c.sn + ', where you want to study.');
-    return {fit: Math.max(1, Math.min(99, Math.round(100 * pts / max))), why: why.slice(0, 5)};
-  }
-  function run(){
-    var v = read(); save(v);
-    var hidden = 0, rows = [];
-    data.forEach(function(c){
-      if(v.state && c.st !== v.state) return;
-      if(v.ctrl && c.ct !== v.ctrl) return;
-      if(v.size && size(c) !== v.size) return;
-      if(v.loc && c.lc !== v.loc) return;
-      if(v.hbcu && !c.hb) return;
-      if(v.notest && c.tp === 'Required') return;
-      if(v.region && c.rg !== v.region) return;
-      if(v.home && v.reach){
-        if(v.reach === 'state' && c.st !== v.home) return;
-        if(v.reach === 'near' && c.st !== v.home && (ADJ[v.home] || []).indexOf(c.st) < 0) return;
-        if(v.reach === 'region' && c.rg !== (REG[v.home] || '')) return;
-      }
-      if(v.ratio && (c.sf == null || c.sf > v.ratio)) return;
-      if(v.gradMin && (c.gr == null || c.gr < v.gradMin)) return;
-      if(v.retMin && (c.rt == null || c.rt < v.retMin)) return;
-      if(v.earnMin && (c.er == null || c.er < v.earnMin)) return;
-      if(v.debtMax && (c.db == null || c.db > v.debtMax)) return;
-      if(v.select === 'hard' && c.ad >= 20) return;
-      if(v.select === 'mid' && (c.ad < 20 || c.ad >= 50)) return;
-      if(v.select === 'open' && c.ad < 50) return;
-      if(v.major && v.major_only && !(c.mj && c.mj[v.major])) return;
-      var pr = price(c, v);
-      if(v.price && (pr === null || pr > v.price)) return;
-      var hasScore = v.sat || v.act;
-      if(hasScore && far(c, v)){ hidden++; return; }
-      var t = position(c, v), bd = band(c, t), p = personalize(c, v, t, bd);
-      rows.push({c:c, t:t, band:bd, unk: hasScore && t === null, fit:p.fit, why:p.why, pr:pr});
-    });
-    rows.sort(function(a, b){
-      if(v.sort === 'price') return (a.pr === null) - (b.pr === null) || a.pr - b.pr;
-      if(v.sort === 'grad') return (b.c.gr || 0) - (a.c.gr || 0);
-      if(v.sort === 'earn') return (b.c.er || 0) - (a.c.er || 0);
-      return b.fit - a.fit || (a.pr || 1e9) - (b.pr || 1e9);
-    });
-    last = rows; shown = PAGE; filter = 'all';
-    render(v, hidden);
-  }
-  function profile(v){
-    var bits = [];
-    if(v.sat) bits.push('a ' + v.sat + ' SAT'); if(v.act) bits.push('a ' + v.act + ' ACT');
-    var want = [];
-    if(v.size) want.push(v.size + '-size'); if(v.ctrl) want.push(v.ctrl); if(v.loc) want.push(v.loc.replace('suburb','suburban') + (v.loc === 'suburb' ? '' : '-based'));
-    var s = 'Matches built for ' + (bits.length ? bits.join(' and ') : 'you');
-    if(v.income !== '') s += ', a household in the ' + BANDS[v.income] + ' band';
-    if(v.price) s += ', a net price under ' + money(v.price);
-    if(want.length) s += ', looking for a ' + want.join(' ') + ' college';
-    if(v.state) s += ' in ' + pick(form.state);
-    if(v.region) s += ' in the ' + v.region;
-    if(v.home && v.reach === 'state') s += ', staying in ' + pick(form.home);
-    if(v.home && v.reach === 'near') s += ', within reach of ' + pick(form.home);
-    if(v.ratio) s += ', with at most ' + v.ratio + ' students per faculty member';
-    if(v.gradMin) s += ', graduating at least ' + v.gradMin + '% of students';
-    if(v.major) s += ', studying ' + v.major;
-    var pri = [['pCost','low cost'],['pDebt','low student debt'],['pRet','students staying'],['pGrad','graduation rates'],['pEarn','earnings'],['pSmall','small classes'],['pDiv','diversity'],['pFirst','first-generation support']]
-      .filter(function(p){ return v[p[0]] === 'high'; }).map(function(p){ return p[1]; });
-    if(pri.length) s += ', putting ' + pri.join(' and ') + ' first';
-    return s + '.';
-  }
-  function counts(){ var n = {likely:0, match:0, reach:0}; last.forEach(function(r){ n[r.band]++; }); return n; }
-  function render(v, hidden){
-    var n = counts(), total = last.length;
-    prof.textContent = total ? profile(v) : '';
-    prof.hidden = !total;
-    sum.textContent = total ? ('We found ' + total + ' colleges: ' + n.match + ' match, ' + n.likely + ' likely and ' + n.reach + ' reach.' +
-      (hidden ? ' ' + hidden + ' more were left out because your score is well below their range.' : '') +
-      ((v.sat || v.act) ? '' : ' Add a score for sharper matches.')) :
-      'No colleges fit all of those filters. Loosen the price, size, location or major and try again.';
-    tabs.textContent = '';
-    if(total){
-      [['all','All (' + total + ')'],['match','Match (' + n.match + ')'],['likely','Likely (' + n.likely + ')'],['reach','Reach (' + n.reach + ')']].forEach(function(p){
-        var b = document.createElement('button'); b.type = 'button'; b.textContent = p[1];
-        b.setAttribute('aria-pressed', String(filter === p[0]));
-        b.addEventListener('click', function(){ filter = p[0]; shown = PAGE; draw(); markTabs(); });
-        b.dataset.k = p[0]; tabs.appendChild(b);
-      });
-    }
-    draw();
-  }
-  function markTabs(){ Array.prototype.forEach.call(tabs.children, function(b){ b.setAttribute('aria-pressed', String(b.dataset.k === filter)); }); }
-  function draw(){
-    out.textContent = '';
-    var list = last.filter(function(r){ return filter === 'all' || r.band === filter; });
-    list.slice(0, shown).forEach(function(r){
-      var c = r.c, li = document.createElement('li'); li.className = 'cm-card';
-      var top = document.createElement('div'); top.className = 'cm-top';
-      var h = document.createElement('h3'), a = document.createElement('a'); a.href = '/colleges/' + c.sl + '/'; a.textContent = c.n; h.appendChild(a);
-      var fit = document.createElement('span'); fit.className = 'cm-fit'; fit.textContent = 'Your fit ' + r.fit + '%';
-      top.appendChild(h); top.appendChild(fit);
-      var chip = document.createElement('span'); chip.className = 'cm-chip cm-' + (r.unk ? 'unk' : r.band);
-      chip.textContent = r.band === 'likely' ? 'Likely' : r.band === 'match' ? 'Match' : 'Reach';
-      var meta = document.createElement('div'); meta.className = 'cm-meta';
-      var bits = [c.sn + ' · ' + (c.ct === 'public' ? 'Public' : 'Private') + ' · ' + (LOC[c.lc] || ''),
-        c.en.toLocaleString('en-US') + ' undergrads',
-        c.s1 ? 'SAT ' + c.s1 + '–' + c.s2 : (c.a1 ? 'ACT ' + c.a1 + '–' + c.a2 : 'Score range not reported'),
-        'Admits ' + Math.round(c.ad) + '%',
-        r.pr === null ? 'Net price not reported' : 'Net price ' + money(r.pr) + '/yr',
-        c.gr ? Math.round(c.gr) + '% graduate' : ''];
-      bits.filter(Boolean).forEach(function(t){ var s = document.createElement('span'); s.textContent = t; meta.appendChild(s); });
-      li.appendChild(top); li.appendChild(chip); li.appendChild(meta);
-      if(r.why.length){
-        var ul = document.createElement('ul'); ul.className = 'cm-why';
-        r.why.forEach(function(t){ var x = document.createElement('li'); x.textContent = t; ul.appendChild(x); });
-        li.appendChild(ul);
-      }
-      out.appendChild(li);
-    });
-    more.textContent = '';
-    if(list.length > shown){
-      var b = document.createElement('button'); b.type = 'button'; b.textContent = 'Show more (' + (list.length - shown) + ' left)';
-      b.addEventListener('click', function(){ shown += PAGE; draw(); }); more.appendChild(b);
-    }
-  }
-  form.addEventListener('submit', function(ev){ ev.preventDefault(); run(); });
-  document.getElementById('cm-reset').addEventListener('click', function(){
-    form.reset(); try{ localStorage.removeItem(KEY); }catch(e){} out.textContent=''; tabs.textContent=''; more.textContent=''; sum.textContent=''; prof.hidden = true;
-  });
-  restore();
-  if(['ratio','gradMin','retMin','earnMin','debtMax','select'].some(function(k){ return form[k].value; })) document.querySelector('details.cm-fs').open = true;
-  var v0 = read();
-  if(v0.sat || v0.act || v0.state || v0.price || v0.major || v0.income !== '' || v0.home || v0.region || v0.ratio) run();
-})();
-"""
-
 
 def compact(colleges):
     """Only the fields the matcher reads, keyed short so the page stays small."""
@@ -412,54 +138,32 @@ def college_match_page(colleges):
     major_opts = '<option value="">No preference</option>' + "".join(f'<option value="{e(m)}">{e(m)}</option>' for m in MAJORS)
     path = "/college-match/"
     faqs = [
-        ("How does the college matcher find colleges that fit me?",
-         "It uses your SAT or ACT score, your family's income band, your budget, where you want to study, the size, "
-         "setting and type of college you prefer, the major you are interested in and the priorities you rank. Each "
-         "college gets a personal fit percentage, and the card lists the specific reasons behind it."),
-        ("How does it decide reach, match and likely?",
-         "It compares your score with each college's reported middle-50% range and its acceptance rate. At or above the "
-         "75th percentile at a college that admits most applicants is likely. Inside the range is a match, unless the "
-         "college admits under about a quarter of applicants, which makes it a reach. Below the 25th percentile is a reach."),
-        ("What does the personal fit percentage mean?",
-         "It blends how well your score fits the college with the priorities you marked as important, such as cost, "
-         "graduation rate, earnings, class size, diversity and first-generation support, plus a bonus when your major is "
-         "one of the college's largest programs. A higher percentage means the college lines up better with what you told us."),
-        ("Why does my family income matter?",
-         "Net price is what students pay after grants and scholarships, and it varies a lot by income. When you choose "
-         "an income band, the matcher uses each college's reported net price for that band instead of the average, "
-         "so the price you see is closer to what a family like yours has paid."),
-        ("Is the matcher a prediction that I will be admitted?",
-         "No. It is a way to sort a long list. Admissions decisions also weigh grades, course rigor, essays, "
-         "recommendations and what a college needs that year, none of which the matcher sees."),
-        ("Do I need a test score to use it?",
-         "No. Without a score it sorts by acceptance rate and your other answers. Add an SAT or ACT score for sharper "
-         "matches, or take a free practice test to get an estimate first."),
-        ("Where does the college data come from?",
-         "From the U.S. Department of Education's College Scorecard (IPEDS and related federal sources). Each college "
-         "profile lists the reporting period and source for every number."),
-        ("Why is a college I expected missing from my results?",
-         "It failed a filter you set, such as price, size or location, its net price was not reported and you set a "
-         "price cap, or your score is well below its range. Loosen a filter and run it again."),
-        ("Can I search by location or distance from home?",
-         "Yes. Choose a home state and then stay in that state, search that state and the states bordering it, or stay in "
-         "the same region of the U.S. You can also pick a region such as the Northeast, Midwest, South or West on its own, "
-         "and combine either with a city, suburb, town or rural setting."),
-        ("What is a good student-to-faculty ratio?",
-         "Lower is generally better for access to professors. Ratios of about 12 to 1 or less are typical of small colleges, "
-         "and 18 to 1 or more is common at large public universities. It is a college-wide average, so also ask about class sizes in your major."),
-        ("What other filters can I use?",
-         "You can set minimums for graduation rate, first-year retention and median earnings, a maximum for typical federal "
-         "student debt, a student-to-faculty ratio limit and how selective the college is. You can also rank low debt and "
-         "student retention as priorities."),
-        ("Does it consider weather or climate?",
-         "No. The federal data we use does not include climate. Use the region and state filters as a rough guide, and check "
-         "each college's own page for campus life details."),
-        ("What if I am undecided about a major?",
-         "Leave the major on no preference. The matcher then ranks on score, cost, outcomes and the priorities you chose. "
-         "You can try a few majors and see how the list changes."),
+        ("How does the college match quiz work?",
+         "You answer questions about what you want to study, cost, location, campus life, career and support, and mark how "
+         "much each matters. Each college gets a personal fit score from 0 to 100 built only from those answers, with the "
+         "reasons and the concerns listed. Admissions chances and cost are shown separately."),
+        ("Is my fit score affected by how selective a college is?",
+         "No. Fit uses your preferences only. A college can be a great fit and a reach, or easy to get into and a poor fit; "
+         "you see both."),
+        ("How does it decide Likely, Target and Reach?",
+         "From your SAT or ACT score against the college's reported middle-50% range for enrolled students, and its "
+         "acceptance rate. Colleges admitting under 15% are a reach for everyone. Without a score, or applying test-optional, "
+         "the label is Uncertain. It is guidance, not a prediction."),
+        ("What happens when a college is missing data?",
+         "Missing facts never count as a pass or a fail. The evidence percentage drops, the fit becomes a range, and if the "
+         "missing fact is a must-have the college is listed under Needs checking instead of being removed."),
+        ("Can I describe what I want in my own words?",
+         "Yes. The matcher reads your description and shows the preferences it found. Nothing is applied until you tick it, "
+         "and it tells you which wishes it cannot match on yet, such as beaches, skiing or climate."),
+        ("Where does the data come from?",
+         "Costs, outcomes and score ranges from the U.S. Department of Education's College Scorecard; programs, services, "
+         "housing rules, military benefits and locations from IPEDS 2023. Every result lists the source."),
+        ("Can I ask questions about a specific college?",
+         "Yes. The research panel answers from pages on that college's official website and links to them. If those pages "
+         "do not answer it, it says so instead of guessing."),
         ("Is anything I enter stored or shared?",
-         "No. The matcher runs entirely in your browser. Your answers are saved only on your own device so the form is "
-         "filled in next time, and Reset clears them."),
+         "Your answers stay in your browser, and Clear my answers deletes them. Saved colleges go into your FunSAT profile on "
+         "this device. The research panel sends only the college and your question, never your grades, scores or budget."),
     ]
 
     def sel(name, label, options):
@@ -468,85 +172,24 @@ def college_match_page(colleges):
     body = (
         f'<nav class="gnav"><a href="/">&larr; {SITE_NAME}</a><a href="/colleges/">All colleges</a></nav>'
         '<p class="gkicker">College matcher</p>'
-        '<h1>College Matcher: Find Colleges That Fit Your Scores, Budget and Goals</h1>'
-        f'<p>Tell us about your scores, your budget, the campus you picture and what matters most, and we will rank '
-        f'{len(rows)} four-year colleges for <em>you</em>. Every college gets a personal fit percentage and a short list of '
-        'the exact reasons it fits, and is sorted into <strong>reach</strong>, <strong>match</strong> or <strong>likely</strong> '
-        'from its reported score range and acceptance rate. It runs in your browser; nothing you type is sent anywhere.</p>'
-        '<form id="cm-form" aria-label="College matcher">'
-        '<fieldset class="cm-fs"><legend>1. Your scores</legend><div class="cm-form">'
-        '<label>SAT score (400&ndash;1600)<input name="sat" type="number" inputmode="numeric" min="400" max="1600" step="10" placeholder="e.g. 1200"></label>'
-        '<label>ACT score (1&ndash;36)<input name="act" type="number" inputmode="numeric" min="1" max="36" step="1" placeholder="e.g. 26"></label>'
-        '<p class="cm-hint">Have both? Enter both and we use the one that fits each college better. No score yet? '
-        '<a href="/">Take a free practice test</a>.</p></div></fieldset>'
-        '<fieldset class="cm-fs"><legend>2. Your budget</legend><div class="cm-form">'
-        + sel("income", 'Household income <span class="cm-hint">(sets the net price we show)</span>',
-              '<option value="">Prefer not to say</option><option value="0">Under $30,000</option>'
-              '<option value="1">$30,001&ndash;$48,000</option><option value="2">$48,001&ndash;$75,000</option>'
-              '<option value="3">$75,001&ndash;$110,000</option><option value="4">Over $110,000</option>')
-        + sel("price", "Most you can pay per year (net price)",
-              '<option value="">No limit</option><option value="10000">Up to $10,000</option><option value="15000">Up to $15,000</option>'
-              '<option value="20000">Up to $20,000</option><option value="30000">Up to $30,000</option><option value="40000">Up to $40,000</option>')
-        + '</div></fieldset>'
-        '<fieldset class="cm-fs"><legend>3. Your campus</legend><div class="cm-form">'
-        + sel("state", "Where you want to study", state_opts)
-        + sel("ctrl", "Type", '<option value="">Public or private</option><option value="public">Public</option><option value="private">Private</option>')
-        + sel("size", "Size", '<option value="">Any size</option><option value="small">Small (under 3,000)</option>'
-              '<option value="medium">Medium (3,000&ndash;10,000)</option><option value="large">Large (over 10,000)</option>')
-        + sel("loc", "Setting", '<option value="">Any setting</option><option value="city">City</option><option value="suburb">Suburb</option>'
-              '<option value="town">Town</option><option value="rural">Rural</option>')
-        + '<label class="cm-check"><input name="hbcu" type="checkbox"> Historically Black colleges only</label>'
-        '<label class="cm-check"><input name="notest" type="checkbox"> Skip colleges that require test scores</label>'
-        '</div></fieldset>'
-        '<fieldset class="cm-fs"><legend>4. Home and distance</legend><div class="cm-form">'
-        + sel("home", "Your home state", state_opts_home)
-        + sel("reach", "How far would you go?", '<option value="">No limit</option><option value="state">Stay in my home state</option>'
-              '<option value="near">My state or a bordering state</option><option value="region">Same region of the U.S.</option>')
-        + sel("region", "Or pick a region", '<option value="">Anywhere in the U.S.</option>'
-              + "".join(f'<option value="{r}">{r}</option>' for r in REGIONS) + '<option value="Territories">U.S. territories</option>')
-        + '</div></fieldset>'
-        '<fieldset class="cm-fs"><legend>5. Your interests</legend><div class="cm-form">'
-        + sel("major", "A major you are considering", major_opts)
-        + '<label class="cm-check"><input name="majorOnly" type="checkbox"> Only colleges where it is a top program</label>'
-        '</div></fieldset>'
-        '<fieldset class="cm-fs"><legend>6. What matters most to you</legend><div class="cm-form">'
-        + sel("pCost", "Low cost", PRIORITY) + sel("pGrad", "Students who graduate", PRIORITY)
-        + sel("pEarn", "Earnings after college", PRIORITY) + sel("pSmall", "Small classes", PRIORITY)
-        + sel("pDiv", "A diverse campus", PRIORITY) + sel("pFirst", "Support for first-generation students", PRIORITY)
-        + sel("pDebt", "Low student debt", PRIORITY) + sel("pRet", "Students who stay (first-year retention)", PRIORITY)
-        + sel("sort", "Sort results by", '<option value="fit">Best overall fit for me</option><option value="price">Lowest net price</option>'
-              '<option value="grad">Highest graduation rate</option><option value="earn">Highest earnings</option>')
-        + '</div></fieldset>'
-        '<details class="cm-fs"><summary><strong>7. Fine-tune with hard limits (optional)</strong></summary><div class="cm-form">'
-        + sel("ratio", "Student-to-faculty ratio (smaller means more attention)", '<option value="">Any</option><option value="10">10 to 1 or smaller</option>'
-              '<option value="14">14 to 1 or smaller</option><option value="18">18 to 1 or smaller</option>')
-        + sel("gradMin", "Graduation rate at least", '<option value="">Any</option><option value="50">50%</option><option value="60">60%</option>'
-              '<option value="70">70%</option><option value="80">80%</option><option value="90">90%</option>')
-        + sel("retMin", "First-year retention at least", '<option value="">Any</option><option value="75">75%</option><option value="85">85%</option><option value="90">90%</option>')
-        + sel("earnMin", "Median earnings after 10 years at least", '<option value="">Any</option><option value="40000">$40,000</option>'
-              '<option value="50000">$50,000</option><option value="60000">$60,000</option><option value="75000">$75,000</option>')
-        + sel("debtMax", "Typical federal debt at most", '<option value="">Any</option><option value="15000">$15,000</option>'
-              '<option value="20000">$20,000</option><option value="25000">$25,000</option>')
-        + sel("select", "How selective", '<option value="">Any</option><option value="hard">Most selective (admits under 20%)</option>'
-              '<option value="mid">Selective (20% to 50%)</option><option value="open">Less selective (admits 50% or more)</option>')
-        + '</div></details></form>'
-        '<div class="cm-actions"><button type="submit" form="cm-form" class="cm-go">Find my colleges</button>'
-        '<button type="button" id="cm-reset">Reset</button></div>'
-        '<p id="cm-profile" class="cm-profile" hidden></p>'
-        '<p id="cm-summary" class="cm-summary" role="status" aria-live="polite"></p>'
-        '<div id="cm-tabs" class="cm-tabs" role="group" aria-label="Filter results by match type"></div>'
-        '<ul id="cm-results" class="cm-list"></ul><div id="cm-more" class="cm-more"></div>'
-        '<p class="cm-note">Fit percentages compare colleges on the answers you gave and on College Scorecard data. They are not '
-        'admission odds, and the matcher does not see your grades, essays or activities.</p>'
+        '<h1>College Match Quiz: Find Colleges That Fit Your Life</h1>'
+        f'<div class="glead">Answer 11 to 25 questions, or describe your ideal college in your own words, and get {len(rows)} '
+        'four-year colleges ranked on <em>your</em> priorities. Each one shows why it fits, what could go wrong, how hard it is to '
+        'get into, what it would cost you, and how much of that we could verify. No account; answers stay in your browser.</div>'
+        '<div id="cmx" class="cmx" aria-live="polite"><p class="cmx-small">Loading the matcher…</p></div>'
         '<noscript><p>The matcher needs JavaScript. You can still browse every college by '
         '<a href="/colleges-by-state/">state</a> or look up your <a href="/sat-scores/">SAT score</a> '
         'or <a href="/act-scores/">ACT score</a>.</p></noscript>'
         '<h2>How the matcher works</h2>'
-        '<ul><li><strong>Likely:</strong> your score is at or above the college\'s 75th percentile and it admits at least 40% of applicants.</li>'
-        '<li><strong>Match:</strong> your score is inside the middle-50% range and the college admits at least a quarter of applicants, or your score is above the range at a more selective college.</li>'
-        '<li><strong>Reach:</strong> your score is below the 25th percentile, or the college admits fewer than about a quarter (or 15%) of applicants.</li>'
-        '<li><strong>Your fit %:</strong> your score\'s fit plus the priorities you marked, and a bonus when your major is one of the college\'s biggest programs.</li>'
-        '<li><strong>Left out:</strong> colleges where your score is more than 200 SAT points (5 ACT points) below the range.</li></ul>'
+        '<ul><li><strong>Personal fit (0-100)</strong> scores only your own preferences, grouped into academics, cost, location, '
+        'career, campus life, flexibility, getting around and support. You set how much each matters.</li>'
+        '<li><strong>Admissions</strong> (Likely, Target, Reach, Uncertain) comes separately from the college\'s reported score '
+        'range and admit rate. It never changes your fit score, and it is not a prediction.</li>'
+        '<li><strong>Evidence</strong> shows how much of your preferences we could check with verified federal data. Unknowns '
+        'are never counted as a pass or a fail; when evidence is thin you see a range instead of one number.</li>'
+        '<li><strong>Must-haves</strong> remove a college only when the data shows it fails. If we cannot check it, the college '
+        'goes under "Needs checking".</li></ul>'
+        '<p><a href="/college-match/how-it-works/">Full method, data sources and what we cannot match on yet &rarr;</a></p>'
         + seo_sections(rows)
         + '<p>Next steps: <a href="/guides/how-to-build-a-college-list/">how to build a college list</a>, '
         '<a href="/guides/how-much-does-college-really-cost/">what college really costs</a>, '
@@ -557,26 +200,23 @@ def college_match_page(colleges):
         + '<div class="glinks"><a href="/colleges/">All colleges</a><a href="/colleges-by-state/">Colleges by state</a>'
           '<a href="/college-comparisons/">Compare colleges</a><a href="/college-costs/">College costs</a>'
           '<a href="/scholarships/">Scholarships</a><a href="/sat-scores/">SAT score lookup</a><a href="/act-scores/">ACT score lookup</a></div>'
-        f'<script type="application/json" id="cm-adj">{json.dumps(ADJ, separators=(",", ":"))}</script>'
-        f'<script type="application/json" id="cm-reg">{json.dumps(REGION_OF, separators=(",", ":"))}</script>'
-        f'<script type="application/json" id="cm-data">{json.dumps(rows, separators=(",", ":"), ensure_ascii=False).replace("</", "<\\/")}</script>'
-        f'<script>{SCRIPT}</script>'
+
     )
     howto = {"@type": "HowTo", "name": "How to find colleges that fit you",
              "step": [{"@type": "HowToStep", "name": n, "text": t} for n, t in [
-                 ("Enter your scores", "Add your SAT or ACT score, or take a practice test to get an estimate."),
-                 ("Set your budget", "Choose your household income band and the most you can pay per year."),
-                 ("Describe your campus", "Pick a state, size, setting and type of college."),
-                 ("Add your interests", "Choose a major area you are considering."),
-                 ("Rank what matters", "Mark cost, graduation, earnings, class size, diversity and first-generation support."),
-                 ("Compare your matches", "Read each college's personal fit and reasons, then open the profiles of your favorites.")]]}
+                 ("Choose a depth", "Pick Quick, Detailed or Advanced; you can switch at any time without losing answers."),
+                 ("Answer or describe", "Answer the questions, or describe your ideal college in your own words and confirm what was understood."),
+                 ("Mark what matters", "Set each preference from nice to have to must have, and adjust category weights."),
+                 ("Read your matches", "Each college shows personal fit, admissions, cost and how much was verified."),
+                 ("Research and list", "Ask questions answered from official college pages, compare, and save colleges to your list.")]]}
     return path, page(
         path=path,
-        title=f"College Matcher: Find Colleges That Fit You | {SITE_NAME}",
-        description=(f"Free college matcher: enter your SAT or ACT score, budget, major and priorities to get a personal fit "
-                     f"for {len(rows)} colleges, sorted into reach, match and likely."),
+        title=f"Free College Match Quiz: Find Colleges That Fit Your Life | {SITE_NAME}",
+        description=(f"Free college match quiz: rank {len(rows)} colleges on your major, budget, location and priorities. See why each fits, "
+                     "what could go wrong, admissions odds and cost, with sources. No account."),
         body=body,
-        extra_head=STYLE,
+        extra_head=('<link rel="stylesheet" href="/college-matcher.css">\n<script defer src="/college-match-engine.js"></script>\n'
+                    '<script defer src="/college-matcher.js"></script>\n'),
         schema=[
             breadcrumbs([("Home", "/"), ("Colleges", "/colleges/"), ("College matcher", path)]),
             faq_schema(faqs), howto,
@@ -584,3 +224,69 @@ def college_match_page(colleges):
              "applicationCategory": "EducationalApplication", "operatingSystem": "Any",
              "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}},
         ])
+
+
+def how_it_works_page():
+    """/college-match/how-it-works/: the scoring method, read from the engine and the data file so it cannot drift."""
+    import subprocess
+    from seo_common import ROOT
+    info = json.loads(subprocess.run(["node", "-e", """
+      global.window = {}; require('./college-match-data.js'); const M = require('./college-match-engine.js');
+      const D = window.COLLEGE_MATCH_DATA.meta;
+      process.stdout.write(JSON.stringify({ version: M.VERSION, cats: M.CATEGORIES, imp: M.IMPORTANCE,
+        crit: M.CRITERIA.map((c) => ({ id: c.id, cat: c.cat, label: c.label })), majors: D.majors, prof: D.professional, source: D.source, notes: D.notes }));
+    """], cwd=ROOT, capture_output=True, text=True, check=True).stdout)
+    path = "/college-match/how-it-works/"
+    cats = "".join(f"<tr><td>{e(v['label'])}</td><td>{v['weight']}%</td><td>{e(', '.join(c['label'] for c in info['crit'] if c['cat'] == k))}</td></tr>"
+                   for k, v in info["cats"].items())
+    imps = "".join(f"<tr><td>{e(v['label'])}</td><td>{v['w']}</td><td>{'Yes' if v.get('hard') else 'No'}</td></tr>" for v in info["imp"].values())
+    majors = "".join(f"<tr><td>{e(v['label'])}</td><td>{e(', '.join(v['cip']))}</td></tr>" for v in info["majors"].values())
+    body = (
+        f'<nav class="gnav"><a href="/">&larr; {SITE_NAME}</a><a href="/college-match/">College match quiz</a></nav>'
+        '<p class="gkicker">Method</p><h1>How the College Matcher Works</h1>'
+        '<p>The matcher is a fixed set of rules, not an AI judgment: the same answers and data always give the same results. '
+        f'Scoring version <code>{e(info["version"])}</code>.</p>'
+        '<h2>Three measures that are never mixed</h2>'
+        '<ul><li><strong>Personal fit</strong>: how well a college meets your preferences.</li>'
+        '<li><strong>Admissions</strong>: Likely, Target, Reach or Uncertain, from the college\'s reported score range and admit rate.</li>'
+        '<li><strong>Cost</strong>: net price (for your income band when you give one) against your budget.</li></ul>'
+        '<h2>Personal fit</h2>'
+        '<p>Each preference you answer becomes a check that returns met (1), partly met (between 0 and 1), not met (0) or '
+        '<em>not verified</em>. A category score is the importance-weighted average of its verified checks. Fit is the weighted '
+        'average of category scores; categories you did not answer drop out and the remaining weights are rescaled to 100%.</p>'
+        f'<table class="gtable"><thead><tr><th>Category</th><th>Default weight</th><th>Checks</th></tr></thead><tbody>{cats}</tbody></table>'
+        f'<table class="gtable"><thead><tr><th>Importance</th><th>Weight</th><th>Requirement</th></tr></thead><tbody>{imps}</tbody></table>'
+        '<h2>Evidence and missing data</h2>'
+        '<p>Evidence coverage is the weighted share of your checks we could verify. Unverified checks are left out of the fit, '
+        'never counted as a pass or a fail. The fit range runs from "every unknown fails" to "every unknown passes"; when '
+        'coverage is under 60% the range is shown instead of a single number. A college does not score higher for having more data.</p>'
+        '<h2>Requirements</h2>'
+        '<p>A "must have" or "dealbreaker" that the data shows a college fails, even partly, removes it from the main list (you '
+        'can still see it under Left out, with the reason). If the data cannot check it, the college moves to Needs checking. '
+        '"Workable without a car" is only an estimate from the campus setting, so it can never remove a college.</p>'
+        '<h2>Admissions labels</h2>'
+        '<ul><li>Admit rate under 15%: Reach for everyone.</li>'
+        '<li>Score at or above the 75th percentile: Likely if the college admits 50%+, Target if 25-50%, otherwise Reach.</li>'
+        '<li>Score inside the middle 50%: Likely if it admits 70%+, Target if 25-70%, otherwise Reach.</li>'
+        '<li>Score below the 25th percentile: Target if it admits 80%+, otherwise Reach.</li>'
+        '<li>No score, or applying test-optional: Uncertain.</li></ul>'
+        '<p>Score ranges describe enrolled students, not cutoffs. Colleges do not report GPA ranges to the federal government, so '
+        'GPA is not used. A high admit rate alone never makes a college Likely.</p>'
+        '<h2>Data</h2>'
+        f'<p>{e(info["source"])}; costs, outcomes and score ranges from the College Scorecard. {e(info["notes"])}</p>'
+        '<h3>Majors and the program codes behind them</h3>'
+        f'<table class="gtable"><thead><tr><th>Major</th><th>CIP 2020 codes</th></tr></thead><tbody>{majors}</tbody></table>'
+        '<h2>What we cannot match on yet</h2>'
+        '<p>Beaches, ski areas, climate, airports, nightlife, Greek life, transit service, local job listings and wages have no '
+        'verified source in our data yet, so the matcher lists them as unsupported instead of guessing. Ask about them in the '
+        'research panel for a specific college, which answers from that college\'s official website with links.</p>'
+        '<h2>Research answers</h2>'
+        '<p>The research panel reads only pages on the college\'s own website (the address the college reports to IPEDS), '
+        'respects robots.txt, quotes the passages it used and links to them. An answer that cites nothing is marked unverified. '
+        'Nothing about you is sent except the question.</p>'
+        '<p><a href="/college-match/">Back to the college match quiz &rarr;</a></p>'
+    )
+    schema = [breadcrumbs([("Home", "/"), ("College match quiz", "/college-match/"), ("How it works", path)])]
+    return path, page(path=path, title=f"How the College Matcher Works: Method and Data | {SITE_NAME}",
+                      description="How FunSAT's college match quiz scores personal fit, admissions and cost separately, handles missing data and must-haves, and which federal data it uses.",
+                      body=body, schema=schema)

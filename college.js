@@ -983,7 +983,7 @@
       '<div class="cc-field-row">' +
       '<label class="cc-field">GPA<input type="number" id="ccGpa" min="0" max="100" step="0.01" value="' + (c.gpa != null ? c.gpa : "") + '" placeholder="3.8"></label>' +
       '<label class="cc-field">Scale<select id="collegeGpaScale">' + opts([["4uw", "4.0 unweighted"], ["4w", "4.0 weighted"], ["5w", "5.0 weighted"], ["100", "100-point"]], c.gpaScale || "4uw") + "</select></label></div>" +
-      '<p class="cc-calc-link"><a href="/calculators/high-school-gpa/">Calculate your GPA</a> · <a href="/calculators/gpa-improvement/">What GPA could you reach?</a></p>' +
+      '<p class="cc-calc-link"><a href="/college-match/">Take the college match quiz</a> · <a href="/calculators/high-school-gpa/">Calculate your GPA</a> · <a href="/calculators/gpa-improvement/">What GPA could you reach?</a></p>' +
       '<div class="cc-field-row">' +
       '<label class="cc-field">Grade<select id="ccGrade">' + opts([["9", "9th"], ["10", "10th"], ["11", "11th"], ["12", "12th"], ["gap", "Gap year"]], c.grade) + "</select></label>" +
       '<label class="cc-field">Home state<select id="ccHomeState" aria-label="Your home state">' + states.map((st) => '<option value="' + st + '"' + sel(c.homeState, st) + ">" + (st || "Choose") + "</option>").join("") + "</select></label></div>" +
